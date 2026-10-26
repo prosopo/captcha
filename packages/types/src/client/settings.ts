@@ -17,16 +17,445 @@ import {
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
-import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
+import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
-export const frictionlessThresholdDefault = 0.5;
+
+/**
+ * Lower rung of the frictionless score ladder: at or below this a session
+ * passes silently to PoW, above it the user is asked to drag a puzzle.
+ *
+ * Same value `frictionlessThreshold` carried when it was a bare number, so
+ * moving to the ladder is a shape change and not a routing change — nobody
+ * who passes frictionlessly today stops passing.
+ */
+export const frictionlessPuzzleThresholdDefault = 0.5;
+
+/**
+ * Upper rung: at or above this the user gets an image captcha instead.
+ *
+ * Deliberately allowed above 1 by the schema, unlike the lower rung: the
+ * score compared against it is a total that server-side penalties add to,
+ * and it is expected to exceed 1.
+ */
+export const frictionlessImageThresholdDefault = 1.0;
+
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
 export const imageMaxRoundsDefault = 32;
-export const contextAwareThresholdDefault = 0.7;
+// Floor on image rounds. Matches the floor that was previously only
+// hard-coded (the provider's `captchas.solved.count` default and the
+// `Math.max(2, …)` inside `timestampDecayFunction`), so leaving it unset
+// preserves existing behaviour.
+export const imageMinRoundsDefault = 2;
 export const puzzleToleranceDefault = 15;
+
+/**
+ * Ceiling on the puzzle difficulty ladder for a site, in ladder levels.
+ *
+ * The puzzle equivalent of `imageMaxRounds`. An escalated session samples its
+ * render settings from a difficulty band, and a sampled band sets EVERY knob —
+ * so while the ladder is active the site's own `puzzle` block and
+ * `puzzleTolerance` are not consulted at all. That is intended for a site
+ * using escalation, and wrong for a site that has deliberately configured an
+ * easier puzzle and expects to get it.
+ *
+ * `0` pins the site to level 0, which is the documented "nothing escalated"
+ * case: the session is left bare and the site's own settings render every
+ * time. Higher values cap how far automatic escalation may climb.
+ *
+ * The default matches `MAX_AUTO_ESCALATION_LEVEL` in `@prosopo/captcha-severity`,
+ * and the maximum matches that package's ladder length. Those live there
+ * because the ladder does, and this package deliberately does not depend on it
+ * — `puzzleMaxDifficultyMatchesLadder` in @prosopo/provider pins the pair so
+ * they cannot drift.
+ */
+export const puzzleMaxDifficultyDefault = 3;
+export const puzzleMaxDifficultyMax = 4;
+
+// Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
+// `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
+// authoritative bounds and defaults; the renderer just receives resolved
+// values from the provider.
+export const puzzleDecoyCountDefault = 5;
+export const puzzleDecoyEdgeDarknessDefault = 20;
+export const puzzleDecoyBodyBrightnessDefault = 4;
+export const puzzleHoleDarkenDefault = 0.55;
+// Multiplier on decoy pixels, mirroring `holeDarken` for the real cut.
+// Lower = darker decoys. Kept looser than `holeDarken` so the real hole is
+// still the deepest region on the frame; too close and humans can't tell,
+// too far and a solver keys on brightness alone.
+export const puzzleDecoyHoleDarkenDefault = 0.7;
+// Piece size as a fraction of the background width. The provider draws a
+// fresh value from [min, max] per challenge so a solver can't hard-code
+// the expected silhouette scale. Defaults preserve the historical 44px
+// minimum (44/300 ≈ 0.147) and open the top end to 90% of the frame; a
+// piece is allowed to overhang the background — the cut is clipped.
+export const puzzlePieceScaleMinDefault = 0.15;
+export const puzzlePieceScaleMaxDefault = 0.45;
+
+// Must match `DEFAULT_RENDER_SETTINGS` in @prosopo/audio-assets. Tuned for
+// intelligibility rather than difficulty: this is the accessibility path.
+export const audioDigitCountDefault = 5;
+export const audioNoiseSnrDbDefault = 14;
+export const audioBabbleGainDefault = 0.16;
+export const audioBabbleVoicesDefault = 2;
+export const audioReverbMixDefault = 0.12;
+export const audioGapMsDefault = 220;
+// Must match `DEFAULT_RENDER_SETTINGS` in @prosopo/icon-order-assets.
+export const iconOrderTargetCountDefault = 3;
+export const iconOrderDecoyCountDefault = 4;
+// A multiple of the clicked icon's own size, not pixels like
+// `puzzleTolerance`: icon sizes are jittered, and a fixed pixel radius would
+// make the smaller icons harder to hit.
+export const iconOrderToleranceDefault = 0.75;
+
+// Field-level schemas hoisted so `TrafficFilterSchema` per-category
+// challenge policies validate captcha parameters with the same bounds as
+// the site-wide defaults on `ClientSettingsSchema`. Do not redefine these
+// bounds elsewhere — reuse the hoisted schemas.
+export const powDifficultyFieldSchema = number().positive().min(1).max(10);
+export const imageThresholdFieldSchema = number().min(0).max(1);
+
+// Tarpit: bytes of incompressible padding the provider appends to a challenge
+// issuance response for this traffic category. The bytes are generated
+// provider-side into the response only — never persisted, never client-set —
+// so a category can be made expensive to solve at scale without touching the
+// stored session. Capped at 5 MiB so a misconfiguration (or an attacker who
+// deliberately trips it) cannot be turned into an unbounded amplifier.
+export const MAX_PAD_BYTES = 5 * 1024 * 1024;
+export const padBytesFieldSchema = number().int().min(0).max(MAX_PAD_BYTES);
+
+/**
+ * The frictionless score ladder. Two rungs cutting the score line into three
+ * bands: PoW at or below the puzzle rung, puzzle between the two, image at or
+ * above the image rung.
+ *
+ * This replaces the bare `frictionlessThreshold: number`, which could only
+ * express "pass or image". A number is still accepted on the way in and lifted
+ * into the puzzle rung — see the preprocess below — because documents written
+ * before the migration are still out there, and a settings blob that fails to
+ * parse would take the whole site down rather than degrade.
+ */
+export const FrictionlessThresholdSchema = z.preprocess(
+	(raw) =>
+		typeof raw === "number" ? { frictionlessPuzzleThreshold: raw } : raw,
+	object({
+		frictionlessPuzzleThreshold: number()
+			.min(0)
+			.max(1)
+			.optional()
+			.default(frictionlessPuzzleThresholdDefault),
+		// Not capped at 1, unlike the rung below it — see the default's note.
+		frictionlessImageThreshold: number()
+			.min(0)
+			.optional()
+			.default(frictionlessImageThresholdDefault),
+	}).refine(
+		(t) => t.frictionlessImageThreshold >= t.frictionlessPuzzleThreshold,
+		{
+			message:
+				"frictionlessImageThreshold must be >= frictionlessPuzzleThreshold — the image band sits above the puzzle band",
+			path: ["frictionlessImageThreshold"],
+		},
+	),
+);
+
+export type IFrictionlessThreshold = output<typeof FrictionlessThresholdSchema>;
+
+/** The ladder every site gets when it has never configured one. */
+export const frictionlessThresholdDefault: IFrictionlessThreshold = {
+	frictionlessPuzzleThreshold: frictionlessPuzzleThresholdDefault,
+	frictionlessImageThreshold: frictionlessImageThresholdDefault,
+};
+
+/**
+ * Which challenge types the frictionless flow may serve on this site.
+ *
+ * PoW is deliberately absent and is always available: it is the terminal
+ * fallback of the decision machine and the only type with no interaction
+ * requirement, so a site with all of these off still has a way to challenge.
+ *
+ * This is a hard constraint on OUTPUT, not a hint. A site with `image: false`
+ * must never be served an image captcha by any path — score ladder, access
+ * policy, traffic filter, routing machine, detector rule or escalation. See
+ * `coerceToEnabledCaptchaType` in the provider, which is applied at the two
+ * points a session's captchaType is decided.
+ *
+ * Expressing "no image" here rather than as an unreachable
+ * `frictionlessImageThreshold` keeps the intent explicit: the rung is a score
+ * boundary, and a site that wants image off should not have to encode that as
+ * a threshold nobody can reach.
+ */
+export const FrictionlessTypesSchema = object({
+	image: boolean().optional().default(true),
+	puzzle: boolean().optional().default(true),
+	iconOrder: boolean().optional().default(true),
+});
+
+export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
+
+export const frictionlessTypesDefault: IFrictionlessTypes = {
+	image: true,
+	puzzle: true,
+	iconOrder: true,
+};
+
+/**
+ * Read a stored `frictionlessTypes` into a complete set.
+ *
+ * Tolerates `undefined` (a client record written before the field existed)
+ * and a partial object, so a provider handed an older settings blob keeps
+ * serving image and puzzle rather than silently narrowing to PoW.
+ */
+export const resolveFrictionlessTypes = (
+	configured: Partial<IFrictionlessTypes> | undefined | null,
+): Required<IFrictionlessTypes> => ({
+	image: configured?.image ?? frictionlessTypesDefault.image,
+	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
+	iconOrder: configured?.iconOrder ?? frictionlessTypesDefault.iconOrder,
+});
+
+/**
+ * Prosopo-controlled switches for whether a captcha type may be served on a
+ * site at all. Set by Prosopo staff, never by the site owner, and outranks
+ * every other selector: the configured `captchaType`, `frictionlessTypes`,
+ * access policies, traffic filter, routing machines and escalation.
+ *
+ * Each key is optional with no stored default, so a record that never had a
+ * flag set keeps whatever `captchaTypeFeatureFlagDefaults` says for that type.
+ * A new gated type adds a key here and a default there.
+ */
+export const CaptchaTypeFeatureFlagsSchema = object({
+	[CaptchaType.puzzle]: boolean().optional(),
+	[CaptchaType.iconOrder]: boolean().optional(),
+	[CaptchaType.audio]: boolean().optional(),
+});
+
+export type ICaptchaTypeFeatureFlags = output<
+	typeof CaptchaTypeFeatureFlagsSchema
+>;
+
+export type FeatureFlaggedCaptchaType = Extract<
+	CaptchaType,
+	keyof ICaptchaTypeFeatureFlags
+>;
+
+export const captchaTypeFeatureFlagDefaults: Required<ICaptchaTypeFeatureFlags> =
+	{
+		[CaptchaType.puzzle]: true,
+		[CaptchaType.iconOrder]: false,
+		[CaptchaType.audio]: false,
+	};
+
+const isFeatureFlaggedCaptchaType = (
+	captchaType: CaptchaType,
+): captchaType is FeatureFlaggedCaptchaType =>
+	captchaType in captchaTypeFeatureFlagDefaults;
+
+/** Types without a feature flag are always enabled. */
+export const isCaptchaTypeFeatureEnabled = (
+	captchaType: CaptchaType,
+	flags: ICaptchaTypeFeatureFlags | undefined | null,
+): boolean =>
+	isFeatureFlaggedCaptchaType(captchaType)
+		? (flags?.[captchaType] ?? captchaTypeFeatureFlagDefaults[captchaType])
+		: true;
+
+/**
+ * The interactive challenge types a site may be served: the site owner's
+ * `frictionlessTypes` narrowed by Prosopo's captcha type feature flags.
+ * PoW is always allowed, as in `frictionlessTypes`.
+ */
+export const resolveAllowedCaptchaTypes = (
+	settings:
+		| {
+				frictionlessTypes?: Partial<IFrictionlessTypes> | null;
+				captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags | null;
+		  }
+		| undefined
+		| null,
+): Required<IFrictionlessTypes> => {
+	const preferred = resolveFrictionlessTypes(settings?.frictionlessTypes);
+	const flags = settings?.captchaTypeFeatureFlags;
+	return {
+		image: preferred.image,
+		puzzle:
+			preferred.puzzle &&
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags),
+		iconOrder:
+			preferred.iconOrder &&
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags),
+	};
+};
+
+/**
+ * Prosopo-controlled switches for widget behaviour on a site. Like
+ * `captchaTypeFeatureFlags`, set by Prosopo staff and never by the site
+ * owner, with no stored default: `widgetFeatureFlagDefaults` decides.
+ */
+export const WidgetFeatureFlagsSchema = object({
+	// Offer a control on the puzzle that swaps it for an image challenge.
+	puzzleImageSwitch: boolean().optional(),
+});
+
+export type IWidgetFeatureFlags = output<typeof WidgetFeatureFlagsSchema>;
+
+export type WidgetFeature = keyof IWidgetFeatureFlags;
+
+export const widgetFeatureFlagDefaults: Required<IWidgetFeatureFlags> = {
+	puzzleImageSwitch: false,
+};
+
+export const isWidgetFeatureEnabled = (
+	feature: WidgetFeature,
+	flags: IWidgetFeatureFlags | undefined | null,
+): boolean => flags?.[feature] ?? widgetFeatureFlagDefaults[feature];
+
+/**
+ * Read a stored `frictionlessThreshold` into a complete ladder.
+ *
+ * The single place that knows how to interpret the pre-ladder shape. Records
+ * are migrated in the background rather than in lockstep with the deploy, so
+ * both the provider and the portal API can be handed a bare number; it means
+ * what it always meant, the puzzle rung, and the image rung falls back to its
+ * default. The image rung is never allowed below the puzzle rung, which would
+ * otherwise invert the ladder and puzzle the worst traffic.
+ */
+export const resolveFrictionlessThreshold = (
+	configured: IFrictionlessThreshold | number | null | undefined,
+): IFrictionlessThreshold => {
+	const raw: Partial<IFrictionlessThreshold> =
+		typeof configured === "number"
+			? { frictionlessPuzzleThreshold: configured }
+			: (configured ?? {});
+	const frictionlessPuzzleThreshold =
+		raw.frictionlessPuzzleThreshold ?? frictionlessPuzzleThresholdDefault;
+	return {
+		frictionlessPuzzleThreshold,
+		frictionlessImageThreshold: Math.max(
+			frictionlessPuzzleThreshold,
+			raw.frictionlessImageThreshold ?? frictionlessImageThresholdDefault,
+		),
+	};
+};
+export const imageMaxRoundsFieldSchema = number().int().min(2);
+// Deliberately looser than the max at the bottom end: a site may want to
+// serve a single round, but no site may cap itself below 2. `min <= max` is
+// enforced across the pair on `ClientSettingsSchema`.
+export const imageMinRoundsFieldSchema = number().int().min(1);
+export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
+export const puzzleMaxDifficultyFieldSchema = number()
+	.int()
+	.min(0)
+	.max(puzzleMaxDifficultyMax);
+export const puzzleDecoyCountFieldSchema = number().int().min(0).max(200);
+export const puzzleDecoyEdgeDarknessFieldSchema = number().int().min(0).max(40);
+export const puzzleDecoyBodyBrightnessFieldSchema = number()
+	.int()
+	.min(-20)
+	.max(20);
+export const puzzleHoleDarkenFieldSchema = number().min(0).max(1);
+export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
+// Bounds are wider than the defaults so operators can pin the piece to a
+// fixed size (min == max) or explore the full frame. Cross-field
+// `min <= max` is enforced on the containing object schema.
+export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
+// Past 8 digits a spoken sequence outruns most listeners' working memory.
+export const audioDigitCountFieldSchema = number().int().min(3).max(8);
+// Below about 3 dB the noise drowns the speech.
+export const audioNoiseSnrDbFieldSchema = number().min(3).max(60);
+export const audioBabbleGainFieldSchema = number().min(0).max(0.6);
+export const audioBabbleVoicesFieldSchema = number().int().min(0).max(4);
+export const audioReverbMixFieldSchema = number().min(0).max(0.6);
+export const audioGapMsFieldSchema = number().int().min(0).max(1500);
+
+/** Partial overrides of the audio-assets `DEFAULT_RENDER_SETTINGS`. */
+export const AudioSettingsSchema = object({
+	digitCount: audioDigitCountFieldSchema.optional(),
+	noiseSnrDb: audioNoiseSnrDbFieldSchema.optional(),
+	babbleGain: audioBabbleGainFieldSchema.optional(),
+	babbleVoices: audioBabbleVoicesFieldSchema.optional(),
+	reverbMix: audioReverbMixFieldSchema.optional(),
+	gapMs: audioGapMsFieldSchema.optional(),
+});
+
+export type IAudioSettings = output<typeof AudioSettingsSchema>;
+
+export const PuzzlePieceScaleSchema = object({
+	min: puzzlePieceScaleFieldSchema
+		.optional()
+		.default(puzzlePieceScaleMinDefault),
+	max: puzzlePieceScaleFieldSchema
+		.optional()
+		.default(puzzlePieceScaleMaxDefault),
+}).refine((v) => v.min <= v.max, {
+	message: "puzzle piece scale min must be <= max",
+});
+
+/**
+ * Per-render tunables for the puzzle captcha. Every field is optional so
+ * operators can override a subset from the portal without having to
+ * restate the defaults. The provider merges these on top of the asset
+ * package's `DEFAULT_RENDER_SETTINGS` before calling the renderer.
+ */
+export const PuzzleSettingsSchema = object({
+	decoyCount: puzzleDecoyCountFieldSchema.optional(),
+	decoyEdgeDarkness: puzzleDecoyEdgeDarknessFieldSchema.optional(),
+	decoyBodyBrightness: puzzleDecoyBodyBrightnessFieldSchema.optional(),
+	decoyHoleDarken: puzzleDecoyHoleDarkenFieldSchema.optional(),
+	holeDarken: puzzleHoleDarkenFieldSchema.optional(),
+	pieceScale: PuzzlePieceScaleSchema.optional(),
+});
+
+export type IPuzzleSettings = output<typeof PuzzleSettingsSchema>;
+
+// Every icon on a frame is a distinct glyph, so this caps targets + decoys.
+// Must match `GLYPH_KINDS.length` in @prosopo/icon-order-assets.
+export const ICON_ORDER_GLYPH_VOCABULARY = 10;
+
+export const iconOrderTargetCountFieldSchema = number().int().min(2).max(6);
+export const iconOrderDecoyCountFieldSchema = number()
+	.int()
+	.min(0)
+	.max(ICON_ORDER_GLYPH_VOCABULARY - 2);
+export const iconOrderStrokeWidthFieldSchema = number().min(1).max(10);
+export const iconOrderIconOpacityFieldSchema = number().min(0.1).max(1);
+export const iconOrderHaloOpacityFieldSchema = number().min(0).max(1);
+export const iconOrderBackgroundClutterFieldSchema = number()
+	.int()
+	.min(0)
+	.max(40);
+// The end-to-end tests click without reading the imagery, which needs a
+// tolerance at which any click on the 300x200 frame is a hit: the smallest
+// icon is 32.3px and the furthest click ~336px away, so above ~10.4. Keep the
+// ceiling near that; past it the hit test checks nothing.
+export const iconOrderToleranceFieldSchema = number().min(0.1).max(12);
+
+/**
+ * Partial overrides of the icon-order render settings. The refine rejects a
+ * targets + decoys total the glyph vocabulary cannot supply, which would
+ * otherwise only surface as a 500 on every challenge request.
+ */
+export const IconOrderSettingsSchema = object({
+	targetCount: iconOrderTargetCountFieldSchema.optional(),
+	decoyCount: iconOrderDecoyCountFieldSchema.optional(),
+	strokeWidth: iconOrderStrokeWidthFieldSchema.optional(),
+	iconOpacity: iconOrderIconOpacityFieldSchema.optional(),
+	haloOpacity: iconOrderHaloOpacityFieldSchema.optional(),
+	backgroundClutter: iconOrderBackgroundClutterFieldSchema.optional(),
+}).refine(
+	(v) =>
+		(v.targetCount ?? iconOrderTargetCountDefault) +
+			(v.decoyCount ?? iconOrderDecoyCountDefault) <=
+		ICON_ORDER_GLYPH_VOCABULARY,
+	{
+		message: `icon-order targetCount + decoyCount must be <= ${ICON_ORDER_GLYPH_VOCABULARY}, the number of distinct glyphs available`,
+	},
+);
+
+export type IIconOrderSettings = output<typeof IconOrderSettingsSchema>;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -103,40 +532,123 @@ export const IPValidationRulesSchema = object({
 	forceConsistentIp: boolean().optional().default(false),
 });
 
-// Context type enum for filtering entropy samples
+/**
+ * The device families a context-aware baseline is held per.
+ *
+ * Coarse on purpose. A site's `<head>` differs most between a phone-width
+ * responsive render, a tablet render and a desktop render; finer splits
+ * (vendor, OS version) fracture the sample without changing the DOM.
+ */
+export enum DeviceType {
+	Desktop = "desktop",
+	Mobile = "mobile",
+	Tablet = "tablet",
+}
+
+/**
+ * Context type — the bucket a session's head hash is averaged into, and the
+ * key a context-aware entropy record is stored under.
+ *
+ * The device family crossed with whether the page is running inside a
+ * webview. Both dimensions move the DOM independently: a phone renders
+ * different markup from a desktop, and an in-app webview injects and
+ * suppresses different things again from the same device's real browser.
+ *
+ */
 export enum ContextType {
-	Default = "default",
-	Webview = "webview",
+	Desktop = "desktop",
+	DesktopWebview = "desktop-webview",
+	Mobile = "mobile",
+	MobileWebview = "mobile-webview",
+	Tablet = "tablet",
+	TabletWebview = "tablet-webview",
 }
 
 // Zod schema for context type
 export const ContextTypeSchema = z.nativeEnum(ContextType);
 
-// Individual context configuration
-export const ContextConfigSchema = z.object({
-	type: ContextTypeSchema,
-	threshold: number()
-		.min(Number((contextAwareThresholdDefault - 0.2).toFixed(2)))
-		.max(Number((contextAwareThresholdDefault + 0.2).toFixed(2)))
-		.optional()
-		.default(contextAwareThresholdDefault),
-});
+/** Every device-type context, in a stable order. */
+export const deviceContextTypes = [
+	ContextType.Desktop,
+	ContextType.DesktopWebview,
+	ContextType.Mobile,
+	ContextType.MobileWebview,
+	ContextType.Tablet,
+	ContextType.TabletWebview,
+] as const;
 
-export type IContextConfig = z.infer<typeof ContextConfigSchema>;
+const contextTypeByDevice: Record<
+	DeviceType,
+	{ browser: ContextType; webview: ContextType }
+> = {
+	[DeviceType.Desktop]: {
+		browser: ContextType.Desktop,
+		webview: ContextType.DesktopWebview,
+	},
+	[DeviceType.Mobile]: {
+		browser: ContextType.Mobile,
+		webview: ContextType.MobileWebview,
+	},
+	[DeviceType.Tablet]: {
+		browser: ContextType.Tablet,
+		webview: ContextType.TabletWebview,
+	},
+};
 
-const ContextsSchema = z.record(
-	z.enum([ContextType.Default, ContextType.Webview]),
-	ContextConfigSchema,
-);
+/** The context a (device family, webview) pair belongs to. */
+export const contextTypeFor = (
+	deviceType: DeviceType,
+	webView: boolean,
+): ContextType =>
+	webView
+		? contextTypeByDevice[deviceType].webview
+		: contextTypeByDevice[deviceType].browser;
 
-export type IContexts = z.infer<typeof ContextsSchema>;
+// Tablets are tested before phones because both tablet shapes collide with
+// the phone patterns: an iPad's UA carries a `Mobile/<build>` token, and an
+// Android tablet is exactly "Android without Mobile", which the bare
+// "Android" phone signal would otherwise claim.
+//
+// Known gap: an iPadOS 13+ Safari in its default desktop mode identifies as a
+// Mac, with no iPad token at all, and lands in Desktop. Nothing in a UA
+// distinguishes it from a real Mac, so it is left there deliberately — both
+// the decision machine and the sweep make the same call, which is what
+// matters for the lookup to line up.
+const TABLET_PATTERN =
+	/\b(iPad|Tablet|PlayBook|Silk)\b|Android(?!.*\bMobile\b)/i;
+const MOBILE_PATTERN =
+	/\b(Mobi|Mobile|iPhone|iPod|Windows Phone|IEMobile|BlackBerry|BB10|Opera Mini)\b/i;
 
-const ContextAwareSchema = object({
-	enabled: boolean().optional().default(false),
-	contexts: ContextsSchema,
-});
+/**
+ * Classify a raw user-agent string into a device family.
+ *
+ * Deliberately hand-rolled rather than delegating to ua-parser-js: this
+ * module is imported by the browser widget bundles, and the entropy sweep on
+ * the server has to bucket sessions *identically* or it writes baselines the
+ * decision machine will never look up. One shared function with no runtime
+ * dependency is what keeps the two sides in lockstep.
+ *
+ * An absent or unrecognised UA is Desktop — the largest population, and the
+ * conservative landing spot for a bucket we can't identify.
+ *
+ * Note this reads a claimed UA. A spoofed one buckets the session by the
+ * claim, which is fine here: the head hash is compared against the baseline
+ * for whatever the client says it is, so a desktop harness claiming to be a
+ * phone is measured against real phones and stands out rather than blending
+ * into desktop traffic.
+ */
+export const deviceTypeFromUserAgent = (userAgent?: string): DeviceType => {
+	if (!userAgent) return DeviceType.Desktop;
+	if (TABLET_PATTERN.test(userAgent)) return DeviceType.Tablet;
+	if (MOBILE_PATTERN.test(userAgent)) return DeviceType.Mobile;
+	return DeviceType.Desktop;
+};
 
-export type IContextAware = z.infer<typeof ContextAwareSchema>;
+/** The context a session belongs to, from its UA and webview flag. */
+export const contextTypeFromSession = (
+	userAgent: string | undefined,
+	webView: boolean,
+): ContextType => contextTypeFor(deviceTypeFromUserAgent(userAgent), webView);
 
 // Spam filter rules
 export const maxLocalPartDotsDefault = 2;
@@ -187,39 +699,120 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
-export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+// Abuser score at or above which the `abuser` category applies. The scale is
+// 0..1 with 0 meaning "clean", so 0 would act on any non-zero score.
+export const trafficFilterAbuserScoreThresholdDefault = 0.2;
 
-// Operators almost always want `blockDatacenter` to catch scraping/automation
-// traffic but not legitimate consumer relays that exit from datacenter IPs.
-// Entries match case-insensitively against `datacenterName`, `providerName`,
-// or `asnOrganization` — upstream populates `datacenter.datacenter` only for
-// curated named ranges, so the providerName / asnOrganization fallback is
-// needed to reach generic CDN and cloud-provider IPs.
+// Operators almost always want the datacenter category to catch
+// scraping/automation traffic but not legitimate consumer relays that exit
+// from datacenter IPs. Entries match case-insensitively against
+// `datacenterName`, `providerName`, or `asnOrganization` — upstream
+// populates `datacenter.datacenter` only for curated named ranges, so the
+// providerName / asnOrganization fallback is needed to reach generic CDN
+// and cloud-provider IPs.
 const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
 const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
 
+export enum TrafficFilterAction {
+	Block = "block",
+	Challenge = "challenge",
+}
+
+export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
+
+// Per-category policy. When `action === "challenge"`, the optional captcha
+// fields override the site-wide `ClientSettingsSchema` defaults for that
+// request (same override semantics as `AccessPolicy`). Field validators
+// are reused verbatim from the site-wide settings so bounds stay in sync.
+const TrafficCategoryActionSchema = object({
+	action: TrafficFilterActionSchema,
+	captchaType: SelectableCaptchaTypeSpec.optional(),
+	powDifficulty: powDifficultyFieldSchema.optional(),
+	solvedImagesCount: imageMaxRoundsFieldSchema.optional(),
+	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
+	// Tarpit padding for this category — see padBytesFieldSchema. Pairs with a
+	// high `powDifficulty` to make a challenge expensive in both bandwidth and
+	// CPU for traffic (e.g. `proxy`) an operator would otherwise hard-block.
+	padBytes: padBytesFieldSchema.optional(),
+	// Per-category overrides for puzzle rendering. Individual fields on
+	// the nested object are themselves optional, so a category can
+	// override, say, just `decoyCount` without restating the rest.
+	puzzle: PuzzleSettingsSchema.optional(),
+	audio: AudioSettingsSchema.optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
+	iconOrder: IconOrderSettingsSchema.optional(),
+});
+
+const MAX_TRAFFIC_CATEGORY_EXCEPTIONS = 20;
+const MAX_COUNTRY_CODES = 250;
+
+// ISO 3166-1 alpha-2, so the UK is "GB".
+const countryCodesSchema = array(
+	string()
+		.trim()
+		.length(2)
+		.transform((code) => code.toUpperCase()),
+).max(MAX_COUNTRY_CODES);
+
+// Replaces the category's action (and captcha overrides) for IPs meeting
+// every condition set on it. `inMarket` tests the IP's country against the
+// filter's `marketCountries`: true matches inside the market, false outside
+// it, and neither matches while the market is unknown. `minAbuserScore`
+// compares against the higher of the IP's own and its company's abuser
+// score, inclusive.
+export const TrafficCategoryExceptionSchema =
+	TrafficCategoryActionSchema.extend({
+		countries: countryCodesSchema.min(1).optional(),
+		inMarket: boolean().optional(),
+		minAbuserScore: number().min(0).max(1).optional(),
+	}).refine(
+		(exception) =>
+			exception.countries !== undefined ||
+			exception.inMarket !== undefined ||
+			exception.minAbuserScore !== undefined,
+		{
+			message: "An exception needs countries, inMarket or minAbuserScore",
+		},
+	);
+
+export type ITrafficCategoryException = output<
+	typeof TrafficCategoryExceptionSchema
+>;
+
+// When several `exceptions` match an IP the harshest wins (a block beats any
+// challenge, then by captcha severity); an IP matching none gets the
+// category's own action.
+export const TrafficCategoryPolicySchema = TrafficCategoryActionSchema.extend({
+	exceptions: array(TrafficCategoryExceptionSchema)
+		.max(MAX_TRAFFIC_CATEGORY_EXCEPTIONS)
+		.optional(),
+});
+
+export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
+
 export const TrafficFilterSchema = object({
-	blockVpn: boolean().optional().default(false),
-	blockProxy: boolean().optional().default(false),
-	blockTor: boolean().optional().default(false),
-	blockAbuser: boolean().optional().default(true),
+	vpn: TrafficCategoryPolicySchema.optional(),
+	proxy: TrafficCategoryPolicySchema.optional(),
+	tor: TrafficCategoryPolicySchema.optional(),
+	abuser: TrafficCategoryPolicySchema.optional(),
 	abuserScoreThreshold: number()
 		.min(0)
 		.max(1)
 		.optional()
 		.default(trafficFilterAbuserScoreThresholdDefault),
-	blockDatacenter: boolean().optional().default(false),
+	datacenter: TrafficCategoryPolicySchema.optional(),
 	datacenterNameAllowlist: array(
 		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
 	)
 		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
 		.optional(),
 	// Counterpart to `datacenterNameAllowlist`: any entry here forces the
-	// datacenter block for a matching name, overriding both the
+	// datacenter rule for a matching name, overriding both the
 	// `providerType === "isp"` bypass and any allowlist entry for the same
 	// name. Useful for named providers that upstream classifies as ISP but
 	// operators want treated as datacenter (for example IP-leasing platforms
-	// whose ranges sit on carrier ASNs but exit as proxy pools). Same
+	// whose ranges sit on carrier ASNs but exit as proxy pools), or for
+	// iCloud Private Relay, which the provider exempts by default. Same
 	// case-insensitive, whitespace-trimmed matching as the allowlist and the
 	// same three name sources (`datacenterName`, `providerName`,
 	// `asnOrganization`).
@@ -235,9 +828,13 @@ export const TrafficFilterSchema = object({
 	// datacenter or high-abuser) trip the rule despite the visitor being
 	// a real user on a real network.
 	skipExtrasOnValidDnsPath: boolean().optional().default(true),
-	blockMobile: boolean().optional().default(false),
-	blockSatellite: boolean().optional().default(false),
-	blockCrawler: boolean().optional().default(false),
+	mobile: TrafficCategoryPolicySchema.optional(),
+	satellite: TrafficCategoryPolicySchema.optional(),
+	crawler: TrafficCategoryPolicySchema.optional(),
+	// The account's market, which the portal copies in when it pushes the site
+	// to providers. Account-owned: values saved from the site settings form
+	// are overwritten on the next push.
+	marketCountries: countryCodesSchema.optional(),
 });
 
 export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
@@ -267,7 +864,7 @@ export const HoneypotSettingsSchema = object({
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
 export const ClientSettingsSchema = object({
-	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
+	captchaType: SelectableCaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
 	// Maximum ms between user submission and the dapp's /verify call.
 	verifiedTimeout: number()
@@ -286,27 +883,37 @@ export const ClientSettingsSchema = object({
 		.max(600000)
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
-	frictionlessThreshold: number()
-		.min(0)
-		.max(1)
-		.optional()
-		.default(frictionlessThresholdDefault),
-	powDifficulty: number()
-		.positive()
-		.min(1)
-		.max(10)
+	// The score ladder. Was a bare number meaning "above this, image captcha";
+	// now an object carrying both rungs so the flow can put the middle band on
+	// a puzzle. A legacy number is lifted into the puzzle rung on parse.
+	frictionlessThreshold: FrictionlessThresholdSchema.optional().default(
+		frictionlessThresholdDefault,
+	),
+	// Which challenge types the ladder may actually serve. Independent of the
+	// rungs above: the rungs say where the score boundaries sit, this says
+	// which outcomes are permitted at all.
+	frictionlessTypes: FrictionlessTypesSchema.optional().default(
+		frictionlessTypesDefault,
+	),
+	captchaTypeFeatureFlags: CaptchaTypeFeatureFlagsSchema.optional(),
+	widgetFeatureFlags: WidgetFeatureFlagsSchema.optional(),
+	powDifficulty: powDifficultyFieldSchema
 		.optional()
 		.default(powDifficultyDefault),
-	imageThreshold: number()
-		.min(0)
-		.max(1)
+	imageThreshold: imageThresholdFieldSchema
 		.optional()
 		.default(imageThresholdDefault),
-	imageMaxRounds: number()
-		.int()
-		.min(2)
+	imageMaxRounds: imageMaxRoundsFieldSchema
 		.optional()
 		.default(imageMaxRoundsDefault),
+	// Floor on the same count. Every round-count source in the provider —
+	// access-policy rules, traffic-filter categories, routing machines, the
+	// staleness curve — is clamped into [imageMinRounds, imageMaxRounds], so
+	// this pair is how a site overrides its rules rather than the other way
+	// round. See `clampImageRounds`.
+	imageMinRounds: imageMinRoundsFieldSchema
+		.optional()
+		.default(imageMinRoundsDefault),
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
@@ -316,19 +923,36 @@ export const ClientSettingsSchema = object({
 	// canvas diagonal (~360 px on a 300×200 canvas) so end-to-end tests
 	// can raise it high enough that a scripted release anywhere on the
 	// canvas passes. Real sites should never need more than a few tens.
-	puzzleTolerance: number()
-		.int()
-		.min(5)
-		.max(1000)
+	puzzleTolerance: puzzleToleranceFieldSchema
 		.optional()
 		.default(puzzleToleranceDefault),
+	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels —
+	// the puzzle counterpart to `imageMaxRounds`. Set to 0 to pin the site to
+	// its own `puzzle` / `puzzleTolerance` settings on every challenge; the
+	// ladder otherwise replaces all of them whenever a session escalates.
+	puzzleMaxDifficulty: puzzleMaxDifficultyFieldSchema
+		.optional()
+		.default(puzzleMaxDifficultyDefault),
+	// Site-wide puzzle render settings. Fields not set here fall back to
+	// the asset package's defaults. Traffic-filter category policies may
+	// further override any of these on a per-request basis.
+	puzzle: PuzzleSettingsSchema.optional(),
+	audio: AudioSettingsSchema.optional(),
+	// Offers audio as an accessibility alternative from the visual widgets;
+	// the only route to it, since audio is not a selectable type. Off when
+	// absent: the audio path is English-only, so a site has to opt in. Also
+	// needs `captchaTypeFeatureFlags.audio`, which only Prosopo can set.
+	audioAccessibilityEnabled: boolean().optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema
+		.optional()
+		.default(iconOrderToleranceDefault),
+	iconOrder: IconOrderSettingsSchema.optional(),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	// The trailing `.optional()` that used to sit after `.default(false)` made
 	// the default unreachable, so this parsed to `undefined` rather than
 	// `false`. Both are falsy, so no consumer changed behaviour, but the
 	// declared output type said `boolean` while the value was missing.
 	disallowWebView: boolean().optional().default(false),
-	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
 	trafficFilter: TrafficFilterSchema.optional(),
@@ -338,8 +962,97 @@ export const ClientSettingsSchema = object({
 	// whether the submitted emails are mostly spam).
 	storeMetadata: boolean().optional(),
 	honeypot: HoneypotSettingsSchema.optional(),
+	// Web Bot Auth (RFC 9421) verified-agent pass-through. When true, a
+	// request that carries a valid Ed25519 signature and matches no
+	// operator-authored Block/Restrict rule on its Signature-Agent URL
+	// gets an `authenticated` session — no captcha, no interaction. When
+	// false (default), verified agents are still identified on the userScope
+	// so per-agent access rules can act on them, but they follow the normal
+	// challenge flow like everyone else. Opt-in because the whole
+	// authenticated flow issues bearer tokens that skip the puzzle-solve
+	// cost, and the site operator should make that trust decision
+	// explicitly rather than get it as a default.
+	allowAgents: boolean().optional(),
+	assetOrigin: string().url().optional(),
+	clientUrl: string()
+		.regex(/^\/(?!\/)/, "clientUrl must be a root-relative path")
+		.optional(),
+}).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {
+	message: "imageMinRounds must be <= imageMaxRounds",
+	path: ["imageMinRounds"],
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
+
+// The market is account-owned, so whatever the site's own copy says is
+// replaced on the way to a provider, and dropped once the account has none.
+export const withMarketCountries = (
+	settings: IUserSettings,
+	marketCountries: ReadonlyArray<string> | undefined,
+): IUserSettings => {
+	if (!settings.trafficFilter) return settings;
+	const { marketCountries: _siteCopy, ...trafficFilter } =
+		settings.trafficFilter;
+	return {
+		...settings,
+		trafficFilter:
+			marketCountries && marketCountries.length > 0
+				? { ...trafficFilter, marketCountries: [...marketCountries] }
+				: trafficFilter,
+	};
+};
+
+/**
+ * The subset of a client record's settings that bounds how many image rounds
+ * a challenge may carry. Accepts a whole `IUserSettings` — every call site
+ * has one — but is stated narrowly so tests and rule code can pass a literal.
+ */
+export interface ImageRoundsBounds {
+	imageMinRounds?: number;
+	imageMaxRounds?: number;
+}
+
+export interface ResolvedImageRounds {
+	min: number;
+	max: number;
+}
+
+/**
+ * Resolve a client record's image-round bounds, filling in defaults for
+ * records written before either field existed.
+ *
+ * The `min <= max` invariant is enforced by `ClientSettingsSchema`, but only
+ * on write: a record stored before `imageMinRounds` existed can end up with a
+ * min above its max the moment an operator lowers the max. The cap wins in
+ * that case — a site that asked for at most N rounds never gets more.
+ */
+export const resolveImageRoundsBounds = (
+	bounds: ImageRoundsBounds,
+): ResolvedImageRounds => {
+	const max = bounds.imageMaxRounds ?? imageMaxRoundsDefault;
+	return {
+		min: Math.min(bounds.imageMinRounds ?? imageMinRoundsDefault, max),
+		max,
+	};
+};
+
+/**
+ * Clamp a requested image-round count into the site's configured bounds.
+ *
+ * This is the single place the site settings win over every other source of a
+ * round count — access-policy rules, traffic-filter categories, routing
+ * machines, and the provider's own heuristics all pass through it.
+ */
+export const clampImageRounds = (
+	requested: number,
+	bounds: ImageRoundsBounds,
+): number => {
+	const { min, max } = resolveImageRoundsBounds(bounds);
+	// A non-finite request is a bug upstream, not a signal about the user.
+	// Fall back to the floor rather than propagating NaN into the session
+	// record or handing a real user the maximum.
+	if (!Number.isFinite(requested)) return min;
+	return Math.min(Math.max(Math.round(requested), min), max);
+};
 export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
 export type IIPValidation = output<typeof IPValidationSchema>;

@@ -33,28 +33,53 @@ describe("the two themes", () => {
 	});
 
 	test("keep text readable against their own background", () => {
-		expect(lightTheme.palette.background.contrastText).toBe("#000");
-		expect(lightTheme.palette.background.default).toBe("#fff");
-		expect(darkTheme.palette.background.contrastText).toBe("#fff");
-		expect(darkTheme.palette.background.default).toBe("#303030");
+		// The dialog container takes the M3 surfaceContainerHigh role and its text
+		// the matching onSurface role. Asserting the pairing rather than the literal
+		// hex is what actually guarantees legibility: retone the scheme and the two
+		// still move together.
+		expect(lightTheme.palette.background.default).toBe(
+			lightTheme.palette.surfaceContainerHigh,
+		);
+		expect(lightTheme.palette.background.contrastText).toBe(
+			lightTheme.palette.onSurface,
+		);
+		expect(darkTheme.palette.background.default).toBe(
+			darkTheme.palette.surfaceContainerHigh,
+		);
+		expect(darkTheme.palette.background.contrastText).toBe(
+			darkTheme.palette.onSurface,
+		);
 	});
 
 	test("draw the logo in a colour that shows on their background", () => {
-		expect(lightTheme.palette.logoFill).toBe("#1d1d1b");
-		expect(darkTheme.palette.logoFill).toBe("#fff");
+		expect(lightTheme.palette.logoFill).toBe("#332C67");
+		expect(darkTheme.palette.logoFill).toBe("#cfc9e6");
 	});
 
-	test("share the brand primary and its contrast text", () => {
-		expect(darkTheme.palette.primary).toEqual(lightTheme.palette.primary);
+	test("take their primary from one ramp, lightened for dark mode", () => {
+		// M3 dark schemes shift the accent to a lighter tone of the source hue so
+		// it keeps contrast on a dark surface — sharing one primary would fail that.
+		expect(lightTheme.palette.primary.main).toBe("#4E439F"); // purple 500
+		expect(darkTheme.palette.primary.main).toBe("#8C85C1"); // purple 300
 	});
 
-	test("share the same grey ramp object", () => {
-		expect(darkTheme.palette.grey).toBe(lightTheme.palette.grey);
+	test("share one shape, type and state-layer scale", () => {
+		// These are mode-independent in M3; a divergence would mean a widget that
+		// changed geometry when the host page flipped to dark.
+		expect(darkTheme.shape).toBe(lightTheme.shape);
+		expect(darkTheme.typography).toBe(lightTheme.typography);
+		expect(darkTheme.stateLayer).toBe(lightTheme.stateLayer);
 	});
 
-	test("pick a border grey that contrasts with the background", () => {
-		expect(lightTheme.palette.border).toBe(lightTheme.palette.grey[400]);
-		expect(darkTheme.palette.border).toBe(darkTheme.palette.grey[300]);
+	test("outline containers in a tone distinct from their surface", () => {
+		// Elevation is shadowless here, so the outline is the only thing separating
+		// a container from the surface behind it.
+		expect(lightTheme.palette.border).not.toBe(
+			lightTheme.palette.background.default,
+		);
+		expect(darkTheme.palette.border).not.toBe(
+			darkTheme.palette.background.default,
+		);
 	});
 
 	test("declare their own mode", () => {
@@ -62,9 +87,11 @@ describe("the two themes", () => {
 		expect(darkTheme.palette.mode).toBe("dark");
 	});
 
-	test("agree on error red", () => {
-		expect(lightTheme.palette.error.main).toBe("#f44336");
-		expect(darkTheme.palette.error.main).toBe(lightTheme.palette.error.main);
+	test("use the M3 error role for each mode", () => {
+		// M3 pairs a deep error red on light with a light one on dark, rather than
+		// carrying a single red across both.
+		expect(lightTheme.palette.error.main).toBe("#b3261e");
+		expect(darkTheme.palette.error.main).toBe("#f2b8b5");
 	});
 });
 

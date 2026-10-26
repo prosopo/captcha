@@ -13,11 +13,10 @@
 // limitations under the License.
 
 import { createPrivateKey } from "node:crypto";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
-	type ContextType,
 	type DecisionMachineCaptchaType,
 	type DecisionMachineKind,
 	type DecisionMachineLanguage,
@@ -28,7 +27,7 @@ import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
-	Tier,
+	type Tier,
 	type UserCommitment,
 } from "@prosopo/types";
 import type {
@@ -36,10 +35,13 @@ import type {
 	IProviderDatabase,
 	SessionRecord,
 } from "@prosopo/types-database";
-import { majorityAverage, parseUrl } from "@prosopo/util";
+import { parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
+import {
+	invalidateAllDecisionMachineArtifactCaches,
+	invalidateDecisionMachineScriptCache,
+} from "../decisionMachine/decisionMachineRunner.js";
 
-const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
@@ -52,6 +54,34 @@ const isValidPrivateKey = (privateKeyString: string) => {
 	} catch (error) {
 		return false;
 	}
+};
+
+/**
+ * Matches `text` against a pattern where `*` matches any run of characters.
+ * Greedy two-pointer match, retrying from the last `*` on mismatch, so time
+ * is bounded by pattern length times text length.
+ */
+export const matchesGlob = (pattern: string, text: string): boolean => {
+	let p = 0;
+	let t = 0;
+	let starP = -1;
+	let starT = 0;
+	while (t < text.length) {
+		if (p < pattern.length && pattern[p] === "*") {
+			starP = p++;
+			starT = t;
+		} else if (p < pattern.length && pattern[p] === text[t]) {
+			p++;
+			t++;
+		} else if (starP !== -1) {
+			p = starP + 1;
+			t = ++starT;
+		} else {
+			return false;
+		}
+	}
+	while (p < pattern.length && pattern[p] === "*") p++;
+	return p === pattern.length;
 };
 
 export class ClientTaskManager {
@@ -120,10 +150,10 @@ export class ClientTaskManager {
 			let processedCommitments = 0;
 
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
+				async (afterId?: unknown) =>
 					await this.providerDB.getUnstoredDappUserCommitments(
 						BATCH_SIZE,
-						skip,
+						afterId,
 					),
 				async (batch) => {
 					const filteredBatch = (
@@ -149,15 +179,16 @@ export class ClientTaskManager {
 					}
 					processedCommitments += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			// Process PoW records with cursor
 			let processedPowRecords = 0;
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
+				async (afterId?: unknown) =>
 					await this.providerDB.getUnstoredDappUserPoWCommitments(
 						BATCH_SIZE,
-						skip,
+						afterId,
 					),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
@@ -173,13 +204,14 @@ export class ClientTaskManager {
 					}
 					processedPowRecords += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			// process session records with cursor
 			let processedSessionRecords = 0;
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
-					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, skip),
+				async (afterId?: unknown) =>
+					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, afterId),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
@@ -194,6 +226,7 @@ export class ClientTaskManager {
 					}
 					processedSessionRecords += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			await this.providerDB.updateScheduledTaskStatus(
@@ -284,97 +317,15 @@ export class ClientTaskManager {
 				},
 			);
 		} catch (e: unknown) {
-			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
-				context: { error: e },
-				logger: this.logger,
+			const getClientListError = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "PROV-51",
+				message: "Unknown database error",
+				cause: e,
 			});
 			this.logger.error(() => ({
 				err: getClientListError,
 				msg: "Error getting client list",
-			}));
-			await this.providerDB.updateScheduledTaskStatus(
-				taskID,
-				ScheduledTaskStatus.Failed,
-				{ error: String(e) },
-			);
-		}
-	}
-
-	/**
-	 * @description Calculate client entropy scores and update in db
-	 * @returns Promise<void>
-	 */
-	async calculateClientEntropy(): Promise<void> {
-		const taskID = await this.providerDB.createScheduledTaskStatus(
-			ScheduledTaskNames.SetClientEntropy,
-			ScheduledTaskStatus.Running,
-		);
-
-		try {
-			let clients = await this.providerDB.getAllClientRecords();
-
-			clients = clients.filter((client) => client.tier !== Tier.Free);
-
-			this.logger.info(() => ({
-				msg: `Calculating entropies for ${clients.length} clients`,
-			}));
-
-			for (const client of clients) {
-				// Calculate context-specific entropy if client has context awareness enabled
-				if (client.settings?.contextAware?.enabled) {
-					// Get context types from client settings
-					const contextTypes = Object.keys(
-						client.settings.contextAware.contexts ?? {},
-					) as ContextType[];
-
-					for (const contextType of contextTypes) {
-						const contextSamples = await this.providerDB.sampleContextEntropy(
-							SAMPLE_SIZE,
-							client.account,
-							contextType,
-						);
-
-						if (contextSamples.length < SAMPLE_SIZE) {
-							this.logger.info(() => ({
-								msg: `Skipping ${contextType} entropy calculation for client ${client.account} due to insufficient samples (${contextSamples.length}/${SAMPLE_SIZE})`,
-							}));
-							continue;
-						}
-
-						const contextAvgEntropy = majorityAverage(contextSamples);
-
-						this.logger.info(() => ({
-							msg: `Calculated ${contextType} entropy for client ${client.account}: ${contextAvgEntropy}`,
-						}));
-
-						await this.providerDB.setClientContextEntropy(
-							client.account,
-							contextType,
-							contextAvgEntropy,
-						);
-					}
-				}
-			}
-			await this.providerDB.updateScheduledTaskStatus(
-				taskID,
-				ScheduledTaskStatus.Completed,
-				{
-					data: {
-						clientRecords: clients.length,
-					},
-				},
-			);
-		} catch (e: unknown) {
-			const calculateClientEntropiesError = new ProsopoApiError(
-				"DATABASE.UNKNOWN",
-				{
-					context: { error: e },
-					logger: this.logger,
-				},
-			);
-			this.logger.error(() => ({
-				err: calculateClientEntropiesError,
-				msg: "Error calculating client entropy",
 			}));
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -445,9 +396,11 @@ export class ClientTaskManager {
 		updatedAt: string;
 	}> {
 		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-52",
+				message: "BadRequest",
 				context: { scope, dappAccount },
-				logger: this.logger,
 			});
 		}
 
@@ -465,6 +418,15 @@ export class ClientTaskManager {
 			createdAt: now,
 			updatedAt: now,
 		});
+
+		// Flush both DM caches so the new artifact + source take effect on the
+		// next request instead of waiting for TTL. Script cache is content-
+		// addressed (a new source gets a new key) so `clear()` is defensive
+		// against a source that reuses a prior SHA; the artifact cache is
+		// keyed by (scope, kind, dappAccount) so a same-key overwrite would
+		// otherwise return stale for up to 5 minutes.
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 
 		return {
 			scope,
@@ -523,9 +485,11 @@ export class ClientTaskManager {
 	}> {
 		const artifact = await this.providerDB.getDecisionMachineArtifactById(id);
 		if (!artifact) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-53",
+				message: "BadRequest",
 				context: { id },
-				logger: this.logger,
 			});
 		}
 		return {
@@ -550,11 +514,15 @@ export class ClientTaskManager {
 	}> {
 		const success = await this.providerDB.removeDecisionMachineArtifact(id);
 		if (!success) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-54",
+				message: "BadRequest",
 				context: { id, message: "Decision machine not found" },
-				logger: this.logger,
 			});
 		}
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success,
 			deletedId: id,
@@ -567,6 +535,8 @@ export class ClientTaskManager {
 	}> {
 		const deletedCount =
 			await this.providerDB.removeAllDecisionMachineArtifacts();
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success: true,
 			deletedCount,
@@ -600,13 +570,10 @@ export class ClientTaskManager {
 				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
 			}
 
-			// General glob pattern: convert * to .*
+			// General glob pattern. Matched without a regex: patterns are
+			// customer-controlled and `.*` runs backtrack exponentially.
 			if (pattern.includes("*")) {
-				const escaped = pattern
-					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
-					.replace(/\*/g, ".*");
-				const regex = new RegExp(`^${escaped}$`, "i");
-				return regex.test(referrerHost);
+				return matchesGlob(pattern, referrerHost.toLowerCase());
 			}
 
 			// Exact or subdomain match for plain domains
@@ -634,17 +601,31 @@ export class ClientTaskManager {
 		);
 	}
 
+	/**
+	 * Drive a keyset-paginated sweep. Each iteration passes the `_id` of the
+	 * previous batch's last row to `fetchBatch` so the query resumes from
+	 * `_id > afterId` — see `getUnstoredDappUserCommitments` for why we
+	 * moved off `skip(N)`. `getLastId` extracts the resumption cursor from
+	 * a batch row; both `PoWCaptchaRecord` and `UserCommitmentRecord` are
+	 * `mongoose.Document` subtypes so `_id` is always present at runtime
+	 * even though our stored types don't spell it out.
+	 */
 	private async processBatchesWithCursor<T>(
-		fetchBatch: (skip: number) => Promise<T[]>,
+		fetchBatch: (afterId?: unknown) => Promise<T[]>,
 		processBatch: (batch: T[]) => Promise<void>,
+		getLastId: (row: T) => unknown,
 	): Promise<void> {
-		let skip = 0;
+		let afterId: unknown | undefined;
 		while (true) {
-			const batch = await fetchBatch(skip);
+			const batch = await fetchBatch(afterId);
 			if (!batch.length) break;
 
 			await processBatch(batch);
-			skip += batch.length;
+			const last = batch[batch.length - 1];
+			if (last === undefined) break;
+			const nextId = getLastId(last);
+			if (nextId === undefined) break;
+			afterId = nextId;
 		}
 	}
 }

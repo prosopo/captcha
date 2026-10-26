@@ -24,20 +24,28 @@ import {
 	nativeEnum,
 	number,
 	object,
+	record,
 	string,
 	tuple,
 	union,
+	unknown as unknownType,
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType } from "../client/settings.js";
+import type {
+	ContextType,
+	IIconOrderSettings,
+	IPuzzleSettings,
+} from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaSolutionSchema,
 	CaptchaStatus,
+	type InputMethod,
+	InputMethodSchema,
 	type PoWCaptchaUser,
 	type PoWChallengeId,
 	PowChallengeIdSchema,
@@ -48,8 +56,18 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { PuzzleEvent, RequestHeaders } from "./api.js";
-import type { SimdReadings } from "./detection.js";
+import type {
+	AudioEvent,
+	IconClick,
+	IconOrderEvent,
+	PuzzleEvent,
+	RequestHeaders,
+} from "./api.js";
+import type { DetectorData, SimdReadings } from "./detection.js";
+import {
+	type MatchedAccessRule,
+	MatchedAccessRuleSchema,
+} from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
 
 export interface BrowserInfo {
@@ -133,6 +151,7 @@ export interface BehavioralDataPacked {
 	c1: unknown[];
 	c2: unknown[];
 	c3: unknown[];
+	c4?: unknown[];
 	d: string;
 }
 
@@ -155,6 +174,12 @@ export interface StoredCaptchaMetadata {
 // signal channel for the honeypot (and any future widget-side traps).
 export interface ClientMetaData {
 	hp?: string;
+	// The site-owner session id the widget was rendered with (`data-sessionid`
+	// / `renderOptions.sessionId`). Named `clientSessionId` rather than
+	// `sessionId` because the record already carries a top-level `sessionId`
+	// for the provider's own frictionless session — these are different
+	// things and both appear on the same document.
+	clientSessionId?: string;
 }
 
 /**
@@ -208,6 +233,14 @@ export interface StoredCaptcha {
 	// index instead of $or'ing `{storedAtTimestamp:{$exists:false}}` with an
 	// unindexable $expr branch.
 	pendingStage?: boolean;
+	// True when this record represents a blocked request rather than a
+	// legitimate user failure of the challenge. Mirrors `Session.blocked`
+	// so either collection can be queried with the same filter — see
+	// `isBlockingCaptchaResult` for the classification rule (PoW: any
+	// Disapproved is a block; image/puzzle: server-side rejection only,
+	// not CAPTCHA_INVALID_SOLUTION). Written by the canonical result
+	// writers in the DB layer alongside `result`.
+	blocked?: boolean;
 	sessionId?: string;
 	coords?: [number, number][][];
 	// Legacy fields - kept for backward compatibility with existing data
@@ -238,6 +271,9 @@ export interface UserCommitment extends StoredCaptcha {
 	requestHash: string;
 	threshold: number;
 	deadlineTimestamp: Date;
+	// Same shape as `coords`: how each of those selections was made. Absent on
+	// commitments from widgets that do not report it.
+	inputMethods?: InputMethod[][];
 }
 
 // Runtime parsing stays permissive (`string().optional()`) because decision
@@ -259,6 +295,7 @@ const BehavioralDataPackedSchema = object({
 	c1: array(any()),
 	c2: array(any()),
 	c3: array(any()),
+	c4: array(any()).optional(),
 	d: string(),
 });
 
@@ -269,6 +306,7 @@ export const StoredCaptchaMetadataSchema = object({
 
 export const ClientMetaDataDbSchema = object({
 	hp: string().optional(),
+	clientSessionId: string().optional(),
 }) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
 
 export const UserCommitmentSchema = object({
@@ -303,6 +341,7 @@ export const UserCommitmentSchema = object({
 	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
 	coords: array(array(tuple([number(), number()]))).optional(),
+	inputMethods: array(array(InputMethodSchema)).optional(),
 	// Pending request fields for image captcha workflow
 	pending: boolean(),
 	salt: string(),
@@ -364,6 +403,19 @@ export const SimdReadingsSchema = union([
 	}),
 ]);
 
+// Whatever the detector reported, left unvalidated on purpose: the point of
+// the bag is that no schema here knows what is in it.
+//
+// Values keep their own types all the way through — a boolean is stored as a
+// boolean and a number as a number, because the bag travels as JSON and is
+// persisted as a Mongo subdocument, both of which are typed. Only the keys are
+// strings, in the sense that object keys always are.
+//
+// The caps that make it safe to persist are applied on ingress by the
+// provider's `sanitiseDetectorData` — not here, since this schema also has to
+// parse records that were stored before any given cap existed.
+export const DetectorDataSchema = record(string(), unknownType());
+
 // Stage at which the catcher's SIMD readings first reached the provider.
 // Tracked once on the Session record (first hop wins) so analytics can see
 // when in the user's journey the CPU fingerprint became available.
@@ -419,6 +471,9 @@ export const SessionSchema = object({
 	// to the origin for fields the escalation doesn't carry itself
 	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
 	originSessionId: string().optional(),
+	refreshOf: string().optional(),
+	refreshCount: number().optional(),
+	refreshedAfterMs: number().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
@@ -450,6 +505,8 @@ export const SessionSchema = object({
 	ruleHash: string().optional(),
 	ruleType: string().array().optional(),
 	ruleDescription: string().optional(),
+	// See Session.matchedRule.
+	matchedRule: MatchedAccessRuleSchema.optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -475,10 +532,9 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
-	entropyMathRandomFingerprint: string().optional(),
-	entropyCryptoFingerprint: string().optional(),
-	entropyWallClockOffsetMs: number().optional(),
-	entropyMathRandomFirst: number().optional(),
+	// Everything the detector reported beyond the fields above. See
+	// Session.d.
+	d: DetectorDataSchema.optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -488,12 +544,53 @@ export const SessionSchema = object({
 	// write.
 	tcpToChelloUs: number().optional(),
 	chelloToHandshakeUs: number().optional(),
+	// Raw per-connection TCP-handshake signals forwarded by chaddy from
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
+	// (RFC-793 / RFC-9293) — kernel nanosecond timestamps of SYN /
+	// SYN-ACK / ACK, the SYN's TTL byte, and its TCP options. Deliberately
+	// stored raw with no derived latency / hop-count / stack-hash fields
+	// so consumers are free to compute any equivalent metric at query
+	// time. Undefined on sessions that came in without the tcp-probe
+	// pipeline (pre-rollout traffic, dev, or requests through a
+	// non-chaddy front).
+	synNs: number().optional(),
+	synackNs: number().optional(),
+	ackNs: number().optional(),
+	observedTtl: number().min(0).max(255).optional(),
+	tcpMss: number().min(0).max(65535).optional(),
+	tcpWscale: number().min(0).max(255).optional(),
+	tcpWindow: number().min(0).max(65535).optional(),
+	// Whole-SYN fields from the 104-byte probe record
+	// (prosopo/Protect#1167). `tcpOptsKinds` holds the IANA kind number of
+	// each TCP option in wire order, decoded from the probe's packed u64 —
+	// that value reaches 2^64 and a JS number is exact only to 2^53, so the
+	// packed form could not be stored without losing the low bytes, which
+	// are the kinds themselves.
+	tcpOptsKinds: array(number().min(0).max(255)).max(8).optional(),
+	tcpOptsPresent: number().min(0).max(65535).optional(),
+	tcpOptsCount: number().min(0).max(255).optional(),
+	tcpTsval: number().min(0).max(4_294_967_295).optional(),
+	tcpTsecr: number().min(0).max(4_294_967_295).optional(),
+	tcpFlags: number().min(0).max(255).optional(),
+	tcpDataOffsetResv: number().min(0).max(255).optional(),
+	tcpUrgPtr: number().min(0).max(65535).optional(),
+	ipIdent: number().min(0).max(65535).optional(),
+	ipTotalLen: number().min(0).max(65535).optional(),
+	ipFragFlags: number().min(0).max(65535).optional(),
+	ipTos: number().min(0).max(255).optional(),
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Still written on
+	// sessions served by a chaddy older than prosopo/chaddy#16, and kept
+	// because historical rows hold them and routing rules read them.
+	tcpOptsFlags: number().min(0).max(255).optional(),
+	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
 		pathValid: boolean().optional(),
 		receivedAt: date(),
 	}).optional(),
+	// See Session.clientMetaData.
+	clientMetaData: ClientMetaDataDbSchema.optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -509,6 +606,22 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Puzzle-only render overrides chosen by the routing machine, persisted
+	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
+	// re-derives its overrides from a live trafficFilter verdict, which a
+	// machine-chosen puzzle has no counterpart for. Same semantics as the
+	// trafficFilter challenge-policy fields of the same names.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
+	/**
+	 * Difficulty ladder index `puzzleTolerance` and `puzzle` were sampled from.
+	 * Carried only so the challenge record can report it; nothing reads it to
+	 * make a decision, and a router that set the overrides directly leaves it
+	 * unset.
+	 */
+	puzzleLevel?: number;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -523,6 +636,13 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
+	// Set when this session was minted because the user pressed refresh on
+	// the challenge of `refreshOf`. `refreshCount` is how many refreshes in a
+	// row led here, and `refreshedAfterMs` how long the replaced session had
+	// been alive when the user gave up on it. Absent on every other session.
+	refreshOf?: string;
+	refreshCount?: number;
+	refreshedAfterMs?: number;
 	decryptedHeadHash: string;
 	// The provider-assigned detector pool bundle this session's detector ran
 	// from, promoted off the short-lived detectorSessionId→bundleId Redis
@@ -556,6 +676,13 @@ export type Session = {
 	ruleHash?: string; // == the redis-key suffix of the matched rule
 	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
 	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
+	// The full matched rule, denormalised at enforcement time. Unlike the three
+	// fields above it is written by EVERY access-policy path — the request-time
+	// block middleware, the frictionless entry (block and restrict alike), and
+	// the verify-time hard-block check — so the audit page can name the exact
+	// policy that acted on a request rather than just echoing its description.
+	// See MatchedAccessRule for why the rule is copied rather than joined.
+	matchedRule?: MatchedAccessRule;
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
@@ -567,20 +694,66 @@ export type Session = {
 	};
 	userSubmitted?: boolean;
 	serverChecked?: boolean;
+	// True on sessions issued because the request was Web Bot Auth verified
+	// (captchaType === CaptchaType.authenticated). Boolean shortcut for the
+	// Traffic view's "pre-verified pass" filter; the full signer URL lives
+	// on `webBotAuthAgent`.
+	agent?: boolean;
+	// Canonical Signature-Agent URL (e.g. "https://chatgpt.com") captured
+	// from the verified Ed25519 signature at issuance. Read at
+	// `/verify` time to enforce IP binding: `ipAddress` on the session
+	// must equal the `ip` the operator forwards on the verify call, so a
+	// leaked authenticated token can't be replayed from a different IP.
+	webBotAuthAgent?: string;
 	// WASM SIMD CPU fingerprint readings forwarded by the catcher client.
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
-	entropyMathRandomFingerprint?: string;
-	entropyCryptoFingerprint?: string;
-	entropyWallClockOffsetMs?: number;
-	entropyMathRandomFirst?: number;
+	// Everything the detector reported that the provider does not itself
+	// branch on, carried verbatim from the client and handed to decision and
+	// routing machines as `input.d`.
+	//
+	// Signals live here rather than as named columns so that adding, removing
+	// or reshaping one is a detector-side change alone: no `types` release, no
+	// `provider` release, no migration, and no risk of a signal being dropped
+	// by one of the several hand-maintained field lists it used to have to
+	// pass through. Keys are assigned by the detector; nothing in this repo
+	// enumerates them.
+	d?: DetectorData;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a
 	// proxy chain before reaching Caddy.
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Raw per-connection TCP-handshake signals — see SessionSchema block
+	// above. Wire primitives from the tcp-probe eBPF sidecar; consumers
+	// derive whatever timing / hop / stack fingerprints they want at
+	// query time from these fields.
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpWindow?: number;
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Still written on
+	// sessions served by a chaddy older than prosopo/chaddy#16, and kept
+	// because historical rows hold them and routing rules read them.
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -602,12 +775,88 @@ export type Session = {
 		// above but don't bump this timestamp.
 		receivedAt: Date;
 	};
+	// Site-owner-supplied metadata the widget was rendered with, mirrored up
+	// from the captcha record so the session row carries it too. Today that is
+	// just `clientSessionId` (Protect's JTI or any per-user session id the site
+	// holds); it is an object rather than a flat field because more render-time
+	// metadata is expected to land here. The verify endpoints correlate the
+	// `clientSessionId` the dapp server sends against the one recorded here /
+	// on the captcha record, and reject the token when they disagree.
+	clientMetaData?: ClientMetaData;
 };
 
 // Zod schema for PoWCaptchaStored
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
 // Note: challenge uses PowChallengeIdSchema for runtime validation
 // The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
+/**
+ * The disclosed values that are fixed by the installation and the host, kept
+ * individually alongside `groupHash`, which is a hash of exactly these.
+ *
+ * `groupHash` alone is enough to group by, but it is one-way: a cohort could be
+ * counted and never described, so "which timezone is this concentrated in?"
+ * would be unanswerable after the fact. Keeping the values costs about 170
+ * bytes a record against a whole proof's ~7.8KB, and the hash stays
+ * precomputed so it can carry an index.
+ *
+ * `languages` is a nested array in the component set and is stored as canonical
+ * JSON, so it is one indexable scalar rather than an array path.
+ */
+export interface FingerprintDisclosedValuesStored {
+	timezone?: string;
+	languages?: string;
+	architecture?: number;
+	cookiesEnabled?: boolean;
+	sessionStorage?: boolean;
+	localStorage?: boolean;
+}
+
+/**
+ * What is worth keeping from a verified fingerprint proof.
+ *
+ * The proof itself is not persisted: each disclosure carries a full Merkle
+ * path, which is large and of no use once the proof has been checked.
+ *
+ *   root      the commitment to the whole component set. Both this and the
+ *             account address are functions of that one set, so one root
+ *             belongs to one address and vice versa.
+ *   groupHash a hash of the disclosed values in `disclosed`.
+ *   bucketId  the disclosed `deviceBucket` digest, an opaque hash of the device
+ *             traits that do not change between sessions. Carried through only
+ *             because its disclosure hashed to `root`, so it cannot be
+ *             presented independently of the identity the same commitment
+ *             produced. Absent for a client that did not disclose it.
+ *   colorDepth / hardwareConcurrency
+ *             disclosed values kept per record, so a cohort can be described
+ *             rather than only counted.
+ */
+export interface FingerprintSummaryStored {
+	root: string;
+	groupHash: string;
+	bucketId?: string;
+	colorDepth?: number;
+	hardwareConcurrency?: number;
+	disclosed?: FingerprintDisclosedValuesStored;
+}
+
+export const FingerprintDisclosedValuesSchema = object({
+	timezone: string().optional(),
+	languages: string().optional(),
+	architecture: number().optional(),
+	cookiesEnabled: boolean().optional(),
+	sessionStorage: boolean().optional(),
+	localStorage: boolean().optional(),
+});
+
+export const FingerprintSummarySchema = object({
+	root: string(),
+	groupHash: string(),
+	bucketId: string().optional(),
+	colorDepth: number().optional(),
+	hardwareConcurrency: number().optional(),
+	disclosed: FingerprintDisclosedValuesSchema.optional(),
+});
+
 export const PoWCaptchaStoredSchema = object({
 	// From PoWCaptchaUser (extends PoWCaptcha)
 	challenge: PowChallengeIdSchema,
@@ -645,6 +894,7 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 	// Internal ML labelling (see StoredCaptcha.label)
 	label: CaptchaLabelSchema.optional(),
 	labelReason: string().optional(),
@@ -666,20 +916,95 @@ export type PendingImageCaptchaRequest = {
 
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
-		StoredCaptcha {}
+		StoredCaptcha {
+	fingerprintSummary?: FingerprintSummaryStored;
+}
 
-export interface PuzzleCaptchaStored extends StoredCaptcha {
+/**
+ * Everything needed to reproduce a served puzzle exactly, for the portal's
+ * replay view. `tolerance`, `targetX` and `targetY` live on the record itself
+ * and are not repeated here.
+ *
+ * Written after the imagery is rendered rather than at issue, because the
+ * sampled piece size and the two seeds only exist once the render has run.
+ * Absent on records written before this field existed, and on any challenge
+ * whose render failed.
+ *
+ * `backgroundSeed` and `renderSeed` are the secrets described in
+ * puzzle-assets/src/prng.ts: they regenerate the clean background, from which
+ * the target position can be read by diffing. They must never be served to a
+ * caller, and never while the challenge is still live.
+ */
+export interface PuzzleRenderRecord {
+	/**
+	 * Difficulty ladder index the settings were sampled from. Absent when the
+	 * ladder did not pick this render — a site-configured puzzle, or a
+	 * trafficFilter category override, has no level.
+	 */
+	level?: number;
+	/** Piece bounding box in px, drawn per-challenge from the scale range. */
+	pieceSize: number;
+	geometry: { width: number; height: number; notchSize: number };
+	settings: {
+		decoyCount: number;
+		decoyEdgeDarkness: number;
+		decoyBodyBrightness: number;
+		holeDarken: number;
+		decoyHoleDarken: number;
+	};
+	/** 128-bit hex. Regenerates the clean background. */
+	backgroundSeed: string;
+	/** 128-bit hex. Drives decoy placement and the notch cut. */
+	renderSeed: string;
+}
+
+/** Fields shared by the challenge records of the on-screen captcha types. */
+export interface InteractiveCaptchaStored extends StoredCaptcha {
 	challenge: PoWChallengeId;
-	targetX: number;
-	targetY: number;
-	originX: number;
-	originY: number;
-	tolerance: number;
 	providerSignature: string;
 	userSignature?: string;
 	userAccount: string;
 	dappAccount: string;
+}
+
+export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
+	tolerance: number;
+	targetX: number;
+	targetY: number;
+	originX: number;
+	originY: number;
 	puzzleEvents?: PuzzleEvent[];
+	render?: PuzzleRenderRecord;
+}
+
+/** `answer` is the spoken transcript: the secret, never sent to a client. */
+export interface AudioCaptchaStored extends InteractiveCaptchaStored {
+	answer: string;
+	/** What the user typed, kept for audit and difficulty tuning. */
+	submittedAnswer?: string;
+	/** How many times the clip was played before submitting. */
+	replays?: number;
+	audioEvents?: AudioEvent[];
+}
+
+/**
+ * `targets` is the answer. Nothing on this record is ever sent to a client,
+ * and decoys are not stored because grading never consults them.
+ */
+export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
+	targets: StoredIconTarget[];
+	/** Hit radius as a multiple of each icon's own size. */
+	tolerance: number;
+	clicks?: IconClick[];
+	iconOrderEvents?: IconOrderEvent[];
+}
+
+/** A target icon as persisted: what grading needs, without render-only fields. */
+export interface StoredIconTarget {
+	x: number;
+	y: number;
+	size: number;
+	kind: string;
 }
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -725,15 +1050,50 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	createdAt: Date;
 	updatedAt: Date;
+};
+
+/**
+ * The baseline for one normalised URL inside a context — "what this page type
+ * is expected to look like". Head hashes vary far more between page types
+ * than between visitors, so a per-URL baseline is a much tighter comparison
+ * than the context-wide one, which has to average every page together.
+ */
+export type ClientContextEntropyUrl = {
+	/** Normalised `currentUrl`, e.g. `example.com/en/results/:id`. */
+	url: string;
+	sessions: number;
+	entropy: string;
 };
 
 export type ClientContextEntropy = {
 	account: string;
 	contextType: ContextType;
 	entropy: string;
+	/**
+	 * Per-page-type baselines, best-sampled first. Only URLs whose own sample
+	 * cleared the sweep's floors appear here, so a page type nobody visits
+	 * much is absent rather than represented by a thin average.
+	 */
+	urls?: ClientContextEntropyUrl[];
+	/**
+	 * Sessions behind this baseline, and how many distinct head hashes voted
+	 * in it.
+	 *
+	 * Kept so detectors have a measured sense of what normal volume looks
+	 * like for this site and context, instead of comparing every site against
+	 * the same absolute number. A cluster of 30 sessions is noise on a site
+	 * doing 12,000 an hour and is most of the traffic on one doing 200.
+	 */
+	totalSessions?: number;
+	distinctHashes?: number;
 	createdAt: Date;
 	updatedAt: Date;
 };

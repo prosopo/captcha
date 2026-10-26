@@ -18,12 +18,12 @@ export const WIDGET_INNER_HEIGHT = 74;
 export const WIDGET_OUTER_HEIGHT = 80;
 export const WIDGET_MIN_HEIGHT = "80px";
 export const WIDGET_MAX_WIDTH = "302px";
+/** The narrowest the widget lays out at; below this it scrolls rather than shrink. */
+export const WIDGET_MIN_WIDTH = "170px";
 export const WIDGET_DIMENSIONS = {
 	maxWidth: WIDGET_MAX_WIDTH,
 	minHeight: `${WIDGET_OUTER_HEIGHT}px`,
 };
-export const WIDGET_BORDER_RADIUS = "8px";
+export const WIDGET_BORDER_RADIUS = "16px";
 export const WIDGET_PADDING = "2px";
 export const WIDGET_BORDER = "1px solid";
-export const WIDGET_CHECKBOX_SPINNER_CSS_CLASS =
-	"prosopo-checkbox__loading-spinner";

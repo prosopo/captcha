@@ -13,34 +13,37 @@
 // limitations under the License.
 
 import type { RedisWriteQueue } from "@prosopo/database";
-import type { TranslationKey } from "@prosopo/locale";
+import type { TranslateFn, TranslationKey } from "@prosopo/locale";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
-	type CaptchaType,
+	CaptchaType,
+	type CompositeIpAddress,
 	type EnrichedDnsEvent,
 	type IPInfoResponse,
 	type ITrafficFilter,
 	type KeyringPair,
+	type OpenDetectorFormat,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
 	type Session,
 	type SimdReadingsStage,
 	Tier,
-	type UserCommitment,
+	TrafficFilterAction,
+	isCaptchaTypeFeatureEnabled,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
 	IUserDataSlim,
-	PoWCaptchaRecord,
-	PuzzleCaptchaRecord,
+	ProjectedSession,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
+	type AccessRule,
 	type AccessRulesStorage,
 	type UserScope,
 	type UserScopeRecord,
@@ -48,11 +51,17 @@ import {
 import {
 	getPrioritisedAccessRule,
 	getRequestUserScope,
+	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import {
+	isAudioAlternativeAllowed,
+	isAudioAlternativeEnabled,
+} from "./audioAlternative.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { decode } from "./detection/decoderPool.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
@@ -69,7 +78,18 @@ import {
  */
 export interface PoolBundleDecrypt {
 	key: string;
-	innerConfig: string;
+	// Absent on open-format bundles, which carry no inner layer and produce no
+	// SIMD or behavioural payloads.
+	innerConfig?: string;
+	format?: OpenDetectorFormat;
+	/**
+	 * Opaque per-bundle decode parameter from the bundle's `{id}.json`. Only
+	 * meaningful to the decoder, and only alongside the bundle it was built
+	 * with. Absent for bundles from a pool built before it existed.
+	 */
+	payloadLayout?: string;
+	/** Second opaque decode parameter, same contract as `payloadLayout`. */
+	keyMap?: string;
 }
 
 /**
@@ -94,8 +114,8 @@ export interface PoolBundleDecrypt {
  * rules — they pick which challenge type to serve, not whether to reject.
  */
 const findHardBlockPolicy = (
-	accessPolicies: AccessPolicy[],
-): AccessPolicy | undefined => {
+	accessPolicies: AccessRule[],
+): AccessRule | undefined => {
 	return accessPolicies.find((policy) => {
 		if (policy.deferToVerify === true) {
 			return true;
@@ -103,6 +123,13 @@ const findHardBlockPolicy = (
 		return policy.type === AccessPolicyType.Block && !policy.captchaType;
 	});
 };
+
+/** The fields `checkForHardBlock` reads; every captcha record has them. */
+export interface HardBlockRecordView {
+	dappAccount: string;
+	ipAddress: CompositeIpAddress;
+	ja4: string;
+}
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -176,7 +203,7 @@ export class CaptchaManager {
 	 * Read a session and, if it's an escalation missing one of the
 	 * inherently-origin-populated fields, walk to `originSessionId` and fill
 	 * the gap. Intended for the decision-machine input read path only —
-	 * `simdReadings`, `dnsEvent`, `entropyMathRandomFingerprint` etc. are
+	 * `simdReadings`, `dnsEvent` and the detector bag are
 	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
 	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
 	 * automatically end up on the escalation record because
@@ -196,7 +223,7 @@ export class CaptchaManager {
 	 */
 	public async getSessionRecordWithOriginFallback(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const session = await this.db.getSessionRecordBySessionId(sessionId);
 		if (!session) return undefined;
 		if (!session.originSessionId) return session;
@@ -205,19 +232,14 @@ export class CaptchaManager {
 			session.simdReadings === undefined || session.simdReadings === null;
 		const needsDns =
 			session.dnsEvent === undefined || session.dnsEvent === null;
-		const needsEntropyMath = session.entropyMathRandomFingerprint === undefined;
-		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
-		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
-		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
+		// An absent bag is reason enough to walk to the origin. A present one
+		// is not — but if the walk happens anyway for simd or dns, the bags
+		// are merged key by key, since the origin can have gained keys after
+		// the escalation copied it. The escalation's own keys always win.
+		const escalationData = session.d ?? {};
+		const needsData = session.d === undefined;
 
-		if (
-			!needsSimd &&
-			!needsDns &&
-			!needsEntropyMath &&
-			!needsEntropyCrypto &&
-			!needsEntropyWall &&
-			!needsEntropyFirst
-		) {
+		if (!needsSimd && !needsDns && !needsData) {
 			return session;
 		}
 
@@ -226,27 +248,93 @@ export class CaptchaManager {
 		);
 		if (!origin) return session;
 
+		const mergedData =
+			origin.d === undefined ? session.d : { ...origin.d, ...escalationData };
+
 		return {
 			...session,
 			...(needsSimd &&
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
-			...(needsEntropyMath &&
-				origin.entropyMathRandomFingerprint !== undefined && {
-					entropyMathRandomFingerprint: origin.entropyMathRandomFingerprint,
-				}),
-			...(needsEntropyCrypto &&
-				origin.entropyCryptoFingerprint !== undefined && {
-					entropyCryptoFingerprint: origin.entropyCryptoFingerprint,
-				}),
-			...(needsEntropyWall &&
-				origin.entropyWallClockOffsetMs !== undefined && {
-					entropyWallClockOffsetMs: origin.entropyWallClockOffsetMs,
-				}),
-			...(needsEntropyFirst &&
-				origin.entropyMathRandomFirst !== undefined && {
-					entropyMathRandomFirst: origin.entropyMathRandomFirst,
-				}),
+			...(mergedData !== undefined && { d: mergedData }),
+		};
+	}
+
+	/**
+	 * Decode the payloads a solution submission can carry, in one pass.
+	 *
+	 * Both decodes want the same session bundle and neither depends on the
+	 * other, so the bundle is resolved once and the two decodes run together.
+	 * Done separately they cost two bundle lookups and two serialised decoder
+	 * round trips on the submit path, which measured as a ~22-25% latency
+	 * regression on `pow/solution` and `puzzle/solution` once decoding moved
+	 * to worker threads.
+	 *
+	 * Absent or undecodable payloads come back undefined rather than throwing,
+	 * matching what the individual decoders already do: a submission is not
+	 * worth failing over a signal we could not read.
+	 */
+	public async decodeSubmissionPayloads(
+		sessionId: string | undefined,
+		payloads: { behavioural?: string; simd?: string },
+	): Promise<{
+		behavioural?: BehavioralDataResult;
+		simd?: NonNullable<Session["simdReadings"]>;
+	}> {
+		const { behavioural, simd } = payloads;
+		if (!behavioural && !simd) return {};
+
+		let bundle: PoolBundleDecrypt | undefined;
+		try {
+			bundle = await this.resolveBundleBySessionId(sessionId);
+		} catch (err) {
+			this.logger?.warn(() => ({
+				msg: "Could not resolve the detector bundle for a submission",
+				data: { sessionId },
+				err,
+			}));
+			return {};
+		}
+
+		// Caught per decode, not around the pair. Both decoders already return
+		// null for a payload they cannot read, but anything they throw for some
+		// other reason used to be contained by the caller's try/catch; running
+		// them together moved them outside it, so the tolerance has to live here.
+		// Per decode rather than around both, or one failure would discard the
+		// other's perfectly good result.
+		const tolerate = async <T>(
+			decoding: Promise<T | null | undefined> | undefined,
+			which: string,
+		): Promise<T | undefined> => {
+			if (!decoding) return undefined;
+			try {
+				return (await decoding) ?? undefined;
+			} catch (err) {
+				this.logger?.warn(() => ({
+					msg: "Failed to decode a submission payload",
+					data: { decoder: which, sessionId },
+					err,
+				}));
+				return undefined;
+			}
+		};
+
+		const [decodedBehavioural, decodedSimd] = await Promise.all([
+			tolerate(
+				behavioural
+					? this.decryptBehavioralData(behavioural, bundle)
+					: undefined,
+				"behaviour",
+			),
+			tolerate(
+				simd ? this.decryptSimdReadingsForAttach(simd, bundle) : undefined,
+				"simd",
+			),
+		]);
+
+		return {
+			...(decodedBehavioural && { behavioural: decodedBehavioural }),
+			...(decodedSimd && { simd: decodedSimd }),
 		};
 	}
 
@@ -375,6 +463,33 @@ export class CaptchaManager {
 			},
 		}));
 
+		// Ahead of the session lookup so a session minted before the type was
+		// switched off is refused rather than consumed and served. Audio also
+		// needs the site owner's switch, which is checked here for the same
+		// reason: refusing it later would spend the visual session it trades.
+		const typeEnabled =
+			requestedCaptchaType === CaptchaType.audio
+				? isAudioAlternativeEnabled(clientSettings.settings)
+				: isCaptchaTypeFeatureEnabled(
+						requestedCaptchaType,
+						clientSettings.settings?.captchaTypeFeatureFlags,
+					);
+		if (!typeEnabled) {
+			this.logger.warn(() => ({
+				msg: "Captcha type is switched off for this site",
+				data: {
+					account: clientSettings.account,
+					requestedCaptchaType,
+					sessionId,
+				},
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
+
 		// User Access Policies override default behaviour, but only for
 		// sessionless requests. When a sessionId is present the session record
 		// is authoritative for captchaType: it was minted by frictionless /
@@ -436,7 +551,7 @@ export class CaptchaManager {
 				// puzzle from postPow. Real-world widgets and dapps that
 				// don't fully wire `onEscalate` keep calling /captcha/*
 				// with the original sessionId — without this fallback they
-				// see CAPTCHA.NO_SESSION_FOUND and the user lands on the
+				// see NO_SESSION_FOUND and the user lands on the
 				// FAQ page.
 				const escalationSessionId =
 					await this.writeQueue.getCachedSessionEscalation(sessionId);
@@ -559,6 +674,28 @@ export class CaptchaManager {
 				]);
 			}
 
+			// A session is minted for one site's settings (captcha type, PoW
+			// difficulty). Honouring it for another site would let a session
+			// from a lenient site stand in for a strict one.
+			if (
+				sessionRecord.siteKey !== undefined &&
+				sessionRecord.siteKey !== clientSettings.account
+			) {
+				this.logger.warn(() => ({
+					msg: "Session was issued for a different site key",
+					data: {
+						account: clientSettings.account,
+						sessionId,
+						sessionSiteKey: sessionRecord.siteKey,
+					},
+				}));
+				return {
+					valid: false,
+					reason: ResultReason.CAPTCHA_NO_SESSION_FOUND,
+					type: requestedCaptchaType,
+				};
+			}
+
 			// Validate IP address if currentIP is provided
 			if (currentIP) {
 				const ipValidation = await this.validateSessionIP(
@@ -576,7 +713,14 @@ export class CaptchaManager {
 			}
 
 			// Check the captcha type of the session is the same as the requested captcha type
-			if (sessionRecord.captchaType !== requestedCaptchaType) {
+			if (
+				sessionRecord.captchaType !== requestedCaptchaType &&
+				!isAudioAlternativeAllowed(
+					requestedCaptchaType,
+					sessionRecord.captchaType,
+					clientSettings.settings,
+				)
+			) {
 				this.logger.warn(() => ({
 					msg: "Session captcha type does not match requested type",
 					data: {
@@ -608,6 +752,19 @@ export class CaptchaManager {
 		}
 
 		// No Session ID
+
+		// Audio is only served in exchange for a visual session.
+		if (requestedCaptchaType === CaptchaType.audio) {
+			this.logger.warn(() => ({
+				msg: "Sessionless audio captcha request rejected",
+				data: { account: clientSettings.account },
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
 
 		// Sessionless request: policy captchaType (if pinned by an active
 		// restrict rule) still takes precedence over the client's configured
@@ -660,9 +817,10 @@ export class CaptchaManager {
 	getVerificationResponse(
 		verified: boolean,
 		clientRecord: ClientRecord,
-		translateFn: (key: string) => string,
+		translateFn: TranslateFn,
 		score?: number,
 		reason?: string,
+		sessionId?: string,
 	) {
 		return {
 			status: translateFn(
@@ -677,6 +835,8 @@ export class CaptchaManager {
 				reason && {
 					[ApiParams.reason]: reason,
 				}),
+			// Not tier-gated — a log correlation handle, not a scoring signal.
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
 	}
 
@@ -684,8 +844,14 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		// Raw request headers for header-restriction rules — see
+		// getPrioritisedAccessRule for why this has no default.
+		requestHeaders: Record<string, string>,
 		options?: {
 			blockOnly?: boolean;
+			// Widen a blockOnly pool to admit deferred rules of any type
+			// — see AccessRulesFilter.includeDeferred.
+			includeDeferred?: boolean;
 			// When a caller has an Express request in scope (e.g. the
 			// verify handler), passing it here shares the per-request memo
 			// with the block middleware — a duplicate lookup within one
@@ -697,6 +863,7 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			requestHeaders,
 			options,
 		);
 	}
@@ -711,7 +878,15 @@ export class CaptchaManager {
 			? getDetectorBundlePool()?.get(bundleId)
 			: undefined;
 		return bundle
-			? { key: bundle.privateKey, innerConfig: bundle.innerConfig }
+			? {
+					key: bundle.privateKey,
+					...(bundle.innerConfig && { innerConfig: bundle.innerConfig }),
+					...(bundle.format && { format: bundle.format }),
+					...(bundle.payloadLayout && {
+						payloadLayout: bundle.payloadLayout,
+					}),
+					...(bundle.keyMap && { keyMap: bundle.keyMap }),
+				}
 			: undefined;
 	}
 
@@ -724,10 +899,42 @@ export class CaptchaManager {
 	async resolveBundleByDetectorSession(
 		detectorSessionId?: string,
 	): Promise<(PoolBundleDecrypt & { bundleId: string }) | undefined> {
-		if (!detectorSessionId || !this.writeQueue) return undefined;
+		if (!detectorSessionId || !this.writeQueue) {
+			this.logUnresolvedDetectorBundle("noDetectorSession");
+			return undefined;
+		}
 		const bundleId = await this.writeQueue.getDetectorBundle(detectorSessionId);
+		if (!bundleId) {
+			this.logUnresolvedDetectorBundle("noBinding");
+			return undefined;
+		}
 		const decrypt = this.resolveBundleById(bundleId);
-		return bundleId && decrypt ? { ...decrypt, bundleId } : undefined;
+		if (!decrypt) {
+			this.logUnresolvedDetectorBundle("bundleNotInPool", bundleId);
+			return undefined;
+		}
+		return { ...decrypt, bundleId };
+	}
+
+	/**
+	 * Returning undefined here leaves the frictionless decrypt with no keys to
+	 * try, which fails closed: the score is forced to 1 and the caller is
+	 * challenged despite nothing having been measured about it. The three causes
+	 * need different fixes — a caller that sent no detector session, a binding
+	 * that was absent or had expired (see `DETECTOR_BUNDLE_TTL_SECONDS`), and a
+	 * bundle this provider no longer holds — but they are indistinguishable
+	 * downstream, where all three surface as the same decrypt failure. Logged at
+	 * info because that is the level aggregated log search runs at, and only on
+	 * the failure path, so this costs nothing on the hot path.
+	 */
+	private logUnresolvedDetectorBundle(
+		cause: "noDetectorSession" | "noBinding" | "bundleNotInPool",
+		bundleId?: string,
+	): void {
+		this.logger?.info(() => ({
+			msg: "Detector bundle not resolved",
+			data: { cause, ...(bundleId !== undefined && { bundleId }) },
+		}));
 	}
 
 	/**
@@ -770,14 +977,13 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
-			.default;
+		if (!bundle.innerConfig) return null;
 		try {
-			return await decryptSimdReadings(
+			return await decode<SimdReadingsResult>("simd", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 		} catch (err) {
 			this.logger?.warn(() => ({
 				msg: "Failed to decrypt SIMD readings with the session's bundle",
@@ -797,21 +1003,20 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptBehavioralData = (
-			await import("./detection/decodeBehavior.js")
-		).default;
+		if (!bundle.innerConfig) return null;
 		try {
-			const result = await decryptBehavioralData(
+			const result = await decode<BehavioralDataResult>("behaviour", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 			this.logger?.info(() => ({
 				msg: "Behavioral data decrypted successfully",
 				data: {
 					c1Length: result.collector1?.length || 0,
 					c2Length: result.collector2?.length || 0,
 					c3Length: result.collector3?.length || 0,
+					c4Length: result.collector4?.length || 0,
 					deviceCapability: result.deviceCapability,
 				},
 			}));
@@ -833,22 +1038,18 @@ export class CaptchaManager {
 	 */
 	async checkForHardBlock(
 		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord | PuzzleCaptchaRecord | UserCommitment,
+		challengeRecord: HardBlockRecordView,
 		userAccount: string,
 		headers: RequestHeaders,
+		// From the session the caller has already read for its own checks.
+		headHash: string | undefined,
 		coords?: [number, number][][],
 		countryCode?: string,
 		asn?: number,
-	): Promise<AccessPolicy | undefined> {
-		// Get headHash from session record if available
-		let headHash: string | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
-			);
-			headHash = sessionRecord?.decryptedHeadHash;
-		}
-
+		// Returns the whole rule, not just its policy half: callers persist
+		// the matched rule (scope fields included) onto the record they
+		// disapprove, so the audit page can name the exact policy.
+	): Promise<AccessRule | undefined> {
 		// Serialize coords to string for querying
 		const coordsString = coords ? JSON.stringify(coords) : undefined;
 
@@ -871,11 +1072,22 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Raw headers for the in-code header-condition check. Available
+			// on the verify path too, so header rules fire there (e.g. an
+			// allow-list rule marked deferToVerify).
+			normalizeHeadersForMatching(headers),
 			// Hard-block lookup only — restrict the Redis-side candidate
-			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
-			// crowd a hard-block out of the top-N with Restrict or
-			// routing-Block (captchaType-scoped) entries.
-			{ blockOnly: true },
+			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
+			// hard-block out of the top-N with routing-Block
+			// (captchaType-scoped) or plain Restrict entries.
+			//
+			// `includeDeferred` widens that pool to
+			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
+			// is skipped at request time and enforced here, so it is a
+			// valid hard block whatever its type — findHardBlockPolicy
+			// below already accepts one (case c), but a Block-only pool
+			// meant a deferred Restrict was never fetched to be found.
+			{ blockOnly: true, includeDeferred: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);
@@ -891,19 +1103,24 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check.
+	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check
+	 * at submit time. Only `action: "block"` matches produce `isBlocked:true`;
+	 * `action: "challenge"` matches were already applied at request time and
+	 * are ignored here.
 	 *
 	 * - The captcha record already carries the IPInfoResponse from request
 	 *   time (ipInfoMiddleware → storeXxxRecord), so by default we reuse it
 	 *   instead of hitting the sidecar again.
 	 * - If the dapp's server passed up the end user's current IP via the
-	 *   verify call, look that up fresh — it's the "now" IP for filtering
-	 *   and may differ from the IP that originally requested the captcha.
+	 *   verify call, the caller looks that up fresh and passes the result as
+	 *   `currentIpInfo` — it's the "now" IP for filtering and may differ from
+	 *   the IP that originally requested the captcha.
 	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
 	 *   are enriched and passed alongside the primary IP.
-	 * - `blockAbuser` defaults to true so abusive networks are always
-	 *   blocked even when the site hasn't configured a trafficFilter.
-	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
+	 * - The abuser category defaults to `{action:"block"}` so abusive
+	 *   networks are always blocked even when the site hasn't configured a
+	 *   trafficFilter.
+	 * - Returns `{ isBlocked: false }` if no category is active, without
 	 *   consulting the payload at all.
 	 *
 	 * Callers handle the "blocked" branch themselves (each verify path
@@ -911,31 +1128,51 @@ export class CaptchaManager {
 	 * the verdict.
 	 */
 	async resolveTrafficFilterCheck(
-		env: ProviderEnvironment,
 		recordIpInfo: IPInfoResponse | undefined,
 		trafficFilter: Partial<ITrafficFilter> | undefined,
-		currentIp?: string,
+		currentIpInfo?: IPInfoResponse,
 		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
-		const effective = { blockAbuser: true, ...trafficFilter };
-		const hasAny = Object.values(effective).some((v) => v);
+		const effective: Partial<ITrafficFilter> = {
+			abuser: { action: TrafficFilterAction.Block },
+			...trafficFilter,
+		};
+		const hasAny =
+			effective.vpn !== undefined ||
+			effective.proxy !== undefined ||
+			effective.tor !== undefined ||
+			effective.abuser !== undefined ||
+			effective.datacenter !== undefined ||
+			effective.mobile !== undefined ||
+			effective.satellite !== undefined ||
+			effective.crawler !== undefined;
 		if (!hasAny) {
-			return { isBlocked: false };
+			return { isBlocked: false, matches: [] };
 		}
 
-		const ipInfo = currentIp
-			? await env.ipInfoService.lookup(currentIp)
-			: recordIpInfo;
-
 		return checkTrafficFilter(
-			ipInfo,
+			currentIpInfo ?? recordIpInfo,
 			effective,
 			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
 			enrichedDnsEvent?.pathValid,
 		);
 	}
 
-	static canClientSeeScore(tier: Tier, score?: number) {
-		return score && tier && tier !== Tier.Free;
+	/**
+	 * Does this client's tier entitle it to the bot score, and is there one?
+	 *
+	 * `score !== undefined`, not `score`: a session with nothing wrong with it
+	 * scores 0, and a truthiness test dropped the field for exactly those
+	 * users — a paying customer reading `score` got a present field for
+	 * every suspicious visitor and a missing one for their cleanest. It has
+	 * been invisible because `Math.random() * 0.3` makes an exact 0 all but
+	 * impossible; taking that noise out (see captcha-private#4433) is what
+	 * would expose it.
+	 *
+	 * Returning `boolean` rather than the old `number | boolean | undefined`,
+	 * which came from `&&`-chaining the score and the tier.
+	 */
+	static canClientSeeScore(tier: Tier, score?: number): boolean {
+		return score !== undefined && tier !== Tier.Free;
 	}
 }

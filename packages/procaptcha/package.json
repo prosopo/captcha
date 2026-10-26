@@ -1,64 +1,63 @@
 {
 	"name": "@prosopo/procaptcha",
-	"version": "2.10.63",
+	"version": "2.11.36",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
-	"main": "./dist/index.js",
+	"main": "./dist/esm/index.js",
 	"type": "module",
-	"types": "./dist/index.d.ts",
+	"types": "./dist/types/index.d.ts",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest watch --config ./vite.test.config.ts",
-		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
+		"build:types": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest watch --config ./vite.test.config.ts",
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --coverage --config ./vite.test.config.ts"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./modules/Manager": {
-			"types": "./dist/modules/Manager.d.ts",
-			"import": "./dist/modules/Manager.js",
+			"types": "./dist/types/modules/Manager.d.ts",
+			"import": "./dist/esm/modules/Manager.js",
 			"require": "./dist/cjs/modules/Manager.cjs",
-			"default": "./dist/modules/Manager.js"
+			"default": "./dist/esm/modules/Manager.js"
 		}
 	},
 	"dependencies": {
-		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "4.0.2",
-		"@prosopo/common": "3.1.49",
-		"@prosopo/datasets": "3.1.58",
-		"@prosopo/load-balancer": "2.10.19",
-		"@prosopo/procaptcha-common": "2.11.22",
-		"@prosopo/types": "5.0.2",
-		"@prosopo/util": "3.3.5",
-		"@prosopo/util-crypto": "13.5.30"
+		"@polkadot/util": "14.0.3",
+		"@prosopo/api": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/datasets": "workspace:*",
+		"@prosopo/load-balancer": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.7",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"dotenv": "16.4.5",
+		"dotenv": "18.0.7",
 		"jsdom": "26.1.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"keywords": [],
 	"repository": {

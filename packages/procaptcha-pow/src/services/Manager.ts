@@ -14,14 +14,16 @@
 
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	FINGERPRINT_DISCLOSURE_KEYS,
 	encodeFingerprintProof,
 	getFingerprintProof,
 } from "@prosopo/fingerprint";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
+	buildClientMetaData,
 	buildUpdateState,
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
@@ -33,6 +35,7 @@ import {
 	type Account,
 	ApiParams,
 	CaptchaType,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
@@ -95,6 +98,19 @@ export const Manager = (
 		resetState(frictionlessState?.restart);
 	};
 
+	// The provider rejects a solution submitted after its solution window
+	// without saying why, and a slow phone can take longer than that to solve.
+	// Report it as an expired challenge rather than a failed one, and reset so
+	// the user can tick the box again for a fresh challenge.
+	const onSolutionExpired = () => {
+		updateState({
+			isHuman: false,
+			loading: false,
+		});
+		events.onChallengeExpired();
+		resetState(frictionlessState?.restart);
+	};
+
 	const clearSuccessfulChallengeTimeout = () => {
 		// clear the timeout
 		window.clearTimeout(Number(state.successfullChallengeTimeout));
@@ -119,7 +135,9 @@ export const Manager = (
 
 	const getAccount = () => {
 		if (!state.account) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "POW-1",
 				context: { error: "Account not loaded" },
 			});
 		}
@@ -129,7 +147,7 @@ export const Manager = (
 
 	const getDappAccount = () => {
 		if (!state.dappAccount) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "POW-2" });
 		}
 
 		const dappAccount: string = state.dappAccount;
@@ -154,6 +172,7 @@ export const Manager = (
 	const setValidChallengeTimeout = () => {
 		const timeMillis: number = getConfig().captchas.pow.solutionTimeout;
 		const successfullChallengeTimeout = setTimeout(() => {
+			if (disposed) return;
 			// Human state expired, disallow user's claim to be human
 			updateState({ isHuman: false });
 
@@ -221,7 +240,9 @@ export const Manager = (
 
 				// check if account has been provided in config (doesn't matter in web2 mode)
 				if (!config.web2 && !config.userAccountAddress) {
-					throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+					throw new ProsopoError({
+						code: "ACCOUNT_NOT_FOUND",
+						errorSite: "POW-3",
 						context: {
 							error: "Account address has not been set for web3 mode",
 						},
@@ -244,7 +265,12 @@ export const Manager = (
 				const providerUrl = getRandomProviderResponse.provider.url;
 				previousProviderUrl = providerUrl;
 
-				const providerApi = new ProviderApi(providerUrl, getDappAccount());
+				const providerApi = new ProviderApi(
+					providerUrl,
+					getDappAccount(),
+					undefined,
+					widgetLanguageHeaders(getConfig().language),
+				);
 
 				// Non-blocking check (timeoutMs=0): only attach SIMD readings if
 				// the benchmark prefetched by the catcher has already resolved.
@@ -253,6 +279,7 @@ export const Manager = (
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings(0)
 					: undefined;
+				const challengeRequestedAt = Date.now();
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
@@ -263,10 +290,7 @@ export const Manager = (
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: {
-							message: challenge.error.message,
-							key: challenge.error.key || "API.UNKNOWN_ERROR",
-						},
+						error: challenge.error,
 					});
 				} else {
 					const solution = await solvePoWParallel(
@@ -289,7 +313,10 @@ export const Manager = (
 					const signer = user.extension?.signer;
 
 					if (!signer || !signer.signRaw) {
-						throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+						throw new ProsopoError({
+							code: "CONFIG_INVALID",
+							errorSite: "POW-4",
+							message: "Can't find the keyringpair for {{address}}",
 							context: {
 								error:
 									"Signer is not defined, cannot sign message to prove account ownership",
@@ -310,7 +337,8 @@ export const Manager = (
 						frictionlessState?.encryptBehavioralData &&
 						(frictionlessState?.behaviorCollector1 ||
 							frictionlessState?.behaviorCollector2 ||
-							frictionlessState?.behaviorCollector3)
+							frictionlessState?.behaviorCollector3 ||
+							frictionlessState?.behaviorCollector4)
 					) {
 						try {
 							const behavioralData = {
@@ -320,6 +348,8 @@ export const Manager = (
 									frictionlessState.behaviorCollector2?.getData() || [],
 								collector3:
 									frictionlessState.behaviorCollector3?.getData() || [],
+								collector4:
+									frictionlessState.behaviorCollector4?.getData() || [],
 								deviceCapability:
 									frictionlessState.deviceCapability || "unknown",
 							};
@@ -341,8 +371,10 @@ export const Manager = (
 					// Wait 5 secs for ongoing SIMD, else submit without
 					const simdReadings =
 						await getSimdReadingsForSubmit(frictionlessState);
-					const hpValue = getHoneypotValue?.();
-					const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+					const clientMetaData = buildClientMetaData(
+						getHoneypotValue?.(),
+						getConfig().clientSessionId,
+					);
 					// Best-effort proof of fingerprint; submission proceeds without it
 					// if a proof can't be produced (e.g. fingerprint unavailable).
 					// Only the validator-checked keys are disclosed to keep the
@@ -379,6 +411,7 @@ export const Manager = (
 						clientMetaData,
 						fingerprintProof,
 					);
+					if (disposed) return;
 					const escalation = verifiedSolution[ApiParams.escalation];
 					if (
 						escalation &&
@@ -432,6 +465,11 @@ export const Manager = (
 							}),
 						);
 						setValidChallengeTimeout();
+					} else if (
+						Date.now() - challengeRequestedAt >=
+						DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT
+					) {
+						onSolutionExpired();
 					} else {
 						onFailed();
 					}
@@ -449,8 +487,26 @@ export const Manager = (
 		);
 	};
 
+	// Set once the widget that owns this manager is torn down. A solve still in
+	// flight can land afterwards, so the timer callbacks check it as well as
+	// being cleared here.
+	let disposed = false;
+
+	/**
+	 * Stops this manager's challenge and solution-expiry timers without firing
+	 * any event. Left running after the widget is destroyed (reset(), a
+	 * restart, an SPA route change) they fired onExpired/onReset later on,
+	 * which also cleared the replacement widget's token from the form.
+	 */
+	const dispose = () => {
+		disposed = true;
+		window.clearTimeout(Number(state.timeout));
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
+	};
+
 	return {
 		start,
 		resetState,
+		dispose,
 	};
 };

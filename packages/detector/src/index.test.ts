@@ -26,10 +26,17 @@ describe("@prosopo/detector bundle contract", () => {
 		expect(typeof detect).toBe("function");
 	});
 
-	it("keeps the detect signature at five parameters", () => {
-		// env, randomProviderSelectorFn, container, restart, accountGenerator.
-		// Consumers call this positionally, so a drop here is a silent breakage.
-		expect(detect).toHaveLength(5);
+	it("keeps the detect signature at three parameters", () => {
+		// container, restart, accountGenerator — matching `DetectorType` in
+		// procaptcha-frictionless/src/detectorLoader.ts, which is the real
+		// consumer contract. Consumers call this positionally, so a drop here is
+		// a silent breakage.
+		//
+		// This asserted five until the bundle was regenerated: `env` and
+		// `randomProviderSelectorFn` were dropped when the detector moved to
+		// provider-served pool bundles, but src/index.js had not been rebuilt
+		// since, so the committed artifact still carried the pre-pool arity.
+		expect(detect).toHaveLength(3);
 	});
 
 	it("exports encryptData as a single-parameter function", () => {

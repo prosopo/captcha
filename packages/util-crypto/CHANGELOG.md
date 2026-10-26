@@ -1,5 +1,98 @@
 # @prosopo/util-crypto
 
+## 13.6.2
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 13.6.1
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 13.6.0
+### Minor Changes
+
+- ede4352: Admin tokens can now be bound to one provider and used only once. `jwtVerify` takes optional checks for the `aud` claim and for the longest allowed lifetime, and the provider's admin check uses them. A token that names an audience must name this provider: its host, `https://` plus its host, or one of the values in `PROSOPO_ADMIN_JWT_AUDIENCE`. A token that carries a `jti` is accepted once per provider process. Tokens may live at most one hour (`PROSOPO_ADMIN_JWT_MAX_LIFETIME_SECONDS`).
+  
+  Migration: tokens without `aud` or `jti` are still accepted, so current callers keep working. Callers should add both, for example `pair.jwtIssue({ expiresIn }, { aud: provider.url, jti: randomUUID() })`, minting one token per provider and per request. Callers that reuse one token for several requests to the same provider must mint a new one per request before they add `jti`. Once every caller sends `aud`, set `PROSOPO_ADMIN_JWT_REQUIRE_AUDIENCE=true` to refuse tokens without it.
+
+### Patch Changes
+
+- b017dfb: `sr25519jwtIssue` now writes the standard claims (`sub`, `iat`, `nbf`, `exp`) after any extra message fields, so a message can no longer replace them. Before, a message carrying `exp` or `nbf` could extend a token's lifetime or switch off its not-before check.
+- 97a799e: `jwtVerify` now only accepts tokens whose header says `"alg": "sr25519"`, which is what `sr25519jwtIssue` writes. Before, the header was never checked, so a signed token claiming `none`, `HS256` or anything else was still accepted. The signature is also now checked as a plain sr25519 signature over `header.payload`. Before, it also accepted a signature over the `<Bytes>`-wrapped text (the form a wallet produces when it signs a message) and a 65-byte signature with a crypto-type prefix byte. Tokens issued by `jwtIssue` are unaffected. A signature of the wrong length now returns an invalid result instead of throwing.
+- 9fc1e8a: `jwtVerify` is now strict about the time claims in a token. `nbf` (not before) must be a number if it is present; before, a string, `true`, `null` or an object was silently ignored, so a token could skip its not-before check. `exp`, `iat` and `nbf` must also be finite, so an `exp` of `1e400` (which JSON reads as Infinity) no longer makes a token that never expires. A payload that is not a JSON object, or a `sub` that is not a string, now returns an invalid result instead of throwing. Tokens issued by `jwtIssue` are unaffected.
+
+## 13.5.33
+### Patch Changes
+
+- a9141c3: Ship one copy of each crypto library in the widget instead of two or three.
+  
+  The bundle contained three separate copies of `@noble/hashes` and two of `@polkadot/util`, because different packages asked for different major versions and npm installed each one in its own folder. Same code, bundled repeatedly. The widget's eager payload drops by about 6KB gzipped.
+  
+  Two stale version pins caused it:
+  
+  - `@prosopo/util-crypto` asked for `@noble/hashes` 1.8.0 while its own dependencies `@noble/curves` and `@scure/sr25519` asked for 2.4.0, so npm installed both majors. Everything is now on 2.4.0. The v2 import paths changed (`@noble/hashes/sha256` is now `@noble/hashes/sha2.js`, `blake2b` is `blake2.js`); the functions themselves are unchanged.
+  - `@prosopo/util-crypto` asked for `@polkadot/x-randomvalues` 13.5.7, which in turn demands exactly `@polkadot/util` 13.5.7. Every other package in the repo asks for 14.0.3, so npm put the old one in the shared folder and gave each package its own private copy of the new one. Bumping that single pin to 14.0.3 leaves one shared copy. As a side effect `@prosopo/util-crypto` now gets the `@scure/base` 2.4.0 it always asked for, rather than the 1.2.6 it was silently given.
+  
+  `@prosopo/keyring` no longer depends on `@polkadot/util-crypto`. It was used for one type, which `@prosopo/util-crypto` already exports.
+  
+  The repo root now names the versions the workspace standardises on (`@noble/hashes`, `@noble/curves`, `@scure/base`, `@scure/sr25519`), which is what keeps npm putting them in the shared folder. Older majors are still installed for the Polkadot web3 packages that require them; those load only in web3 mode and are unaffected.
+  
+  Covered by the existing test suites for each package, all passing unchanged.
+
+## 13.5.32
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+
+## 13.5.31
+### Patch Changes
+
+- 1b77849: chore(deps): bump @scure/sr25519 from 0.2.0 to 2.4.0
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+
 ## 13.5.30
 ### Patch Changes
 

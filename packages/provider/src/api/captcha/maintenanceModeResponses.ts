@@ -13,17 +13,26 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
+import type { TranslateFn } from "@prosopo/locale";
 import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaType,
+	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaResponse,
+	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaResponse,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type VerificationResponse,
 } from "@prosopo/types";
+import {
+	renderAudioClip,
+	resolveAudioRenderSettings,
+} from "../../tasks/audio/audioRenderer.js";
+import { renderIconOrderImages } from "../../tasks/iconOrder/iconOrderRenderer.js";
+import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
 // short-circuit to `verified: true`, so these responses just need to be
@@ -60,7 +69,7 @@ export const MAINTENANCE_VERIFY_SCORE = 0;
 // `reason` is failure-only and maintenance always passes, so it never applies.
 // `commitmentId` (image) is deliberately absent — no commitment exists to name.
 export const buildMaintenanceVerificationResponse = (
-	translate: (key: string) => string,
+	translate: TranslateFn,
 ): VerificationResponse => ({
 	[ApiParams.status]: translate("API.USER_VERIFIED"),
 	[ApiParams.verified]: true,
@@ -68,7 +77,11 @@ export const buildMaintenanceVerificationResponse = (
 });
 
 export const buildFrictionlessMaintenanceResponse = (
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle,
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
 	[ApiParams.captchaType]: captchaType,
@@ -107,22 +120,65 @@ export const buildImageMaintenanceResponse = (): CaptchaResponseBody => ({
 	},
 });
 
-// Tolerance is intentionally generous: the widget uses it client-side to
-// decide whether the drop counts as "complete". Submit doesn't validate
-// in maintenance mode, so any drop should resolve cleanly.
-export const buildPuzzleMaintenanceResponse = (
+// Rendered for real, because the widget now needs imagery to show anything at
+// all — there are no coordinates left to fake a challenge out of. Generation is
+// in-process and needs no database, so it works fine while Mongo is away, and
+// /submit/puzzle doesn't validate in maintenance mode so any drop resolves.
+export const buildPuzzleMaintenanceResponse = async (
 	user: string,
 	dapp: string,
-): GetPuzzleCaptchaResponse => {
+): Promise<GetPuzzleCaptchaResponse> => {
 	const timestamp = Date.now();
+	const images = await renderPuzzleImages({ targetX: 200, targetY: 100 });
 	return {
 		[ApiParams.status]: "ok",
 		[ApiParams.challenge]: buildChallenge(user, dapp),
-		[ApiParams.targetX]: 100,
-		[ApiParams.targetY]: 100,
-		[ApiParams.originX]: 0,
-		[ApiParams.originY]: 0,
-		[ApiParams.tolerance]: 1000,
+		[ApiParams.background]: images.background,
+		[ApiParams.piece]: images.piece,
+		[ApiParams.pieceSize]: images.pieceSize,
+		[ApiParams.originX]: 60,
+		[ApiParams.originY]: 100,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// A real clip so the widget plays normally; the answer is discarded because
+// maintenance mode accepts every submission.
+export const buildAudioMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetAudioCaptchaResponse> => {
+	const timestamp = Date.now();
+	const rendered = renderAudioClip(resolveAudioRenderSettings());
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.clip]: rendered.clip,
+		[ApiParams.characterCount]: rendered.characterCount,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// Rendered for real, like the puzzle response above. The targets are
+// discarded: nothing is graded in maintenance mode.
+export const buildIconOrderMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetIconOrderCaptchaResponse> => {
+	const timestamp = Date.now();
+	const images = await renderIconOrderImages();
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.background]: images.background,
+		[ApiParams.legend]: images.legend,
+		[ApiParams.legendIconSize]: images.legendIconSize,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

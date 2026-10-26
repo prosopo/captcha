@@ -14,9 +14,11 @@
 
 import {
 	CaptchaType,
+	MAX_PAD_BYTES,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	Tier,
+	TrafficFilterAction,
 	captchaTypeDefault,
 	domainsDefault,
 	powDifficultyDefault,
@@ -37,6 +39,7 @@ import {
 	ClientRecordSchema,
 	CompositeIpAddressRecordSchemaObj,
 	PoWCaptchaRecordSchema,
+	PuzzleCaptchaRecordSchema,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
 	SessionRecordSchema,
@@ -96,7 +99,7 @@ describe("BannedDomainRecordSchema", () => {
 		// made mongoose warn about a duplicate on every process start.
 		expect(BannedDomainRecordSchema.path("domain").options.unique).toBe(true);
 		expect(indexesOf(BannedDomainRecordSchema)).toEqual([
-			[{ domain: 1 }, { unique: true, background: true }],
+			[{ domain: 1 }, { unique: true }],
 		]);
 	});
 
@@ -391,6 +394,57 @@ describe("PoWCaptchaRecordSchema", () => {
 			partialFilterExpression: { pendingStage: true },
 		});
 	});
+
+	// `strict: true` drops undeclared paths without complaining, so a field
+	// missing from the schema is written by the provider and never stored.
+	// These assert the whole fingerprint summary survives the schema.
+	it("keeps every field of a fingerprint summary", () => {
+		const summary = {
+			root: "0xroot",
+			groupHash: "0xgroup",
+			bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+			colorDepth: 24,
+			hardwareConcurrency: 8,
+			disclosed: {
+				timezone: "Europe/London",
+				languages: '[["en-GB"]]',
+				architecture: 127,
+				cookiesEnabled: true,
+				sessionStorage: true,
+				localStorage: false,
+			},
+		};
+
+		const doc = validate(PoWCaptchaRecordSchema, {
+			challenge: "0x1___100000___5Gx___5Gy",
+			dappAccount: "5Gx",
+			userAccount: "5Gy",
+			fingerprintSummary: summary,
+		});
+
+		expect(doc.validateSync()?.errors.fingerprintSummary).toBeUndefined();
+		expect(doc.toObject().fingerprintSummary).toStrictEqual(summary);
+	});
+
+	it("stores a summary that disclosed no bucket", () => {
+		const doc = validate(PoWCaptchaRecordSchema, {
+			challenge: "0x1___100000___5Gx___5Gy",
+			dappAccount: "5Gx",
+			userAccount: "5Gy",
+			fingerprintSummary: { root: "0xroot", groupHash: "0xgroup" },
+		});
+
+		expect(doc.toObject().fingerprintSummary).toStrictEqual({
+			root: "0xroot",
+			groupHash: "0xgroup",
+		});
+	});
+
+	it("leaves the fingerprint summary optional, since not every client proves one", () => {
+		expect(
+			PoWCaptchaRecordSchema.path("fingerprintSummary").isRequired,
+		).toBeFalsy();
+	});
 });
 
 describe("SessionRecordSchema", () => {
@@ -444,6 +498,17 @@ describe("UserSettingsSchema", () => {
 		expect([...doc.domains]).toEqual(domainsDefault);
 	});
 
+	it("keeps allowAgents, assetOrigin and clientUrl on write", () => {
+		const doc = settings({
+			allowAgents: true,
+			assetOrigin: "https://example.com",
+			clientUrl: "/robots.txt",
+		});
+		expect(doc.allowAgents).toBe(true);
+		expect(doc.assetOrigin).toBe("https://example.com");
+		expect(doc.clientUrl).toBe("/robots.txt");
+	});
+
 	it("rejects a captcha type outside the enum", () => {
 		expect(
 			errorPaths(settings({ captchaType: "sudoku" }).validateSync()),
@@ -453,11 +518,11 @@ describe("UserSettingsSchema", () => {
 		).toBeUndefined();
 	});
 
-	it("defaults the traffic filter to blocking abusers only", () => {
+	it("leaves every traffic-filter category unconfigured by default (submit-time abuser default is applied by resolveTrafficFilterCheck)", () => {
 		const doc = settings();
-		expect(doc.trafficFilter.blockAbuser).toBe(true);
-		expect(doc.trafficFilter.blockVpn).toBe(false);
-		expect(doc.trafficFilter.blockTor).toBe(false);
+		expect(doc.trafficFilter.vpn).toBeUndefined();
+		expect(doc.trafficFilter.tor).toBeUndefined();
+		expect(doc.trafficFilter.abuser).toBeUndefined();
 		expect(doc.trafficFilter.skipExtrasOnValidDnsPath).toBe(true);
 	});
 
@@ -511,14 +576,6 @@ describe("UserSettingsSchema", () => {
 		expect([...doc.spamFilter.emailRules.customRegexBlocklist]).toEqual([]);
 	});
 
-	it("seeds the context-aware thresholds for both contexts", () => {
-		const doc = settings();
-		expect(Object.keys(doc.contextAware.contexts).sort()).toEqual(
-			Object.keys(doc.contextAware.contexts).sort(),
-		);
-		expect(doc.contextAware.enabled).toBe(false);
-	});
-
 	it("leaves the ip validation rules unset unless configured", () => {
 		expect(settings().ipValidationRules).toBeUndefined();
 	});
@@ -538,6 +595,192 @@ describe("UserSettingsSchema", () => {
 				}).validateSync(),
 			),
 		).toEqual(["ipValidationRules.distanceThresholdKm"]);
+	});
+
+	// Same failure mode as `frictionlessTypes`: mongoose is strict by
+	// default, so a field the portal saves but this schema never declares is
+	// dropped on write and the operator sees their settings silently revert.
+	it("persists every puzzle render override", () => {
+		const doc = settings({
+			puzzle: {
+				decoyCount: 12,
+				decoyEdgeDarkness: 30,
+				decoyBodyBrightness: -6,
+				decoyHoleDarken: 0.8,
+				holeDarken: 0.4,
+				pieceScale: { min: 0.2, max: 0.35 },
+			},
+		});
+		expect(doc.puzzle.decoyCount).toBe(12);
+		expect(doc.puzzle.decoyEdgeDarkness).toBe(30);
+		expect(doc.puzzle.decoyBodyBrightness).toBe(-6);
+		expect(doc.puzzle.decoyHoleDarken).toBe(0.8);
+		expect(doc.puzzle.holeDarken).toBe(0.4);
+		expect(doc.puzzle.pieceScale.min).toBe(0.2);
+		expect(doc.puzzle.pieceScale.max).toBe(0.35);
+	});
+
+	it("persists the captcha type feature flags", () => {
+		const flags = settings({
+			captchaTypeFeatureFlags: { puzzle: false, iconOrder: true, audio: true },
+		}).captchaTypeFeatureFlags;
+		expect(flags.puzzle).toBe(false);
+		expect(flags.iconOrder).toBe(true);
+		expect(flags.audio).toBe(true);
+	});
+
+	it("leaves the captcha type feature flags unset unless configured", () => {
+		// Absent means "use captchaTypeFeatureFlagDefaults"; a stored default
+		// would pin today's default into every site.
+		expect(settings().captchaTypeFeatureFlags).toBeUndefined();
+		expect(
+			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags.puzzle,
+		).toBeUndefined();
+		expect(
+			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags
+				.iconOrder,
+		).toBeUndefined();
+	});
+
+	it("persists the widget feature flags", () => {
+		expect(
+			settings({ widgetFeatureFlags: { puzzleImageSwitch: true } })
+				.widgetFeatureFlags.puzzleImageSwitch,
+		).toBe(true);
+	});
+
+	it("leaves the widget feature flags unset unless configured", () => {
+		expect(settings().widgetFeatureFlags).toBeUndefined();
+		expect(
+			settings({ widgetFeatureFlags: {} }).widgetFeatureFlags.puzzleImageSwitch,
+		).toBeUndefined();
+	});
+
+	it("leaves the puzzle overrides unset unless configured", () => {
+		// Absent means "use the provider defaults" — a defaulted empty
+		// subdocument would write a `puzzle` block onto every site.
+		expect(settings().puzzle).toBeUndefined();
+	});
+
+	it("persists a partial puzzle override without filling in the rest", () => {
+		// Every field is independently optional: the provider merges what is
+		// set on top of its own defaults, so a one-field override must not
+		// drag the other five into the record.
+		const doc = settings({ puzzle: { decoyCount: 0 } });
+		expect(doc.puzzle.decoyCount).toBe(0);
+		expect(doc.puzzle.holeDarken).toBeUndefined();
+		expect(doc.puzzle.pieceScale).toBeUndefined();
+	});
+
+	it("persists puzzle overrides on a traffic filter category", () => {
+		const doc = settings({
+			trafficFilter: {
+				vpn: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.puzzle,
+					puzzleTolerance: 8,
+					puzzle: { decoyCount: 40, pieceScale: { min: 0.1, max: 0.2 } },
+				},
+			},
+		});
+		expect(doc.trafficFilter.vpn.puzzleTolerance).toBe(8);
+		expect(doc.trafficFilter.vpn.puzzle.decoyCount).toBe(40);
+		expect(doc.trafficFilter.vpn.puzzle.pieceScale.max).toBe(0.2);
+	});
+
+	it("persists exceptions on a traffic filter category", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					exceptions: [
+						{
+							countries: ["GB"],
+							minAbuserScore: 0.5,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+			},
+		});
+		const [exception] = doc.trafficFilter.proxy.exceptions;
+		expect([...exception.countries]).toEqual(["GB"]);
+		expect(exception.minAbuserScore).toBe(0.5);
+		expect(exception.action).toBe(TrafficFilterAction.Block);
+	});
+
+	it("leaves exceptions absent when none are configured", () => {
+		const doc = settings({
+			trafficFilter: { proxy: { action: TrafficFilterAction.Block } },
+		});
+		expect(doc.trafficFilter.proxy.exceptions).toBeUndefined();
+	});
+
+	it("rejects an exception abuser score outside the unit interval", () => {
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: {
+							action: TrafficFilterAction.Challenge,
+							exceptions: [
+								{ minAbuserScore: 2, action: TrafficFilterAction.Block },
+							],
+						},
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.exceptions.0.minAbuserScore"]);
+	});
+
+	it("persists the tarpit padBytes on a challenge category", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.pow,
+					powDifficulty: 9,
+					padBytes: 2048,
+				},
+			},
+		});
+		expect(doc.trafficFilter.proxy.padBytes).toBe(2048);
+	});
+
+	it("persists the tarpit padBytes on a blocked category", () => {
+		// A blocked category still hands out a deferred challenge at request
+		// time, so it carries padding too — and `policyToApi` in the portal
+		// sends `padBytes` alongside `action: block` with nothing else.
+		const doc = settings({
+			trafficFilter: {
+				proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+			},
+		});
+		expect(doc.trafficFilter.proxy.padBytes).toBe(1_048_576);
+	});
+
+	it("rejects a padBytes above the 5 MiB cap", () => {
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: {
+							action: TrafficFilterAction.Block,
+							padBytes: MAX_PAD_BYTES + 1,
+						},
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.padBytes"]);
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: { action: TrafficFilterAction.Block, padBytes: -1 },
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.padBytes"]);
 	});
 });
 
@@ -572,5 +815,60 @@ describe("the stored-event schemas", () => {
 		// sessionId index to one must not add it to the other.
 		expect(StoredPoWCaptchaRecordSchema).not.toBe(PoWCaptchaRecordSchema);
 		expect(hasIndexOn(PoWCaptchaRecordSchema, "sessionId")).toBe(false);
+	});
+});
+
+describe("the puzzle render record", () => {
+	const render = {
+		level: 2,
+		pieceSize: 47,
+		geometry: { width: 300, height: 200, notchSize: 44 },
+		settings: {
+			decoyCount: 7,
+			decoyEdgeDarkness: 31,
+			decoyBodyBrightness: 4,
+			holeDarken: 0.55,
+			decoyHoleDarken: 0.71,
+		},
+		backgroundSeed: "00112233445566778899aabbccddeeff",
+		renderSeed: "ffeeddccbbaa99887766554433221100",
+	};
+
+	// Schemas are strict, so a field the schema does not declare is dropped on
+	// write without an error. Asserting each value survives is the only way to
+	// catch a sub-field that was added to the type but not to the schema —
+	// which would silently store nothing and make a replay impossible.
+	it("survives a strict-mode write on both the provider and stored schemas", () => {
+		for (const schema of [
+			PuzzleCaptchaRecordSchema,
+			StoredPuzzleCaptchaRecordSchema,
+		]) {
+			const doc = validate(schema, { render });
+			expect(doc.render.level).toBe(render.level);
+			expect(doc.render.pieceSize).toBe(render.pieceSize);
+			expect(doc.render.geometry.width).toBe(render.geometry.width);
+			expect(doc.render.geometry.height).toBe(render.geometry.height);
+			expect(doc.render.geometry.notchSize).toBe(render.geometry.notchSize);
+			for (const key of Object.keys(render.settings)) {
+				expect(doc.render.settings[key]).toBe(
+					render.settings[key as keyof typeof render.settings],
+				);
+			}
+			expect(doc.render.backgroundSeed).toBe(render.backgroundSeed);
+			expect(doc.render.renderSeed).toBe(render.renderSeed);
+		}
+	});
+
+	it("is optional, so records written before it existed still validate", () => {
+		const doc = validate(PuzzleCaptchaRecordSchema, {});
+		expect(doc.render).toBeUndefined();
+		expect(errorPaths(doc.validateSync() ?? null)).not.toContain("render");
+	});
+
+	// The ladder sets these together; a projection that drops the level leaves
+	// the challenge record unable to report which band it came from.
+	it("keeps puzzleLevel on the session schema and its projection", () => {
+		const session = validate(SessionRecordSchema, { puzzleLevel: 3 });
+		expect(session.puzzleLevel).toBe(3);
 	});
 });

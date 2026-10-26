@@ -1,5 +1,721 @@
 # @prosopo/env
 
+## 3.6.81
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/common@3.3.1
+  - @prosopo/database@4.3.0
+  - @prosopo/ipinfo@0.4.25
+  - @prosopo/keyring@2.10.12
+  - @prosopo/logger@2.1.6
+  - @prosopo/types-env@2.11.27
+  - @prosopo/types@5.19.0
+  - @prosopo/util-crypto@13.6.2
+
+## 3.6.80
+### Patch Changes
+
+- Updated dependencies [d02b3bc]
+- Updated dependencies [159766a]
+  - @prosopo/database@4.2.10
+  - @prosopo/types@5.18.0
+  - @prosopo/common@3.3.0
+  - @prosopo/ipinfo@0.4.24
+  - @prosopo/keyring@2.10.11
+  - @prosopo/types-env@2.11.26
+
+## 3.6.79
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.9
+  - @prosopo/ipinfo@0.4.23
+  - @prosopo/keyring@2.10.10
+  - @prosopo/types-env@2.11.25
+
+## 3.6.78
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- 860948c: Server-side verify (what siteverify calls) now does far less waiting. A PoW verify used to make about 19 database and ip-lookup calls one after another; it now makes about 6, and a rejected verify fewer. Changes:
+  
+  - The ip lookup that runs on every request is skipped on verify routes. Nothing on verify used it, and the caller there is the site's server, not the user.
+  - The session record is read once instead of twice, and the client record once instead of twice.
+  - DNS enrichment and the user's ip lookup run alongside the access-rule check instead of after it. The ip lookup is skipped once a check has already failed.
+  - The verify answers without waiting for its two bookkeeping writes, unless 500 are already waiting, so a slow database cannot pile them up in memory. The single-use claim is still made before anything else, so a token still verifies only once.
+  - Decision-machine artifacts are cached per process. They were cached per request, so every verify read them from Mongo. Saving or deleting a machine clears the cache.
+  - Client records are cached for 30 seconds and the cache is cleared by every client-record write in the process.
+  - Successful ip lookups are cached for 10 minutes, so an address is not looked up twice in one verify, or again at verify after the challenge looked it up.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [860948c]
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.8
+  - @prosopo/ipinfo@0.4.22
+  - @prosopo/keyring@2.10.9
+  - @prosopo/logger@2.1.5
+  - @prosopo/types@5.17.0
+  - @prosopo/types-env@2.11.24
+  - @prosopo/util-crypto@13.6.1
+
+## 3.6.77
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/database@4.2.7
+  - @prosopo/ipinfo@0.4.21
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+  - @prosopo/types-env@2.11.23
+  - @prosopo/util-crypto@13.6.0
+
+## 3.6.76
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/database@4.2.6
+  - @prosopo/ipinfo@0.4.20
+  - @prosopo/keyring@2.10.7
+  - @prosopo/types-env@2.11.22
+
+## 3.6.75
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/database@4.2.5
+  - @prosopo/keyring@2.10.6
+  - @prosopo/ipinfo@0.4.19
+  - @prosopo/types-env@2.11.21
+
+## 3.6.74
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/database@4.2.4
+  - @prosopo/ipinfo@0.4.18
+  - @prosopo/keyring@2.10.5
+  - @prosopo/types-env@2.11.20
+
+## 3.6.73
+### Patch Changes
+
+  - @prosopo/database@4.2.3
+  - @prosopo/types-env@2.11.19
+
+## 3.6.72
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/database@4.2.2
+  - @prosopo/types@5.15.1
+  - @prosopo/common@3.1.65
+  - @prosopo/ipinfo@0.4.17
+  - @prosopo/keyring@2.10.4
+  - @prosopo/logger@2.1.4
+  - @prosopo/types-env@2.11.18
+  - @prosopo/util-crypto@13.6.0
+
+## 3.6.71
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+  - @prosopo/database@4.2.1
+  - @prosopo/ipinfo@0.4.16
+  - @prosopo/keyring@2.10.3
+  - @prosopo/types-env@2.11.17
+
+## 3.6.70
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/database@4.2.0
+  - @prosopo/keyring@2.10.2
+  - @prosopo/common@3.1.63
+  - @prosopo/ipinfo@0.4.15
+  - @prosopo/types-env@2.11.16
+
+## 3.6.69
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/common@3.1.62
+  - @prosopo/database@4.1.4
+  - @prosopo/ipinfo@0.4.14
+  - @prosopo/keyring@2.10.1
+  - @prosopo/types-env@2.11.15
+  - @prosopo/logger@2.1.3
+  - @prosopo/util-crypto@13.6.0
+
+## 3.6.68
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [f53ddb2]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/database@4.1.3
+  - @prosopo/common@3.1.61
+  - @prosopo/types-env@2.11.14
+  - @prosopo/ipinfo@0.4.13
+  - @prosopo/logger@2.1.2
+
+## 3.6.67
+### Patch Changes
+
+  - @prosopo/database@4.1.2
+  - @prosopo/types-env@2.11.13
+
+## 3.6.66
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/database@4.1.1
+  - @prosopo/ipinfo@0.4.12
+  - @prosopo/keyring@2.9.99
+  - @prosopo/types-env@2.11.12
+
+## 3.6.65
+### Patch Changes
+
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [dffecf0]
+- Updated dependencies [fa316d6]
+  - @prosopo/database@4.1.0
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/types-env@2.11.11
+  - @prosopo/ipinfo@0.4.11
+  - @prosopo/keyring@2.9.98
+  - @prosopo/logger@2.1.1
+
+## 3.6.64
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/database@4.0.41
+  - @prosopo/ipinfo@0.4.10
+  - @prosopo/keyring@2.9.97
+  - @prosopo/types-env@2.11.10
+
+## 3.6.63
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/database@4.0.40
+  - @prosopo/ipinfo@0.4.9
+  - @prosopo/keyring@2.9.96
+  - @prosopo/types-env@2.11.9
+
+## 3.6.62
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/util-crypto@13.5.33
+  - @prosopo/keyring@2.9.95
+  - @prosopo/database@4.0.39
+  - @prosopo/ipinfo@0.4.8
+  - @prosopo/types-env@2.11.8
+
+## 3.6.61
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/database@4.0.38
+  - @prosopo/keyring@2.9.94
+  - @prosopo/ipinfo@0.4.7
+  - @prosopo/types-env@2.11.7
+
+## 3.6.60
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/database@4.0.37
+  - @prosopo/common@3.1.57
+  - @prosopo/ipinfo@0.4.6
+  - @prosopo/keyring@2.9.93
+  - @prosopo/types-env@2.11.6
+
+## 3.6.59
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/database@4.0.36
+  - @prosopo/ipinfo@0.4.5
+  - @prosopo/keyring@2.9.92
+  - @prosopo/types-env@2.11.5
+
+## 3.6.58
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/database@4.0.35
+  - @prosopo/ipinfo@0.4.4
+  - @prosopo/keyring@2.9.91
+  - @prosopo/types-env@2.11.4
+
+## 3.6.57
+### Patch Changes
+
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/database@4.0.34
+  - @prosopo/keyring@2.9.90
+  - @prosopo/types@5.8.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/ipinfo@0.4.3
+  - @prosopo/logger@2.0.10
+  - @prosopo/types-env@2.11.3
+
+## 3.6.56
+### Patch Changes
+
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/database@4.0.33
+  - @prosopo/types@5.8.3
+  - @prosopo/types-env@2.11.2
+  - @prosopo/common@3.1.55
+  - @prosopo/ipinfo@0.4.2
+  - @prosopo/keyring@2.9.89
+
+## 3.6.55
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+  - @prosopo/database@4.0.32
+  - @prosopo/ipinfo@0.4.1
+  - @prosopo/keyring@2.9.88
+  - @prosopo/types-env@2.11.1
+
+## 3.6.54
+### Patch Changes
+
+- Updated dependencies [886b664]
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/ipinfo@0.4.0
+  - @prosopo/types-env@2.11.0
+  - @prosopo/types@5.8.1
+  - @prosopo/database@4.0.31
+  - @prosopo/keyring@2.9.87
+
+## 3.6.53
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/database@4.0.30
+  - @prosopo/ipinfo@0.3.25
+  - @prosopo/keyring@2.9.86
+  - @prosopo/types-env@2.10.46
+
+## 3.6.52
+### Patch Changes
+
+- Updated dependencies [8a63ea3]
+- Updated dependencies [162f591]
+  - @prosopo/database@4.0.29
+  - @prosopo/ipinfo@0.3.24
+
+## 3.6.51
+### Patch Changes
+
+- Updated dependencies [f8a41fe]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/database@4.0.28
+  - @prosopo/types@5.7.0
+  - @prosopo/common@3.1.54
+  - @prosopo/ipinfo@0.3.23
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+  - @prosopo/types-env@2.10.45
+
+## 3.6.50
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/common@3.1.53
+  - @prosopo/database@4.0.27
+  - @prosopo/ipinfo@0.3.22
+  - @prosopo/keyring@2.9.84
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+  - @prosopo/types-env@2.10.44
+
+## 3.6.49
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/database@4.0.26
+  - @prosopo/ipinfo@0.3.21
+  - @prosopo/keyring@2.9.83
+  - @prosopo/types-env@2.10.43
+
+## 3.6.48
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/database@4.0.25
+  - @prosopo/ipinfo@0.3.20
+  - @prosopo/keyring@2.9.82
+  - @prosopo/types-env@2.10.42
+
+## 3.6.47
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/database@4.0.24
+  - @prosopo/types@5.5.1
+  - @prosopo/types-env@2.10.41
+  - @prosopo/ipinfo@0.3.19
+  - @prosopo/keyring@2.9.81
+
+## 3.6.46
+### Patch Changes
+
+  - @prosopo/database@4.0.23
+  - @prosopo/types-env@2.10.40
+
+## 3.6.45
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/database@4.0.22
+  - @prosopo/types-env@2.10.39
+  - @prosopo/ipinfo@0.3.18
+  - @prosopo/keyring@2.9.80
+
+## 3.6.44
+### Patch Changes
+
+- Updated dependencies [5a17a65]
+  - @prosopo/database@4.0.21
+
+## 3.6.43
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/common@3.1.52
+  - @prosopo/database@4.0.20
+  - @prosopo/ipinfo@0.3.17
+  - @prosopo/keyring@2.9.79
+  - @prosopo/types-env@2.10.38
+
+## 3.6.42
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/database@4.0.19
+  - @prosopo/ipinfo@0.3.16
+  - @prosopo/keyring@2.9.78
+  - @prosopo/types-env@2.10.37
+
+## 3.6.41
+### Patch Changes
+
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [179a2b0]
+  - @prosopo/database@4.0.18
+  - @prosopo/types@5.2.6
+  - @prosopo/ipinfo@0.3.15
+  - @prosopo/common@3.1.51
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+  - @prosopo/types-env@2.10.36
+
+## 3.6.40
+### Patch Changes
+
+- Updated dependencies [dfc1fa6]
+  - @prosopo/database@4.0.17
+  - @prosopo/types-env@2.10.35
+
+## 3.6.39
+### Patch Changes
+
+- Updated dependencies [127985f]
+  - @prosopo/database@4.0.16
+
+## 3.6.38
+### Patch Changes
+
+- Updated dependencies [1afe466]
+  - @prosopo/database@4.0.15
+  - @prosopo/types-env@2.10.34
+
+## 3.6.37
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/database@4.0.14
+  - @prosopo/ipinfo@0.3.14
+  - @prosopo/keyring@2.9.76
+  - @prosopo/types-env@2.10.33
+
+## 3.6.36
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/database@4.0.13
+  - @prosopo/ipinfo@0.3.13
+  - @prosopo/keyring@2.9.75
+  - @prosopo/types-env@2.10.32
+
+## 3.6.35
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/database@4.0.12
+  - @prosopo/types-env@2.10.31
+  - @prosopo/ipinfo@0.3.12
+  - @prosopo/keyring@2.9.74
+
+## 3.6.34
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/database@4.0.11
+  - @prosopo/ipinfo@0.3.11
+  - @prosopo/keyring@2.9.73
+  - @prosopo/types-env@2.10.30
+
+## 3.6.33
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/database@4.0.10
+  - @prosopo/ipinfo@0.3.10
+  - @prosopo/keyring@2.9.72
+  - @prosopo/types-env@2.10.29
+
+## 3.6.32
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/database@4.0.9
+  - @prosopo/ipinfo@0.3.9
+  - @prosopo/keyring@2.9.71
+  - @prosopo/types-env@2.10.28
+
+## 3.6.31
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/database@4.0.8
+  - @prosopo/ipinfo@0.3.8
+  - @prosopo/keyring@2.9.70
+  - @prosopo/types-env@2.10.27
+
+## 3.6.30
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/database@4.0.7
+  - @prosopo/ipinfo@0.3.7
+  - @prosopo/keyring@2.9.69
+  - @prosopo/types-env@2.10.26
+
+## 3.6.29
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/database@4.0.6
+  - @prosopo/ipinfo@0.3.6
+  - @prosopo/keyring@2.9.68
+  - @prosopo/types-env@2.10.25
+
+## 3.6.28
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+  - @prosopo/database@4.0.5
+  - @prosopo/types-env@2.10.24
+  - @prosopo/ipinfo@0.3.5
+  - @prosopo/keyring@2.9.67
+
+## 3.6.27
+### Patch Changes
+
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+- Updated dependencies [16dbab0]
+- Updated dependencies [69c6982]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [063e69d]
+- Updated dependencies [4c8114d]
+  - @prosopo/types@5.0.3
+  - @prosopo/database@4.0.4
+  - @prosopo/types-env@2.10.23
+  - @prosopo/common@3.1.50
+  - @prosopo/ipinfo@0.3.4
+  - @prosopo/keyring@2.9.66
+  - @prosopo/logger@2.0.6
+
 ## 3.6.26
 ### Patch Changes
 

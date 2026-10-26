@@ -1,5 +1,172 @@
 # @prosopo/util
 
+## 3.3.17
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 3.3.16
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+
+## 3.3.15
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+
+## 3.3.14
+### Patch Changes
+
+- a17e8eb: Move the repo from npm to pnpm 11.
+  
+  - `pnpm-workspace.yaml` replaces the `workspaces` field and `.npmrc`, and `pnpm-lock.yaml` replaces `package-lock.json` (converted with `pnpm import`, so versions are unchanged).
+  - Internal `@prosopo/*` dependencies use `workspace:*`. `pnpm publish` (which `changeset publish` now runs) swaps each for the exact version, so published manifests are the same as before. Member packages no longer declare an npm engine.
+  - `@prosopo/config`'s `getDependencies` walks the installed `node_modules` tree instead of parsing `npm ls`, so bundle externals are computed the same way under any package manager.
+  - `@prosopo/workspace` exports `getWorkspacePatterns`, which builds glob patterns from the workspace's `pnpm-workspace.yaml` (keeping its exclusions); the lint commands use it instead of `package.json`'s `workspaces`.
+  - `verifyDepsBeforeRun` is off, because inside captcha-private a script run here would otherwise install captcha standalone over the parent's `node_modules`.
+  - Packages that relied on npm hoisting for types or tools now declare them.
+  - `@prosopo/util` declares the `url` package. `isMain` imports `url`, which Node serves from its built-in module and browser bundlers resolve to this package; npm used to provide it by hoisting.
+
+## 3.3.13
+### Patch Changes
+
+- de6bb08: `embedData` no longer corrupts the click coordinates it hides in a captcha salt. Positions are stored as one byte, but the values were written at the end of the salt, so once the salt passed 256 hex characters (about nine selected image tiles) the positions were cut to two hex digits and the provider read back the wrong numbers. Values are now packed below position 256, and anything that genuinely cannot fit (more than 255 values, a salt that is too short, or a value that is negative or not a finite number) throws. Fractional values, such as sub-pixel click coordinates, are rounded to the nearest integer; before, their hex digits (including the `.`) were written into the salt and read back as the wrong number instead of being silently mangled. The size check also no longer counts the `0x` prefix or ignores the count byte. The format is unchanged, so existing providers decode the output as before.
+  
+  Procaptcha now sizes each salt with room for the count byte, so a later captcha with no tiles selected still gets a salt `embedData` can write into instead of an empty one that the new size check rejects.
+- 8d7ba8c: The "constructs async with no args" test passed arguments and checked nothing, so it could not fail. It now constructs with no arguments and checks that the async constructor ran to completion and received no arguments. It fails if `anew` stops waiting for the async constructor.
+- 995e954: `at()` now does what its type signature already promised. Without `optional: true` it throws when the element it finds is `undefined` (its return type already excluded `undefined`, so callers were never checking), and it throws on a non-integer index instead of quietly returning `undefined`. The comment now describes the default wrap-around behaviour correctly.
+
+## 3.3.12
+### Patch Changes
+
+- 0d29dde: `merge` no longer lets a source object write to `Object.prototype`. A source parsed from JSON with a `__proto__` or `constructor.prototype` key used to be merged into the shared prototype of every object; those keys are now skipped or copied as plain own properties, and merging only descends into values the destination owns.
+
+## 3.3.11
+### Patch Changes
+
+- a9141c3: Ship one copy of each crypto library in the widget instead of two or three.
+  
+  The bundle contained three separate copies of `@noble/hashes` and two of `@polkadot/util`, because different packages asked for different major versions and npm installed each one in its own folder. Same code, bundled repeatedly. The widget's eager payload drops by about 6KB gzipped.
+  
+  Two stale version pins caused it:
+  
+  - `@prosopo/util-crypto` asked for `@noble/hashes` 1.8.0 while its own dependencies `@noble/curves` and `@scure/sr25519` asked for 2.4.0, so npm installed both majors. Everything is now on 2.4.0. The v2 import paths changed (`@noble/hashes/sha256` is now `@noble/hashes/sha2.js`, `blake2b` is `blake2.js`); the functions themselves are unchanged.
+  - `@prosopo/util-crypto` asked for `@polkadot/x-randomvalues` 13.5.7, which in turn demands exactly `@polkadot/util` 13.5.7. Every other package in the repo asks for 14.0.3, so npm put the old one in the shared folder and gave each package its own private copy of the new one. Bumping that single pin to 14.0.3 leaves one shared copy. As a side effect `@prosopo/util-crypto` now gets the `@scure/base` 2.4.0 it always asked for, rather than the 1.2.6 it was silently given.
+  
+  `@prosopo/keyring` no longer depends on `@polkadot/util-crypto`. It was used for one type, which `@prosopo/util-crypto` already exports.
+  
+  The repo root now names the versions the workspace standardises on (`@noble/hashes`, `@noble/curves`, `@scure/base`, `@scure/sr25519`), which is what keeps npm putting them in the shared folder. Older majors are still installed for the Polkadot web3 packages that require them; those load only in web3 mode and are unaffected.
+  
+  Covered by the existing test suites for each package, all passing unchanged.
+
+## 3.3.10
+### Patch Changes
+
+- ae121df: Type the internal hex encoding helper's input as `Uint8Array` instead of `any`.
+
+## 3.3.9
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+
+## 3.3.8
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+
+## 3.3.7
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+
+## 3.3.6
+### Patch Changes
+
+- 16dbab0: chore(deps): bump ip-address from 10.0.1 to 10.5.0
+  
+  The @angular/core and @angular/common bumps in the angular integration demo are
+  not listed here: that demo sits below the root `integration/*` workspace glob, so
+  changesets does not know it and errors on a changeset naming it.
+- d5e104b: Optimise the `solvePoW` hot loop by removing per-iteration allocations: reuse a single message buffer and rewrite only the nonce digits in place, and replace the per-candidate 256-bit comparison with an early-exit byte check.
+
 ## 3.3.5
 ### Patch Changes
 

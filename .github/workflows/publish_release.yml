@@ -14,8 +14,8 @@ on:
 permissions:
   contents: write
   packages: write
-  # Required so npm CLI can mint an OIDC token for trusted publishing.
-  # Without this, `npm publish` falls back to legacy NPM_TOKEN auth.
+  # Required so pnpm can mint an OIDC token for trusted publishing.
+  # Without this, `pnpm publish` falls back to legacy NPM_TOKEN auth.
   # See https://docs.npmjs.com/trusted-publishers
   id-token: write
 
@@ -24,21 +24,28 @@ defaults:
     shell: bash
 
 env:
+  # Dependency debuginfo dominates a dev build and nothing here steps through
+  # third-party code; incremental state is worthless on a cold CI runner.
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
   NODE_ENV: "production"
 
 jobs:
   publish:
     name: Publish Release
-    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
-    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
-    # disk. Runners advertise one label per step up to their own size, so a job
-    # only lands on a host big enough for it. Set to a JSON string -> used as
-    # given, which is how a repo opts back out to a hosted runner.
-    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
+    # other repos: this repository is public, so a fork PR would run on the
+    # self-hosted fleet -- executing arbitrary contributor code on hardware we
+    # own, where it can also persist and poison later trusted jobs. Nothing is
+    # given up by staying hosted: standard GitHub-hosted runners are free and
+    # unlimited on public repos, macOS and Windows included. Only *larger*
+    # runners are billed, so do not "upgrade" a job to one.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    runs-on: ubuntu-latest
     steps:
       - name: Get token for gh app
         id: app_token
-        uses: peter-murray/workflow-application-token-action@v5
+        uses: peter-murray/workflow-application-token-action@dad2b81e50ce3edeb5f3b7ffbd79f731368bd668 # v5
         with:
           application_id: ${{ vars.PROSOPONATOR_APP_ID }}
           application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
@@ -50,13 +57,15 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', inputs.version) || github.ref }}
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
-          cache: 'npm'
+          node-version: '24.22.1'
+          cache: 'pnpm'
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -72,19 +81,34 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
 
-      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+      - name: Preflight publishability check
+        # Runs before the install and build because it needs neither, and a
+        # release that cannot publish should fail in seconds rather than after
+        # three minutes of building artifacts nobody will ship.
+        #
+        # `changeset publish` publishes serially and cannot roll back, so a
+        # package that fails part way through leaves the release half-applied,
+        # with the earlier packages already live and immutable on the registry.
+        # This turns that into a failure before anything is published. It
+        # catches the two ways a package is unpublishable: a first publish
+        # (trusted publishing cannot bootstrap a package that does not exist
+        # yet, and the registry rejects it with a misleading auth error) and a private
+        # workspace package leaked into a published package's runtime deps.
+        run: node .github/scripts/check-publishable.mjs
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
 
       - name: Build packages
         run: |
           echo "Building all packages in production mode"
-          NODE_ENV=production npm run build:all:tsc
-          NODE_ENV=production npm run build:all
-          NODE_ENV=production npm run build:all:cjs
+          NODE_ENV=production pnpm run build:all:tsc
+          NODE_ENV=production pnpm run build:all
+          NODE_ENV=production pnpm run build:all:cjs
 
       - name: Bundle the production provider CLI
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="production" npm run -w @prosopo/cli bundle
+          NODE_ENV="production" pnpm --filter @prosopo/cli run bundle
 
       - name: Verify production build
         run: |
@@ -100,7 +124,7 @@ jobs:
           echo "✅ Build verification passed"
 
       - name: Publish to npm
-        # Trusted publishing: npm CLI auto-exchanges the GitHub OIDC token
+        # Trusted publishing: pnpm auto-exchanges the GitHub OIDC token
         # (granted via `id-token: write` above) for a short-lived registry
         # token. No NPM_TOKEN secret required. Each workspace package must
         # be registered as a trusted publisher on npmjs.com pointing at
@@ -114,34 +138,55 @@ jobs:
         # registry and only publishes packages whose local version is
         # ahead of npm.
         #
-        # NPM_CONFIG_PROVENANCE=true is the env-var form of
-        # `npm publish --provenance`; changeset publish delegates to npm
-        # CLI and inherits the flag, so each tarball gets a Sigstore
-        # attestation linking it to this workflow run. Provenance
-        # verification requires `repository.url` on every published
-        # manifest to match the OIDC claim.
+        # changeset publish runs `pnpm publish` because pnpm-lock.yaml sits at
+        # the repo root; `npm publish` would ship the literal `workspace:*`
+        # specifiers, which pnpm replaces with the real versions.
+        #
+        # PNPM_CONFIG_PROVENANCE=true is the env-var form of
+        # `pnpm publish --provenance` (pnpm 11 ignores NPM_CONFIG_*), so each
+        # tarball gets a Sigstore attestation linking it to this workflow run.
+        # Provenance verification requires `repository.url` on every
+        # published manifest to match the OIDC claim.
         env:
-          NPM_CONFIG_PROVENANCE: 'true'
+          PNPM_CONFIG_PROVENANCE: 'true'
         run: |
+          # A version npm is still running its automated review over is
+          # "staged": uploaded, not yet servable, and impossible to publish
+          # over -- every retry gets `409 Cannot publish over previously staged
+          # version`. That is a queue we wait out, not a failure to act on, and
+          # failing the job here strands everything after it: the docker image,
+          # the GitHub release and the private release PR never happen, so a
+          # release that npm will finish on its own stays undelivered.
+          #
+          # So a staged-version conflict warns and continues. Any other publish
+          # error still fails the job.
+          set -o pipefail
           echo "Publishing changed packages via @changesets/cli"
-          npx @changesets/cli publish
+          if pnpm exec changeset publish 2>&1 | tee /tmp/changeset-publish.log; then
+            exit 0
+          fi
+          if grep -q "Cannot publish over previously staged version" /tmp/changeset-publish.log; then
+            echo "::warning::npm is still validating a version uploaded by an earlier run; it goes live when that review finishes. Continuing so the rest of the release ships."
+            exit 0
+          fi
+          exit 1
 
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing production provider image to Docker Hub"
-          NODE_ENV="production" npm run -w @prosopo/cli build:docker
-          NODE_ENV="production" npm run -w @prosopo/cli publish:docker
+          NODE_ENV="production" pnpm --filter @prosopo/cli run build:docker
+          NODE_ENV="production" pnpm --filter @prosopo/cli run publish:docker
 
       - name: Bundle the staging provider CLI
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="staging" npm run -w @prosopo/cli bundle
+          NODE_ENV="staging" pnpm --filter @prosopo/cli run bundle
 
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing staging provider image to Docker Hub"
-          NODE_ENV="staging" npm run -w @prosopo/cli build:docker
-          NODE_ENV="staging" npm run -w @prosopo/cli publish:docker
+          NODE_ENV="staging" pnpm --filter @prosopo/cli run build:docker
+          NODE_ENV="staging" pnpm --filter @prosopo/cli run publish:docker
 
       - name: Create GitHub Release
         env:
@@ -150,6 +195,32 @@ jobs:
           gh release create "v${{ steps.version.outputs.version }}" \
             --title "Release v${{ steps.version.outputs.version }}" \
             --generate-notes
+
+      - name: Open the private release PR
+        # The release is not finished when this repo's packages are out: the
+        # private repo still has to move its captcha submodule to the new tag,
+        # cascade the version bumps through its own packages and repoint the
+        # ansible inventories at the new provider image. Its create_release_pr
+        # workflow does all of that, but it was dispatch-only, so it happened
+        # only when somebody remembered. v3.8.7 and v3.8.8 both shipped from
+        # here with no release PR opened there at all, and production's
+        # compose_provider_image_version was hand-edited to 3.8.7 in an
+        # unrelated PR to paper over it.
+        #
+        # Fired after the GitHub Release exists so the private side never opens
+        # a PR for a release that did not finish. Non-fatal on purpose: at this
+        # point the packages, images and release are already published, and
+        # failing here would both mark a successful release as failed and fire
+        # the failure notification below. A missed dispatch just means running
+        # create_release_pr by hand, which is where this started.
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          gh api repos/prosopo/captcha-private/dispatches \
+            --method POST \
+            --field event_type=captcha_released \
+            --field 'client_payload[version]=${{ steps.version.outputs.version }}'
 
       - name: Send success notification
         if: success()

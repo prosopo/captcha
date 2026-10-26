@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
 	pickIpMode,
+	resolveClientSessionId,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
@@ -27,6 +29,7 @@ import type {
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import {
 	DetectorLoaderFromScript,
+	type DetectorOptions,
 	type DetectorType,
 } from "./detectorLoader.js";
 import {
@@ -119,7 +122,13 @@ export const withTimeout = async <T>(
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
 		timeoutId = setTimeout(() => {
-			reject(new ProsopoEnvError("API.UNKNOWN"));
+			reject(
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "FRIC-1",
+					message: "Unknown API error",
+				}),
+			);
 		}, ms);
 	});
 
@@ -142,9 +151,11 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
+	refreshOf?: string,
+	switchToImage?: boolean,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
-		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
 	}
 
 	const ipMode = pickIpMode(config);
@@ -174,8 +185,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// same stack. Resolved up front — before detection rather than alongside it —
 	// because the detector bundle is served BY this provider.
 	// The bundle entry starts provider resolution + assign as soon as it has read
-	// the site key off the DOM, which is well before React has mounted this
-	// widget. Claim that in-flight work if it exists rather than repeating it.
+	// the site key off the DOM, which is well before this widget has mounted.
+	// Claim that in-flight work if it exists rather than repeating it.
 	// Only valid on a first attempt: a retry is retrying *because* the pinned
 	// pronode failed, so it must re-resolve.
 	const isFirstAttempt = !retryContext || retryContext.attempt <= 1;
@@ -210,6 +221,8 @@ const customDetectBot: BotDetectionFunction = async (
 	const providerApi = new ProviderApi(
 		provider.provider.url,
 		config.account.address,
+		undefined,
+		widgetLanguageHeaders(config.language),
 	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY
@@ -219,6 +232,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// timeout) we have NO detector to run and there is no bundled fallback.
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
+	let detectorOptions: DetectorOptions | undefined;
 	try {
 		// Reuse the prefetched assignment when the entry already fetched one for
 		// this provider; otherwise issue it now.
@@ -234,6 +248,10 @@ const customDetectBot: BotDetectionFunction = async (
 			// we are already holding.
 			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
+			detectorOptions = {
+				clientUrl: assigned.clientUrl,
+				assetOrigin: assigned.assetOrigin,
+			};
 		}
 	} catch (err) {
 		// No detector available — fall through to the PoW request below.
@@ -255,6 +273,12 @@ const customDetectBot: BotDetectionFunction = async (
 	const ExtClass = await extClassPromise;
 	const ext = new ExtClass();
 
+	// Sent on this hop as well as on solution submit, so a session that is
+	// allowed frictionlessly — or abandoned before a solve — still correlates
+	// back to the site's (or Protect's) session. Undefined when Protect has not
+	// finished initialising yet; the solve-time read then supplies it.
+	const clientSessionId = resolveClientSessionId(config.clientSessionId);
+
 	// No provider detector ⇒ no detection is possible, so there is nothing to
 	// send. The request goes out with an empty token and the provider decides
 	// what to serve; the client gets no say in that.
@@ -273,6 +297,9 @@ const customDetectBot: BotDetectionFunction = async (
 				undefined,
 				fallbackUrl,
 				fallbackIframeUrl,
+				clientSessionId,
+				refreshOf,
+				switchToImage,
 			),
 			10000,
 		);
@@ -297,13 +324,18 @@ const customDetectBot: BotDetectionFunction = async (
 			userAccount: userAccount,
 			error: captcha.error,
 			hp: captcha.hp,
+			agent: captcha.agent,
+			audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		};
 	}
 
 	const detect: DetectorType = providerDetect;
 
-	const detectionResult = await detect(container, restartFn, () =>
-		ext.getAccount(config),
+	const detectionResult = await detect(
+		container,
+		restartFn,
+		() => ext.getAccount(config),
+		detectorOptions,
 	);
 
 	const userAccount = detectionResult.userAccount;
@@ -325,6 +357,9 @@ const customDetectBot: BotDetectionFunction = async (
 		detectorSessionId,
 		currentUrl,
 		iframeUrl,
+		clientSessionId,
+		refreshOf,
+		switchToImage,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher
@@ -357,10 +392,13 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount: userAccount,
 		error: captcha.error,
 		hp: captcha.hp,
+		agent: captcha.agent,
+		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		// Map specific trackers to generic behavioral collectors
 		behaviorCollector1: detectionResult.mouseTracker,
 		behaviorCollector2: detectionResult.touchTracker,
 		behaviorCollector3: detectionResult.clickTracker,
+		behaviorCollector4: detectionResult.scrollTracker,
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,

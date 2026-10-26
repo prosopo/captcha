@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { fileURLToPath } from "node:url";
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { IDatabase } from "@prosopo/types-database";
 import mongoose, { type Connection } from "mongoose";
@@ -22,6 +22,15 @@ mongoose.set("strictQuery", false);
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017";
+
+/**
+ * Per-connection timeout overrides for databases that are not local to the
+ * process. Omitted fields fall back to the defaults in mongooseOptions.
+ */
+export interface MongoConnectionTimeouts {
+	connectTimeoutMS?: number;
+	serverSelectionTimeoutMS?: number;
+}
 
 /**
  * Returns a generic Mongo database layer
@@ -37,13 +46,18 @@ export class MongoDatabase implements IDatabase {
 	logger: Logger;
 	connected = false;
 	private connecting?: Promise<void>;
+	protected readonly connectTimeoutMS?: number;
+	protected readonly serverSelectionTimeoutMS?: number;
 
 	constructor(
 		url: string,
 		dbname?: string,
 		authSource?: string,
 		logger?: Logger,
+		timeouts?: MongoConnectionTimeouts,
 	) {
+		this.connectTimeoutMS = timeouts?.connectTimeoutMS;
+		this.serverSelectionTimeoutMS = timeouts?.serverSelectionTimeoutMS;
 		const baseEndpoint = url || DEFAULT_ENDPOINT;
 		const parsedUrl = new URL(baseEndpoint);
 		if (dbname) {
@@ -66,9 +80,11 @@ export class MongoDatabase implements IDatabase {
 
 	getConnection(): mongoose.Connection {
 		if (!this.connection) {
-			throw new ProsopoDBError("DATABASE.CONNECTION_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-1",
+				message: "Connection undefined",
 				context: { failedFuncName: this.getConnection.name },
-				logger: this.logger,
 			});
 		}
 		return this.connection;
@@ -110,10 +126,21 @@ export class MongoDatabase implements IDatabase {
 						dbName: this.dbname,
 						maxPoolSize: 50,
 						minPoolSize: 5,
+						connectTimeoutMS: this.connectTimeoutMS,
+						serverSelectionTimeoutMS: this.serverSelectionTimeoutMS,
 					}),
 				);
 
+				// Tracks whether the initial connect succeeded, so that a later
+				// runtime `error` on a healthy connection is not mistaken for a
+				// failed connect and torn down. The `error` listener stays
+				// registered after `open` on purpose: mongoose emits `error` on
+				// the connection at runtime too, and an EventEmitter `error`
+				// with no listener would take the process down.
+				let opened = false;
+
 				const onConnected = () => {
+					opened = true;
 					this.logger.debug(() => ({
 						msg: "Database connection opened",
 					}));
@@ -130,6 +157,32 @@ export class MongoDatabase implements IDatabase {
 					}));
 					this.connected = false;
 					this.connecting = undefined;
+
+					if (!opened) {
+						// A connection that never opened is unreachable from this
+						// object — `this.connection` is only assigned in
+						// `onConnected`, so `close()` can never reach it — but
+						// mongoose keeps its topology monitor, its `minPoolSize`
+						// pool and its entry in `mongoose.connections` alive,
+						// all retrying forever. On a host where connects
+						// routinely time out that leaks a pool per attempt until
+						// the driver's DNS lookups starve libuv's threadpool and
+						// every outbound lookup in the process backs up behind
+						// them. `destroy` rather than `close` because only
+						// `destroy` drops the `mongoose.connections` entry.
+						//
+						// Safe to call from here: mongoose sets `readyState` to
+						// `disconnected` before emitting this event, so `destroy`
+						// takes its disconnected branch rather than waiting on an
+						// `open`/`error` that will never come.
+						connection.destroy(true).catch((destroyErr: unknown) => {
+							this.logger.error(() => ({
+								err: destroyErr,
+								msg: "Failed to destroy unconnected database connection",
+							}));
+						});
+					}
+
 					reject(err);
 				};
 

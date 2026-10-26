@@ -1,5 +1,770 @@
 # @prosopo/procaptcha
 
+## 2.11.36
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/api@4.7.7
+  - @prosopo/common@3.3.1
+  - @prosopo/datasets@3.2.12
+  - @prosopo/load-balancer@2.11.16
+  - @prosopo/locale@3.13.1
+  - @prosopo/procaptcha-common@2.21.9
+  - @prosopo/types@5.19.0
+  - @prosopo/util-crypto@13.6.2
+  - @prosopo/util@3.3.17
+
+## 2.11.35
+### Patch Changes
+
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+- Updated dependencies [96dbf9a]
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/procaptcha-common@2.21.8
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.11
+  - @prosopo/load-balancer@2.11.15
+
+## 2.11.34
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/types@5.17.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.10
+  - @prosopo/load-balancer@2.11.14
+  - @prosopo/procaptcha-common@2.21.7
+
+## 2.11.33
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/api@4.7.4
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.9
+  - @prosopo/load-balancer@2.11.13
+  - @prosopo/locale@3.12.0
+  - @prosopo/procaptcha-common@2.21.6
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+  - @prosopo/util-crypto@13.6.1
+
+## 2.11.32
+### Patch Changes
+
+- Updated dependencies [b6e9459]
+  - @prosopo/locale@3.11.1
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/api@4.7.3
+  - @prosopo/datasets@3.2.8
+  - @prosopo/load-balancer@2.11.12
+  - @prosopo/util@3.3.15
+  - @prosopo/util-crypto@13.6.0
+
+## 2.11.31
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/api@4.7.2
+  - @prosopo/datasets@3.2.7
+  - @prosopo/load-balancer@2.11.11
+  - @prosopo/procaptcha-common@2.21.4
+
+## 2.11.30
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/datasets@3.2.6
+  - @prosopo/load-balancer@2.11.10
+  - @prosopo/api@4.7.1
+  - @prosopo/procaptcha-common@2.21.3
+
+## 2.11.29
+### Patch Changes
+
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/api@4.7.0
+  - @prosopo/datasets@3.2.5
+  - @prosopo/load-balancer@2.11.9
+  - @prosopo/procaptcha-common@2.21.2
+
+## 2.11.28
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/procaptcha-common@2.21.1
+  - @prosopo/api@4.6.1
+  - @prosopo/common@3.1.65
+  - @prosopo/datasets@3.2.4
+  - @prosopo/load-balancer@2.11.8
+  - @prosopo/util-crypto@13.6.0
+
+## 2.11.27
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/procaptcha-common@2.21.0
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+  - @prosopo/datasets@3.2.3
+  - @prosopo/load-balancer@2.11.7
+
+## 2.11.26
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/api@4.5.0
+  - @prosopo/procaptcha-common@2.20.0
+  - @prosopo/common@3.1.63
+  - @prosopo/datasets@3.2.2
+  - @prosopo/load-balancer@2.11.6
+
+## 2.11.25
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [2e69b83]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/procaptcha-common@2.19.0
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/common@3.1.62
+  - @prosopo/datasets@3.2.1
+  - @prosopo/load-balancer@2.11.5
+  - @prosopo/util-crypto@13.6.0
+
+## 2.11.24
+### Patch Changes
+
+- de6bb08: `embedData` no longer corrupts the click coordinates it hides in a captcha salt. Positions are stored as one byte, but the values were written at the end of the salt, so once the salt passed 256 hex characters (about nine selected image tiles) the positions were cut to two hex digits and the provider read back the wrong numbers. Values are now packed below position 256, and anything that genuinely cannot fit (more than 255 values, a salt that is too short, or a value that is negative or not a finite number) throws. Fractional values, such as sub-pixel click coordinates, are rounded to the nearest integer; before, their hex digits (including the `.`) were written into the salt and read back as the wrong number instead of being silently mangled. The size check also no longer counts the `0x` prefix or ignores the count byte. The format is unchanged, so existing providers decode the output as before.
+  
+  Procaptcha now sizes each salt with room for the count byte, so a later captcha with no tiles selected still gets a salt `embedData` can write into instead of an empty one that the new size check rejects.
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- af4a7e7: Stop two stale-state bugs in the challenge widgets.
+  
+  - The image, PoW and puzzle widgets no longer call the site's success or failure callback when a solve comes back after the widget was destroyed.
+  - Resetting the image widget now clears the earlier solve's two-minute expiry timer, so it can no longer fire `expired` against the new session.
+- 082346b: Removing or resetting a widget now stops its expiry timers. Before, a widget torn down after a solve (by `procaptcha.reset()`, `procaptcha.remove()` or a frictionless escalation) still fired `onExpired` two minutes later. That removed the token the replacement widget had just put into the form and reset the page's own state. The image challenge's timeout could also fire `onChallengeExpired` after the widget was gone.
+- Updated dependencies [ede4352]
+- Updated dependencies [4ea2ca9]
+- Updated dependencies [97d65fa]
+- Updated dependencies [08daf16]
+- Updated dependencies [1144e04]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [70fcefd]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [7b65240]
+- Updated dependencies [b38d55f]
+- Updated dependencies [b75e9b7]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/types@5.12.0
+  - @prosopo/procaptcha-common@2.18.2
+  - @prosopo/datasets@3.2.0
+  - @prosopo/util@3.3.13
+  - @prosopo/load-balancer@2.11.4
+  - @prosopo/common@3.1.61
+  - @prosopo/api@4.3.8
+
+## 2.11.23
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/api@4.3.7
+  - @prosopo/datasets@3.1.93
+  - @prosopo/load-balancer@2.11.3
+  - @prosopo/procaptcha-common@2.18.1
+
+## 2.11.22
+### Patch Changes
+
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [8933ad5]
+- Updated dependencies [5375d10]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [caabd39]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/load-balancer@2.11.2
+  - @prosopo/datasets@3.1.92
+  - @prosopo/procaptcha-common@2.18.0
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+
+## 2.11.21
+### Patch Changes
+
+- 20542d8: Send page scroll events with the captcha's behavioural data.
+  
+  The widget now passes a fourth collector, the page's scroll position and the
+  time of each scroll, alongside mouse, touch and click data, and the provider
+  stores it as `c4` on the captcha record. People scroll in uneven bursts while
+  bots tend to scroll at a steady rate, so this gives detection something to
+  work with. Detector bundles that predate the scroll tracker simply send no
+  `c4`.
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/procaptcha-common@2.17.3
+  - @prosopo/api@4.3.5
+  - @prosopo/datasets@3.1.91
+  - @prosopo/load-balancer@2.11.1
+
+## 2.11.20
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+- Updated dependencies [f13bea8]
+  - @prosopo/types@5.10.1
+  - @prosopo/load-balancer@2.11.0
+  - @prosopo/api@4.3.4
+  - @prosopo/datasets@3.1.90
+  - @prosopo/procaptcha-common@2.17.2
+
+## 2.11.19
+### Patch Changes
+
+- Updated dependencies [aed164d]
+- Updated dependencies [3d45c37]
+- Updated dependencies [4cc28db]
+- Updated dependencies [d3b3286]
+  - @prosopo/datasets@3.1.89
+  - @prosopo/procaptcha-common@2.17.1
+
+## 2.11.18
+### Patch Changes
+
+- Updated dependencies [94929c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [e180281]
+- Updated dependencies [5e5fb9e]
+  - @prosopo/procaptcha-common@2.17.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/load-balancer@2.10.50
+  - @prosopo/util-crypto@13.5.33
+  - @prosopo/util@3.3.11
+  - @prosopo/datasets@3.1.88
+  - @prosopo/api@4.3.3
+
+## 2.11.17
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/procaptcha-common@2.16.0
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/datasets@3.1.87
+  - @prosopo/load-balancer@2.10.49
+  - @prosopo/api@4.3.2
+
+## 2.11.16
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/api@4.3.1
+  - @prosopo/common@3.1.57
+  - @prosopo/datasets@3.1.86
+  - @prosopo/load-balancer@2.10.48
+  - @prosopo/procaptcha-common@2.15.1
+
+## 2.11.15
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/procaptcha-common@2.15.0
+  - @prosopo/api@4.3.0
+  - @prosopo/datasets@3.1.85
+  - @prosopo/load-balancer@2.10.47
+
+## 2.11.14
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/api@4.2.5
+  - @prosopo/datasets@3.1.84
+  - @prosopo/load-balancer@2.10.46
+  - @prosopo/procaptcha-common@2.14.2
+
+## 2.11.13
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/datasets@3.1.83
+  - @prosopo/procaptcha-common@2.14.1
+  - @prosopo/types@5.8.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/util@3.3.10
+  - @prosopo/api@4.2.4
+  - @prosopo/load-balancer@2.10.45
+
+## 2.11.12
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [028a158]
+  - @prosopo/procaptcha-common@2.14.0
+  - @prosopo/types@5.8.3
+  - @prosopo/api@4.2.3
+  - @prosopo/common@3.1.55
+  - @prosopo/datasets@3.1.82
+  - @prosopo/load-balancer@2.10.44
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [0d479f9]
+- Updated dependencies [124784f]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/load-balancer@2.10.43
+  - @prosopo/procaptcha-common@2.13.3
+  - @prosopo/types@5.8.2
+  - @prosopo/api@4.2.2
+  - @prosopo/datasets@3.1.81
+
+## 2.11.10
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/api@4.2.1
+  - @prosopo/datasets@3.1.80
+  - @prosopo/load-balancer@2.10.42
+  - @prosopo/procaptcha-common@2.13.2
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/api@4.2.0
+  - @prosopo/datasets@3.1.79
+  - @prosopo/load-balancer@2.10.41
+  - @prosopo/procaptcha-common@2.13.1
+
+## 2.11.8
+### Patch Changes
+
+- 9e06d72: Stop `CAPTCHA.NO_SESSION_FOUND` leaving the widget on a dead checkbox.
+  
+  Users reported a checkbox reading "No session found" that never recovered, usually after pressing the image-challenge reload button. Provider logs show the shape clearly: `POST /captcha/image` returns 200 and issues a challenge, then 2-6 seconds later the *same* sessionId is POSTed again and the provider answers 400 `CAPTCHA.NO_SESSION_FOUND` — `checkAndRemoveSession` consumed the session when it issued the first challenge, so a second challenge fetch on that id can never succeed.
+  
+  Three defects combined to turn that into a permanent dead end.
+  
+  - **The manager re-sent a sessionId it had already spent.** `defaultState()` doesn't clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id survives `resetState()` and any path that re-enters `start()` re-sends it. `Manager` now remembers the id it exchanged for a challenge and, rather than making a request it knows the provider will reject, routes straight to the `CAPTCHA.NO_SESSION_FOUND` state the wrapper already listens for.
+  
+  - **Recovery was one-shot per outer widget lifetime and had no terminal branch.** `ProcaptchaWidget` always takes the `onSessionInvalidated` branch and returns before its own `frictionlessState.restart()` fallback, and its guard ref is fresh on every re-mount because the wrapper bumps the mount key. So once the wrapper's one-shot was spent, the second failure was handled by nobody: no re-mint, no restart, no message — just a stuck checkbox. `handleSessionInvalidated` is now a bounded counter (`MAX_SESSION_INVALIDATED_RETRIES`) rather than a boolean, it reports `exhausted` to the caller, a reload press clears it (a reload mints a genuinely new session, so it shouldn't spend the budget for the old one), and exhaustion falls over visibly through `fallOverWithStyle` — which schedules the existing 10-second full restart, so there is always a way back.
+  
+  - **`resetState(0)` never reset anything.** `0 || stateRef.current.attemptCount` kept the old count, so `attemptCount` accumulated across every re-mint and `start()`'s own `attemptCount >= 5` fall-over fired after five *cumulative* runs in a widget lifetime. Five successful reload presses were enough to drop the user onto the error placeholder. Now `??`, so callers passing literal `0` get the reset they asked for.
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/procaptcha-common@2.13.0
+  - @prosopo/api@4.1.6
+  - @prosopo/common@3.1.54
+  - @prosopo/datasets@3.1.78
+  - @prosopo/load-balancer@2.10.40
+
+## 2.11.6
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/api@4.1.5
+  - @prosopo/common@3.1.53
+  - @prosopo/datasets@3.1.77
+  - @prosopo/load-balancer@2.10.39
+  - @prosopo/procaptcha-common@2.12.6
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/api@4.1.4
+  - @prosopo/datasets@3.1.76
+  - @prosopo/load-balancer@2.10.38
+  - @prosopo/procaptcha-common@2.12.5
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+  - @prosopo/datasets@3.1.75
+  - @prosopo/load-balancer@2.10.37
+  - @prosopo/procaptcha-common@2.12.4
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/api@4.1.2
+  - @prosopo/datasets@3.1.74
+  - @prosopo/load-balancer@2.10.36
+  - @prosopo/procaptcha-common@2.12.3
+
+## 2.11.2
+### Patch Changes
+
+- Updated dependencies [d7a0a64]
+  - @prosopo/load-balancer@2.10.35
+  - @prosopo/procaptcha-common@2.12.2
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/api@4.1.1
+  - @prosopo/datasets@3.1.73
+  - @prosopo/load-balancer@2.10.34
+  - @prosopo/procaptcha-common@2.12.1
+
+## 2.11.0
+### Minor Changes
+
+- 4b1cb19: Correlate a site-supplied session id across render and verify.
+  
+  A site can now hand the widget its own session identifier — Protect's JTI, or any per-user session id it already holds — and have the provider confirm at verify time that the token was earned in that same session. Render it with `data-sessionid="..."` or `renderOptions.sessionId`, resolved the same way `mode` and `language` already are, so implicit, explicit and invisible-button renders all pick it up. Pass the same value as the new trailing `clientSessionId` argument to `ProsopoServer.isVerified`.
+  
+  The widget attaches it to the solution as `clientMetaData.clientSessionId`. It is persisted on the captcha record (PoW, puzzle and image alike) and mirrored to a new top-level `clientMetaData` key on the session record — an object rather than a flat field, because more render-time metadata is expected to land there. It survives the PoW→image/puzzle escalation handoff, since the escalated widget is mounted with the same config.
+  
+  At verify, when the value is supplied and the solve does not carry exactly that value — including carrying none at all, which is what a token minted outside the site's session looks like — the token is disapproved with the new `ResultReason.CLIENT_SESSION_MISMATCH` (`API.CLIENT_SESSION_MISMATCH`, translated in all 31 locales), recorded on both the captcha record and the session.
+  
+  Omitting the id preserves existing behaviour, so this is opt-in and backward compatible. The verify request field is `clientSessionId` rather than `sessionId` because `VerificationResponse.sessionId` already means the provider's own frictionless session; same-named request and response fields meaning different things would be a trap for integrators.
+
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/procaptcha-common@2.12.0
+  - @prosopo/api@4.1.0
+  - @prosopo/common@3.1.52
+  - @prosopo/datasets@3.1.72
+  - @prosopo/load-balancer@2.10.33
+
+## 2.10.76
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/api@4.0.15
+  - @prosopo/datasets@3.1.71
+  - @prosopo/load-balancer@2.10.32
+  - @prosopo/procaptcha-common@2.11.35
+
+## 2.10.75
+### Patch Changes
+
+- ce5a3d7: Fix the reload button on the image captcha closing the challenge instead of loading a new one. Reload now asks the frictionless wrapper for a fresh session and re-mounts the widget so a new challenge opens straight away, and the checkbox click position is carried over to the replacement solve
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/api@4.0.14
+  - @prosopo/common@3.1.51
+  - @prosopo/datasets@3.1.70
+  - @prosopo/load-balancer@2.10.31
+
+## 2.10.74
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/api@4.0.13
+  - @prosopo/datasets@3.1.69
+  - @prosopo/load-balancer@2.10.30
+  - @prosopo/procaptcha-common@2.11.33
+
+## 2.10.73
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/api@4.0.12
+  - @prosopo/datasets@3.1.68
+  - @prosopo/load-balancer@2.10.29
+  - @prosopo/procaptcha-common@2.11.32
+
+## 2.10.72
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/api@4.0.11
+  - @prosopo/datasets@3.1.67
+  - @prosopo/load-balancer@2.10.28
+  - @prosopo/procaptcha-common@2.11.31
+
+## 2.10.71
+### Patch Changes
+
+- Updated dependencies [6db5d8b]
+- Updated dependencies [ae475a5]
+  - @prosopo/datasets@3.1.66
+  - @prosopo/types@5.2.2
+  - @prosopo/api@4.0.10
+  - @prosopo/load-balancer@2.10.27
+  - @prosopo/procaptcha-common@2.11.30
+
+## 2.10.70
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/api@4.0.9
+  - @prosopo/datasets@3.1.65
+  - @prosopo/load-balancer@2.10.26
+  - @prosopo/procaptcha-common@2.11.29
+
+## 2.10.69
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/api@4.0.8
+  - @prosopo/datasets@3.1.64
+  - @prosopo/load-balancer@2.10.25
+  - @prosopo/procaptcha-common@2.11.28
+
+## 2.10.68
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/api@4.0.7
+  - @prosopo/datasets@3.1.63
+  - @prosopo/load-balancer@2.10.24
+  - @prosopo/procaptcha-common@2.11.27
+
+## 2.10.67
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/api@4.0.6
+  - @prosopo/datasets@3.1.62
+  - @prosopo/load-balancer@2.10.23
+  - @prosopo/procaptcha-common@2.11.26
+
+## 2.10.66
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/api@4.0.5
+  - @prosopo/datasets@3.1.61
+  - @prosopo/load-balancer@2.10.22
+  - @prosopo/procaptcha-common@2.11.25
+
+## 2.10.65
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+- Updated dependencies [cc3ffe3]
+  - @prosopo/types@5.0.4
+  - @prosopo/procaptcha-common@2.11.24
+  - @prosopo/api@4.0.4
+  - @prosopo/datasets@3.1.60
+  - @prosopo/load-balancer@2.10.21
+
+## 2.10.64
+### Patch Changes
+
+- Updated dependencies [729349e]
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/procaptcha-common@2.11.23
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/api@4.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/datasets@3.1.59
+  - @prosopo/load-balancer@2.10.20
+
 ## 2.10.63
 ### Patch Changes
 

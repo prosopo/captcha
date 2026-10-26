@@ -174,6 +174,11 @@ export default function getConfig(
 			baseUrl: process.env.PROSOPO_IPAPI_URL,
 		},
 		maxmindDbPath: process.env.MAXMIND_DB_PATH,
+		// The image ships ASN alongside City and Country (see cli/Dockerfile),
+		// but nothing ever read a path for it, so the only database carrying AS
+		// organisations went unopened and the MaxMind fallback could never name
+		// a provider.
+		maxmindAsnDbPath: process.env.MAXMIND_ASN_DB_PATH,
 		dnsServers: getDnsServers(),
 	} as ProsopoConfigInput);
 }

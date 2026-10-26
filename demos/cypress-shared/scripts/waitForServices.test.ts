@@ -118,12 +118,24 @@ describe("checkService", () => {
 		expect(req.timeoutMs).toBe(500);
 	});
 
-	it("does not verify the certificate, because the dev services are self-signed", async () => {
+	it("does not verify the certificate on loopback, because the dev services are self-signed", async () => {
+		stageRequest(200);
+		await checkService("https://localhost:9229");
+		expect(get).toHaveBeenCalledWith(
+			"https://localhost:9229",
+			{ rejectUnauthorized: false },
+			expect.any(Function),
+		);
+	});
+
+	it("keeps certificate verification on for anything that is not loopback", async () => {
+		// The skip is scoped to loopback so a mistyped or remote URL can never
+		// silently downgrade to an unauthenticated connection.
 		stageRequest(200);
 		await checkService("https://one.test");
 		expect(get).toHaveBeenCalledWith(
 			"https://one.test",
-			{ rejectUnauthorized: false },
+			{ rejectUnauthorized: true },
 			expect.any(Function),
 		);
 	});

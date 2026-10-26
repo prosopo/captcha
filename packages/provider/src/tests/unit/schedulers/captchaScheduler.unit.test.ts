@@ -17,7 +17,7 @@ import type { Logger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import { CronJob } from "cron";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { storeCaptchasExternally } from "../../../schedulers/captchaScheduler.js";
 import { Tasks } from "../../../tasks/tasks.js";
 
@@ -97,9 +97,10 @@ describe("storeCaptchasExternally", () => {
 	it("should log message when cron job runs", async () => {
 		await storeCaptchasExternally(mockPair, "0 * * * *", mockConfig);
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		const envInstance = (ProviderEnvironment as any).mock.results[0].value;
-		const logFn = envInstance.logger.info.mock.calls[0][0];
+		const envInstance = vi.mocked(ProviderEnvironment).mock.results[0]?.value;
+		assert(envInstance);
+		const logFn = vi.mocked(envInstance.logger.info).mock.calls[0]?.[0];
+		assert(logFn);
 		const logObj = logFn();
 		expect(logObj).toMatchObject({
 			msg: "StoreCommitmentsExternal task running: false",

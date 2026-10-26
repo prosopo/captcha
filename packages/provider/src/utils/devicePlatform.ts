@@ -12,26 +12,73 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RoutingMachinePlatform } from "@prosopo/types";
+import type {
+	ITrafficFilter,
+	RoutingMachinePlatform,
+	TrafficCategoryPolicies,
+} from "@prosopo/types";
+import { type MobileSignals, deriveMobileVerdict } from "./mobileSignals.js";
 
+// NB: `isApple` covers desktop macOS as well as iOS. A rule that needs
+// "iPhone / iPad specifically" must test the UA itself — see the iOS UA
+// gate in the decision machines' route checks.
 const APPLE_UA_REGEX = /iPhone|iPad|iPod|Macintosh|Mac OS X/i;
-const MOBILE_UA_REGEX = /Mobile|Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i;
+
+/** Everything `derivePlatform` can weigh beyond its positional arguments. */
+export type PlatformSignals = Omit<MobileSignals, "userAgent" | "webView">;
 
 /**
  * Derive platform flags from server-visible signals. `isWebView` is supplied
  * by the caller because that bit only comes from the encrypted bot-detection
- * payload, not request headers. `isMobile` prefers IPInfo's network-classified
- * mobile bit when present and falls back to UA parsing otherwise.
+ * payload, not request headers. `isMobile` is a weighed verdict over whatever
+ * signals the caller can supply — see `deriveMobileVerdict`.
  */
 export const derivePlatform = (
 	userAgent: string,
 	webView: boolean,
-	ipInfo?: { isMobile?: boolean },
+	signals: PlatformSignals = {},
 ): RoutingMachinePlatform => ({
 	isApple: APPLE_UA_REGEX.test(userAgent),
 	isWebView: webView,
-	isMobile:
-		typeof ipInfo?.isMobile === "boolean"
-			? ipInfo.isMobile
-			: MOBILE_UA_REGEX.test(userAgent),
+	isMobile: deriveMobileVerdict({ ...signals, userAgent, webView }).isMobile,
 });
+
+// Categories on TrafficFilterSchema that carry a TrafficCategoryPolicy. The
+// schema's other keys (thresholds, allow/deny name lists, skipExtras…) are
+// not egress classes and have no `action`.
+const TRAFFIC_FILTER_CATEGORIES = [
+	"vpn",
+	"proxy",
+	"tor",
+	"datacenter",
+	"abuser",
+	"mobile",
+	"satellite",
+	"crawler",
+] as const satisfies readonly (keyof TrafficCategoryPolicies)[];
+
+/**
+ * Project a site's `trafficFilter` down to just its per-category policies, for
+ * consumption by routing / decision machines. Machines use these both to tell
+ * whether the operator rejects an egress class at all, and to inherit the
+ * operator's configured action when they classify one themselves — see
+ * `TrafficCategoryPolicies`.
+ *
+ * Returns `undefined` when no category is configured, so the field can be
+ * omitted from the machine input entirely.
+ */
+export const deriveTrafficPolicies = (
+	trafficFilter: Partial<ITrafficFilter> | undefined,
+): TrafficCategoryPolicies | undefined => {
+	if (!trafficFilter) return undefined;
+	const policies: TrafficCategoryPolicies = {};
+	let any = false;
+	for (const category of TRAFFIC_FILTER_CATEGORIES) {
+		const policy = trafficFilter[category];
+		if (policy) {
+			policies[category] = policy;
+			any = true;
+		}
+	}
+	return any ? policies : undefined;
+};

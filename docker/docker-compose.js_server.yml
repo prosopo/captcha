@@ -13,6 +13,12 @@ services:
             # STAGE: 'production' # Don't use production until staging works
         volumes:
             - https-portal-data:/var/lib/https-portal
+        # Cap the json log file so a chatty container can't fill the host disk.
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
 
 volumes:
     # Recommended, to avoid re-signing when upgrading HTTPS-PORTAL

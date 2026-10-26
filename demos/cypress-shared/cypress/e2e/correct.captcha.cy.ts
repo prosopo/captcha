@@ -13,7 +13,7 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import type { Captcha, CaptchaType } from "@prosopo/types";
 import {
@@ -22,7 +22,7 @@ import {
 	getWidgetElement,
 } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
@@ -62,17 +62,17 @@ describe("Captchas", () => {
 		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-3",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 
 		cy.intercept("/dummy").as("dummy");
 
-		const page = Cypress.env("default_page");
+		const page = Cypress.expose("default_page");
 
 		console.log(`Visiting page: ${page}`);
 
@@ -127,12 +127,15 @@ describe("Captchas", () => {
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
-				cy.get("@captchas").each((captcha: Captcha) => {
-					cy.log("in each function");
+				cy.get("@captchas").each((captcha: Captcha, index: number) => {
+					cy.log(`in each function: round ${index}`);
+					// Nothing is selected in this test, so the clicks otherwise
+					// land back to back while the round is still settling — the
+					// second one then misses the button, hits an image instead,
+					// and the solution is never posted.
+					cy.waitForCaptchaRound(index);
 					// Click next without selecting any images (incorrect answer)
 					cy.clickNextButton();
-					// wait a bit for the next captcha to load
-					cy.wait(500);
 				});
 			});
 
@@ -170,6 +173,9 @@ describe("Captchas", () => {
 		// Solve the captchas
 		cy.get("@captchas").each((captcha: Captcha, index: number) => {
 			cy.log(`Solving captcha ${index + 1}: ${captcha.captchaContentId}`);
+			// Wait for the round to be on screen and its images loaded before
+			// clicking, so nothing shifts under the click
+			cy.waitForCaptchaRound(index);
 			// Click correct images and submit the solution
 			cy.clickCorrectCaptchaImages(captcha);
 			// Wait for the next captcha to fully load before continuing

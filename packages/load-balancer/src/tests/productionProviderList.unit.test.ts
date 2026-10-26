@@ -22,6 +22,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	PROVIDER_LIST_FETCH_TIMEOUT_MS,
 	convertHostedProvider,
 	getProviderHostname,
 	loadBalancer,
@@ -226,5 +227,41 @@ describe("getRandomProviderFromList (production.json end-to-end)", () => {
 		await getRandomProviderFromList("production", "ipv4", undefined, () => 0);
 		await getRandomProviderFromList("production", "ipv6", undefined, () => 0);
 		expect(mocked).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("loadBalancer provider-list fetch timeout", () => {
+	// A list endpoint that accepts the request and never answers: the fetch
+	// only settles if the caller supplied an abort signal.
+	const stallingFetch = () =>
+		vi.fn(
+			(_input: RequestInfo | URL, init?: RequestInit): Promise<Response> =>
+				new Promise<Response>((_resolve, reject) => {
+					init?.signal?.addEventListener("abort", () =>
+						reject(init.signal?.reason),
+					);
+				}),
+		);
+
+	it("aborts a stalled provider-list fetch after the timeout", async () => {
+		const mocked = stallingFetch();
+		globalThis.fetch = mocked as typeof fetch;
+		const started = Date.now();
+		await expect(
+			loadBalancer("production", undefined, 50),
+		).rejects.toMatchObject({ name: "TimeoutError" });
+		expect(Date.now() - started).toBeLessThan(2_000);
+	});
+
+	it("bounds the fetch by default", async () => {
+		const mocked = vi.fn(
+			async (_input: RequestInfo | URL, _init?: RequestInit) =>
+				new Response(JSON.stringify(productionJson), { status: 200 }),
+		);
+		globalThis.fetch = mocked as typeof fetch;
+		await loadBalancer("production");
+		const init = mocked.mock.calls[0]?.[1];
+		expect(init?.signal).toBeInstanceOf(AbortSignal);
+		expect(PROVIDER_LIST_FETCH_TIMEOUT_MS).toBe(10_000);
 	});
 });

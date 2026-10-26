@@ -1,5 +1,290 @@
 # @prosopo/config
 
+## 3.5.1
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 3.5.0
+### Minor Changes
+
+- 67268f8: Name the procaptcha bundle's honeypot and shared fingerprint chunks from a seed instead of at random, so bundling the same source twice gives byte-identical output.
+  
+  The names come from the new `buildToken` helper in `@prosopo/config`: an HMAC of the package version (or `PROSOPO_BUILD_SEED`) keyed by the secret `PROSOPO_BUILD_TOKEN_KEY`. They still change every release, and without the key they cannot be worked out from this public source.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 3.4.5
+### Patch Changes
+
+- a5c953d: Lay the widget out at its natural width in hosts that size it by measuring it.
+  
+  Size containment on the widget's container-query element left it with no
+  intrinsic width, so an inline-block, float, `fit-content` box, table cell,
+  flex item, auto grid track or absolutely positioned host found nothing to
+  shrink-wrap and fell back to the widget's 170px minimum — rendering it in its
+  smallest breakpoint on pages with room for all 302px. A zero-height measuring
+  row now states both intrinsic widths, so the widget fills its natural width
+  where there is room and still shrinks into parents narrower than it.
+  
+  `@prosopo/config` gains a `browser` test type, which keeps vitest browser-mode
+  suites out of jsdom runs.
+
+## 3.4.4
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+
+## 3.4.3
+### Patch Changes
+
+- a17e8eb: Move the repo from npm to pnpm 11.
+  
+  - `pnpm-workspace.yaml` replaces the `workspaces` field and `.npmrc`, and `pnpm-lock.yaml` replaces `package-lock.json` (converted with `pnpm import`, so versions are unchanged).
+  - Internal `@prosopo/*` dependencies use `workspace:*`. `pnpm publish` (which `changeset publish` now runs) swaps each for the exact version, so published manifests are the same as before. Member packages no longer declare an npm engine.
+  - `@prosopo/config`'s `getDependencies` walks the installed `node_modules` tree instead of parsing `npm ls`, so bundle externals are computed the same way under any package manager.
+  - `@prosopo/workspace` exports `getWorkspacePatterns`, which builds glob patterns from the workspace's `pnpm-workspace.yaml` (keeping its exclusions); the lint commands use it instead of `package.json`'s `workspaces`.
+  - `verifyDepsBeforeRun` is off, because inside captcha-private a script run here would otherwise install captcha standalone over the parent's `node_modules`.
+  - Packages that relied on npm hoisting for types or tools now declare them.
+  - `@prosopo/util` declares the `url` package. `isMain` imports `url`, which Node serves from its built-in module and browser bundlers resolve to this package; npm used to provide it by hoisting.
+
+## 3.4.2
+### Patch Changes
+
+- 25c795f: Setting `TEST_TYPE` no longer drops test files that don't declare a type. The vitest configs selected only `*.<type>.test.ts`, so a package whose `test` script filtered by type (provider, user-access-policy, redis-client) silently skipped every plain `*.test.ts`, contrary to the config's own comment. Filtering now works by excluding the other known types (`unit`, `integration`), so untyped tests run under every filter. Two provider test files that had never run in CI since they were added are now collected.
+
+## 3.4.1
+### Patch Changes
+
+- f13bea8: Let a deployment supply its own provider list with `PROSOPO_PROVIDER_LIST`.
+  
+  There was no supported way to point the widget at providers you run. The only lever was
+  `PROSOPO_PROVIDER_URL_DEVELOPMENT`, which is read solely when the environment is `development`, and the widget takes
+  that environment from `NODE_ENV` at build time. So redirecting a bundle meant building it as a development bundle:
+  unminified, ~1.9 MB across chunks instead of ~1.4 MB, with rate limiting implications if anyone copied the same setting
+  onto their provider. Building with `NODE_ENV=production` silently ignored the variable and sent the widget back to
+  Prosopo's fleet, with nothing in the output to say so.
+  
+  `PROSOPO_PROVIDER_LIST` is environment-independent, so `production` stays correct everywhere. It short-circuits both
+  halves of discovery — the `/healthz` call that picks a node, and the list `@prosopo/server` matches a token against —
+  so a self-hosted deployment makes no request to Prosopo at all.
+  
+  Two forms, because one node and several have different needs:
+  
+  ```bash
+  PROSOPO_PROVIDER_LIST=https://captcha1.example.com,https://captcha2.example.com
+  PROSOPO_PROVIDER_LIST='{"one":{"address":"5Abc...","url":"https://captcha1.example.com","datasetId":"","weight":3}}'
+  ```
+  
+  The JSON form is the exact shape `provider-list.prosopo.io` serves, parsed by the same `convertHostedProvider`, so
+  weights and the `ipv4` / `ipv6` sub-lists behave identically. The bare-URL form fills in placeholder `address` and
+  `datasetId`, neither of which is load-bearing on this path — the DNS-routed production path already passes a constant
+  for `address`, and clients stopped sending `datasetId`.
+  
+  Because it returns a list rather than one URL, a multi-provider override gets weighted selection and real failover:
+  `getRandomProviderFromList` can now exclude a node that just errored and pick a different one, which with a single
+  development URL degraded to retrying the same node.
+  
+  Details worth knowing:
+  
+  - Trailing slashes are stripped. A token embeds the provider URL it was minted against and the verifier matches by
+    exact string, so `https://host/` and `https://host` must not disagree.
+  - A malformed value is ignored and normal discovery resumes rather than throwing, so a deployment-time typo cannot
+    take every captcha on a page down with it.
+  - The env read lives in its own module holding nothing else. Parsing needs `convertHostedProvider` from `balancer.ts`,
+    and `balancer.ts` needs the read — putting both in one file would create an import cycle, which this package has
+    already lost a release to when a cycle between chunks broke the widget at load.
+  - `PROSOPO_PROVIDER_URL_DEVELOPMENT` is untouched and still works for local development.
+  
+  Verified by building a production bundle with the override set: `defaultEnvironment` stays `production`, the bundle is
+  minified, and the override is baked in.
+
+## 3.4.0
+### Minor Changes
+
+- c151f8a: Decode detector payloads on worker threads instead of on the request path, and fix the CPU metric that was measuring the wrong thing.
+  
+  **The measurement was wrong.** `prosopo_sync_span_cpu_seconds_total` claimed to report the CPU a block of synchronous work costs, on the reasoning that nothing else can run while it holds the event loop. That is true of the main thread but not of the process: `process.cpuUsage()` counts every thread, so V8's background garbage collector and compiler and the image encoder's thread pool were all billed to whichever block happened to be open. In production it reported *more* CPU than wall-clock time, which is impossible for work on one thread, and that is what gave it away. Node offers no per-thread CPU clock, so the counter is removed rather than corrected — process-wide CPU is already reported as `prosopo_process_cpu_seconds_total`. The wall-time counter was never affected and is the one to rank by: for a synchronous block it is exactly the delay imposed on everything else waiting.
+  
+  **What that measurement found.** The three detector decoders held the event loop for 15–47 ms every time they ran, and together accounted for about 84% of all the blocking we measured. That cost does not stay with the request doing the decoding — it delays every other request being served at that moment, health checks included. It is the same shape of problem as the decoder that shipped nine times slower in 3.8.14.
+  
+  **The fix.** The decoders now run on a small pool of worker threads. The decoders themselves are untouched: the same file, the same input, the same output, including the same failures — the tests check that decoding through the pool is indistinguishable from decoding inline. A round trip to a worker costs between 0.01 and 0.2 ms against the 15–47 ms it takes off the request path.
+  
+  Set `PROSOPO_DECODER_WORKERS=0` to go back to decoding inline; it takes a restart but not a rollback. `PROSOPO_DECODER_WORKERS` sets the pool size (default: up to four, leaving a core spare) and `PROSOPO_DECODER_TIMEOUT_MS` caps how long one decode may take before the worker is replaced. If workers cannot be started at all the provider decodes inline and says so in the log, because serving slowly is better than not serving.
+  
+  Two new metrics replace the decoder spans: `prosopo_decoder_duration_seconds` and `prosopo_decoder_calls_total`. Watch them next to `prosopo_nodejs_eventloop_lag_p99_seconds` — that pair is how you confirm the work moved rather than disappeared.
+  
+  The decoders are now copied next to the bundle under fixed names and loaded by path, because a worker cannot ask the bundler what it called a chunk. `copyAssetsPlugin` does the copying.
+
+## 3.3.17
+### Patch Changes
+
+- bf26b8f: Give the nodejs-polars and ts-nocheck vite plugins real rolldown hook parameter types instead of `any`.
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+
+## 3.3.16
+### Patch Changes
+
+- 0d479f9: Let the development provider URL be set with an environment variable.
+  
+  In development the widget looked for its provider at a hardcoded
+  `https://localhost:9229`. That is right when the page and the provider share a
+  machine and wrong as soon as they do not: a phone or an iOS simulator loading
+  the demo over the LAN resolves `localhost` to itself, never reaches the
+  provider, and reports the site key as unregistered — which is a confusing way
+  to be told the request went nowhere.
+  
+  `PROSOPO_PROVIDER_URL_DEVELOPMENT` now overrides it, so that case can be
+  pointed at the host actually running the provider. Unset, it still defaults to
+  `https://localhost:9229`, so existing setups are unaffected. Staging and
+  production resolve through their DNS-routed endpoints and ignore it.
+
+## 3.3.15
+### Patch Changes
+
+- af267c2: Web Bot Auth verifier and an authenticated frictionless flow for pre-verified agents.
+  
+  **`@prosopo/web-bot-auth`** — a new package: an RFC 9421 HTTP Message Signatures verifier built on `@noble/curves/ed25519`, with no Cloudflare dependency. It parses `Signature-Agent` in both its bare-string and dictionary forms, resolves the signer's JWKS at `/.well-known/http-message-signatures-directory` honouring the response's cache-control TTL, and verifies the Ed25519 signature over the RFC 9421 signature base.
+  
+  **Provider fast path.** `/captcha/frictionless` returns `captchaType: authenticated` when a non-`deferToVerify` `AccessPolicyType.Allow` rule matches the request's user scope, and writes a session with `serverChecked: false`, `agent: true` and the issuing IP frozen for verify-time binding. Decrypt, bot score and the decision machine are all skipped. A verified `Signature-Agent` is one way to qualify — the userScope gains a `webBotAuthAgent` field, set only when signature verification succeeded so a rule scoped to a signer can never be matched by a spoofed header — but an IP CIDR, JA4, user agent, ASN or country rule qualifies the same way. A `Block` or `Restrict` on the same match set always wins, because severity outranks Allow.
+  
+  **`/client/authenticated/verify`.** A separate router with mandatory IP binding — the operator must forward the client IP (`API.AUTHENTICATED_IP_REQUIRED`) and it must match the one the session was issued to (`API.AUTHENTICATED_IP_MISMATCH`), so a leaked token cannot be replayed from elsewhere. Single use is enforced through `serverChecked`, and `captchaType` is checked so an ordinary captcha token cannot be redeemed on this route. `clientSessionId` correlation goes through the same `isClientSessionMismatch` helper as pow / image / puzzle, so the authenticated path cannot drift from the others.
+  
+  **Surface.** `AccessPolicyType.Allow` and `CaptchaType.authenticated`; `webBotAuthAgent` on the user scope (indexed, normalised at parse time to a lowercase scheme+host with no trailing slash); `Session.agent` / `Session.webBotAuthAgent` for the Traffic view's "pre-verified pass" filter; `submitAuthenticatedCaptchaVerify` on `ProviderApi` and the matching branch in `@prosopo/server.verifyProvider`; `AuthenticatedBadge` and a dispatch branch in `procaptcha-frictionless`.
+  
+  Three fixes the new end-to-end coverage turned up, each of which broke the flow outright:
+  
+  - `ipMatchesSession` compared the operator's parsed IP against the session's composite halves with `===`. A session read back from Mongo carries BSON (`Decimal128`, or `Long` on pre-migration records), not the `bigint` the type claims, so the comparison was false for every session that had been through the database — every legitimate redemption was rejected as `API.AUTHENTICATED_IP_MISMATCH`. Both halves are now normalised before comparison, and an unparseable half fails closed rather than defaulting to `0n`, so garbage still cannot match garbage.
+  - `serverChecked` was never written onto the authenticated session, so "never set" and "consumed" were distinguishable only by an absence. It is now written as `false` at issuance.
+  - `serverChecked` was missing from `SESSION_PROJECTION`. Left out, the single-use check reads `undefined` and an authenticated token verifies an unlimited number of times.
+
+## 3.3.14
+### Patch Changes
+
+- 56e5502: chore(deps-dev): bump webpack-cli from 5.1.4 to 7.2.3
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+
+## 3.3.13
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+
+## 3.3.12
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps-dev): bump @babel/plugin-transform-object-rest-spread from 7.28.4 to 8.0.1
+
+## 3.3.11
+### Patch Changes
+
+- 6db5d8b: Move image-captcha merkle tree computation and per-solution leaf hashing to a Rust napi module (@prosopo/native-merkle). ~4× faster on realistic 9-solution commits. Extends the cli bundle plugin so multiple native-* .node files can coexist without basename collision.
+
+## 3.3.10
+### Patch Changes
+
+- 721c5ba: Move JA4 TLS fingerprint computation to a Rust napi module (@prosopo/native-ja4). Provider-side JA4 middleware is ~2.7× faster on realistic ClientHellos. The cli bundle plugin now copies the .node binary next to the bundle so it works in the container.
+
+## 3.3.9
+### Patch Changes
+
+- e46e0bd: Keep the server-only i18next backend out of frontend bundles.
+  
+  `i18next-fs-backend` has been on the frontend config's exclusion list for a long
+  time, but it was still being bundled. `external` only ever matches a specifier
+  exactly, and `i18nBackend.ts` imports the subpath `i18next-fs-backend/cjs`
+  (i18next/i18next-fs-backend#57), which is a different string. So the fs backend
+  shipped in the browser artifact along with its YAML, JSON5 and JSONC parsers.
+  `i18next-http-middleware` — Express request handling — was never on the list at
+  all.
+  
+  The subpath is now listed literally, and `i18next-http-middleware` joins the
+  exclusion list.
+  
+  Both are listed one by one rather than by matching `pkg/*` against the whole
+  exclusion list. That broader rule looks tidier but is wrong: the `vite` filter
+  is a substring match, so it also selects `vite-plugin-node-polyfills`, and
+  `vite-plugin-node-polyfills/shims/process` is injected into the served and IIFE
+  bundles as a bare import. Externalising it leaves the browser unable to resolve
+  the specifier and the widget dies on load.
+  
+  Measured on `@prosopo/procaptcha-bundle`, production mode:
+  
+  | | before | after |
+  | --- | --- | --- |
+  | `i18nBackend` chunk, raw | 153,593 | 788 |
+  | all chunks, raw | 1,247,449 | 1,094,644 (−12.2%) |
+  | all chunks, gzip | 474,695 | 434,408 (−8.5%) |
+  
+  This is not a first-paint change — the critical path is unchanged, because the
+  chunk is only reachable through `loadI18next(true)` and the widget always calls
+  `loadI18next(false, language)`. It is dead weight in the published artifact.
+  
+  No browser behaviour can regress: that chunk already imported `node:path`, which
+  is already external, so it was never loadable in a browser to begin with. The
+  i18next packages the browser does use — `http-backend`,
+  `browser-languagedetector`, `chained-backend`, `resources-to-backend` — are
+  unaffected and still bundled.
+
+## 3.3.8
+### Patch Changes
+
+- bde0cb9: Enable whitespace minification for production frontend bundles.
+  
+  For a `lib` + `es` build, Vite downgrades `build.minify: true` to
+  `{ compress: true, mangle: true, codegen: false }`, so bundles shipped compressed
+  and mangled but still pretty-printed. Setting `output.minify` explicitly fixes it.
+  
+  On `@prosopo/procaptcha-bundle`, the critical path drops 22.5% raw (658KB → 510KB)
+  and 9.6% gzipped. Chunk membership is unchanged. Production builds only.
+
 ## 3.3.7
 ### Patch Changes
 

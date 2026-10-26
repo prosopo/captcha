@@ -1,0 +1,622 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import {
+	type Ti18n,
+	type TranslateOptions,
+	createUntranslatedI18n,
+} from "@prosopo/locale";
+import {
+	type BotDetectionFunction,
+	type BotDetectionFunctionResult,
+	CaptchaType,
+	type ProcaptchaClientConfigOutput,
+	type ProcaptchaFrictionlessProps,
+	type ProcaptchaProps,
+} from "@prosopo/types";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+
+/**
+ * The orchestrator decides which solver to mount, tears the previous one down,
+ * and owns the recovery paths. Each solver package is stubbed to a probe so a
+ * test can read the props it was handed and assert the mount/unmount ordering
+ * that used to come free from the reconciler.
+ */
+const mocks = vi.hoisted(() => {
+	const mounted: { solver: string; props: ProcaptchaProps }[] = [];
+	const destroyed: string[] = [];
+	const probe =
+		(solver: string) => (container: HTMLElement, props: ProcaptchaProps) => {
+			mounted.push({ solver, props });
+			const element = container.ownerDocument.createElement("div");
+			element.setAttribute("data-solver", solver);
+			container.appendChild(element);
+			return {
+				destroy: () => {
+					element.remove();
+					destroyed.push(solver);
+				},
+			};
+		};
+	return { mounted, destroyed, probe };
+});
+
+// jsdom serves the suite over http, so the widget's own HTTPS guard would
+// short-circuit every test before detection ran.
+vi.mock("@prosopo/procaptcha-common", async (importOriginal) => ({
+	...(await importOriginal<typeof import("@prosopo/procaptcha-common")>()),
+	isSecureBrowserContext: () => true,
+}));
+
+vi.mock("@prosopo/procaptcha-react", () => ({
+	mountProcaptchaImageWidget: mocks.probe("image"),
+}));
+vi.mock("@prosopo/procaptcha-puzzle", () => ({
+	mountProcaptchaPuzzleWidget: mocks.probe("puzzle"),
+}));
+vi.mock("@prosopo/procaptcha-icon-order", () => ({
+	mountProcaptchaIconOrderWidget: mocks.probe("iconOrder"),
+}));
+vi.mock("@prosopo/procaptcha-pow", () => ({
+	mountProcaptchaPowWidget: mocks.probe("pow"),
+}));
+vi.mock("@prosopo/procaptcha-audio", () => ({
+	mountProcaptchaAudioWidget: mocks.probe("audio"),
+}));
+
+const { mountProcaptchaFrictionless } = await import(
+	"../procaptchaFrictionless.js"
+);
+const { MAX_SESSION_INVALIDATED_RETRIES } = await import(
+	"../sessionInvalidatedRecovery.js"
+);
+
+const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
+
+const config = (): ProcaptchaClientConfigOutput =>
+	({
+		account: { address: SITE_KEY },
+		defaultEnvironment: "staging",
+		mode: "visible",
+		theme: "light",
+	}) as unknown as ProcaptchaClientConfigOutput;
+
+const i18n = (catalogue: Record<string, string> = {}): Ti18n =>
+	createUntranslatedI18n({
+		isInitialized: true,
+		t: (key: string, options?: TranslateOptions) =>
+			catalogue[key] ?? options?.defaultValue ?? key,
+		language: "en",
+		changeLanguage: () => Promise.resolve(),
+	});
+
+const detection = (
+	captchaType: CaptchaType,
+	overrides: Partial<BotDetectionFunctionResult> = {},
+): BotDetectionFunctionResult =>
+	({
+		captchaType,
+		sessionId: "session-1",
+		provider: { providerAccount: "acc", provider: { url: "https://p.one" } },
+		userAccount: { account: { address: "user" } },
+		...overrides,
+	}) as unknown as BotDetectionFunctionResult;
+
+let container: HTMLDivElement;
+let widget: { destroy: () => void } | undefined;
+
+const props = (
+	detectBot: BotDetectionFunction,
+	overrides: Partial<ProcaptchaFrictionlessProps> = {},
+): ProcaptchaFrictionlessProps => ({
+	config: config(),
+	callbacks: {},
+	i18n: i18n(),
+	restart: () => undefined,
+	detectBot,
+	...overrides,
+});
+
+const settle = async (): Promise<void> => {
+	await new Promise<void>((resolve: () => void) => setTimeout(resolve, 0));
+	await Promise.resolve();
+};
+
+const waitFor = async (condition: () => boolean): Promise<void> => {
+	for (let poll = 0; poll < 100 && !condition(); poll++) {
+		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 20));
+	}
+};
+
+const solvers = (): string[] =>
+	Array.from(container.querySelectorAll("[data-solver]")).map(
+		(element: Element) => element.getAttribute("data-solver") ?? "",
+	);
+
+beforeEach(() => {
+	mocks.mounted.length = 0;
+	mocks.destroyed.length = 0;
+	widget = undefined;
+	container = document.createElement("div");
+	document.body.appendChild(container);
+});
+
+afterEach(() => {
+	widget?.destroy();
+	widget = undefined;
+	container.remove();
+});
+
+describe("choosing a solver", () => {
+	test("mounts the image widget when the provider asks for one", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		expect(solvers()).toEqual(["image"]);
+	});
+
+	test("mounts the puzzle widget when the provider asks for one", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.puzzle))),
+		);
+		await settle();
+		expect(solvers()).toEqual(["puzzle"]);
+	});
+
+	test("mounts the icon-order widget when the provider asks for one", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.iconOrder))),
+		);
+		await settle();
+		expect(solvers()).toEqual(["iconOrder"]);
+	});
+
+	test("falls through to PoW for anything else", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.pow))),
+		);
+		await settle();
+		expect(solvers()).toEqual(["pow"]);
+	});
+
+	test("passes a restart's wrong-answer notice on to the first solver", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image)), {
+				startShowRetry: true,
+			}),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.startShowRetry).toBe(true);
+	});
+
+	test("mounts an ordinary solver without the notice", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.startShowRetry).toBe(false);
+	});
+
+	test("hands the solver the session the frictionless call minted", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.frictionlessState).toMatchObject({
+			sessionId: "session-1",
+		});
+	});
+
+	test("only PoW is given an escalation handler", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.pow))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.onEscalate).toBeTypeOf("function");
+	});
+});
+
+describe("the loading placeholder", () => {
+	test("shows a checkbox before detection resolves", () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => new Promise<BotDetectionFunctionResult>(() => undefined)),
+		);
+		expect(
+			container.querySelector('[data-cy="captcha-checkbox"]'),
+		).not.toBeNull();
+	});
+
+	test("is replaced by the solver, not left behind it", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		expect(container.querySelector('[role="status"]')).toBeNull();
+		expect(solvers()).toEqual(["image"]);
+	});
+
+	test("shows a terminal detection error instead of a solver", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(
+				() =>
+					Promise.resolve(
+						detection(CaptchaType.image, {
+							error: {
+								code: "SITE_KEY_NOT_REGISTERED",
+								errorId: "SITE_KEY_NOT_REGISTERED:PROV-1",
+								message: "site key not registered",
+							},
+						} as Partial<BotDetectionFunctionResult>),
+					),
+				{ callbacks: { onError } },
+			),
+		);
+		await settle();
+		expect(solvers()).toEqual([]);
+		expect(container.textContent).toContain("site key not registered");
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	test("shows a provider error in the widget's language, not the one the provider answered in", async () => {
+		// The provider translates for the browser's Accept-Language, so a German
+		// widget in an English browser used to show English errors.
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(
+				() =>
+					Promise.resolve(
+						detection(CaptchaType.image, {
+							error: {
+								code: "SITE_KEY_INVALID",
+								errorId: "SITE_KEY_INVALID:PROV-1",
+								message: "Invalid site key",
+							},
+						} as Partial<BotDetectionFunctionResult>),
+					),
+				{
+					i18n: i18n({
+						"ERRORS.SITE_KEY_INVALID": "Ungültiger Site-Schlüssel",
+					}),
+				},
+			),
+		);
+		await settle();
+		expect(container.textContent).toContain("Ungültiger Site-Schlüssel");
+		expect(container.textContent).not.toContain("Invalid site key");
+	});
+
+	test("re-rolls onto another provider for a failure that is not the caller's fault", async () => {
+		// An unrecognised key means the provider broke in a way it has no
+		// vocabulary for; another node may well be healthy, so the user should
+		// not be stranded on the first answer.
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(
+				detection(CaptchaType.image, {
+					error: {
+						code: "BACKEND_ERROR",
+						errorId: "BACKEND_ERROR:PROV-1",
+						message: "no capacity",
+					},
+				} as Partial<BotDetectionFunctionResult>),
+			)
+			.mockResolvedValue(detection(CaptchaType.image));
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		// providerRetry backs off before re-rolling, so the second call lands a
+		// randomised delay later rather than on the next tick.
+		await waitFor(() => detectBot.mock.calls.length > 1);
+		await settle();
+		expect(solvers()).toEqual(["image"]);
+	});
+
+	test("shows the cannot-load message in the widget's language", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() =>
+				Promise.resolve(
+					detection(CaptchaType.authenticated, { sessionId: undefined }),
+				),
+			),
+		);
+		await settle();
+		expect(container.textContent).toContain("WIDGET.CANNOT_LOAD");
+		expect(container.textContent).not.toContain("Cannot load CAPTCHA");
+	});
+
+	test("refuses to mount anything when the response names no captcha type", async () => {
+		// A hard block short-circuits the request and answers with a bare
+		// `{ error: "..." }`; mounting the PoW default against it only earns an
+		// API.INCORRECT_CAPTCHA_TYPE from the next call.
+		const onError = vi.fn<(error: Error) => void>();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(
+				() =>
+					Promise.resolve({
+						sessionId: "session-1",
+					} as unknown as BotDetectionFunctionResult),
+				{ callbacks: { onError } },
+			),
+		);
+		await settle();
+		expect(solvers()).toEqual([]);
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+});
+
+describe("escalating from PoW", () => {
+	test("swaps PoW for the escalated solver rather than stacking them", async () => {
+		// Nothing reconciles this for us: without the explicit teardown the page
+		// ends up with two live widgets, two modals and two sets of document
+		// listeners.
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.pow))),
+		);
+		await settle();
+
+		mocks.mounted[0]?.props.onEscalate?.(CaptchaType.image, "session-2", {
+			x: 4,
+			y: 5,
+		});
+		await settle();
+
+		expect(solvers()).toEqual(["image"]);
+		expect(mocks.destroyed).toContain("pow");
+	});
+
+	test("carries the new session and the original click into the escalation", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.pow))),
+		);
+		await settle();
+
+		mocks.mounted[0]?.props.onEscalate?.(CaptchaType.image, "session-2", {
+			x: 4,
+			y: 5,
+		});
+		await settle();
+
+		expect(mocks.mounted[1]?.props).toMatchObject({
+			autoStart: true,
+			startCoords: { x: 4, y: 5 },
+		});
+		expect(mocks.mounted[1]?.props.frictionlessState).toMatchObject({
+			sessionId: "session-2",
+		});
+	});
+});
+
+describe("recovering an invalidated session", () => {
+	test("re-runs detection and remounts with the preserved coordinates", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(detection(CaptchaType.image))
+			.mockResolvedValue(
+				detection(CaptchaType.image, {
+					sessionId: "session-2",
+				} as Partial<BotDetectionFunctionResult>),
+			);
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		await settle();
+
+		mocks.mounted[0]?.props.onSessionInvalidated?.(11, 22);
+		await settle();
+
+		expect(detectBot).toHaveBeenCalledTimes(2);
+		expect(solvers()).toEqual(["image"]);
+		expect(mocks.mounted[1]?.props).toMatchObject({
+			autoStart: true,
+			startCoords: { x: 11, y: 22 },
+		});
+	});
+
+	test("stops re-minting once the budget is spent, so a persistently broken session cannot loop", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(detection(CaptchaType.image));
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		await settle();
+
+		// One more failure than the budget allows; the last one falls over
+		// visibly rather than asking for yet another session.
+		for (
+			let attempt = 0;
+			attempt <= MAX_SESSION_INVALIDATED_RETRIES;
+			attempt++
+		) {
+			mocks.mounted.at(-1)?.props.onSessionInvalidated?.(11, 22);
+			await settle();
+		}
+
+		expect(detectBot).toHaveBeenCalledTimes(
+			MAX_SESSION_INVALIDATED_RETRIES + 1,
+		);
+	});
+});
+
+describe("the audio alternative", () => {
+	const withAudio = (
+		captchaType: CaptchaType,
+		sessionId = "session-1",
+	): BotDetectionFunctionResult =>
+		detection(captchaType, { sessionId, audioAlternativeAvailable: true });
+
+	const switchToAudio = async (
+		detectBot: BotDetectionFunction,
+	): Promise<void> => {
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		await settle();
+		mocks.mounted.at(-1)?.props.onRequestAudioAlternative?.();
+		await settle();
+	};
+
+	test("is not offered when the site has not turned it on", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.audioAlternativeAvailable).toBeUndefined();
+		expect(mocks.mounted[0]?.props.onRequestAudioAlternative).toBeUndefined();
+	});
+
+	test.each([CaptchaType.image, CaptchaType.puzzle, CaptchaType.iconOrder])(
+		"is offered on the %s challenge when the site turned it on",
+		async (captchaType: CaptchaType) => {
+			widget = mountProcaptchaFrictionless(
+				container,
+				props(() => Promise.resolve(withAudio(captchaType))),
+			);
+			await settle();
+			expect(mocks.mounted[0]?.props).toMatchObject({
+				audioAlternativeAvailable: true,
+				onRequestAudioAlternative: expect.any(Function),
+			});
+		},
+	);
+
+	test("is not offered on PoW, which has no visual challenge to escape", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(withAudio(CaptchaType.pow))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.onRequestAudioAlternative).toBeUndefined();
+	});
+
+	test("asking for it mints a fresh session and mounts the audio widget against it", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(withAudio(CaptchaType.image))
+			.mockResolvedValue(withAudio(CaptchaType.image, "session-2"));
+		await switchToAudio(detectBot);
+		expect(detectBot).toHaveBeenCalledTimes(2);
+		expect(solvers()).toEqual(["audio"]);
+		expect(mocks.destroyed).toContain("image");
+		expect(mocks.mounted.at(-1)?.props).toMatchObject({
+			autoStart: true,
+			frictionlessState: expect.objectContaining({ sessionId: "session-2" }),
+		});
+	});
+
+	test("the audio widget is not offered a switch to itself", async () => {
+		await switchToAudio(
+			vi
+				.fn<BotDetectionFunction>()
+				.mockResolvedValue(withAudio(CaptchaType.puzzle)),
+		);
+		expect(solvers()).toEqual(["audio"]);
+		expect(
+			mocks.mounted.at(-1)?.props.onRequestAudioAlternative,
+		).toBeUndefined();
+		expect(
+			mocks.mounted.at(-1)?.props.audioAlternativeAvailable,
+		).toBeUndefined();
+	});
+
+	test("a wrong audio answer stays on audio for the replacement clip", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(withAudio(CaptchaType.image));
+		await switchToAudio(detectBot);
+		mocks.mounted.at(-1)?.props.onReload?.(5, 6, { showRetry: true });
+		await settle();
+		expect(solvers()).toEqual(["audio"]);
+		expect(mocks.mounted.at(-1)?.props).toMatchObject({
+			autoStart: true,
+			startShowRetry: true,
+			startCoords: { x: 5, y: 6 },
+		});
+	});
+
+	test("an invalidated audio session is re-minted as audio", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(withAudio(CaptchaType.image));
+		await switchToAudio(detectBot);
+		mocks.mounted.at(-1)?.props.onSessionInvalidated?.(1, 2);
+		await settle();
+		expect(solvers()).toEqual(["audio"]);
+	});
+
+	test("falls back to the provider's choice when the re-run has no visual challenge", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(withAudio(CaptchaType.image))
+			.mockResolvedValue(withAudio(CaptchaType.pow));
+		await switchToAudio(detectBot);
+		expect(solvers()).toEqual(["pow"]);
+	});
+
+	test("the choice is spent once honoured, so a later re-mint follows the provider", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(withAudio(CaptchaType.image))
+			.mockResolvedValueOnce(withAudio(CaptchaType.pow))
+			.mockResolvedValue(withAudio(CaptchaType.image));
+		await switchToAudio(detectBot);
+		mocks.mounted.at(-1)?.props.onSessionInvalidated?.(1, 2);
+		await settle();
+		expect(solvers()).toEqual(["image"]);
+	});
+});
+
+describe("tearing down", () => {
+	test("takes the mounted solver with it", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		widget.destroy();
+		widget = undefined;
+		expect(mocks.destroyed).toContain("image");
+		expect(container.querySelector("[data-solver]")).toBeNull();
+	});
+
+	test("does not mount a solver that resolves after destroy", async () => {
+		let release: (result: BotDetectionFunctionResult) => void = () => undefined;
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(
+				() =>
+					new Promise<BotDetectionFunctionResult>(
+						(resolve: (result: BotDetectionFunctionResult) => void) => {
+							release = resolve;
+						},
+					),
+			),
+		);
+		widget.destroy();
+		widget = undefined;
+		release(detection(CaptchaType.image));
+		await settle();
+		expect(mocks.mounted).toHaveLength(0);
+	});
+});

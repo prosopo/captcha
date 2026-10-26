@@ -1,5 +1,857 @@
 # @prosopo/database
 
+## 4.3.0
+### Minor Changes
+
+- 915f30b: Traffic filter categories can now have exceptions. An exception matches visitors by country, by whether their country is inside or outside the account's market, by a minimum abuser score, or any mix of these. It then replaces the category's block or challenge action. When several exceptions match, the harshest wins: a block beats any challenge, and a stricter captcha beats a milder one. So the order of the list does not matter. For example, block proxies, but challenge those from the account's market unless their abuser score is at least 0.5.
+  
+  The account's market countries now travel to providers inside each site's traffic filter, including when a provider pulls updated sites from the portal database. An exception that depends on the market never matches while the account has no market set.
+  
+  `@prosopo/captcha-severity` gains `policyHarshness` and `harshestPolicy`. They rank a policy that may block, and the access rules now use them too, with the same ordering as before.
+
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/common@3.3.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/redis-client@1.0.43
+  - @prosopo/types-database@5.12.0
+  - @prosopo/types@5.19.0
+  - @prosopo/user-access-policy@3.15.8
+  - @prosopo/util@3.3.17
+
+## 4.2.10
+### Patch Changes
+
+- d02b3bc: The image challenge endpoint now answers 400 `INVALID_REQUEST` when the caller sends a `datasetId` that is not a stored dataset: an unknown hex id, a non-hex string or a byte array. Before, the id was only looked up once challenge generation had started, so a bad id came back as a 500. The response does not echo the id. If looking up the dataset fails for another reason, such as the database being unreachable, the endpoint still returns 500. Requests that leave `datasetId` out still use the provider's default dataset.
+  
+  `getDatasetDetails` now throws `RECORD_NOT_FOUND` rather than `DB_QUERY_FAILED` when no dataset matches, so a missing dataset can be told apart from a failed query.
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/types-database@5.11.2
+  - @prosopo/common@3.3.0
+  - @prosopo/user-access-policy@3.15.7
+
+## 4.2.9
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/types-database@5.11.1
+  - @prosopo/common@3.3.0
+  - @prosopo/user-access-policy@3.15.6
+
+## 4.2.8
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- 860948c: Server-side verify (what siteverify calls) now does far less waiting. A PoW verify used to make about 19 database and ip-lookup calls one after another; it now makes about 6, and a rejected verify fewer. Changes:
+  
+  - The ip lookup that runs on every request is skipped on verify routes. Nothing on verify used it, and the caller there is the site's server, not the user.
+  - The session record is read once instead of twice, and the client record once instead of twice.
+  - DNS enrichment and the user's ip lookup run alongside the access-rule check instead of after it. The ip lookup is skipped once a check has already failed.
+  - The verify answers without waiting for its two bookkeeping writes, unless 500 are already waiting, so a slow database cannot pile them up in memory. The single-use claim is still made before anything else, so a token still verifies only once.
+  - Decision-machine artifacts are cached per process. They were cached per request, so every verify read them from Mongo. Saving or deleting a machine clears the cache.
+  - Client records are cached for 30 seconds and the cache is cleared by every client-record write in the process.
+  - Successful ip lookups are cached for 10 minutes, so an address is not looked up twice in one verify, or again at verify after the challenge looked it up.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/common@3.3.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/redis-client@1.0.42
+  - @prosopo/types@5.17.0
+  - @prosopo/types-database@5.11.0
+  - @prosopo/user-access-policy@3.15.5
+  - @prosopo/util@3.3.16
+
+## 4.2.7
+### Patch Changes
+
+- Updated dependencies [3c5d196]
+  - @prosopo/user-access-policy@3.15.4
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/types-database@5.10.6
+  - @prosopo/logger@2.1.4
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/util@3.3.15
+
+## 4.2.6
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/types-database@5.10.5
+  - @prosopo/user-access-policy@3.15.3
+
+## 4.2.5
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/types-database@5.10.4
+  - @prosopo/user-access-policy@3.15.2
+
+## 4.2.4
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/types-database@5.10.3
+  - @prosopo/user-access-policy@3.15.1
+
+## 4.2.3
+### Patch Changes
+
+- Updated dependencies [460ca67]
+  - @prosopo/user-access-policy@3.15.0
+  - @prosopo/types-database@5.10.2
+
+## 4.2.2
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/types@5.15.1
+  - @prosopo/types-database@5.10.1
+  - @prosopo/user-access-policy@3.14.18
+  - @prosopo/util@3.3.15
+  - @prosopo/common@3.1.65
+  - @prosopo/logger@2.1.4
+
+## 4.2.1
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/types-database@5.10.0
+  - @prosopo/user-access-policy@3.14.17
+  - @prosopo/common@3.1.64
+
+## 4.2.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/types-database@5.9.0
+  - @prosopo/user-access-policy@3.14.16
+  - @prosopo/common@3.1.63
+
+## 4.1.4
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/types-database@5.8.0
+  - @prosopo/util@3.3.14
+  - @prosopo/common@3.1.62
+  - @prosopo/user-access-policy@3.14.15
+  - @prosopo/logger@2.1.3
+  - @prosopo/redis-client@1.0.40
+
+## 4.1.3
+### Patch Changes
+
+- f53ddb2: Updating an image captcha commitment now moves its `lastUpdatedTimestamp` forward. The field name was misspelt, so the timestamp never changed. The central-store sweep uses that timestamp to decide whether a record changed after it read it. Because of the misspelling, a `providedIp` or email written while the sweep was running could be marked as stored without ever reaching the central store. Pipeline-form updates also stopped writing a stray `lastUpdatedAtTimestamp` field.
+- 8ed0eb8: Every error key the code throws now has a translation. Twelve keys were missing from the catalogue, so users and logs saw the raw key: ten thrown keys plus the `CAPTCHA.INVALID_TIMESTAMP` and `CAPTCHA.DECISION_MACHINE_DENIED` result reasons. They are added to all 32 locales. The database import error threw `DATABASE.DATABASE_IMPORT_ERROR`, a typo for the existing `DATABASE.DATABASE_IMPORT_FAILED`. A new test fails if an error is thrown with a key that is not in the catalogue.
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/common@3.1.61
+  - @prosopo/types-database@5.7.3
+  - @prosopo/user-access-policy@3.14.14
+  - @prosopo/logger@2.1.2
+  - @prosopo/redis-client@1.0.39
+
+## 4.1.2
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/types-database@5.7.2
+
+## 4.1.1
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/types-database@5.7.1
+  - @prosopo/user-access-policy@3.14.13
+
+## 4.1.0
+### Minor Changes
+
+- 7065689: Removed the Redis session write queue. Nothing ever put a session on it, yet every provider polled Redis for it every 10 seconds, and its drain step could duplicate, drop or delete records if it had ever been used. `RedisWriteQueue` loses `queueSessionRecord`, `drainSessionRecords`, `startPeriodicFlush` and `stopPeriodicFlush`, and `Tasks.flushWriteQueue` is gone. The session read cache is unchanged.
+
+### Patch Changes
+
+- f650c66: A Web Bot Auth (authenticated) token can now only be verified once, even when several verify requests for it arrive at the same time. Before, the provider checked whether the session was already used and then marked it used in a separate step, so parallel verifies could all return `verified: true`. Marking the session used is now a single conditional database write, and only the request that wins it is verified; the rest get `API.USER_ALREADY_VERIFIED`.
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+- dffecf0: Patching a cached session in Redis no longer brings back a session that was invalidated between the read and the write, and no longer drops a field written by a concurrent patch. The write now only lands if the cached value is unchanged since it was read (checked inside Redis); on a conflict the patch is recomputed, and if the session has gone the patch does nothing.
+- fa316d6: A captcha token now verifies at most once even when a site's server sends several verify requests for it at the same moment. Before, each request read the record, saw it had not been checked yet, and then marked it checked, so every request that arrived before the first write finished was accepted. Marking a PoW, puzzle or image result as checked is now a single conditional write, and only the request that wins it is verified. The same applies to image captcha submissions: a request hash can now only be spent by one submission, so answers can no longer be tried in parallel against one challenge.
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [4109641]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+- Updated dependencies [fa316d6]
+  - @prosopo/types-database@5.7.0
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/redis-client@1.0.38
+  - @prosopo/util@3.3.12
+  - @prosopo/user-access-policy@3.14.12
+  - @prosopo/logger@2.1.1
+
+## 4.0.41
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/types-database@5.6.5
+  - @prosopo/user-access-policy@3.14.11
+
+## 4.0.40
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/types-database@5.6.4
+  - @prosopo/user-access-policy@3.14.10
+
+## 4.0.39
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/types-database@5.6.3
+  - @prosopo/util@3.3.11
+  - @prosopo/user-access-policy@3.14.9
+  - @prosopo/redis-client@1.0.37
+
+## 4.0.38
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/user-access-policy@3.14.8
+
+## 4.0.37
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/user-access-policy@3.14.7
+  - @prosopo/types@5.9.1
+  - @prosopo/types-database@5.6.1
+  - @prosopo/common@3.1.57
+
+## 4.0.36
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [ce2500b]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/types-database@5.6.0
+  - @prosopo/user-access-policy@3.14.6
+
+## 4.0.35
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/types-database@5.5.5
+  - @prosopo/user-access-policy@3.14.5
+
+## 4.0.34
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/redis-client@1.0.36
+  - @prosopo/types-database@5.5.4
+  - @prosopo/types@5.8.4
+  - @prosopo/user-access-policy@3.14.4
+  - @prosopo/util@3.3.10
+  - @prosopo/logger@2.0.10
+
+## 4.0.33
+### Patch Changes
+
+- 98ab052: Serve a repeat caller the same detector bundle.
+  
+  `/detector/assign` picked a bundle at random on every request. The provider now
+  records which bundle it served a caller and returns that one for a bounded
+  period, so a returning visitor gets a stable bundle instead of a fresh draw each
+  time. Any bundle performs identically, so this is not visible to users. If Redis
+  cannot answer, assign falls back to the previous behaviour rather than failing.
+  
+  Also fixes the `assignDetectorBundle` tests, which were failing on main and had
+  gone unnoticed because the file was named `*.test.ts` while CI only runs
+  `*.unit.test.ts`. Renamed so it runs, and replaced the mock that
+  `clearAllMocks` was silently emptying.
+- 1f0598c: Derive the detector bundle for a caller instead of storing it.
+  
+  `assignDetectorBundle` now picks the bundle with a keyed hash of the caller's
+  address, using a per-provider secret kept on the pool volume. Same caller, same
+  bundle, with nothing recorded and nothing to expire — which also means the
+  result no longer changes when the cache is unavailable.
+  
+  Replaces the Redis client → bundle entry added in the previous patch, so
+  `bindDetectorBundleToClient` and its TTL constant are gone.
+- 3958046: Keep a detector bundle binding for as long as its payload is accepted
+  
+  The `detectorSessionId → bundleId` binding held the only key able to read a
+  detector payload, and expired after 60 seconds. The frictionless flow accepts a
+  payload for ten minutes (`DEFAULT_MAX_TIMESTAMP_AGE`). For nine of those ten
+  minutes the provider would therefore accept a payload it had already discarded
+  the means to decrypt: `resolveDecryptAttempts` returns an empty key list, the
+  decrypt loop never runs, the score is forced to 1 and the caller is challenged
+  despite nothing having been measured about them.
+  
+  Sixty seconds is ample for the assign → submit gap in the normal case — it is
+  around 1.5s — but it only has to stall once to be lost, and a backgrounded
+  mobile tab is enough.
+  
+  The two values are now one value. `DEFAULT_MAX_TIMESTAMP_AGE` moves from a
+  private constant in `frictionlessTasks` to `@prosopo/types`, the only package
+  both the provider and the database can see, and `DETECTOR_BUNDLE_TTL_SECONDS` is
+  derived from it instead of being written down a second time. A unit test pins
+  the relationship so they cannot drift apart again.
+  
+  The TTL cannot now outlive the payload-age check, so this does not widen the
+  window in which any payload is usable. Bundle selection is unaffected: which
+  bundle a caller receives is derived from their IP and a server secret, not from
+  this binding's lifetime.
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types-database@5.5.3
+  - @prosopo/types@5.8.3
+  - @prosopo/common@3.1.55
+  - @prosopo/user-access-policy@3.14.3
+
+## 4.0.32
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types-database@5.5.2
+  - @prosopo/types@5.8.2
+  - @prosopo/user-access-policy@3.14.2
+
+## 4.0.31
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/types-database@5.5.1
+  - @prosopo/user-access-policy@3.14.1
+
+## 4.0.30
+### Patch Changes
+
+- b2183f9: Fix the client-list poll, which has never carried site settings to a provider.
+  
+  `getUpdatedClients` read `record.sites.siteKey` off the portal's `accounts` documents, where `sites` is an array. That property does not exist on an array, so every record came back as `{ account: undefined }`. `updateClientRecords` upserts filtered on `account`, so a whole poll's worth of sites matched nothing, inserted, and collapsed into a single `account: null` row that each run overwrote. An `as ClientRecord` cast on the mapping is what kept tsc quiet about it.
+  
+  Observed on a production node: `GetClientList` completing every 2 minutes with `clientRecords: 1247`, one `account: null` row in `clients`, and 1,610 site keys still holding settings the portal had changed. Direct registration via the admin `SiteKeyRegister` endpoint was the only path actually updating providers.
+  
+  - `getUpdatedClients` now flattens account → sites and emits one record per site, applying the `updatedAt` cutoff per site rather than relying on the document-level match. The account's `tier` is projected and attached; it was previously projected as `sites.tier`, which does not exist, so `tier` was undefined too.
+  - The cast is gone. `getUpdatedClients` returns `IUserDataSlim[]` and `updateClientRecords` accepts it — these are plain objects built from portal documents, never mongoose Documents, and the declared types now say so.
+  - `updateClientRecords` drops records with no account and logs the count instead of upserting them, so a future mapping bug cannot silently overwrite one row with every client's settings.
+  
+  Adds an integration test covering the flattening, the per-site cutoff, and the active-user filter; it fails with `account: undefined` against the old mapping.
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/types-database@5.5.0
+  - @prosopo/user-access-policy@3.14.0
+
+## 4.0.29
+### Patch Changes
+
+- 8a63ea3: Include `clientMetaData` in the commitment projection.
+  
+  `DAPP_USER_COMMITMENT_PROJECTION` enumerates the fields the verify path reads
+  off `solution`. `clientMetaData` arrived in 5.5.0 with the client-session
+  correlation but was never added, so both `getDappUserCommitmentById` and
+  `getDappUserCommitmentByAccount` returned it as `undefined` on every fetch —
+  whatever was stored on the record.
+  
+  `isClientSessionMismatch(expected, undefined)` is therefore true whenever the
+  caller supplies a session id, so every image captcha verified through a caller
+  that correlates on a session was disapproved with `CLIENT_SESSION_MISMATCH`:
+  a token replay reported on solves earned in exactly the session they claimed.
+  
+  PoW and puzzle were unaffected — they read their own challenge record rather
+  than this projection, which is why the failure was confined to image captchas.
+  
+  The projection's own regression test now asserts the field round-trips; it was
+  written to catch this class of bug and did not cover this field.
+
+## 4.0.28
+### Patch Changes
+
+- f8a41fe: Stop leaking a mongoose connection pool on every failed database connect.
+  
+  `MongoDatabase.connect()` assigns `this.connection` only once the connection
+  opens, so a connection that fails to open is unreachable from the instance and
+  `close()` can never reach it — while mongoose keeps its topology monitor, its
+  `minPoolSize: 5` pool and its entry in `mongoose.connections` alive and
+  retrying forever. `onError` now destroys that connection. `destroy` rather than
+  `close` because only `destroy` drops the `mongoose.connections` entry, which
+  would otherwise retain the object on its own. The teardown is guarded so that a
+  runtime `error` on an already-open connection is not mistaken for a failed
+  connect and does not tear down a working pool; the `error` listener stays
+  registered after `open` because an `EventEmitter` `error` with no listener
+  would take the process down.
+  
+  Observed on a provider whose connects to the central DB were timing out: 524
+  failed connects an hour accumulated 5,819 ESTABLISHED sockets to the central
+  DB and 5,859 TLS sockets, and the resulting flood of driver DNS lookups
+  saturated libuv's four-thread pool — 8,812 `getaddrinfo` calls queued — so
+  every unrelated outbound lookup in the process backed up behind them. That
+  provider burned 3.45x the CPU of a healthy peer while serving 2.5x less
+  traffic, with event-loop p99 at 240ms against the peer's 27ms.
+  
+  `getMongoConnectionOptions` also gains `connectTimeoutMS` and
+  `serverSelectionTimeoutMS` overrides, and `CentralDbStreamer` passes 45s for
+  both. The 10s default is sized for a database that is local or on the same
+  continent; the central DB is long-haul for every provider and genuinely distant
+  for some, where the TLS handshake alone measures 2-30s. Under the old ceiling
+  those providers could never connect at all, so the streamer burned a connect
+  attempt every cooldown forever and streamed no records — which is what fed the
+  leak above.
+- 6f57ee9: chore(deps): bump make-dir from 3.1.0 to 5.1.0
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [b6918c0]
+- Updated dependencies [d288371]
+  - @prosopo/user-access-policy@3.13.0
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/types-database@5.4.1
+  - @prosopo/common@3.1.54
+  - @prosopo/logger@2.0.9
+  - @prosopo/redis-client@1.0.35
+
+## 4.0.27
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- 8a670d3: Remove the provider-side context validation path.
+  
+  The provider read a per-context baseline out of `clientcontextentropies` on the frictionless path and compared a session's head hash against it. The task that wrote that collection was removed from the provider on 2026-08-21, so the read has returned `undefined` ever since and the branch has been dead in every deployment since then. Computing and applying the baseline now happens off-provider.
+  
+  Removed: `contextAwareValidation.ts`, the decision-machine branch that used it, `getClientContextEntropy` on the provider and its database method, the `clientContextEntropy` table registration, the unused `getRoundsFromSimScore` helper, and the `contextAwareEnabled` parameter threaded into image verification — which logged and then did nothing, its return commented out.
+  
+  Also removes the per-site `settings.contextAware` block that configured it, along with `ContextAwareSchema`, `IContextAware`, `IContexts`, `ContextConfigSchema`, `contextAwareThresholdDefault` and `expandContexts`, the legacy `default`/`webview` context keys and their helpers, and `FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED`. The site-key registration CLI no longer writes a `contextAware` default into new sites.
+  
+  `ContextType`, `contextTypeFromSession` and `deviceContextTypes` stay — the off-provider work keys on them. `ClientContextEntropyRecord` and its schema stay for the same reason; only the provider's use of them goes.
+  
+  No behaviour change: every path removed here was already inert.
+- Updated dependencies [7fd6eb2]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/user-access-policy@3.12.33
+  - @prosopo/common@3.1.53
+  - @prosopo/logger@2.0.8
+  - @prosopo/redis-client@1.0.34
+  - @prosopo/types@5.6.0
+  - @prosopo/types-database@5.4.0
+  - @prosopo/util@3.3.8
+
+## 4.0.26
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/types-database@5.3.4
+  - @prosopo/user-access-policy@3.12.32
+
+## 4.0.25
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/types-database@5.3.3
+  - @prosopo/user-access-policy@3.12.31
+
+## 4.0.24
+### Patch Changes
+
+- 0a88895: Project the session fields callers read, and let routing machines set puzzle overrides.
+  
+  `getSessionRecordBySessionId` lists its fields explicitly but declared a full `Session` return type. That type lie let callers read fields the projection never selected — they get `undefined`, with no error anywhere. This is the fourth time it has shipped: after the tcp-probe fields (verify-time TCP decide rules received `undefined` and never fired) and `clientMetaData` (#3141), this round found the entropy fingerprints plus the `g`/`i`/`sw`/`md`/`bn`/`fs` flags — which silently disabled the origin-session fallback in `getSessionRecordWithOriginFallback` *and* made it issue a redundant second query on every escalation, since every `needsX` check was trivially true and the origin read back `undefined` too — along with `ruleType` (fed into `DecisionMachineInput` by all three verify paths, so any decide rule gating on the matched access rule was dead), `powDifficulty` and `isProtect`.
+  
+  Adds the 13 missing fields, then makes it structural: the projection is now `SESSION_PROJECTION` and the return type is derived from it as `ProjectedSession`, so reading an unprojected field is a compile error. The other three projected queries were audited and are correct; `getClientRecord` is safe by construction for the same reason, its return type being `Pick`-narrowed to match.
+  
+  Separately, `RoutingMachineOutput` gains `puzzleTolerance` and `puzzle`, so a routing machine that inherits a trafficFilter `challenge` policy can reproduce it exactly. `getPuzzleCaptchaChallenge` re-derives its overrides from a live trafficFilter verdict, which a machine-chosen puzzle has no counterpart for, so the values are persisted on the session and layered in there. Both are bounded by the same field validators the portal uses.
+  
+  Also: `deriveTrafficPolicies` forwards a site's per-category `trafficFilter` policies to routing and decision machines, so a machine can tell "the operator rejects this egress class" from "the operator deliberately accepts it"; `sendCaptcha` now persists the router's `reason`, which previously never reached the session on the route phase and was invisible in the portal; and `runArtifactExport`'s schema generic is corrected from `z.ZodSchema<T>` (which pins Input === Output === T, so any `.default()` in the tree made `T` unify with the input shape) to `z.ZodType<T, z.ZodTypeDef, unknown>`.
+- Updated dependencies [0a88895]
+- Updated dependencies [360b737]
+  - @prosopo/types-database@5.3.2
+  - @prosopo/types@5.5.1
+  - @prosopo/user-access-policy@3.12.30
+
+## 4.0.23
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+  - @prosopo/user-access-policy@3.12.29
+  - @prosopo/types-database@5.3.1
+
+## 4.0.22
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types-database@5.3.0
+  - @prosopo/types@5.5.0
+  - @prosopo/user-access-policy@3.12.28
+
+## 4.0.21
+### Patch Changes
+
+- 5a17a65: Fix client session id correlation rejecting every token.
+  
+  #3139 added `clientMetaData.clientSessionId` and a verify-time check that the solve carries the same session id the widget was rendered with. The check never passed: `getPowCaptchaRecordByChallenge` and `getPuzzleCaptchaRecordByChallenge` project an explicit field list, and `clientMetaData` was not in it. The verify path therefore read `undefined` and `isClientSessionMismatch(suppliedId, undefined)` returned true for *every* token carrying a session id, disapproving it with `API.CLIENT_SESSION_MISMATCH`.
+  
+  Nothing else was wrong: the widget attached the id, the wire format carried it, and the write path persisted it (the session record — read without a projection — had it all along). Only the read dropped it, which is why unit tests over the comparison helper and the escalation handoff all passed. `getSessionRecordBySessionId` had the same omission and is fixed too.
+  
+  This is the third instance of this class of bug — the projection-contract helper's own docstring already cites #3107 and #3116. The guard existed but its `consumerReads` manifest was not updated when #3139 started reading a new field, so the manifests for the PoW and puzzle contracts now list `clientMetaData` and their fixtures populate it. Reverting the projection fix makes that test fail with "serverVerifyPowCaptchaSolution reads a field that the projection stripped: clientMetaData".
+  
+  Adds an end-to-end Cypress spec (`clientSessionId.cy.ts`) that solves a real PoW captcha rendered with `data-sessionid` and asserts the dapp server's verify succeeds, plus a mismatch case that must be rejected — the half that proves the correlation actually runs rather than being silently skipped. This required wiring `clientSessionId` through the demo server's `/signup` into `isVerified`, which #3139 left unwired; that omission is why no e2e covered the feature.
+
+## 4.0.20
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/types-database@5.2.0
+  - @prosopo/common@3.1.52
+  - @prosopo/user-access-policy@3.12.27
+
+## 4.0.19
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/types-database@5.1.12
+  - @prosopo/user-access-policy@3.12.26
+
+## 4.0.18
+### Patch Changes
+
+- a2f4b13: Extend `getDappUserCommitmentById` and `getDappUserCommitmentByAccount` projections to include every field that the downstream verify path (`verifyImageCaptchaSolution`) reads off the returned solution — `behavioralDataPacked`, `deviceCapability`, `coords`, plus (for the by-account fallback) `userAccount`, `dappAccount`, `headers`, `ipInfo`, `sessionId`, `serverChecked`, `ipAddress`, `submittedAtTimestamp`. Both methods now share `DAPP_USER_COMMITMENT_PROJECTION`.
+  
+  Root cause: same class as #3107 (`getSessionRecordBySessionId` missing tcp-probe fields). `getDappUserCommitmentById` had a 13-field projection that omitted `behavioralDataPacked`, `deviceCapability`, and `coords`. `getDappUserCommitmentByAccount` projected only `{_id: 0, result: 1}`, so on that branch every field beyond `result` landed as `undefined` at the caller. Any downstream code path that read a stripped field silently degraded.
+  
+  Guard: adds `commitmentRecordProjection.integration.test.ts` — persists a full commitment, fetches via both methods, asserts each field the verify path reads round-trips and that both methods return the same shape.
+- 179a2b0: Add reusable projection-contract test scaffold for `ProviderDatabase` mongo fetch methods.
+  
+  `packages/database/src/tests/integration/projectionContract.ts` exports `testProjectionContract`, a vitest helper that pins a (projection method, consumer) pair: insert a fully-populated fixture, fetch via the method under test, assert every field the consumer reads survives the projection. `packages/database/src/tests/integration/projectionContracts.integration.test.ts` wires initial contracts for `getPowCaptchaRecordByChallenge`, `getPuzzleCaptchaRecordByChallenge`, and `getClientRecord`.
+  
+  Motivation: same class of bug keeps landing (`getSessionRecordBySessionId` missing tcp-probe fields — #3107; `getDappUserCommitmentBy{Id,Account}` missing verify-path fields — #3116). Mongo projections narrow at write time and stay narrow, while downstream consumers add new field reads over time; TypeScript can't catch the mismatch because the return type is the full record, not the projected subset. This scaffold pins the contract per method and fails a targeted assertion the moment a projection stops covering what the consumer reads.
+  
+  Adding a new contract when a new projected fetch method lands, or extending the `consumerReads` manifest when a consumer starts reading a new field, is now the drift-prevention convention. `commitmentRecordProjection.integration.test.ts` and `sessionRecordProjection.integration.test.ts` remain as bespoke regression guards; the scaffold is additive, not a replacement.
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/user-access-policy@3.12.25
+  - @prosopo/util@3.3.7
+  - @prosopo/common@3.1.51
+  - @prosopo/logger@2.0.7
+  - @prosopo/redis-client@1.0.33
+  - @prosopo/types-database@5.1.11
+
+## 4.0.17
+### Patch Changes
+
+- dfc1fa6: Two provider-DB latency fixes.
+  
+  **Pin the pending-stage sweep to its compound partial index.** `getUnstoredDappUserCommitments`, `getUnstoredDappUserPoWCommitments`, and `getUnstoredSessionRecords` now call `.hint("pendingStage_partial")`. Observed post-index-fix on 2026-08-21: mongo's planner sometimes picked plain `IXSCAN {_id:1}` over the compound `{pendingStage:1, _id:1}` for `find({pendingStage:true}).sort({_id:1})`, scanning the whole collection and filtering in memory until the 30s socket timeout killed the connection. Clearing the plan cache re-planned once but didn't prevent recurrence after future catalog changes — the hint makes the choice explicit and permanent.
+  
+  **Remove local context-entropy computation.** Deletes `sampleContextEntropy` (the `$sample`-then-`$lookup` aggregation), `setClientContextEntropy`, `ClientTaskManager.calculateClientEntropy`, and the `setClientEntropy` scheduler + CLI registration. Was accounting for ~36 minutes of DB time every 6h against `powcaptchas` and `sessions` — the `$lookup` fanned out to 10 000 session reads per invocation to produce 75 sampled sessionIds. Same computation now runs off-provider in the external job-runner across the full record set; the provider keeps `getClientContextEntropy` for the DM's read path (the job-runner writes to the same `clientcontextentropies` collection).
+- Updated dependencies [dfc1fa6]
+  - @prosopo/types-database@5.1.10
+
+## 4.0.16
+### Patch Changes
+
+- 127985f: Extend `getSessionRecordBySessionId` projection with the nine tcp-probe fields (`synNs`, `synackNs`, `ackNs`, `observedTtl`, `tcpMss`, `tcpWscale`, `tcpOptsFlags`, `tcpOptsOrder`, `tcpWindow`).
+  
+  The img / pow / puzzle verify paths forward these onto `DecisionMachineInput` so decide rules can match TCP fingerprints (e.g. `tcp-stack-dc-linux-ts-off`, `tcp-ttl-windows-ua-linux-stack`). The projection had never been extended past the pre-tcp-probe set, so every DM decide call received `undefined` for the whole group and the rules silently returned `null` against real traffic. Adds a regression guard in `sessionRecordProjection.integration.test.ts` that persists a session with every tcp-probe field and asserts each round-trips through the getter.
+
+## 4.0.15
+### Patch Changes
+
+- 1afe466: Cache compiled decision-machine sandboxes; keyset-paginate the pending-stage sweep.
+  
+  - `DecisionMachineRunner` now hits `vm.createContext` + `new vm.Script` at most once per source blob (keyed by SHA-256). Exports `invalidateDecisionMachineScriptCache` and `invalidateAllDecisionMachineArtifactCaches`, both called from `updateDecisionMachine` after any artifact upload.
+  - `getUnstoredDappUserCommitments` / `getUnstoredDappUserPoWCommitments` / `getUnstoredSessionRecords` switch from `skip(N)` pagination to keyset (`_id > afterId`). Compound partial index `{pendingStage:1, _id:1}` on all four collections so filter + sort ride one index. Fixes the sweep that was scanning 470k–1.2M docs per page under a large pending backlog.
+- Updated dependencies [1afe466]
+  - @prosopo/types-database@5.1.9
+
+## 4.0.14
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/types-database@5.1.8
+  - @prosopo/user-access-policy@3.12.24
+
+## 4.0.13
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/types-database@5.1.7
+  - @prosopo/user-access-policy@3.12.23
+
+## 4.0.12
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+- Updated dependencies [3c88239]
+  - @prosopo/types-database@5.1.6
+  - @prosopo/types@5.2.3
+  - @prosopo/user-access-policy@3.12.22
+
+## 4.0.11
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/types-database@5.1.5
+  - @prosopo/user-access-policy@3.12.21
+
+## 4.0.10
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/types-database@5.1.4
+  - @prosopo/user-access-policy@3.12.20
+
+## 4.0.9
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/types-database@5.1.3
+  - @prosopo/user-access-policy@3.12.19
+
+## 4.0.8
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/types-database@5.1.2
+  - @prosopo/user-access-policy@3.12.18
+
+## 4.0.7
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/types-database@5.1.1
+  - @prosopo/user-access-policy@3.12.17
+
+## 4.0.6
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/types-database@5.1.0
+  - @prosopo/user-access-policy@3.12.16
+
+## 4.0.5
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/user-access-policy@3.12.15
+  - @prosopo/types-database@5.0.4
+  - @prosopo/types@5.0.4
+
+## 4.0.4
+### Patch Changes
+
+- 69c6982: Fix two failures on main.
+  
+  `biome check` was failing on three files from #3025 — two import orderings and one
+  line that fits on a single line. Formatting only, no behaviour change.
+  
+  `@prosopo/prosoponator-bot`'s test suite was failing to load with
+  `Cannot find module 'undici'`. `@actions/github@6.0.0` calls `require("undici")`
+  in `lib/internal/utils.js` but does not declare it as a dependency, relying on it
+  being hoisted. The lockfile only carried undici nested under
+  `@actions/http-client`, so nothing at the root of `node_modules` could resolve
+  it. Declaring `undici` on the bot hoists the same 5.29.0 to the root.
+  
+  This only reproduces in CI. Locally the captcha repo sits inside captcha-private,
+  whose root `node_modules` has an undici that Node finds by walking up out of the
+  submodule — so the resolution succeeds on a dev machine and fails on a standalone
+  checkout.
+- 9ec6cc4: Bind repeated log context once with `Logger.with` instead of re-attaching the same data on every log call (mongo `mongoUrl`, redis `url`/`name`, provider startup-cleanup `failedFuncName`, and IP validation `challengeIp`/`providedIp`).
+- Updated dependencies [16dbab0]
+- Updated dependencies [9ec6cc4]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/user-access-policy@3.12.14
+  - @prosopo/util@3.3.6
+  - @prosopo/redis-client@1.0.32
+  - @prosopo/types-database@5.0.3
+  - @prosopo/common@3.1.50
+  - @prosopo/logger@2.0.6
+
 ## 4.0.3
 ### Patch Changes
 

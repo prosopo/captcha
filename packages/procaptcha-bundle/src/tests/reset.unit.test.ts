@@ -1,0 +1,307 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+/**
+ * `reset()` used to tear every widget down and then call `start()`, which
+ * re-renders only on implicitly-rendered pages. An explicitly-rendered widget
+ * was therefore destroyed and never rebuilt: the skeleton stayed in the DOM
+ * with no checkbox inside it and no fresh captcha request was made. These
+ * tests pin the remount so that regression cannot return.
+ */
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { BundleCaptchaHandle } from "../util/captcha/components/bundleCaptcha.js";
+import type { CreatedWidget } from "../util/widgetFactory.js";
+
+const mocks = vi.hoisted(() => ({
+	prefetchDetector: vi.fn(),
+	createWidgets: vi.fn(),
+}));
+
+vi.mock("@prosopo/procaptcha-frictionless", () => ({
+	prefetchDetector: mocks.prefetchDetector,
+}));
+
+vi.mock("@prosopo/procaptcha-common", () => ({
+	getWindowCallback: vi.fn(),
+	pickIpMode: vi.fn(() => undefined),
+}));
+
+vi.mock("../util/widgetFactory.js", () => ({
+	WidgetFactory: vi.fn(function () {
+		return { createWidgets: mocks.createWidgets };
+	}),
+}));
+
+const { render, reset, remove } = await import("../index.js");
+
+const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
+
+const makeHandle = (): BundleCaptchaHandle => ({ destroy: vi.fn() });
+
+const makeWidget = (
+	handle: BundleCaptchaHandle = makeHandle(),
+): CreatedWidget => ({
+	handle,
+	container: document.createElement("div"),
+});
+
+/** Each createWidgets call yields a distinct handle, as the real factory does. */
+const queueHandles = (...handles: BundleCaptchaHandle[]): void => {
+	for (const handle of handles) {
+		mocks.createWidgets.mockResolvedValueOnce([makeWidget(handle)]);
+	}
+};
+
+/** Appends the widget node to its host, as the real factory does in invisible mode. */
+const mountInto = async (containers: Element[]): Promise<CreatedWidget[]> =>
+	containers.map((host: Element) => {
+		const widget = makeWidget();
+		host.appendChild(widget.container);
+		return widget;
+	});
+
+beforeEach(async () => {
+	vi.clearAllMocks();
+	// Drop any widgets registered by a previous test — module state persists
+	// across tests in the same file.
+	await remove();
+	// clearAllMocks keeps queued "once" results; a test that leaves one unused
+	// would hand it to whichever test the shuffled order runs next.
+	mocks.createWidgets.mockReset();
+	mocks.createWidgets.mockResolvedValue([makeWidget()]);
+});
+
+describe("render", () => {
+	it("returns a widget id", async () => {
+		queueHandles(makeHandle());
+
+		const widgetId = await render(document.createElement("div"), {
+			siteKey: SITE_KEY,
+		});
+
+		expect(typeof widgetId).toBe("string");
+		expect(widgetId).toBeTruthy();
+	});
+
+	it("returns undefined when the factory creates no widget", async () => {
+		mocks.createWidgets.mockResolvedValueOnce([] as CreatedWidget[]);
+
+		const widgetId = await render(document.createElement("div"), {
+			siteKey: SITE_KEY,
+		});
+
+		expect(widgetId).toBeUndefined();
+	});
+});
+
+describe("reset", () => {
+	it("destroys the old widget and mounts a replacement", async () => {
+		const first = makeHandle();
+		const second = makeHandle();
+		queueHandles(first, second);
+
+		const element = document.createElement("div");
+		await render(element, { siteKey: SITE_KEY });
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(1);
+
+		await reset();
+
+		expect(first.destroy).toHaveBeenCalledTimes(1);
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(2);
+		// Rebuilt into the same element, with the options it was rendered with.
+		expect(mocks.createWidgets).toHaveBeenLastCalledWith(
+			[element],
+			expect.objectContaining({ siteKey: SITE_KEY }),
+			true,
+			false,
+		);
+		expect(second.destroy).not.toHaveBeenCalled();
+	});
+
+	it("resets only the widget whose id is given", async () => {
+		const firstA = makeHandle();
+		const firstB = makeHandle();
+		const replacementA = makeHandle();
+		queueHandles(firstA, firstB, replacementA);
+
+		const elementA = document.createElement("div");
+		const elementB = document.createElement("div");
+		const idA = await render(elementA, { siteKey: SITE_KEY });
+		await render(elementB, { siteKey: SITE_KEY });
+
+		await reset(idA);
+
+		expect(firstA.destroy).toHaveBeenCalledTimes(1);
+		expect(firstB.destroy).not.toHaveBeenCalled();
+		expect(mocks.createWidgets).toHaveBeenLastCalledWith(
+			[elementA],
+			expect.anything(),
+			true,
+			false,
+		);
+	});
+
+	it("keeps the widget resettable more than once", async () => {
+		const handles = [makeHandle(), makeHandle(), makeHandle()];
+		queueHandles(...handles);
+
+		await render(document.createElement("div"), { siteKey: SITE_KEY });
+		await reset();
+		await reset();
+
+		expect(handles[0]?.destroy).toHaveBeenCalledTimes(1);
+		expect(handles[1]?.destroy).toHaveBeenCalledTimes(1);
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(3);
+	});
+
+	it("preserves the invisible flag when rebuilding", async () => {
+		queueHandles(makeHandle(), makeHandle());
+
+		const button = document.createElement("button");
+		await render(button, { siteKey: SITE_KEY });
+
+		await reset();
+
+		expect(mocks.createWidgets).toHaveBeenLastCalledWith(
+			[button],
+			expect.anything(),
+			true,
+			true,
+		);
+	});
+
+	it("coalesces overlapping resets so no replacement is left untracked", async () => {
+		const original = makeHandle();
+		const replacement = makeHandle();
+		const orphanCandidate = makeHandle();
+		queueHandles(original);
+		const element = document.createElement("div");
+		const id = await render(element, { siteKey: SITE_KEY });
+
+		let resolveFirst: (widgets: CreatedWidget[]) => void = () => undefined;
+		mocks.createWidgets.mockImplementationOnce(
+			() =>
+				new Promise<CreatedWidget[]>((resolve) => {
+					resolveFirst = resolve;
+				}),
+		);
+		queueHandles(orphanCandidate);
+
+		const first = reset(id);
+		const second = reset(id);
+		resolveFirst([makeWidget(replacement)]);
+		await Promise.all([first, second]);
+
+		// Only one replacement is built, and it is the one remove() reaches.
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(2);
+		expect(original.destroy).toHaveBeenCalledTimes(1);
+		await remove(id);
+		expect(replacement.destroy).toHaveBeenCalledTimes(1);
+		expect(orphanCandidate.destroy).not.toHaveBeenCalled();
+	});
+
+	it("tears down a replacement that finishes building after remove()", async () => {
+		const original = makeHandle();
+		const late = makeHandle();
+		queueHandles(original);
+		const element = document.createElement("div");
+		const id = await render(element, { siteKey: SITE_KEY });
+
+		let resolveBuild: (widgets: CreatedWidget[]) => void = () => undefined;
+		mocks.createWidgets.mockImplementationOnce(
+			() =>
+				new Promise<CreatedWidget[]>((resolve) => {
+					resolveBuild = resolve;
+				}),
+		);
+
+		const pending = reset(id);
+		await remove(id);
+		const lateWidget = makeWidget(late);
+		element.appendChild(lateWidget.container);
+		resolveBuild([lateWidget]);
+		await pending;
+
+		expect(late.destroy).toHaveBeenCalledTimes(1);
+		expect(element.contains(lateWidget.container)).toBe(false);
+		// The removed id stays gone rather than being resurrected by the reset.
+		await reset(id);
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(2);
+	});
+
+	it("does nothing for an unknown widget id", async () => {
+		queueHandles(makeHandle());
+		await render(document.createElement("div"), { siteKey: SITE_KEY });
+
+		await reset("procaptcha-widget-does-not-exist");
+
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("remove", () => {
+	it("destroys without mounting a replacement", async () => {
+		const handle = makeHandle();
+		queueHandles(handle);
+
+		const element = document.createElement("div");
+		element.innerHTML = "<span>skeleton</span>";
+		await render(element, { siteKey: SITE_KEY });
+
+		await remove();
+
+		expect(handle.destroy).toHaveBeenCalledTimes(1);
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(1);
+		// The skeleton is plain DOM the handle doesn't own, so destroying the
+		// widget alone would leave it behind — remove() clears the container too.
+		expect(element.innerHTML).toBe("");
+	});
+
+	it("keeps an invisible-mode button's own label", async () => {
+		mocks.createWidgets.mockImplementation(mountInto);
+		const button = document.createElement("button");
+		button.textContent = "Sign up";
+		await render(button, { siteKey: SITE_KEY });
+		expect(button.childElementCount).toBe(1);
+
+		await remove();
+
+		expect(button.textContent).toBe("Sign up");
+		expect(button.childElementCount).toBe(0);
+	});
+
+	it("does not stack widget nodes in an invisible-mode button on reset", async () => {
+		mocks.createWidgets.mockImplementation(mountInto);
+		const button = document.createElement("button");
+		button.textContent = "Sign up";
+		await render(button, { siteKey: SITE_KEY });
+
+		await reset();
+		await reset();
+
+		expect(button.childElementCount).toBe(1);
+		expect(button.textContent).toBe("Sign up");
+	});
+
+	it("makes a subsequent reset a no-op", async () => {
+		queueHandles(makeHandle());
+		await render(document.createElement("div"), { siteKey: SITE_KEY });
+
+		await remove();
+		await reset();
+
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(1);
+	});
+});

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ALWAYS_FAIL_SITE_KEY, ALWAYS_PASS_SITE_KEY } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BlacklistRequestInspector } from "../../../api/blacklistRequestInspector.js";
@@ -120,5 +121,69 @@ describe("blockMiddleware", () => {
 
 		expect(BlacklistRequestInspector).toHaveBeenCalledTimes(1);
 		expect(mockAbort).toHaveBeenCalledTimes(2);
+	});
+
+	it("skips the blocklist check for a reserved test site key", async () => {
+		const { env, mockDb } = buildMockEnv();
+
+		const middleware = blockMiddleware(env);
+		const next = vi.fn();
+		await middleware(
+			{ headers: { "prosopo-site-key": ALWAYS_PASS_SITE_KEY } } as never,
+			{} as never,
+			next,
+		);
+
+		// This is the whole point of the exemption: the blocklist decides on
+		// IP/JA4/ASN before any site-key logic runs, so without it a reserved
+		// key cannot make a suite deterministic on a blocked runner.
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(BlacklistRequestInspector).not.toHaveBeenCalled();
+		expect(mockDb.getUserAccessRulesStorage).not.toHaveBeenCalled();
+	});
+
+	it("skips the blocklist check for the reserved always-fail key too", async () => {
+		const { env } = buildMockEnv();
+
+		const middleware = blockMiddleware(env);
+		const next = vi.fn();
+		await middleware(
+			{ headers: { "prosopo-site-key": ALWAYS_FAIL_SITE_KEY } } as never,
+			{} as never,
+			next,
+		);
+
+		// Both reserved keys serve the same invisible flow; a suite asserting
+		// the failure path must be as reachable as one asserting the pass path.
+		expect(next).toHaveBeenCalledTimes(1);
+		expect(BlacklistRequestInspector).not.toHaveBeenCalled();
+	});
+
+	it("still runs the blocklist check for a normal site key", async () => {
+		const { env } = buildMockEnv();
+		const mockAbort = vi.fn();
+		vi.mocked(BlacklistRequestInspector).mockImplementation(function () {
+			return {
+				abortRequestForBlockedUsers: mockAbort,
+			} as never;
+		});
+
+		const middleware = blockMiddleware(env);
+		const next = vi.fn();
+		await middleware(
+			{
+				headers: {
+					"prosopo-site-key":
+						"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				},
+			} as never,
+			{} as never,
+			next,
+		);
+
+		// The exemption must not widen into "any site key skips the blocklist".
+		expect(BlacklistRequestInspector).toHaveBeenCalledTimes(1);
+		expect(mockAbort).toHaveBeenCalledTimes(1);
+		expect(next).not.toHaveBeenCalled();
 	});
 });

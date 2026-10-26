@@ -14,12 +14,12 @@
 /// <reference types="cypress" />
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	beforeEach(() => {
@@ -39,17 +39,17 @@ describe("Captchas", () => {
 		}));
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-8",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 		cy.intercept("/dummy").as("dummy");
 
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			// Wait for the procaptcha script to be loaded
 			// This ensures tests work with both async and non-async script loading
 			cy.waitForProcaptchaScript();
@@ -75,7 +75,7 @@ describe("Captchas", () => {
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 
 		// Wait for the procaptcha script to be loaded after navigation
 		cy.waitForProcaptchaScript();

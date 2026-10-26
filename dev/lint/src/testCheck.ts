@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { getWorkspacePatterns } from "@prosopo/workspace";
 import fg from "fast-glob";
 import type { Argv } from "yargs";
 import z from "zod";
@@ -42,31 +43,28 @@ const testCheck = (args: {
 	pkg: string;
 }) => {
 	console.log("Checking", args.pkg);
-	// read the pkg json file
-	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));
-	// only accept workspace pkg json
-	if (pkgJson.workspaces === undefined) {
-		throw new Error(`${args.pkg} is not a workspace`);
-	}
 
 	// for each package in the workspace
-	const globs = z
-		.string()
-		.array()
-		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkg)}/${g}/package.json`);
+	const globs = getWorkspacePatterns(args.pkg, "package.json");
 	const pkgJsonPaths = fg.globSync(globs);
 	for (const pkgJsonPath of pkgJsonPaths) {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 		const hasTestScript = pkgJson.scripts?.test !== undefined;
-		// glob for test files in the source dir (.test.ts or .spec.ts)
-		const testFiles = fg.globSync([
-			`${path.dirname(pkgJsonPath)}/src/**/*.test.ts`,
-			`${path.dirname(pkgJsonPath)}/src/**/*.spec.ts`,
-			`${path.dirname(pkgJsonPath)}/src/**/*.test.tsx`,
-			`${path.dirname(pkgJsonPath)}/src/**/*.spec.tsx`,
-		]);
+		// Glob for test files (.test.ts / .spec.ts) anywhere in the package, not
+		// just under src/ — demos/cypress-shared keeps its only vitest test
+		// beside the script it covers, in scripts/, and a src-only glob reported
+		// it as "test script but no test files". Build output and dependencies
+		// are excluded so a compiled copy never counts as a source test.
+		const testFiles = fg.globSync(
+			[
+				`${path.dirname(pkgJsonPath)}/**/*.test.ts`,
+				`${path.dirname(pkgJsonPath)}/**/*.spec.ts`,
+				`${path.dirname(pkgJsonPath)}/**/*.test.tsx`,
+				`${path.dirname(pkgJsonPath)}/**/*.spec.tsx`,
+			],
+			{ ignore: ["**/node_modules/**", "**/dist/**"] },
+		);
 		if (hasTestScript) {
 			// package has a test script
 			if (testFiles.length === 0) {

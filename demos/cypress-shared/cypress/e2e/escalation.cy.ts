@@ -14,7 +14,7 @@
 /// <reference types="cypress" />
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
@@ -43,7 +43,7 @@ const FORCE_IMAGE_ROUTING_MACHINE = `
 
 describe("Post-PoW route() escalation surfaces the image captcha", () => {
 	// The frictionless siteKey from .env. Same one as other suites.
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${CaptchaType.frictionless.toUpperCase()}`,
 	);
 
@@ -84,16 +84,16 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 		}));
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-6",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 		cy.intercept("/dummy").as("dummy");
 
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 			cy.wrap(solutions).as("solutions");
@@ -117,7 +117,7 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 	});
 
 	it("displays the image captcha after PoW is solved and route() escalates", () => {
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 		cy.waitForProcaptchaScript();
 
 		// Watch every leg of the flow so the test fails on a specific edge
@@ -198,7 +198,7 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 
 		// And the image modal should be visible to the user — same DOM
 		// surface the image-flow tests reach via cy.captchaImages().
-		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+		getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 15000 }).should(
 			"be.visible",
 		);
 	});

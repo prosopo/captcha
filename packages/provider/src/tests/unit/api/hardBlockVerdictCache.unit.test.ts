@@ -203,6 +203,50 @@ describe("HardBlockVerdictCache", () => {
 			expect(wave2).toHaveLength(1);
 		});
 
+		it("a compute that was in flight when clear() ran does not repopulate the cache", async () => {
+			const cache = new HardBlockVerdictCache(30_000, 100);
+			let release: (value: AccessRule[]) => void = () => {};
+			const staleCompute = (): Promise<AccessRule[]> =>
+				new Promise<AccessRule[]>((resolve) => {
+					release = resolve;
+				});
+
+			const stale = cache.getOrCompute("k", staleCompute);
+			cache.clear();
+			release([rule("deleted")]);
+
+			expect((await stale)[0]?.description).toBe("rule-deleted");
+			expect(cache.get("k")).toBeUndefined();
+
+			let calls = 0;
+			const fresh = await cache.getOrCompute("k", async () => {
+				calls++;
+				return [];
+			});
+			expect(calls).toBe(1);
+			expect(fresh).toHaveLength(0);
+		});
+
+		it("a caller arriving after clear() does not join the pre-clear compute", async () => {
+			const cache = new HardBlockVerdictCache(30_000, 100);
+			let release: (value: AccessRule[]) => void = () => {};
+			const stale = cache.getOrCompute(
+				"k",
+				() =>
+					new Promise<AccessRule[]>((resolve) => {
+						release = resolve;
+					}),
+			);
+			cache.clear();
+
+			const fresh = cache.getOrCompute("k", async () => []);
+			release([rule("deleted")]);
+
+			expect(await fresh).toHaveLength(0);
+			expect((await stale)[0]?.description).toBe("rule-deleted");
+			expect(cache.get("k")).toEqual([]);
+		});
+
 		it("fast-paths a cache hit without touching the inflight map", async () => {
 			const cache = new HardBlockVerdictCache(30_000, 100);
 			cache.set("k", [rule("prefilled")]);
@@ -233,6 +277,24 @@ describe("hardBlockCacheKey", () => {
 		};
 		expect(hardBlockCacheKey("client-A", scopeA, true)).toBe(
 			hardBlockCacheKey("client-A", scopeB, true),
+		);
+	});
+
+	it("distinguishes a deferred-inclusive lookup from a Block-only one", () => {
+		// The middleware (blockOnly) and the verify-time lookup
+		// (blockOnly + includeDeferred) share a scope but query
+		// different candidate pools, so they must not share a cached
+		// verdict.
+		const scope = { ja4Hash: "abc" };
+		expect(hardBlockCacheKey("client-A", scope, true, true)).not.toBe(
+			hardBlockCacheKey("client-A", scope, true, false),
+		);
+	});
+
+	it("defaults includeDeferred to false", () => {
+		const scope = { ja4Hash: "abc" };
+		expect(hardBlockCacheKey("client-A", scope, true)).toBe(
+			hardBlockCacheKey("client-A", scope, true, false),
 		);
 	});
 

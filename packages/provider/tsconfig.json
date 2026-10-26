@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
 		"allowJs": true
 	},
 	"include": [
@@ -18,19 +19,25 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../api-route"
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../api"
 		},
 		{
 			"path": "../api-express-router"
 		},
 		{
+			"path": "../api-route"
+		},
+		{
+			"path": "../audio-assets"
+		},
+		{
+			"path": "../captcha-severity"
+		},
+		{
 			"path": "../common"
-		},
-		{
-			"path": "../logger"
-		},
-		{
-			"path": "../../dev/config"
 		},
 		{
 			"path": "../database"
@@ -42,13 +49,31 @@
 			"path": "../env"
 		},
 		{
+			"path": "../icon-order-assets"
+		},
+		{
 			"path": "../ipinfo"
+		},
+		{
+			"path": "../keyring"
 		},
 		{
 			"path": "../load-balancer"
 		},
 		{
-			"path": "../keyring"
+			"path": "../fingerprint"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../logger"
+		},
+		{
+			"path": "../puzzle-assets"
+		},
+		{
+			"path": "../redis-client"
 		},
 		{
 			"path": "../types"
@@ -60,22 +85,16 @@
 			"path": "../types-env"
 		},
 		{
+			"path": "../user-access-policy"
+		},
+		{
 			"path": "../util"
 		},
 		{
 			"path": "../util-crypto"
 		},
 		{
-			"path": "../user-access-policy"
-		},
-		{
-			"path": "../api"
-		},
-		{
-			"path": "../locale"
-		},
-		{
-			"path": "../redis-client"
+			"path": "../web-bot-auth"
 		}
 	]
 }

@@ -1,8 +1,7 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { sha256 as sha256Js } from "@noble/hashes/sha256";
-import { sha512 as sha512Js } from "@noble/hashes/sha512";
+import { sha256 as sha256Js, sha512 as sha512Js } from "@noble/hashes/sha2.js";
 
 /**
  * @name shaAsU8a

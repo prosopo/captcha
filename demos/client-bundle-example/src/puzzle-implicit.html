@@ -1,14 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
 
-    <script src="index.js"></script>
-    <title>Procaptcha demo: Puzzle - Implicit Rendering</title>
-<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha demo: Puzzle, implicit rendering</title>
     <script type="module">
-        // Function to update CAPTCHA status display is now provided by status-log-injector
 
         window.addEventListener('load', () => {
 
@@ -140,7 +135,6 @@
             observer.observe(document.body, { childList: true, subtree: true });
         });
 
-
         window.onCaptchaFailed = function () {
             console.log('Challenge failed');
             updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
@@ -164,28 +158,23 @@
 </head>
 <body>
 
-<div class="mui-container">
-    <h1>Puzzle CAPTCHA - Implicit Rendering</h1>
-    <p>This example demonstrates how to use Procaptcha in Puzzle mode with implicit rendering.</p>
+<div class="demo-card">
 
-    <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
-
-    <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
-        <h2>Example Login Form</h2>
-        <div class="mui-textfield mui-textfield--float-label">
+    <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="demo-form">
+        <h2>Create an account</h2>
+        <div class="demo-field">
             <label for="name">Name</label>
             <input id="name" type="text" name="name" required/>
         </div>
-        <div class="mui-textfield mui-textfield--float-label">
+        <div class="demo-field">
             <label for="email">Email Address</label>
             <input id="email" type="email" name="email" required/>
         </div>
-        <div class="mui-textfield mui-textfield--float-label">
+        <div class="demo-field">
             <label for="password">Password</label>
             <input id="password" type="password" name="password" required/>
         </div>
-        <div class="mui-textfield mui-textfield--float-label">
-            <!-- Dev sitekey -->
+        <div class="demo-field">
             <div
                     class="procaptcha"
                     data-theme="light"
@@ -195,13 +184,9 @@
             ></div>
         </div>
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
-        <button type="button" class="mui-btn mui-btn--raised" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
+        <button type="button" class="demo-button" onclick="onActionHandler()" data-cy="submit-button">Submit</button>
     </form>
 
-    <!-- Console output display area -->
-    <div id="console-output" class="console-output" style="display: none;"></div>
-
-    <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
 </body>
 </html>

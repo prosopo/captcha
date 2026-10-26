@@ -206,6 +206,7 @@ describe("IIpInfoService", () => {
 			initialize: async (): Promise<void> => undefined,
 			lookup: async (_ip: string): Promise<IPInfoResponse> =>
 				stub<IPInfoResponse>(),
+			country: (_ip: string): string | undefined => undefined,
 			isAvailable: (): boolean => true,
 		});
 	});
@@ -241,9 +242,17 @@ describe("IIpInfoService", () => {
 		>();
 	});
 
-	test("has exactly the three members an implementation must provide", () => {
+	test("a country lookup is synchronous and may have no answer", () => {
+		// It reads a memory-mapped database in-process, so there is nothing to
+		// await; `undefined` is the single "no answer" case callers handle.
+		expectTypeOf<IIpInfoService["country"]>().toEqualTypeOf<
+			(ip: string) => string | undefined
+		>();
+	});
+
+	test("has exactly the four members an implementation must provide", () => {
 		expectTypeOf<keyof IIpInfoService>().toEqualTypeOf<
-			"initialize" | "lookup" | "isAvailable"
+			"initialize" | "lookup" | "country" | "isAvailable"
 		>();
 	});
 });

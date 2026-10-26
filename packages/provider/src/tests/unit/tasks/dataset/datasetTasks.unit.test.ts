@@ -14,13 +14,15 @@
 
 import { parseCaptchaDataset } from "@prosopo/datasets";
 import { type Logger, getLogger } from "@prosopo/logger";
-import type {
-	DatasetRaw,
-	ProsopoCaptchaCountConfigSchemaOutput,
-	ProsopoConfigOutput,
-	ScheduledTaskNames,
-	ScheduledTaskResult,
-	ScheduledTaskStatus,
+import {
+	CaptchaTypes,
+	type Dataset,
+	type DatasetRaw,
+	type ProsopoCaptchaCountConfigSchemaOutput,
+	type ProsopoConfigOutput,
+	type ScheduledTaskNames,
+	type ScheduledTaskResult,
+	type ScheduledTaskStatus,
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
@@ -155,11 +157,14 @@ describe("DatasetManager", () => {
 	it("should set the provider dataset from a file", async () => {
 		const mockFile = { captchas: [] };
 		const mockDatasetRaw = { captchas: [], format: "SelectAll" } as DatasetRaw;
-		const mockValidatedDataset = { datasetId: "123", datasetContentId: "456" };
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(parseCaptchaDataset as any).mockReturnValue(mockDatasetRaw);
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(datasetTasksUtils.providerValidateDataset as any).mockResolvedValue(
+		const mockValidatedDataset: Dataset = {
+			datasetId: "123",
+			datasetContentId: "456",
+			captchas: [],
+			format: CaptchaTypes.SelectAll,
+		};
+		vi.mocked(parseCaptchaDataset).mockReturnValue(mockDatasetRaw);
+		vi.mocked(datasetTasksUtils.providerValidateDataset).mockResolvedValue(
 			mockValidatedDataset,
 		);
 

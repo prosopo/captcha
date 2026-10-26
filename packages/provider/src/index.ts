@@ -23,9 +23,10 @@ export * from "./api/handshakeTimingMiddleware.js";
 export * from "./api/public.js";
 export * from "./api/domainMiddleware.js";
 export * from "./api/startProviderApi.js";
+// TEMPORARY - remove with the migration itself, one release after rollout.
+export * from "./migrations/frictionlessLadder.js";
 export * from "./schedulers/captchaScheduler.js";
 export * from "./schedulers/getClientList.js";
-export * from "./schedulers/setClientEntropy.js";
 export * from "./schedulers/updateSpamEmailDomains.js";
 export * from "./api/headerCheckMiddleware.js";
 export * from "./api/admin/createApiAdminRoutesProvider.js";
@@ -35,3 +36,9 @@ export * from "./compositeIpAddress.js";
 export * from "./services/ipComparison.js";
 export * from "./api/blacklistRequestInspector.js";
 export { FrictionlessReason } from "./tasks/frictionless/frictionlessTasks.js";
+export {
+	DEFAULT_DETECTOR_POOL_DIR,
+	filterPoolBundles,
+	persistDetectorBundlePool,
+} from "./tasks/detection/bundlePool.js";
+export { decodeOpenPayload } from "./tasks/detection/openPayload.js";

@@ -15,6 +15,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { ModeEnum } from "@prosopo/types";
 import type { Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { initDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
@@ -36,7 +37,7 @@ const makeInput = (
 		ipAddress: { ip: "1.2.3.4" },
 		ipInfo: undefined,
 		flatHeaders: {},
-		sessionMode: undefined,
+		sessionMode: ModeEnum.visible,
 		userSitekeyIpHash: "hash",
 		requestId: "req-1",
 		logger: { warn: vi.fn(), info: vi.fn() },

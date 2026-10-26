@@ -12,15 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { flatten } from "@prosopo/util";
 import { describe, expect, test } from "vitest";
-import translationEn from "../locales/en/translation.json" with {
-	type: "json",
-};
+import targetEn from "../locales/en/target.json" with { type: "json" };
+import serverEn from "../locales/en/translation.json" with { type: "json" };
+import widgetEn from "../locales/en/widget.json" with { type: "json" };
 import {
-	TranslationKeysSchema,
+	englishText,
+	isTargetKey,
+	isTranslationKey,
+	targetKeys,
+	translationKeys,
+} from "../serverTranslationKeys.js";
+import {
+	NAMESPACES,
 	type TranslationNode,
+	canTranslate,
 	getLeafFieldPath,
+	isWidgetTranslationKey,
 } from "../translationKey.js";
+import type { Ti18n } from "../types.js";
+
+const widgetSections: readonly string[] = [
+	"WIDGET",
+	"API",
+	"CAPTCHA",
+	"GENERAL",
+	"ACCOUNT",
+	"DEVELOPER",
+	"ERRORS",
+];
 
 describe("getLeafFieldPath", () => {
 	test("returns no paths for a bare string, which is a leaf and not a container", () => {
@@ -34,7 +55,7 @@ describe("getLeafFieldPath", () => {
 	// The string is the leaf, so the path ends at its key. This used to yield
 	// [] — the recursion returned nothing for a string and the parent mapped
 	// over that empty list — which made the whole function return [] for every
-	// input and left TranslationKeysSchema an empty enum.
+	// input and left `translationKeys` empty.
 	test("emits a top-level string value under its own key", () => {
 		expect(getLeafFieldPath({ topLevel: "value" })).toEqual(["topLevel"]);
 	});
@@ -112,55 +133,160 @@ describe("getLeafFieldPath", () => {
 	});
 });
 
-describe("TranslationKeysSchema", () => {
-	const keys = getLeafFieldPath(translationEn as TranslationNode);
+describe("translationKeys", () => {
+	const keys: string[] = [widgetEn, targetEn, serverEn].flatMap(
+		(catalogue: TranslationNode) => getLeafFieldPath(catalogue),
+	);
 
-	test("is non-empty — an empty z.enum would throw at module load", () => {
+	test("is non-empty — mongoose validates against an empty enum too", () => {
 		expect(keys.length).toBeGreaterThan(0);
 	});
 
-	test("accepts every key derived from the English translation", () => {
-		for (const key of keys) {
-			expect(TranslationKeysSchema.parse(key)).toBe(key);
-		}
+	test("is exactly the set of keys derived from the English translation", () => {
+		expect(new Set(translationKeys)).toEqual(new Set(keys));
 	});
 
-	test("rejects a key that is not in the English translation", () => {
-		expect(() => TranslationKeysSchema.parse("no.such.key")).toThrow();
+	test("has each key in one namespace only", () => {
+		expect(translationKeys).toHaveLength(keys.length);
+		expect(new Set(keys).size).toBe(keys.length);
 	});
 
-	test("rejects the empty string", () => {
-		expect(() => TranslationKeysSchema.parse("")).toThrow();
-	});
-
-	test("rejects a section name on its own — only leaves are valid keys", () => {
+	test("holds leaves, not section names", () => {
 		const [firstKey] = keys;
 		expect(firstKey).toBeDefined();
 		const section = String(firstKey).split(".")[0];
-		expect(() => TranslationKeysSchema.parse(section)).toThrow();
+		expect(translationKeys).not.toContain(section);
 	});
 
-	test("rejects non-string input", () => {
-		expect(() => TranslationKeysSchema.parse(42)).toThrow();
-		expect(() => TranslationKeysSchema.parse(null)).toThrow();
-		expect(() => TranslationKeysSchema.parse(undefined)).toThrow();
+	test("does not contain a key absent from the English translation", () => {
+		expect(translationKeys).not.toContain("no.such.key");
 	});
 
-	test("safeParse reports failure without throwing", () => {
-		const result = TranslationKeysSchema.safeParse("no.such.key");
-		expect(result.success).toBe(false);
+	test("does not contain the empty string", () => {
+		expect(translationKeys).not.toContain("");
+	});
+});
+
+describe("isTranslationKey", () => {
+	test("accepts a leaf of the English catalogue", () => {
+		expect(isTranslationKey("WIDGET.I_AM_HUMAN")).toBe(true);
+		expect(isTranslationKey("API.INVALID_SITE_KEY")).toBe(true);
 	});
 
-	test("is case sensitive", () => {
-		const [firstKey] = keys;
-		expect(firstKey).toBeDefined();
-		const upper = String(firstKey).toUpperCase();
-		if (upper !== firstKey) {
-			expect(() => TranslationKeysSchema.parse(upper)).toThrow();
+	test("rejects a section, a mistyped key, free text and the empty string", () => {
+		expect(isTranslationKey("WIDGET")).toBe(false);
+		expect(isTranslationKey("WIDGET.I_AM_HUMANN")).toBe(false);
+		expect(isTranslationKey("Invalid site key")).toBe(false);
+		expect(isTranslationKey("")).toBe(false);
+	});
+});
+
+describe("targetKeys", () => {
+	test("is every TARGET label of the English catalogue", () => {
+		expect(targetKeys).toEqual(Object.keys(targetEn.TARGET));
+	});
+
+	test("is the TARGET leaves of translationKeys, without the prefix", () => {
+		const fromKeys: string[] = translationKeys
+			.filter((key: string) => key.startsWith("TARGET."))
+			.map((key: string) => key.slice("TARGET.".length));
+		expect(new Set(targetKeys)).toEqual(new Set(fromKeys));
+	});
+});
+
+describe("isTargetKey", () => {
+	test("accepts a label, including a hyphenated one", () => {
+		expect(isTargetKey("owl")).toBe(true);
+		expect(isTargetKey("fire-hydrant")).toBe(true);
+	});
+
+	test("rejects the prefixed key, a section, an unknown label and the empty string", () => {
+		expect(isTargetKey("TARGET.owl")).toBe(false);
+		expect(isTargetKey("TARGET")).toBe(false);
+		expect(isTargetKey("not-a-label")).toBe(false);
+		expect(isTargetKey("")).toBe(false);
+	});
+
+	test("is case-sensitive, as the dataset labels are", () => {
+		expect(isTargetKey("Owl")).toBe(false);
+	});
+});
+
+describe("NAMESPACES", () => {
+	test("keeps i18next's default namespace for the server-only text", () => {
+		expect(NAMESPACES).toEqual({
+			widget: "widget",
+			target: "target",
+			server: "translation",
+		});
+	});
+
+	test("puts the widget's sections in widget, labels in target, the rest in translation", () => {
+		expect(Object.keys(widgetEn).sort()).toEqual([...widgetSections].sort());
+		expect(Object.keys(targetEn)).toEqual(["TARGET"]);
+		for (const section of Object.keys(serverEn)) {
+			expect(widgetSections).not.toContain(section);
+			expect(section).not.toBe("TARGET");
+		}
+	});
+});
+
+describe("isWidgetTranslationKey", () => {
+	test("accepts every key in the widget namespace", () => {
+		for (const key of getLeafFieldPath(widgetEn)) {
+			expect(isWidgetTranslationKey(key)).toBe(true);
 		}
 	});
 
-	test("exposes exactly the derived keys as enum options", () => {
-		expect(new Set(TranslationKeysSchema.options)).toEqual(new Set(keys));
+	test("rejects keys only the server has text for", () => {
+		expect(isWidgetTranslationKey("TARGET.owl")).toBe(false);
+		expect(isWidgetTranslationKey("DATABASE.UNKNOWN")).toBe(false);
+		expect(isTranslationKey("DATABASE.UNKNOWN")).toBe(true);
+	});
+
+	test("rejects a section, free text and the empty string", () => {
+		expect(isWidgetTranslationKey("WIDGET")).toBe(false);
+		expect(isWidgetTranslationKey("Invalid site key")).toBe(false);
+		expect(isWidgetTranslationKey("")).toBe(false);
+	});
+});
+
+describe("englishText", () => {
+	test("reads each namespace's English text", () => {
+		expect(englishText("TARGET.owl")).toBe(targetEn.TARGET.owl);
+		expect(englishText("WIDGET.SELECT_ALL")).toBe(widgetEn.WIDGET.SELECT_ALL);
+		expect(englishText("DATABASE.UNKNOWN")).toBe(serverEn.DATABASE.UNKNOWN);
+	});
+
+	test("matches the flattened English catalogues for every key", () => {
+		const english: Record<string, string> = flatten({
+			...serverEn,
+			...widgetEn,
+			...targetEn,
+		});
+		for (const key of translationKeys) {
+			if (isTranslationKey(key)) {
+				expect(englishText(key)).toBe(english[key]);
+			}
+		}
+	});
+});
+
+describe("canTranslate", () => {
+	const knowing = (...keys: string[]): Pick<Ti18n, "exists"> => ({
+		exists: (key: string): boolean => keys.includes(key),
+	});
+
+	test("accepts a key the instance has text for", () => {
+		expect(
+			canTranslate(knowing("WIDGET.SELECT_ALL"), "WIDGET.SELECT_ALL"),
+		).toBe(true);
+	});
+
+	test("rejects a key the instance lacks, even one English has", () => {
+		expect(canTranslate(knowing(), "TARGET.owl")).toBe(false);
+		expect(canTranslate(knowing("WIDGET.SELECT_ALL"), "Free text.")).toBe(
+			false,
+		);
 	});
 });

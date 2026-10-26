@@ -12,22 +12,29 @@ defaults:
     shell: bash
 
 env:
+  # Dependency debuginfo dominates a dev build and nothing here steps through
+  # third-party code; incremental state is worthless on a cold CI runner.
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
   BRANCH_PROTECTION_DISABLED: 'true'
   NODE_ENV: "production"
 
 jobs:
   create-pr:
     name: Create Release PR
-    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
-    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
-    # disk. Runners advertise one label per step up to their own size, so a job
-    # only lands on a host big enough for it. Set to a JSON string -> used as
-    # given, which is how a repo opts back out to a hosted runner.
-    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
+    # other repos: this repository is public, so a fork PR would run on the
+    # self-hosted fleet -- executing arbitrary contributor code on hardware we
+    # own, where it can also persist and poison later trusted jobs. Nothing is
+    # given up by staying hosted: standard GitHub-hosted runners are free and
+    # unlimited on public repos, macOS and Windows included. Only *larger*
+    # runners are billed, so do not "upgrade" a job to one.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    runs-on: ubuntu-latest
     steps:
       - name: Get token for gh app
         id: app_token
-        uses: peter-murray/workflow-application-token-action@v5
+        uses: peter-murray/workflow-application-token-action@dad2b81e50ce3edeb5f3b7ffbd79f731368bd668 # v5
         with:
           application_id: ${{ vars.PROSOPONATOR_APP_ID }}
           application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
@@ -38,10 +45,12 @@ jobs:
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
-          cache: 'npm'
+          node-version: '24.22.1'
+          cache: 'pnpm'
 
       - name: Setup npm registry
         run: |
@@ -52,7 +61,7 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
 
       - name: Detect changesets
         id: detect
@@ -74,32 +83,31 @@ jobs:
       - name: Version bump
         if: steps.detect.outputs.has_changesets == 'true'
         run: |
-          npm i -g @changesets/cli --no-audit --no-fund --prefer-offline
-          npx @changesets/cli version --verbose
+          pnpm exec changeset version --verbose
 
-          npm i --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+          pnpm install --lockfile-only --ignore-scripts
           
           # Set the root package.json version to match @prosopo/cli. The provider
           # image tag now comes from packages/cli's own version, so there is no
           # wrapper package left to keep in step.
-          root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+          root_version=$(jq -r .version packages/cli/package.json)
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting versions to $root_version"
           
-          npm pkg set version="$root_version"
+          pnpm pkg set version="$root_version"
           
           git add -u .
 
-      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
 
       - name: Build packages
         run: |
           echo "Building all packages"
-          npm run build:all
+          pnpm run build:all
 
       - name: lint-fix
         run: |
-          npm run lint-fix
+          pnpm run lint-fix
           git add -u .
 
       - name: Create release branch and PR

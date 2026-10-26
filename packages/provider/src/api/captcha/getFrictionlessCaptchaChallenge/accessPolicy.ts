@@ -12,15 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
+	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
-import type { AccessPolicy, UserScope } from "@prosopo/user-access-policy";
+import {
+	type AccessRule,
+	type UserScope,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import type { Response } from "express";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 import type { Tasks } from "../../../tasks/index.js";
@@ -29,7 +37,10 @@ import { attachHoneypot } from "./honeypotResponse.js";
 export type AccessPolicyInput = {
 	tasks: Tasks;
 	clientRecord: ClientRecord;
-	userAccessPolicy: AccessPolicy | undefined;
+	// The full matched rule, not just its policy half: the user-scope fields
+	// are what `describeMatchedRule` turns into the audit page's "this is the
+	// condition that matched you" breakdown.
+	userAccessPolicy: AccessRule | undefined;
 	baseBotScore: number;
 	botScore: number;
 	scoreComponents: ScoreComponents;
@@ -65,6 +76,16 @@ export const handleAccessPolicy = async (
 
 	const { tasks, clientRecord, userAccessPolicy, logger } = input;
 
+	// Snapshot the rule onto the session bag so it lands on whichever record
+	// this request goes on to write — the 401'd block below, the auto-ban a
+	// score bump triggers, the captcha type a Restrict rule forces, or the
+	// plain decision-machine session left behind by a score-only Restrict.
+	// Without it those rows say only "ACCESS_POLICY_BLOCK" /
+	// "USER_ACCESS_POLICY", with no way to tell which of a site's rules did it.
+	tasks.frictionlessManager.setMatchedRule(
+		describeMatchedRule(userAccessPolicy),
+	);
+
 	logger.info(() => ({
 		msg: "User access policy matched",
 		data: {
@@ -93,7 +114,7 @@ export const handleAccessPolicy = async (
 			},
 		}));
 		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 			siteKey: input.dapp,
@@ -103,7 +124,14 @@ export const handleAccessPolicy = async (
 
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({
+					code: "ACCESS_POLICY_BLOCK",
+					errorSite: "PROV-89",
+					status: 401,
+				}),
+			),
 		};
 	}
 
@@ -124,7 +152,7 @@ export const handleAccessPolicy = async (
 			},
 		}));
 		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.AUTO_BAN_SCORE,
 			siteKey: input.dapp,
@@ -133,7 +161,10 @@ export const handleAccessPolicy = async (
 		});
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-90" }),
+			),
 		};
 	}
 
@@ -160,11 +191,11 @@ export const handleAccessPolicy = async (
 				await tasks.frictionlessManager.sendImageCaptcha({
 					...captchaTypeBaseParams,
 					solvedImagesCount: userAccessPolicy.solvedImagesCount
-						? Math.min(
+						? clampImageRounds(
 								userAccessPolicy.solvedImagesCount,
-								clientRecord.settings.imageMaxRounds,
+								clientRecord.settings,
 							)
-						: clientRecord.settings.imageMaxRounds,
+						: resolveImageRoundsBounds(clientRecord.settings).max,
 				}),
 			),
 		};
@@ -199,9 +230,18 @@ export const handleAccessPolicy = async (
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendPuzzleCaptcha(
-					captchaTypeBaseParams,
-				),
+				await tasks.frictionlessManager.sendPuzzleCaptcha({
+					...captchaTypeBaseParams,
+					// Carried so the rule's severity reaches the puzzle difficulty
+					// ladder. A puzzle has no rounds, and `sendCaptcha` drops the
+					// count from a puzzle session — it reads it only to decide how
+					// hard the puzzle should be. Without this a rule that asked for
+					// 8 rounds and one that asked for 2 would produce identical
+					// puzzles.
+					...(userAccessPolicy.solvedImagesCount !== undefined && {
+						solvedImagesCount: userAccessPolicy.solvedImagesCount,
+					}),
+				}),
 			),
 		};
 	}

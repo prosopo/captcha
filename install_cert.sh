@@ -6,7 +6,15 @@ echo "=================================================="
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CERT_FILE="$SCRIPT_DIR/certs/server.crt"
+# Trust the CA, not the leaf it signs. setup_certs.sh issues the server
+# certificate from a local CA so that phones and tablets can trust the whole
+# stack in one go, and a trust store wants the root of that chain. Older certs
+# directories hold only a self-signed server.crt, so fall back to it.
+if [ -f "$SCRIPT_DIR/certs/ca.crt" ]; then
+    CERT_FILE="$SCRIPT_DIR/certs/ca.crt"
+else
+    CERT_FILE="$SCRIPT_DIR/certs/server.crt"
+fi
 
 # Check if certificate exists
 if [ ! -f "$CERT_FILE" ]; then

@@ -109,6 +109,82 @@ describe("applyRouter", () => {
 		});
 	});
 
+	// UA-based routing paths: the routing machine sees the widget's
+	// userAgent verbatim on `ctx.raw.userAgent` and can route on it. These
+	// tests exercise the machinery: they simulate a machine that returns
+	// image (or puzzle) for a specific UA pattern, and assert that whatever
+	// captchaType the machine emits is what the router returns. Per-DM
+	// artifact logic (e.g. "iOS Safari 15 → image") lives in each sitekey's
+	// DM module and is exercised by that machine's own tests.
+	it("routes to image when the machine matches on userAgent (headless-style UA → image)", async () => {
+		const headlessUa =
+			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 HeadlessChrome/128.0.0.0 Safari/537.36";
+		// A stand-in DM that reads userAgent and routes headless to image.
+		runner.route.mockImplementation(
+			async (input: {
+				raw?: { userAgent?: string };
+			}): Promise<{ captchaType: CaptchaType; solvedImagesCount?: number }> => {
+				if ((input.raw?.userAgent ?? "").includes("HeadlessChrome")) {
+					return { captchaType: CaptchaType.image, solvedImagesCount: 3 };
+				}
+				return { captchaType: CaptchaType.pow };
+			},
+		);
+
+		const ctx = buildCtx({
+			raw: { headers: {}, userAgent: headlessUa },
+		});
+		const result = await run(ctx);
+
+		expect(result).toEqual({
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 3,
+		});
+		// The routing runner sees the full userAgent, not a stripped
+		// version — this is what per-DM artifacts rely on.
+		// The routing runner receives the full userAgent verbatim in the
+		// input's `raw` — per-DM artifacts rely on that.
+		const call = runner.route.mock.calls[0];
+		if (!call) throw new Error("expected runner.route to be called");
+		expect(call[0]).toEqual(
+			expect.objectContaining({
+				raw: expect.objectContaining({ userAgent: headlessUa }),
+			}),
+		);
+	});
+
+	it("routes to puzzle when the machine matches on userAgent (mobile-webview-style UA → puzzle)", async () => {
+		const webviewUa =
+			"Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/128.0.0.0 Mobile Safari/537.36 wv";
+		runner.route.mockImplementation(
+			async (input: {
+				raw?: { userAgent?: string };
+			}): Promise<{ captchaType: CaptchaType }> => {
+				// UA ends in " wv" — Android WebView marker.
+				if ((input.raw?.userAgent ?? "").endsWith(" wv")) {
+					return { captchaType: CaptchaType.puzzle };
+				}
+				return { captchaType: CaptchaType.pow };
+			},
+		);
+
+		const ctx = buildCtx({
+			raw: { headers: {}, userAgent: webviewUa },
+			platform: { isApple: false, isWebView: true, isMobile: true },
+		});
+		const result = await run(ctx);
+
+		expect(result).toEqual({ captchaType: CaptchaType.puzzle });
+		const call = runner.route.mock.calls[0];
+		if (!call) throw new Error("expected runner.route to be called");
+		expect(call[0]).toEqual(
+			expect.objectContaining({
+				raw: expect.objectContaining({ userAgent: webviewUa }),
+				platform: expect.objectContaining({ isWebView: true }),
+			}),
+		);
+	});
+
 	it("fetches counters only when the machine declares them", async () => {
 		runner.getRequiredCounters.mockResolvedValueOnce([]);
 		await run();
@@ -152,6 +228,73 @@ describe("applyRouter", () => {
 		expect(reads).toHaveLength(2);
 		expect(reads[0]?.value).toBe("9.9.9.9");
 		expect(reads[1]?.value).toBe("0xabc");
+	});
+
+	const deviceBucketSpec: CounterSpec = {
+		kind: "solved",
+		captchaType: CaptchaType.pow,
+		dimension: "deviceBucket",
+		window: "24h",
+	};
+
+	const readsFromLastCall = (): Array<{
+		spec: CounterSpec;
+		value: string;
+	}> => {
+		const call = counters.batchGet.mock.calls[0];
+		if (!call) throw new Error("expected batchGet to be called");
+		return call[1] as Array<{ spec: CounterSpec; value: string }>;
+	};
+
+	it("resolves a deviceBucket counter from the verified fingerprint summary", async () => {
+		runner.getRequiredCounters.mockResolvedValueOnce([deviceBucketSpec]);
+
+		await run(
+			buildCtx({
+				raw: {
+					headers: {},
+					userAgent: "Mozilla/5.0",
+					fingerprintSummary: {
+						root: "0xroot",
+						groupHash: "0xgroup",
+						bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+					},
+				},
+			}),
+		);
+
+		expect(readsFromLastCall()).toStrictEqual([
+			{
+				spec: deviceBucketSpec,
+				value: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+			},
+		]);
+	});
+
+	it("skips a deviceBucket counter when no proof disclosed one", async () => {
+		// Skipped rather than read under a placeholder, so the key is absent
+		// rather than reporting zero traffic for every bucketless request.
+		runner.getRequiredCounters.mockResolvedValueOnce([deviceBucketSpec]);
+
+		await run(buildCtx());
+
+		expect(readsFromLastCall()).toStrictEqual([]);
+	});
+
+	it("skips a deviceBucket counter when the summary carries no bucketId", async () => {
+		runner.getRequiredCounters.mockResolvedValueOnce([deviceBucketSpec]);
+
+		await run(
+			buildCtx({
+				raw: {
+					headers: {},
+					userAgent: "Mozilla/5.0",
+					fingerprintSummary: { root: "0xroot", groupHash: "0xgroup" },
+				},
+			}),
+		);
+
+		expect(readsFromLastCall()).toStrictEqual([]);
 	});
 
 	it("falls back to baseline when batchGet returns null (Redis down)", async () => {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { isHex } from "@polkadot/util/is";
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	type RedisConnection,
@@ -21,13 +21,14 @@ import {
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import {
+	type AudioCaptchaStored,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaStates,
 	CaptchaStatus,
+	CaptchaType,
 	type CompositeIpAddress,
-	ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -38,6 +39,8 @@ import {
 	type DecisionMachineScope,
 	type Hash,
 	type IPInfoResponse,
+	type IconOrderCaptchaStored,
+	type InteractiveCaptchaStored,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
@@ -52,25 +55,31 @@ import {
 	type SimdReadingsStage,
 	type SolutionRecord,
 	type StoredCaptcha,
+	type StoredIconTarget,
 	StoredStatusNames,
 	type UserCommitment,
 	UserCommitmentSchema,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
+	type AudioCaptchaRecord,
+	AudioCaptchaRecordSchema,
 	CaptchaRecordSchema,
-	type ClientContextEntropyRecord,
-	ClientContextEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
 	DecisionMachineArtifactRecordSchema,
 	type IProviderDatabase,
 	type IUserDataSlim,
+	type IconOrderCaptchaRecord,
+	IconOrderCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type ProjectedSession,
 	type PuzzleCaptchaRecord,
 	PuzzleCaptchaRecordSchema,
+	SESSION_PROJECTION,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
@@ -96,7 +105,11 @@ import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 // structurally matches it (missing _bsontype/toHexString/...).
 import type { Types } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
-import type { CentralDbStreamer } from "./centralDbStreamer.js";
+import type {
+	CentralDbStreamer,
+	MarkStoredCallback,
+} from "./centralDbStreamer.js";
+import { clientRecordCache } from "./clientRecordCache.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
@@ -110,12 +123,46 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	audiocaptcha = "audiocaptcha",
+	iconordercaptcha = "iconordercaptcha",
 	client = "client",
 	session = "session",
 	detector = "detector",
 	decisionMachine = "decisionMachine",
-	clientContextEntropy = "clientContextEntropy",
 	spamEmailDomain = "spamEmailDomain",
+}
+
+type InteractiveCaptchaType =
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder
+	| CaptchaType.audio;
+
+type InteractiveCaptchaStoredRecord =
+	| PuzzleCaptchaStored
+	| IconOrderCaptchaStored
+	| AudioCaptchaStored;
+
+type InteractiveCaptchaRecordType =
+	| PuzzleCaptchaRecord
+	| IconOrderCaptchaRecord
+	| AudioCaptchaRecord;
+
+interface InteractiveCaptchaCollection {
+	table:
+		| TableNames.puzzlecaptcha
+		| TableNames.iconordercaptcha
+		| TableNames.audiocaptcha;
+	label: string;
+	captchaType: InteractiveCaptchaType;
+	answerProjection: Record<string, 1>;
+	streamRecord: (
+		record: InteractiveCaptchaStoredRecord,
+		markStored: MarkStoredCallback,
+	) => void;
+	streamUpdate: (
+		challenge: PoWChallengeId,
+		markStored: MarkStoredCallback,
+	) => void;
 }
 
 const PROVIDER_TABLES = [
@@ -133,6 +180,16 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: PuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.audiocaptcha,
+		modelName: "AudioCaptcha",
+		schema: AudioCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.iconordercaptcha,
+		modelName: "IconOrderCaptcha",
+		schema: IconOrderCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.dataset,
@@ -173,11 +230,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.decisionMachine,
 		modelName: "DecisionMachine",
 		schema: DecisionMachineArtifactRecordSchema,
-	},
-	{
-		collectionName: TableNames.clientContextEntropy,
-		modelName: "ClientContextEntropy",
-		schema: ClientContextEntropyRecordSchema,
 	},
 	{
 		collectionName: TableNames.spamEmailDomain,
@@ -275,9 +327,11 @@ export class ProviderDatabase
 
 	getTables(): Tables<TableNames> {
 		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-5",
+				message: "Tables undefined",
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;
@@ -285,9 +339,11 @@ export class ProviderDatabase
 
 	public getRedisAccessRulesConnection(): RedisConnection {
 		if (null === this.redisAccessRulesConnection) {
-			throw new ProsopoDBError(
-				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
-			);
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-6",
+				message: "Redis access rules connection undefined",
+			});
 		}
 
 		return this.redisAccessRulesConnection;
@@ -295,9 +351,11 @@ export class ProviderDatabase
 
 	public getRedisConnection(): RedisConnection {
 		if (null === this.redisConnection) {
-			throw new ProsopoDBError(
-				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
-			);
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-7",
+				message: "Redis access rules connection undefined",
+			});
 		}
 
 		return this.redisConnection;
@@ -343,7 +401,11 @@ export class ProviderDatabase
 
 	public getUserAccessRulesStorage(): AccessRulesStorage {
 		if (null === this.userAccessRulesStorage) {
-			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED");
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-8",
+				message: "User access rules storage undefined",
+			});
 		}
 
 		return this.userAccessRulesStorage;
@@ -451,9 +513,12 @@ export class ProviderDatabase
 				msg: "Dataset stored in database",
 			}));
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.DATASET_LOAD_FAILED", {
-				context: { failedFuncName: this.storeDataset.name, error: err },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-9",
+				message: "Data set load failed",
+				cause: err,
+				context: { failedFuncName: this.storeDataset.name },
 			});
 		}
 	}
@@ -529,7 +594,10 @@ export class ProviderDatabase
 				}),
 			};
 		}
-		throw new ProsopoDBError("DATABASE.DATASET_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-10",
+			message: "Failed to get dataset",
 			context: { failedFuncName: this.getDataset.name, datasetId },
 		});
 	}
@@ -546,7 +614,10 @@ export class ProviderDatabase
 		size?: number,
 	): Promise<Captcha[] | undefined> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-11",
+				message: "Invalid hash",
 				context: { failedFuncName: this.getRandomCaptcha.name, datasetId },
 			});
 		}
@@ -612,7 +683,10 @@ export class ProviderDatabase
 			return docs;
 		}
 
-		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-12",
+			message: "Failed to get captcha",
 			context: {
 				failedFuncName: this.getRandomCaptcha.name,
 				solved,
@@ -645,7 +719,10 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
-		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-13",
+			message: "Failed to get captcha",
 			context: { failedFuncName: this.getCaptchaById.name, captchaId },
 		});
 	}
@@ -657,7 +734,10 @@ export class ProviderDatabase
 	 */
 	async updateCaptcha(captcha: Captcha, datasetId: Hash): Promise<void> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-14",
+				message: "Invalid hash",
 				context: { failedFuncName: this.updateCaptcha.name, datasetId },
 			});
 		}
@@ -669,8 +749,12 @@ export class ProviderDatabase
 				{ upsert: false },
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: { failedFuncName: this.getDatasetDetails.name, error: err },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-15",
+				message: "Failed to update captcha",
+				cause: err,
+				context: { failedFuncName: this.getDatasetDetails.name },
 			});
 		}
 	}
@@ -705,7 +789,10 @@ export class ProviderDatabase
 
 	async getDatasetDetails(datasetId: Hash): Promise<DatasetBase> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-16",
+				message: "Invalid hash",
 				context: { failedFuncName: this.getDatasetDetails.name, datasetId },
 			});
 		}
@@ -719,11 +806,11 @@ export class ProviderDatabase
 			return doc;
 		}
 
-		throw new ProsopoDBError("DATABASE.DATASET_GET_FAILED", {
-			context: {
-				failedFuncName: this.getDatasetDetails.name,
-				datasetId,
-			},
+		throw new ProsopoError({
+			code: "RECORD_NOT_FOUND",
+			errorSite: "DBSE-17",
+			message: "Failed to get dataset",
+			context: { failedFuncName: this.getDatasetDetails.name, datasetId },
 		});
 	}
 
@@ -742,9 +829,17 @@ export class ProviderDatabase
 			const filter: Pick<UserCommitmentRecord, "id"> = {
 				id: commit.id,
 			};
-			await this.tables?.commitment.updateOne(filter, commitmentRecord, {
-				upsert: true,
-			});
+			// Wrap in an explicit `$set` over a shallow copy. Passing the
+			// record itself lets mongoose mutate it in place on an upsert:
+			// `moveImmutableProperties` hoists immutable paths into a
+			// `$setOnInsert` key it adds to the object you handed it. The
+			// same object is then streamed below, and mongoose 9 rejects a
+			// `$set` payload carrying a `$setOnInsert` key.
+			await this.tables?.commitment.updateOne(
+				filter,
+				{ $set: { ...commitmentRecord } },
+				{ upsert: true },
+			);
 
 			const ops = captchas.map((captcha: CaptchaSolution) => ({
 				updateOne: {
@@ -858,15 +953,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					userSubmitted,
-					serverChecked,
-					ipInfo,
-				},
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-18",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, userSubmitted, serverChecked, ipInfo },
 			});
 			this.logger.error(() => ({
 				err: error,
@@ -885,9 +977,11 @@ export class ProviderDatabase
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null> {
 		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-19",
+				message: "Database client is not connected",
 				context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
-				logger: this.logger,
 			});
 		}
 
@@ -917,6 +1011,11 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// Read by the verify path to correlate the site's
+						// session id against the one recorded at solve time.
+						// Omitting it made every clientSessionId-carrying token
+						// look like it was solved in another session.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<PoWCaptchaRecord>]: 1 })
 					.lean<PoWCaptchaRecord>();
 			if (record) {
@@ -932,9 +1031,12 @@ export class ProviderDatabase
 			}));
 			return null;
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: { error, challenge },
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-20",
+				message: "Failed to get captcha",
+				cause: error,
+				context: { challenge },
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -973,6 +1075,11 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
+			// Mirror the result classification onto a dedicated field so
+			// downstream consumers (portal Overview, audit search, exports)
+			// can filter blocked PoW records without decoding result.reason.
+			// See `isBlockingCaptchaResult` — any Disapproved PoW is a block.
+			blocked: isBlockingCaptchaResult(CaptchaType.pow, result),
 			...(coords && { coords }),
 		};
 		if (userSubmitted) {
@@ -986,16 +1093,19 @@ export class ProviderDatabase
 			};
 		}
 		try {
-			const updateResult = await tables.powcaptcha.updateOne({ challenge }, [
-				{ $set: setStage },
-			]);
+			const updateResult = await tables.powcaptcha.updateOne(
+				{ challenge },
+				[{ $set: setStage }],
+				// mongoose 9 refuses an array update unless the caller opts
+				// in, so every pipeline-form write below carries this flag.
+				{ updatePipeline: true },
+			);
 			if (updateResult.matchedCount === 0) {
-				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						challenge,
-						...setStage,
-					},
-					logger: this.logger,
+				const err = new ProsopoError({
+					code: "DB_QUERY_FAILED",
+					errorSite: "DBSE-21",
+					message: "Failed to get captcha",
+					context: { challenge, ...setStage },
 				});
 				this.logger.info(() => ({
 					err: err,
@@ -1024,13 +1134,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					...setStage,
-				},
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-22",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, ...setStage },
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1065,6 +1174,172 @@ export class ProviderDatabase
 		);
 	}
 
+	private interactiveCollection(
+		captchaType: InteractiveCaptchaType,
+	): InteractiveCaptchaCollection {
+		switch (captchaType) {
+			case CaptchaType.puzzle:
+				return {
+					table: TableNames.puzzlecaptcha,
+					label: "PuzzleCaptcha",
+					captchaType,
+					answerProjection: {
+						targetX: 1,
+						targetY: 1,
+						originX: 1,
+						originY: 1,
+						tolerance: 1,
+						puzzleEvents: 1,
+					},
+					streamRecord: (record, markStored) =>
+						this.centralStreamer?.streamPuzzleRecord(
+							record as PuzzleCaptchaRecord,
+							markStored,
+						),
+					streamUpdate: (challenge, markStored) =>
+						this.centralStreamer?.streamPuzzleUpdate(
+							() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+							markStored,
+						),
+				};
+			case CaptchaType.iconOrder:
+				return {
+					table: TableNames.iconordercaptcha,
+					label: "IconOrderCaptcha",
+					captchaType,
+					answerProjection: {
+						// Grading reads the answer straight off this record.
+						targets: 1,
+						tolerance: 1,
+						clicks: 1,
+						iconOrderEvents: 1,
+					},
+					streamRecord: (record, markStored) =>
+						this.centralStreamer?.streamIconOrderRecord(
+							record as IconOrderCaptchaRecord,
+							markStored,
+						),
+					streamUpdate: (challenge, markStored) =>
+						this.centralStreamer?.streamIconOrderUpdate(
+							() => this.getIconOrderCaptchaRecordByChallenge(challenge),
+							markStored,
+						),
+				};
+			case CaptchaType.audio:
+				return {
+					table: TableNames.audiocaptcha,
+					label: "AudioCaptcha",
+					captchaType,
+					answerProjection: {
+						answer: 1,
+						submittedAnswer: 1,
+						replays: 1,
+						audioEvents: 1,
+					},
+					streamRecord: (record, markStored) =>
+						this.centralStreamer?.streamAudioRecord(
+							record as AudioCaptchaRecord,
+							markStored,
+						),
+					streamUpdate: (challenge, markStored) =>
+						this.centralStreamer?.streamAudioUpdate(
+							() => this.getAudioCaptchaRecordByChallenge(challenge),
+							markStored,
+						),
+				};
+		}
+	}
+
+	private markInteractiveRecordStored(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+	): MarkStoredCallback {
+		return (ts) =>
+			this.tables[collection.table]
+				.updateOne(
+					{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+					{
+						$set: { storedAtTimestamp: ts },
+						$unset: { pendingStage: 1 },
+					},
+				)
+				.then(() => {});
+	}
+
+	private streamInteractiveUpdate(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+	): void {
+		collection.streamUpdate(
+			challenge,
+			this.markInteractiveRecordStored(collection, challenge),
+		);
+	}
+
+	private async storeInteractiveCaptchaRecord(
+		collection: InteractiveCaptchaCollection,
+		record: InteractiveCaptchaStoredRecord,
+	): Promise<void> {
+		const tables = this.getTables();
+		const { challenge, ipInfo } = record;
+		try {
+			await tables[collection.table].create(record);
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
+				},
+				msg: `${collection.label} record added successfully`,
+			}));
+			collection.streamRecord(
+				record,
+				this.markInteractiveRecordStored(collection, challenge),
+			);
+		} catch (error) {
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-23",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, ipInfo },
+			});
+			this.logger.error(() => ({
+				err: error,
+				msg: `Failed to add ${collection.label} record`,
+			}));
+			throw err;
+		}
+	}
+
+	private pendingInteractiveRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): InteractiveCaptchaStored {
+		return {
+			challenge,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
+			ipAddress,
+			headers,
+			ja4,
+			result: { status: CaptchaStatus.pending },
+			userSubmitted: false,
+			serverChecked: false,
+			providerSignature,
+			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
+			sessionId,
+			ipInfo,
+		};
+	}
+
 	async storePuzzleCaptchaRecord(
 		challenge: PoWChallengeId,
 		components: PoWChallengeComponents,
@@ -1080,65 +1355,159 @@ export class ProviderDatabase
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
 	): Promise<void> {
-		const tables = this.getTables();
+		await this.storeInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.puzzle),
+			{
+				...this.pendingInteractiveRecord(
+					challenge,
+					components,
+					providerSignature,
+					ipAddress,
+					headers,
+					ja4,
+					sessionId,
+					ipInfo,
+				),
+				tolerance,
+				targetX,
+				targetY,
+				originX,
+				originY,
+			},
+		);
+	}
 
-		const puzzleCaptchaRecord: PuzzleCaptchaStored = {
-			challenge,
-			userAccount: components.userAccount,
-			dappAccount: components.dappAccount,
-			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
-			ipAddress,
-			headers,
-			ja4,
-			result: { status: CaptchaStatus.pending },
-			userSubmitted: false,
-			serverChecked: false,
-			targetX,
-			targetY,
-			originX,
-			originY,
-			tolerance,
-			providerSignature,
-			lastUpdatedTimestamp: new Date(),
-			pendingStage: true,
-			sessionId,
-			ipInfo,
-		};
+	async storeAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		answer: string,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void> {
+		await this.storeInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.audio),
+			{
+				...this.pendingInteractiveRecord(
+					challenge,
+					components,
+					providerSignature,
+					ipAddress,
+					headers,
+					ja4,
+					sessionId,
+					ipInfo,
+				),
+				answer,
+			},
+		);
+	}
+
+	async storeIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		targets: StoredIconTarget[],
+		tolerance: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void> {
+		await this.storeInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			{
+				...this.pendingInteractiveRecord(
+					challenge,
+					components,
+					providerSignature,
+					ipAddress,
+					headers,
+					ja4,
+					sessionId,
+					ipInfo,
+				),
+				targets,
+				tolerance,
+			},
+		);
+	}
+
+	private async getInteractiveCaptchaRecordByChallenge<
+		T extends InteractiveCaptchaRecordType,
+	>(
+		collection: InteractiveCaptchaCollection,
+		challenge: string,
+		failedFuncName: string,
+	): Promise<T | null> {
+		if (!this.tables) {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-24",
+				message: "Database client is not connected",
+				context: { failedFuncName },
+			});
+		}
 
 		try {
-			await tables.puzzlecaptcha.create(puzzleCaptchaRecord);
+			const record: T | null | undefined = await this.tables[collection.table]
+				.findOne(
+					{ challenge },
+					{
+						challenge: 1,
+						userAccount: 1,
+						dappAccount: 1,
+						requestedAtTimestamp: 1,
+						// submittedAtTimestamp gates the submit → verify
+						// recency check in serverVerifyInteractiveCaptchaSolution.
+						// Missing it here silently trips the "too old" path
+						// even on freshly-solved challenges because the code
+						// treats a missing field as Number.POSITIVE_INFINITY.
+						submittedAtTimestamp: 1,
+						ipAddress: 1,
+						headers: 1,
+						ja4: 1,
+						result: 1,
+						sessionId: 1,
+						ipInfo: 1,
+						deviceCapability: 1,
+						behavioralDataPacked: 1,
+						serverChecked: 1,
+						userSubmitted: 1,
+						coords: 1,
+						// See the PoW projection above — same verify-time read.
+						clientMetaData: 1,
+						...collection.answerProjection,
+					},
+				)
+				.lean<T>();
+			if (record) {
+				this.logger.info(() => ({
+					data: { challenge },
+					msg: `${collection.label} record retrieved successfully`,
+				}));
+				return record;
+			}
 			this.logger.info(() => ({
-				data: {
-					challenge,
-					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
-				},
-				msg: "PuzzleCaptcha record added successfully",
+				data: { challenge },
+				msg: `No ${collection.label} record found`,
 			}));
-			this.centralStreamer?.streamPuzzleRecord(
-				puzzleCaptchaRecord as PuzzleCaptchaRecord,
-				(ts) =>
-					this.tables.puzzlecaptcha
-						.updateOne(
-							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-							{
-								$set: { storedAtTimestamp: ts },
-								$unset: { pendingStage: 1 },
-							},
-						)
-						.then(() => {}),
-			);
+			return null;
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					ipInfo,
-				},
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-25",
+				message: "Failed to get captcha",
+				cause: error,
+				context: { challenge },
 			});
 			this.logger.error(() => ({
-				err: error,
-				msg: "Failed to add PuzzleCaptcha record",
+				err: err,
+				msg: `Failed to retrieve ${collection.label} record`,
 			}));
 			throw err;
 		}
@@ -1152,71 +1521,167 @@ export class ProviderDatabase
 	async getPuzzleCaptchaRecordByChallenge(
 		challenge: string,
 	): Promise<PuzzleCaptchaRecord | null> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
-				context: {
-					failedFuncName: this.getPuzzleCaptchaRecordByChallenge.name,
-				},
-				logger: this.logger,
-			});
-		}
+		return this.getInteractiveCaptchaRecordByChallenge<PuzzleCaptchaRecord>(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+			this.getPuzzleCaptchaRecordByChallenge.name,
+		);
+	}
 
+	async getIconOrderCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<IconOrderCaptchaRecord | null> {
+		return this.getInteractiveCaptchaRecordByChallenge<IconOrderCaptchaRecord>(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+			this.getIconOrderCaptchaRecordByChallenge.name,
+		);
+	}
+
+	async getAudioCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<AudioCaptchaRecord | null> {
+		return this.getInteractiveCaptchaRecordByChallenge<AudioCaptchaRecord>(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+			this.getAudioCaptchaRecordByChallenge.name,
+		);
+	}
+
+	/**
+	 * The filter is the guard: of N concurrent submitters only one matches
+	 * `userSubmitted: { $ne: true }`, where a read-then-check would let them
+	 * all through to be graded. `submittedAtTimestamp` is stamped here so the
+	 * record is consistent even if the caller dies before writing a result.
+	 */
+	private async claimInteractiveCaptchaSubmission(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		const tables = this.getTables();
 		try {
-			const filter: {
-				[key in keyof Pick<PuzzleCaptchaRecord, "challenge">]: string;
-			} = { challenge };
-			const record: PuzzleCaptchaRecord | null | undefined =
-				await this.tables.puzzlecaptcha
-					.findOne(filter, {
-						challenge: 1,
-						userAccount: 1,
-						dappAccount: 1,
-						requestedAtTimestamp: 1,
-						// submittedAtTimestamp gates the submit → verify
-						// recency check in serverVerifyPuzzleCaptchaSolution.
-						// Missing it here silently trips the "too old" path
-						// even on freshly-solved puzzles because the code
-						// treats a missing field as Number.POSITIVE_INFINITY.
-						submittedAtTimestamp: 1,
-						ipAddress: 1,
-						headers: 1,
-						ja4: 1,
-						result: 1,
-						targetX: 1,
-						targetY: 1,
-						originX: 1,
-						originY: 1,
-						tolerance: 1,
-						puzzleEvents: 1,
-						sessionId: 1,
-						ipInfo: 1,
-						deviceCapability: 1,
-						behavioralDataPacked: 1,
-						serverChecked: 1,
-						userSubmitted: 1,
-						coords: 1,
-					} as { [key in keyof Partial<PuzzleCaptchaRecord>]: 1 })
-					.lean<PuzzleCaptchaRecord>();
-			if (record) {
-				this.logger.info(() => ({
-					data: { challenge },
-					msg: "PuzzleCaptcha record retrieved successfully",
-				}));
-				return record;
-			}
+			const claim = await tables[collection.table].updateOne(
+				{ challenge, userSubmitted: { $ne: true } },
+				{ $set: { userSubmitted: true, submittedAtTimestamp: new Date() } },
+			);
+			const won = claim.modifiedCount === 1;
 			this.logger.info(() => ({
-				data: { challenge },
-				msg: "No PuzzleCaptcha record found",
+				data: { challenge, won },
+				msg: won
+					? `${collection.label} submission claimed`
+					: `${collection.label} submission already claimed`,
 			}));
-			return null;
+			return won;
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: { error, challenge },
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-26",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge },
 			});
 			this.logger.error(() => ({
 				err: err,
-				msg: "Failed to retrieve PuzzleCaptcha record",
+				msg: `Failed to claim ${collection.label} submission`,
+			}));
+			throw err;
+		}
+	}
+
+	async claimIconOrderCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.claimInteractiveCaptchaSubmission(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+		);
+	}
+
+	async claimAudioCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.claimInteractiveCaptchaSubmission(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+		);
+	}
+
+	private async updateInteractiveCaptchaRecordResult(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		const tables = this.getTables();
+		const timestamp = lastUpdatedTimestamp ?? new Date();
+		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Defence-in-depth: validate coords before write.
+		assertCoordsSafe(coords, "coords");
+		// submittedAtTimestamp / failedAtTimestamp are direct writes rather
+		// than `$ifNull` pipeline exprs: these challenges are single-use, so
+		// both fields are only ever written by the one submit that lands. A
+		// prior attempt to use `$ifNull` inside a pipeline `$set` was silently
+		// dropping the timestamps on the wire — 0 of the last 3002 submitted
+		// puzzle records had `submittedAtTimestamp` set — which then always
+		// tripped the `submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD`
+		// disapproval branch in server verification. That looked to customers
+		// like every solved puzzle failing server-verify.
+		const setStage: Record<string, unknown> = {
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			lastUpdatedTimestamp: timestamp,
+			pendingStage: true,
+			// See the matching comment on `updatePowCaptchaRecordResult` —
+			// mirrors the block classification onto this record so every
+			// collection can be queried the same way.
+			blocked: isBlockingCaptchaResult(collection.captchaType, result),
+			...(coords && { coords }),
+			...(userSubmitted && { submittedAtTimestamp: timestamp }),
+			...(isDisapproved && { failedAtTimestamp: timestamp }),
+		};
+		try {
+			const updateResult = await tables[collection.table].updateOne(
+				{ challenge },
+				{ $set: setStage },
+			);
+			if (updateResult.matchedCount === 0) {
+				const err = new ProsopoError({
+					code: "DB_QUERY_FAILED",
+					errorSite: "DBSE-27",
+					message: "Failed to get captcha",
+					context: { challenge, ...setStage },
+				});
+				this.logger.info(() => ({
+					err: err,
+					msg: `No ${collection.label} record found to update`,
+				}));
+				throw err;
+			}
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					...setStage,
+				},
+				msg: `${collection.label} record updated successfully`,
+			}));
+			this.streamInteractiveUpdate(collection, challenge);
+		} catch (error) {
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-28",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, ...setStage },
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: `Failed to update ${collection.label} record`,
 			}));
 			throw err;
 		}
@@ -1242,100 +1707,69 @@ export class ProviderDatabase
 		coords?: [number, number][][],
 		lastUpdatedTimestamp?: Date,
 	): Promise<void> {
-		const tables = this.getTables();
-		const timestamp = lastUpdatedTimestamp ?? new Date();
-		const isDisapproved = result.status === CaptchaStatus.disapproved;
-		// Defence-in-depth: validate coords before write.
-		assertCoordsSafe(coords, "coords");
-		// submittedAtTimestamp / failedAtTimestamp are direct writes rather
-		// than `$ifNull` pipeline exprs: puzzle refuses re-submission at
-		// `puzzleTasks.ts:228-233` (single-use challenge), so both fields are
-		// only ever written by the one submit that lands. A prior attempt to
-		// use `$ifNull` inside a pipeline `$set` was silently dropping the
-		// timestamps on the wire — 0 of the last 3002 submitted puzzle records
-		// had `submittedAtTimestamp` set — which then always tripped the
-		// `submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD` disapproval branch
-		// in `serverVerifyPuzzleCaptchaSolution`. That looked to customers
-		// like every solved puzzle failing server-verify.
-		const setStage: Record<string, unknown> = {
+		await this.updateInteractiveCaptchaRecordResult(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
 			result,
 			serverChecked,
 			userSubmitted,
 			userSignature,
-			lastUpdatedTimestamp: timestamp,
-			pendingStage: true,
-			...(coords && { coords }),
-			...(userSubmitted && { submittedAtTimestamp: timestamp }),
-			...(isDisapproved && { failedAtTimestamp: timestamp }),
-		};
-		try {
-			const updateResult = await tables.puzzlecaptcha.updateOne(
-				{ challenge },
-				{ $set: setStage },
-			);
-			if (updateResult.matchedCount === 0) {
-				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						challenge,
-						...setStage,
-					},
-					logger: this.logger,
-				});
-				this.logger.info(() => ({
-					err: err,
-					msg: "No PuzzleCaptcha record found to update",
-				}));
-				throw err;
-			}
-			this.logger.info(() => ({
-				data: {
-					challenge,
-					...setStage,
-				},
-				msg: "PuzzleCaptcha record updated successfully",
-			}));
-			this.centralStreamer?.streamPuzzleUpdate(
-				() => this.getPuzzleCaptchaRecordByChallenge(challenge),
-				(ts) =>
-					this.tables.puzzlecaptcha
-						.updateOne(
-							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-							{
-								$set: { storedAtTimestamp: ts },
-								$unset: { pendingStage: 1 },
-							},
-						)
-						.then(() => {}),
-			);
-		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					...setStage,
-				},
-				logger: this.logger,
-			});
-			this.logger.error(() => ({
-				err: err,
-				msg: "Failed to update PuzzleCaptcha record",
-			}));
-			throw err;
-		}
+			coords,
+			lastUpdatedTimestamp,
+		);
 	}
 
-	async updatePuzzleCaptchaRecord(
+	async updateIconOrderCaptchaRecordResult(
 		challenge: PoWChallengeId,
-		updates: Partial<PuzzleCaptchaRecord>,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecordResult(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			coords,
+			lastUpdatedTimestamp,
+		);
+	}
+
+	async updateAudioCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecordResult(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			coords,
+			lastUpdatedTimestamp,
+		);
+	}
+
+	private async updateInteractiveCaptchaRecord(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+		updates: Partial<InteractiveCaptchaRecordType>,
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
-		// verifiedAtTimestamp / submittedAtTimestamp / failedAtTimestamp are
-		// direct writes, not `$ifNull` pipeline exprs — see the matching
-		// note on `updatePuzzleCaptchaRecordResult`. Puzzle challenges are
-		// single-use so each stamp only ever gets one write in its lifetime.
-		// The pipeline-`$ifNull` variant was silently dropping these fields
-		// on the wire, which broke server-verify's recency check.
+		// Direct writes, not `$ifNull` pipeline exprs — see the matching note
+		// on `updateInteractiveCaptchaRecordResult`.
 		const baseSet: Record<string, unknown> = {
 			...updates,
 			pendingStage: true,
@@ -1349,19 +1783,91 @@ export class ProviderDatabase
 				failedAtTimestamp: timestamp,
 			}),
 		};
-		await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
-		this.centralStreamer?.streamPuzzleUpdate(
-			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
-			(ts) =>
-				this.tables.puzzlecaptcha
-					.updateOne(
-						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-						{
-							$set: { storedAtTimestamp: ts },
-							$unset: { pendingStage: 1 },
-						},
-					)
-					.then(() => {}),
+		await tables[collection.table].updateOne({ challenge }, { $set: baseSet });
+		this.streamInteractiveUpdate(collection, challenge);
+	}
+
+	async updatePuzzleCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PuzzleCaptchaRecord>,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+			updates,
+		);
+	}
+
+	async updateIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<IconOrderCaptchaRecord>,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+			updates,
+		);
+	}
+
+	async updateAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<AudioCaptchaRecord>,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+			updates,
+		);
+	}
+
+	private async markInteractiveCaptchaRecordChecked(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		const tables = this.getTables();
+		const timestamp = new Date();
+		const result = await tables[collection.table].updateOne(
+			{ challenge, serverChecked: { $ne: true } },
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: timestamp,
+					verifiedAtTimestamp: timestamp,
+					pendingStage: true,
+				},
+			},
+		);
+		if (result.modifiedCount === 0) {
+			return false;
+		}
+		this.streamInteractiveUpdate(collection, challenge);
+		return true;
+	}
+
+	async markIconOrderCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.markInteractiveCaptchaRecordChecked(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+		);
+	}
+
+	async markAudioCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.markInteractiveCaptchaRecordChecked(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+		);
+	}
+
+	async markPuzzleCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.markInteractiveCaptchaRecordChecked(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
 		);
 	}
 
@@ -1380,22 +1886,44 @@ export class ProviderDatabase
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
 	 * client's total.
 	 *
-	 * Served by the `pendingStage_partial` index. Records have
-	 * `pendingStage: true` set on insert and on every mutation (see
+	 * Served by the compound `pendingStage_partial` index
+	 * (`{pendingStage:1, _id:1}` partial where pendingStage:true). Records
+	 * have `pendingStage: true` set on insert and on every mutation (see
 	 * `updateDappUserCommitment`, `markDappUserCommitmentsChecked`,
 	 * `approveDappUserCommitment`, `disapproveDappUserCommitment`,
 	 * `storePendingImageCommitment`). `markDappUserCommitmentsStored` clears
 	 * the flag after a successful stage, guarded by `lastUpdatedTimestamp`
 	 * so an in-flight update isn't lost.
+	 *
+	 * Keyset pagination: pass the `_id` of the last row from the previous
+	 * page as `afterId` to resume. The old `skip(N)` shape walked N docs
+	 * per page even with the right index; under a 1M-row pending backlog
+	 * that hit multi-second query durations and thrashed the WT cache,
+	 * dragging every co-tenant query with it.
+	 *
+	 * `.hint("pendingStage_partial")` pins the compound index against a
+	 * planner regression seen in prod on 2026-08-21: on collections with
+	 * both a plain `_id` index and the compound `{pendingStage:1, _id:1}`
+	 * partial, the planner sometimes picks `_id` alone for
+	 * `find({pendingStage:true}).sort({_id:1})` and scans the entire
+	 * collection filtering in memory. Clearing the plan cache re-plans
+	 * once but doesn't prevent the regression re-appearing after future
+	 * catalog changes — the hint makes the choice explicit.
 	 */
 	async getUnstoredDappUserCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<UserCommitmentRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.commitment
-			.find({ pendingStage: true })
+			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<UserCommitmentRecord[]>();
 		return docs || [];
@@ -1428,33 +1956,38 @@ export class ProviderDatabase
 
 	/** @description Mark a list of captcha commits as checked
 	 */
-	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
+	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number> {
 		const timestamp = new Date();
-		await this.tables?.commitment.updateMany({ id: { $in: commitmentIds } }, [
-			{
-				$set: {
-					serverChecked: true,
-					lastUpdatedTimestamp: timestamp,
-					pendingStage: true,
-					verifiedAtTimestamp: {
-						$ifNull: ["$verifiedAtTimestamp", timestamp],
+		const result = await this.getTables().commitment.updateMany(
+			{ id: { $in: commitmentIds }, serverChecked: { $ne: true } },
+			[
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: timestamp,
+						pendingStage: true,
+						verifiedAtTimestamp: {
+							$ifNull: ["$verifiedAtTimestamp", timestamp],
+						},
 					},
 				},
-			},
-		]);
+			],
+			{ updatePipeline: true },
+		);
+		return result.modifiedCount;
 	}
 
 	/** @description Update an image captcha commitment
 	 */
 	async updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	) {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		const filter: Pick<UserCommitment, "id"> = { id: commitmentId };
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
-			lastUpdatedAtTimestamp: timestamp,
+			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
 		};
 		const pipelineExprs: Record<string, unknown> = {};
@@ -1482,19 +2015,21 @@ export class ProviderDatabase
 			await this.tables?.commitment.updateOne(filter, { $set: baseSet });
 			return;
 		}
-		await this.tables?.commitment.updateOne(filter, [
-			{ $set: { ...baseSet, ...pipelineExprs } },
-		]);
+		await this.tables?.commitment.updateOne(
+			filter,
+			[{ $set: { ...baseSet, ...pipelineExprs } }],
+			{ updatePipeline: true },
+		);
 	}
 
 	/**
-	 * Counts server-checked captcha records across image (`commitment`),
-	 * PoW and puzzle collections whose `metadata.emailNormalised` matches.
-	 * Each collection carries the same partial index
-	 * (`spamEmailCount_partial`) so all three counts hit index-only scans.
-	 * The three counts are summed — one dapp can mix captcha types over
-	 * time, and per-email rate limits should apply across the whole
-	 * verified surface, not per-type.
+	 * Counts server-checked captcha records across the image (`commitment`),
+	 * PoW, puzzle and icon-order collections whose `metadata.emailNormalised`
+	 * matches. Each collection carries the same partial index
+	 * (`spamEmailCount_partial`) so every count hits an index-only scan. The
+	 * counts are summed — one dapp can mix captcha types over time, and
+	 * per-email rate limits should apply across the whole verified surface,
+	 * not per-type.
 	 */
 	async countCommitmentsByNormalisedEmail(
 		dappAccount: string,
@@ -1507,12 +2042,14 @@ export class ProviderDatabase
 			serverChecked: true,
 			"metadata.emailNormalised": emailNormalised,
 		};
-		const [imgCount, powCount, puzzleCount] = await Promise.all([
+		const counts = await Promise.all([
 			tables.commitment.countDocuments(filter),
 			tables.powcaptcha.countDocuments(filter),
 			tables.puzzlecaptcha.countDocuments(filter),
+			tables.iconordercaptcha.countDocuments(filter),
+			tables.audiocaptcha.countDocuments(filter),
 		]);
-		return imgCount + powCount + puzzleCount;
+		return counts.reduce((total, count) => total + count, 0);
 	}
 
 	/**
@@ -1523,14 +2060,21 @@ export class ProviderDatabase
 	 */
 	async getUnstoredDappUserPoWCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]> {
-		// Served by the `pendingStage_partial` index — see
-		// `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+		// Served by the compound `pendingStage_partial` index — see
+		// `getUnstoredDappUserCommitments` for the lifecycle of the flag
+		// and the keyset-pagination contract.
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.powcaptcha
-			.find({ pendingStage: true })
+			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<PoWCaptchaRecord[]>();
 		return docs || [];
@@ -1561,10 +2105,12 @@ export class ProviderDatabase
 
 	/** @description Mark a list of PoW captcha commits as checked by the server
 	 */
-	async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
+	async markDappUserPoWCommitmentsChecked(
+		challenges: string[],
+	): Promise<number> {
 		const timestamp = new Date();
-		await this.tables?.powcaptcha.updateMany(
-			{ challenge: { $in: challenges } },
+		const result = await this.getTables().powcaptcha.updateMany(
+			{ challenge: { $in: challenges }, serverChecked: { $ne: true } },
 			[
 				{
 					$set: {
@@ -1577,8 +2123,9 @@ export class ProviderDatabase
 					},
 				},
 			],
-			{ upsert: false },
+			{ upsert: false, updatePipeline: true },
 		);
+		return result.modifiedCount;
 	}
 
 	/**
@@ -1618,9 +2165,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
-				context: { error: err, sessionId: sessionRecord.sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-29",
+				message: "Failed to store session",
+				cause: err,
+				context: { sessionId: sessionRecord.sessionId },
 			});
 		}
 	}
@@ -1684,70 +2234,12 @@ export class ProviderDatabase
 	 */
 	async getSessionRecordBySessionId(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
-		// Projection lists every field a caller of this function actually
-		// reads. `headers` is selected by individual key rather than as a
-		// whole blob: the flattened `req.headers` persisted at frictionless
-		// time can contain `x-tls-clienthello` (a base64-encoded full TLS
-		// ClientHello, multi-KB per session). That field is only consumed
-		// by `ja4Middleware` from the live `req.headers` at the entry
-		// point — never re-read off the persisted Session — so it just
-		// bloats every subsequent lookup. The enumerated list below covers
-		// the headers `buildEscalation` forwards onto the escalation
-		// session. New headers that need to round-trip must be added
-		// here explicitly.
+		// See SESSION_PROJECTION for what is selected and why.
 		const doc = await this.tables.session
-			.findOne(filter, {
-				sessionId: 1,
-				token: 1,
-				score: 1,
-				threshold: 1,
-				scoreComponents: 1,
-				ipAddress: 1,
-				ipInfo: 1,
-				webView: 1,
-				iFrame: 1,
-				isEscalation: 1,
-				decryptedHeadHash: 1,
-				siteKey: 1,
-				reason: 1,
-				mode: 1,
-				solvedImagesCount: 1,
-				userSitekeyIpHash: 1,
-				simdReadings: 1,
-				bundleId: 1,
-				dnsEvent: 1,
-				originSessionId: 1,
-				currentUrl: 1,
-				iframeUrl: 1,
-				// captchaType is required by the peek-before-consume path
-				// in `CaptchaManager.isValidRequest` — without it, every
-				// escalation peek would compare `undefined !== <requested>`
-				// and forcibly return INCORRECT_CAPTCHA_TYPE on the happy
-				// path too. Keep this projection in sync with whatever
-				// fields the read-only callers need.
-				captchaType: 1,
-				"headers.user-agent": 1,
-				"headers.accept": 1,
-				"headers.accept-language": 1,
-				"headers.accept-encoding": 1,
-				"headers.sec-ch-ua": 1,
-				"headers.sec-ch-ua-mobile": 1,
-				"headers.sec-ch-ua-platform": 1,
-				"headers.sec-ch-ua-platform-version": 1,
-				"headers.sec-fetch-dest": 1,
-				"headers.sec-fetch-mode": 1,
-				"headers.sec-fetch-site": 1,
-				"headers.sec-fetch-user": 1,
-				"headers.referer": 1,
-				"headers.origin": 1,
-				"headers.prosopo-user": 1,
-				"headers.prosopo-site-key": 1,
-				"headers.prosopo-type": 1,
-				"headers.x-tls-version": 1,
-			})
-			.lean<Session>();
+			.findOne(filter, SESSION_PROJECTION)
+			.lean<ProjectedSession>();
 		return doc || undefined;
 	}
 
@@ -1789,9 +2281,36 @@ export class ProviderDatabase
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_CHECK_REMOVE_FAILED", {
-				context: { error: err, sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-30",
+				message: "Failed to check and remove session",
+				cause: err,
+				context: { sessionId },
+			});
+		}
+	}
+
+	async claimSessionServerCheck(sessionId: string): Promise<boolean> {
+		try {
+			const result = await this.tables.session.updateOne(
+				{ sessionId, serverChecked: { $ne: true } },
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: new Date(),
+						pendingStage: true,
+					},
+				},
+			);
+			return result.modifiedCount > 0;
+		} catch (err) {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-31",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId },
 			});
 		}
 	}
@@ -1841,9 +2360,12 @@ export class ProviderDatabase
 					.catch(() => {});
 			}
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-32",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId },
 			});
 		}
 	}
@@ -1861,20 +2383,27 @@ export class ProviderDatabase
 		stage: SimdReadingsStage,
 	): Promise<void> {
 		try {
-			await this.tables.session.updateOne({ sessionId }, [
-				{
-					$set: {
-						simdReadings: { $ifNull: ["$simdReadings", readings] },
-						simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
-						lastUpdatedTimestamp: new Date(),
-						pendingStage: true,
+			await this.tables.session.updateOne(
+				{ sessionId },
+				[
+					{
+						$set: {
+							simdReadings: { $ifNull: ["$simdReadings", readings] },
+							simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
+							lastUpdatedTimestamp: new Date(),
+							pendingStage: true,
+						},
 					},
-				},
-			]);
+				],
+				{ updatePipeline: true },
+			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, sessionId, stage },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-33",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId, stage },
 			});
 		}
 	}
@@ -1918,14 +2447,19 @@ export class ProviderDatabase
 			setStage["dnsEvent.pathValid"] = fields.pathValid;
 		}
 		try {
-			const result = await this.tables.session.updateOne({ sessionId }, [
-				{ $set: setStage },
-			]);
+			const result = await this.tables.session.updateOne(
+				{ sessionId },
+				[{ $set: setStage }],
+				{ updatePipeline: true },
+			);
 			return result.matchedCount > 0;
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-34",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId },
 			});
 		}
 	}
@@ -1955,9 +2489,12 @@ export class ProviderDatabase
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, userSitekeyIpHash },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-35",
+				message: "Failed to get session",
+				cause: err,
+				context: { userSitekeyIpHash },
 			});
 		}
 	}
@@ -1965,20 +2502,28 @@ export class ProviderDatabase
 	/** Get unstored session records
 	 * @description Get session records that have not been stored yet.
 	 *
-	 * Served by the `pendingStage_partial` index — see
-	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag.
-	 * `checkAndRemoveSession` also flips the flag so consumed sessions
-	 * propagate to the central DB via the next sweep.
-	 * @param limit
-	 * @param skip
+	 * Served by the compound `pendingStage_partial` index — see
+	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag and
+	 * the keyset-pagination contract. `checkAndRemoveSession` also flips
+	 * the flag so consumed sessions propagate to the central DB via the
+	 * next sweep.
 	 */
-	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+	getUnstoredSessionRecords(
+		limit = 1000,
+		afterId?: unknown,
+	): Promise<SessionRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		return Promise.resolve(this.tables?.session)
 			.then((tbl) =>
 				tbl
-					?.find({ pendingStage: true })
+					?.find(filter)
+					.hint("pendingStage_partial")
 					.sort({ _id: 1 })
-					.skip(skip)
 					.limit(limit)
 					.lean<SessionRecord[]>(),
 			)
@@ -2023,7 +2568,10 @@ export class ProviderDatabase
 		ipInfo?: IPInfoResponse,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-36",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.storePendingImageCommitment.name,
 					requestHash,
@@ -2077,7 +2625,10 @@ export class ProviderDatabase
 		requestHash: string,
 	): Promise<PendingImageCaptchaRequest> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-37",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.getPendingImageCommitment.name,
 					requestHash,
@@ -2106,7 +2657,10 @@ export class ProviderDatabase
 			};
 		}
 
-		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
+		throw new ProsopoError({
+			code: "RECORD_NOT_FOUND",
+			errorSite: "DBSE-38",
+			message: "No pending record found",
 			context: {
 				failedFuncName: this.getPendingImageCommitment.name,
 				requestHash,
@@ -2117,9 +2671,14 @@ export class ProviderDatabase
 	/**
 	 * @description Mark a pending request as used
 	 */
-	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
+	async updatePendingImageCommitmentStatus(
+		requestHash: string,
+	): Promise<boolean> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-39",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.updatePendingImageCommitmentStatus.name,
 					requestHash,
@@ -2127,14 +2686,15 @@ export class ProviderDatabase
 			});
 		}
 
-		await this.tables?.commitment.updateOne(
-			{ requestHash: requestHash },
+		const result = await this.getTables().commitment.updateOne(
+			{ requestHash: requestHash, pending: true },
 			{
 				$set: {
 					pending: false,
 				},
 			},
 		);
+		return result.modifiedCount > 0;
 	}
 
 	/**
@@ -2158,7 +2718,11 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
-		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-40",
+			message: "Failed to get captcha",
+		});
 	}
 
 	/**
@@ -2184,7 +2748,11 @@ export class ProviderDatabase
 			) as UserSolutionRecord[];
 		}
 
-		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED");
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-41",
+			message: "Failed to get solution",
+		});
 	}
 
 	async getDatasetIdWithSolvedCaptchasOfSizeN(
@@ -2216,7 +2784,11 @@ export class ProviderDatabase
 			return docs[0]._id;
 		}
 
-		throw new ProsopoDBError("DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED");
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DBSE-42",
+			message: "No datasets found with required number of solutions",
+		});
 	}
 
 	async getRandomSolvedCaptchasFromSingleDataset(
@@ -2224,7 +2796,10 @@ export class ProviderDatabase
 		size: number,
 	): Promise<CaptchaSolution[]> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-43",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.getRandomSolvedCaptchasFromSingleDataset.name,
 					datasetId,
@@ -2250,7 +2825,10 @@ export class ProviderDatabase
 			return docs as CaptchaSolution[];
 		}
 
-		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-44",
+			message: "Failed to get solution",
 			context: {
 				failedFuncName: this.getRandomSolvedCaptchasFromSingleDataset.name,
 				datasetId,
@@ -2277,10 +2855,44 @@ export class ProviderDatabase
 			return doc as unknown as UserSolutionRecord;
 		}
 
-		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-45",
+			message: "Failed to get solution",
 			context: { failedFuncName: this.getCaptchaById.name, commitmentId },
 		});
 	}
+
+	// Shared projection for both commitment fetchers below. Must include
+	// every field the downstream verify path (`verifyImageCaptchaSolution`)
+	// reads off the returned record. Same failure mode as the projection
+	// bug fixed in #3107: extend this list whenever the verify path starts
+	// reading a new field off the solution.
+	private static readonly DAPP_USER_COMMITMENT_PROJECTION = {
+		id: 1,
+		result: 1,
+		serverChecked: 1,
+		requestedAtTimestamp: 1,
+		submittedAtTimestamp: 1,
+		verifiedAtTimestamp: 1,
+		failedAtTimestamp: 1,
+		ipAddress: 1,
+		sessionId: 1,
+		userAccount: 1,
+		dappAccount: 1,
+		headers: 1,
+		ipInfo: 1,
+		behavioralDataPacked: 1,
+		deviceCapability: 1,
+		coords: 1,
+		// Read by `verifyImageCaptchaSolution` for the client-session
+		// correlation. Added in 5.5.0 but never added here, so
+		// `solution.clientMetaData` came back `undefined` on every fetch and
+		// `isClientSessionMismatch(id, undefined)` was true for every caller
+		// that supplied a session id — a token replay reported on solves that
+		// were earned in exactly the session they claimed.
+		clientMetaData: 1,
+	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 
 	/**
 	 * @description Get dapp user commitment by user account
@@ -2291,21 +2903,7 @@ export class ProviderDatabase
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne(filter, {
-				id: 1,
-				result: 1,
-				serverChecked: 1,
-				requestedAtTimestamp: 1,
-				submittedAtTimestamp: 1,
-				verifiedAtTimestamp: 1,
-				failedAtTimestamp: 1,
-				ipAddress: 1,
-				sessionId: 1,
-				userAccount: 1,
-				dappAccount: 1,
-				headers: 1,
-				ipInfo: 1,
-			} as { [key in keyof Partial<UserCommitmentRecord>]: 1 })
+			?.findOne(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION)
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -2326,15 +2924,11 @@ export class ProviderDatabase
 			userAccount,
 			dappAccount,
 		};
-		const project = {
-			_id: 0,
-			result: 1,
-		};
 		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
-				?.find(filter, project, sort)
+				?.find(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION, sort)
 				.lean<UserCommitmentRecord[]>();
 
 		return docs ? (docs as UserCommitmentRecord[]) : [];
@@ -2353,11 +2947,18 @@ export class ProviderDatabase
 			const result: CaptchaResult = { status: CaptchaStatus.approved };
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
+				| "result"
+				| "lastUpdatedTimestamp"
+				| "coords"
+				| "pendingStage"
+				| "blocked"
 			> = {
 				result,
 				lastUpdatedTimestamp: new Date(),
 				pendingStage: true,
+				// Approve always clears blocked to false — see the matching
+				// comment on `updatePowCaptchaRecordResult`.
+				blocked: isBlockingCaptchaResult(CaptchaType.image, result),
 				...(coords ? { coords } : {}),
 			};
 			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
@@ -2381,8 +2982,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
-				context: { error: err, commitmentId },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-46",
+				message: "Failed to approve solution",
+				cause: err,
+				context: { commitmentId },
 			});
 		}
 	}
@@ -2399,13 +3004,26 @@ export class ProviderDatabase
 		coords?: [number, number][][],
 	): Promise<void> {
 		try {
+			const result: CaptchaResult = {
+				status: CaptchaStatus.disapproved,
+				reason,
+			};
 			const updateDoc: Pick<
 				StoredCaptcha,
-				"result" | "lastUpdatedTimestamp" | "coords" | "pendingStage"
+				| "result"
+				| "lastUpdatedTimestamp"
+				| "coords"
+				| "pendingStage"
+				| "blocked"
 			> = {
-				result: { status: CaptchaStatus.disapproved, reason },
+				result,
 				lastUpdatedTimestamp: new Date(),
 				pendingStage: true,
+				// See the matching comment on `updatePowCaptchaRecordResult`.
+				// Image disapprovals for user solution failures
+				// (CAPTCHA_INVALID_SOLUTION) are NOT blocks — see
+				// `isBlockingCaptchaResult`.
+				blocked: isBlockingCaptchaResult(CaptchaType.image, result),
 				...(coords ? { coords } : {}),
 			};
 
@@ -2430,8 +3048,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
-				context: { error: err, commitmentId },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-47",
+				message: "Failed to approve solution",
+				cause: err,
+				context: { commitmentId },
 			});
 		}
 	}
@@ -2450,8 +3072,12 @@ export class ProviderDatabase
 				)
 				.lean();
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SOLUTION_FLAG_FAILED", {
-				context: { error: err, captchaIds },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-48",
+				message: "Failed to flag solution as processed",
+				cause: err,
+				context: { captchaIds },
 			});
 		}
 	}
@@ -2471,8 +3097,12 @@ export class ProviderDatabase
 				)
 				.lean();
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.COMMITMENT_FLAG_FAILED", {
-				context: { error: err, commitmentIds },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-49",
+				message: "Failed to flag commitment as processed",
+				cause: err,
+				context: { commitmentIds },
 			});
 		}
 	}
@@ -2574,8 +3204,20 @@ export class ProviderDatabase
 	/**
 	 * @description Update the client records
 	 */
-	async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
-		const ops = clientRecords.map((record) => {
+	async updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void> {
+		// An upsert filtered on a missing account matches nothing and inserts,
+		// so a batch of records with no account collapses into a single row
+		// keyed on `account: undefined` and silently replaces every site's
+		// settings with the last one in the batch. Drop them instead.
+		const usable = clientRecords.filter((record) => !!record.account);
+		const skipped = clientRecords.length - usable.length;
+		if (skipped > 0) {
+			await this.logger.error(() => ({
+				msg: "Refusing to upsert client records with no account",
+				data: { skipped, received: clientRecords.length },
+			}));
+		}
+		const ops = usable.map((record) => {
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
@@ -2598,7 +3240,11 @@ export class ProviderDatabase
 			await this.logger.debug(() => ({ msg: "No client updates to apply" }));
 			return;
 		}
-		await this.tables?.client.bulkWrite(ops);
+		try {
+			await this.tables?.client.bulkWrite(ops);
+		} finally {
+			clientRecordCache.clear();
+		}
 	}
 
 	/**
@@ -2608,9 +3254,13 @@ export class ProviderDatabase
 		if (!accounts || accounts.length === 0) {
 			return;
 		}
-		await this.tables?.client.deleteMany({
-			account: { $in: accounts },
-		});
+		try {
+			await this.tables?.client.deleteMany({
+				account: { $in: accounts },
+			});
+		} finally {
+			clientRecordCache.clear();
+		}
 	}
 
 	/**
@@ -2625,6 +3275,9 @@ export class ProviderDatabase
 	 * @description Get a client record
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
+		const cacheKey = `${this.url}|${account}`;
+		const cached = clientRecordCache.get(cacheKey);
+		if (cached) return cached;
 		const filter: Pick<ClientRecord, "account"> = { account };
 		const doc = await this.tables?.client
 			.findOne(filter, {
@@ -2633,7 +3286,9 @@ export class ProviderDatabase
 				tier: 1,
 			})
 			.lean<ClientRecord>();
-		return doc ? doc : undefined;
+		if (!doc) return undefined;
+		clientRecordCache.set(cacheKey, doc);
+		return doc;
 	}
 
 	/**
@@ -2757,143 +3412,14 @@ export class ProviderDatabase
 		return result?.deletedCount ?? 0;
 	}
 
-	/**
-	 * @description set client context-specific entropy
-	 */
-	async setClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-		entropy: string,
-	): Promise<void> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		await this.tables?.clientContextEntropy.updateOne(
-			filter,
-			{ $set: { account, contextType, entropy } },
-			{ upsert: true },
-		);
-	}
-
-	/**
-	 * @description get client context-specific entropy
-	 */
-	async getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		const doc = await this.tables?.clientContextEntropy
-			.findOne(filter)
-			.lean<ClientContextEntropyRecord>();
-		return doc ? doc.entropy : undefined;
-	}
-
-	/** Sample captcha records from the database for a specific context */
-	async sampleContextEntropy(
-		sampleSize: number,
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string[]> {
-		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
-		const max = 10000;
-		if (size > max) {
-			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
-				context: {
-					failedFuncName: this.sampleContextEntropy.name,
-					sampleSize,
-				},
-			});
-		}
-
-		// Use aggregation to join with session records and filter by
-		// context. `$sample` runs *before* `$lookup` so the join only
-		// processes the bounded random pool (`max`) instead of every
-		// matched powcaptcha. The previous ordering let `$lookup` chew
-		// through the full match (>30K docs for the busiest dapp,
-		// ~4.7s per call) before the trailing `$limit` had any effect.
-		// A second `$sample` after the post-join filter trims down to
-		// the requested `size`.
-		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
-		const pipeline: any[] = [
-			{
-				$match: {
-					dappAccount: siteKey,
-					requestedAtTimestamp: {
-						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
-					},
-				},
-			},
-			{ $sample: { size: max } },
-			{
-				$lookup: {
-					from: "sessions",
-					localField: "sessionId",
-					foreignField: "sessionId",
-					as: "sessionData",
-				},
-			},
-			{
-				$unwind: {
-					path: "$sessionData",
-					preserveNullAndEmptyArrays: false,
-				},
-			},
-		];
-
-		// Add context-specific filter
-		if (contextType === ContextType.Webview) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": true,
-				},
-			});
-		} else if (contextType === ContextType.Default) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": false,
-				},
-			});
-		}
-
-		pipeline.push(
-			{ $sample: { size } },
-			{
-				$project: {
-					_id: 0,
-					sessionId: 1,
-				},
-			},
-		);
-
-		const cursor = this.tables?.powcaptcha.aggregate(pipeline);
-		const docs = await cursor;
-
-		if (docs?.length === 0) {
-			return [];
-		}
-
-		// Get the associated entropies from sessions
-		return (
-			await Promise.all(
-				docs.map(async (doc) => {
-					if (doc.sessionId) {
-						const tokenRecord = await this.getSessionRecordBySessionId(
-							doc.sessionId,
-						);
-						return tokenRecord?.decryptedHeadHash;
-					}
-					return undefined;
-				}),
-			)
-		).filter((headHash): headHash is string => headHash !== undefined);
-	}
-
 	async getSpamEmailDomain(
 		domain: string,
 	): Promise<SpamEmailDomainRecord | null> {
 		if (!this.tables?.spamEmailDomain) {
-			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-50",
+				message: "Failed to import database engine",
 				context: { failedFuncName: this.getSpamEmailDomain.name },
 			});
 		}
@@ -2917,7 +3443,10 @@ export class ProviderDatabase
 		upsert: boolean,
 	): Promise<void> {
 		if (!this.tables?.spamEmailDomain) {
-			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-51",
+				message: "Failed to import database engine",
 				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
 			});
 		}

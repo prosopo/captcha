@@ -50,7 +50,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) )",
 		);
 	});
 
@@ -126,7 +126,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) )",
 		);
 	});
 
@@ -146,7 +146,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) )",
+			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) )",
 		);
 	});
 
@@ -248,6 +248,19 @@ describe("getRulesRedisQuery", () => {
 
 		// Special characters like [, ], and , should be escaped
 		expect(query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
+	});
+
+	it("escapes the signer URL in a webBotAuthAgent query", () => {
+		const filter = {
+			userScope: {
+				webBotAuthAgent: "https://chatgpt.com",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("( @webBotAuthAgent:{https\\:\\/\\/chatgpt\\.com} )");
 	});
 
 	it("includes both headHash and coords when both provided", () => {

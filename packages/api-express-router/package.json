@@ -1,49 +1,50 @@
 {
 	"name": "@prosopo/api-express-router",
-	"version": "3.1.57",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"version": "3.3.4",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"build:types": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@polkadot/util": "13.5.7",
-		"@prosopo/api-route": "2.6.54",
-		"@prosopo/common": "3.1.49",
-		"@prosopo/logger": "2.0.5",
-		"@prosopo/env": "3.6.26",
-		"@prosopo/locale": "3.2.9",
-		"@prosopo/types": "5.0.2",
-		"@prosopo/util": "3.3.5",
-		"@prosopo/util-crypto": "13.5.30",
-		"dotenv": "16.4.5",
-		"express": "4.21.2",
-		"i18next": "24.1.0",
-		"uuid": "14.0.1",
+		"@polkadot/util": "14.0.3",
+		"@prosopo/api-route": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/logger": "workspace:*",
+		"@prosopo/env": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
+		"dotenv": "18.0.7",
+		"express": "4.22.2",
+		"uuid": "14.0.3",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.7",
+		"@prosopo/config": "workspace:*",
+		"@types/express": "4.17.25",
 		"@types/node": "22.10.2",
-		"vitest": "4.1.10"
+		"del-cli": "6.0.0",
+		"typescript": "5.6.2",
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

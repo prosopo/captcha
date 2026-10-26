@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { builtinModules } from "node:module";
+import { builtinModules, createRequire } from "node:module";
 import path from "node:path";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
@@ -75,6 +75,18 @@ export default async function (
 		"process.env.PROSOPO_SERVER_URL": JSON.stringify(
 			process.env.PROSOPO_SERVER_URL,
 		),
+		// Lets a development widget reach a provider that is not on the machine
+		// serving the page — a phone or simulator testing over the LAN would
+		// otherwise resolve the default `localhost` to itself.
+		"process.env.PROSOPO_PROVIDER_URL_DEVELOPMENT": JSON.stringify(
+			process.env.PROSOPO_PROVIDER_URL_DEVELOPMENT,
+		),
+		// Points a self-hosted build at its own providers regardless of
+		// environment, so a production bundle no longer has to masquerade as a
+		// development build to be redirected.
+		"process.env.PROSOPO_PROVIDER_LIST": JSON.stringify(
+			process.env.PROSOPO_PROVIDER_LIST,
+		),
 		"process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
 			process.env._DEV_ONLY_WATCH_EVENTS,
 		),
@@ -106,7 +118,13 @@ export default async function (
 	const { dependencies: deps, optionalPeerDependencies } =
 		await getDependencies(packageName, isProduction);
 
-	// Get rid of any dependencies we don't want to bundle
+	// Get rid of any dependencies we don't want to bundle.
+	// The two i18next entries are server-only: the fs backend reads locale JSON
+	// off disk and the middleware is Express request handling. Neither can run
+	// in a browser — `i18nBackend.ts` also imports `node:path`, which is already
+	// external — so they are pure weight in a frontend bundle. No other i18next
+	// package is bundled: the widget uses its own `i18nFrontend.ts`. These
+	// filters are substring matches, so they catch only themselves.
 	const { external, internal } = filterDependencies(deps, [
 		"pm2",
 		"nodejs-polars",
@@ -114,7 +132,24 @@ export default async function (
 		"webpack",
 		"vite",
 		"i18next-fs-backend",
+		"i18next-http-middleware",
 	]);
+
+	// `external` only ever matches a specifier exactly, so listing a package by
+	// name does nothing for a subpath import of it. `i18next-fs-backend` has
+	// been on the exclusion list above for a long time, but `i18nBackend.ts`
+	// imports `i18next-fs-backend/cjs` (see i18next/i18next-fs-backend#57) —
+	// a different string — so it was bundled anyway, dragging its YAML, JSON5
+	// and JSONC parsers into the browser artifact.
+	//
+	// Listed literally rather than by matching `pkg/*` against the whole
+	// exclusion list: that broader rule also catches
+	// `vite-plugin-node-polyfills/shims/process` (the `vite` filter is a
+	// substring match, so it selects the plugin package too). That specifier is
+	// injected into the served and IIFE bundles as a bare import, and
+	// externalising it leaves the browser unable to resolve it — the widget dies
+	// on load with "Failed to resolve module specifier".
+	const serverOnlySubpaths = ["i18next-fs-backend/cjs"];
 
 	// Add the node builtins (path, fs, os, etc.) to the external list
 	const allExternal = [
@@ -122,6 +157,7 @@ export default async function (
 		...builtinModules.map((m) => `node:${m}`),
 		...external,
 		...optionalPeerDependencies,
+		...serverOnlySubpaths,
 	];
 	console.debug(
 		`Bundling. ${JSON.stringify(internal.slice(0, 10), null, 2)}... ${internal.length} deps`,
@@ -142,8 +178,27 @@ export default async function (
 
 	const rollupExternal: ExternalOption = allExternal;
 
+	// nodePolyfills injects bare imports of its shims into every module it
+	// transforms, and each resolves from that module's own location. Point them
+	// at this package's copy of the plugin so they do not depend on it being
+	// hoisted to a node_modules above every bundled package.
+	const polyfillsDir = path.dirname(
+		path.dirname(
+			createRequire(import.meta.url).resolve("vite-plugin-node-polyfills"),
+		),
+	);
+	const polyfillShimAliases = Object.fromEntries(
+		["buffer", "global", "process"].map((shim) => [
+			`vite-plugin-node-polyfills/shims/${shim}`,
+			path.join(polyfillsDir, "shims", shim, "dist", "index.js"),
+		]),
+	);
+
 	console.info({ bundleName }, "Bundle name");
 	return {
+		resolve: {
+			alias: polyfillShimAliases,
+		},
 		server: {
 			host: "127.0.0.1",
 		},
@@ -213,6 +268,19 @@ export default async function (
 				output: {
 					dir: path.resolve(dir, "dist/bundle"),
 					entryFileNames: `${bundleName}.bundle.js`,
+					// For a lib + es build, Vite downgrades `build.minify: true` to
+					// `{ compress, mangle, codegen: false }`, which leaves the output
+					// pretty-printed. Set it here to get whitespace removal too;
+					// output options win over the build-level default.
+					...(isProduction
+						? {
+								minify: {
+									compress: true,
+									mangle: true,
+									codegen: true,
+								},
+							}
+						: {}),
 				},
 
 				plugins: [

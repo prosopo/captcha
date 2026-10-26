@@ -48,14 +48,41 @@ export class CaptchaMerkleTree {
 
 	getRoot() {
 		if (this.root === undefined) {
-			throw new ProsopoError("DATASET.MERKLE_ERROR", {
-				context: {
-					error: "root undefined",
-					failedFuncName: this.getRoot.name,
-				},
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSET-10",
+				message: "Error creating merkle tree",
+				context: { error: "root undefined", failedFuncName: this.getRoot.name },
 			});
 		}
 		return this.root;
+	}
+
+	/**
+	 * Populate leaves + layers + root from a precomputed layer stack (layer 0
+	 * = raw leaf hashes, last layer = single root). The caller is trusted to
+	 * have produced the layers with the same hashing scheme this class uses;
+	 * we do no re-hashing here. Used to graft results from the native
+	 * @prosopo/native-merkle module into a JS tree so `.proof()` still works.
+	 */
+	hydrateFromLayers(layers: MerkleLayer[]): void {
+		if (layers.length === 0) {
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSET-11",
+				message: "Error creating merkle tree",
+				context: {
+					error: "cannot hydrate from empty layers",
+					failedFuncName: this.hydrateFromLayers.name,
+				},
+			});
+		}
+		const leafLayer = at(layers, 0);
+		this.leaves = leafLayer.map((h) => new MerkleNode(h));
+		this.layers = layers.map((l) => [...l]);
+		const rootLayer = at(layers, layers.length - 1);
+		const rootHash = at(rootLayer, 0);
+		this.root = new MerkleNode(rootHash);
 	}
 
 	build(leaves: string[]) {
@@ -88,7 +115,10 @@ export class CaptchaMerkleTree {
 		while (leafIndex < numLeaves) {
 			const leftChild = leaves[leafIndex];
 			if (leftChild === undefined) {
-				throw new ProsopoError("DEVELOPER.GENERAL", {
+				throw new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "DSET-12",
+					message: "General Dev Error, see context",
 					context: { error: "leftChild undefined" },
 				});
 			}
@@ -114,12 +144,23 @@ export class CaptchaMerkleTree {
 	}
 
 	proof(leafHash: MerkleLeaf): MerkleProof {
+		if (!at(this.layers, 0).includes(leafHash)) {
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSET-13",
+				message: "Error creating merkle tree",
+				context: { error: "leaf not in tree", failedFuncName: this.proof.name },
+			});
+		}
 		const proofTree: MerkleProofLayer[] = [];
 		let layerNum = 0;
 		while (layerNum < this.layers.length - 1) {
 			const layer = this.layers[layerNum];
 			if (layer === undefined) {
-				throw new ProsopoError("DATASET.MERKLE_ERROR", {
+				throw new ProsopoError({
+					code: "DATASET_INVALID",
+					errorSite: "DSET-14",
+					message: "Error creating merkle tree",
 					context: {
 						error: "layer undefined",
 						failedFuncName: this.proof.name,
@@ -153,23 +194,26 @@ export class CaptchaMerkleTree {
 	}
 }
 
-export function verifyProof(leaf: MerkleLeaf, proof: MerkleProof): boolean {
-	try {
-		if (at(proof, 0).indexOf(leaf) === -1) {
-			return false;
-		}
-		for (const [layerIndex, layer] of proof.entries()) {
-			leaf = hexHashArray(layer);
-			if (at(proof, layerIndex + 1).indexOf(leaf) === -1) {
-				return false;
-			}
-			const last = at(proof, proof.length - 1);
-			if (leaf === at(last, 0)) {
-				return true;
-			}
-		}
-		return false;
-	} catch (err) {
+/**
+ * True when `proof` links `leaf` to `root`. The root must come from a trusted
+ * source: a proof carries its own root layer, so checking it only for internal
+ * consistency would accept a proof built over any leaf at all.
+ */
+export function verifyProof(
+	leaf: MerkleLeaf,
+	proof: MerkleProof,
+	root: MerkleLeaf,
+): boolean {
+	const rootLayer = proof[proof.length - 1];
+	if (rootLayer === undefined || rootLayer.length !== 1) {
 		return false;
 	}
+	let hash = leaf;
+	for (const layer of proof.slice(0, -1)) {
+		if (layer.length !== 2 || !layer.includes(hash)) {
+			return false;
+		}
+		hash = hexHashArray(layer);
+	}
+	return hash === root && rootLayer[0] === root;
 }

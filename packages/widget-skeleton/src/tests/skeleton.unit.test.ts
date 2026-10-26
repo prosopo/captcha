@@ -17,6 +17,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
 	WIDGET_MAX_WIDTH,
 	WIDGET_MIN_HEIGHT,
+	WIDGET_MIN_WIDTH,
 	WIDGET_OUTER_HEIGHT,
 } from "../constants.js";
 import {
@@ -28,6 +29,33 @@ import {
 	replacePlaceholder,
 } from "../elements/skeleton.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
+
+const skeletonOf = (theme: Theme): HTMLElement =>
+	createWidgetSkeletonElement(theme).element;
+
+/** Reads one rule's declarations out of the generated stylesheet. */
+const declarationsFor = (
+	styles: string,
+	selector: string,
+): Map<string, string> => {
+	const body: string =
+		styles
+			.replace(/\/\*[\s\S]*?\*\//g, "")
+			.split("}")
+			.find((rule: string) => rule.split("{")[0]?.trim() === selector)
+			?.split("{")[1] ?? "";
+
+	return new Map(
+		body
+			.split(";")
+			.map((declaration: string) => declaration.split(":"))
+			.filter((parts: string[]) => 2 === parts.length)
+			.map(([property, value]: string[]) => [
+				(property ?? "").trim(),
+				(value ?? "").trim(),
+			]),
+	);
+};
 
 const originalNodeEnv: string | undefined = process.env.NODE_ENV;
 
@@ -44,7 +72,7 @@ describe("createWidgetSkeletonElement", () => {
 		// Each level exists for a specific declaration — the container query, the
 		// overflow clip, the padded content box — so a missing one silently
 		// changes the layout rather than failing.
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		expect(widget.className).toBe("prosopo-widget");
 		for (const selector of [
 			".prosopo-widget__outer",
@@ -58,7 +86,7 @@ describe("createWidgetSkeletonElement", () => {
 	});
 
 	test("substitutes real elements for both placeholders", () => {
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		// The placeholders are gone, not merely filled: replaceWith swaps the node.
 		expect(widget.querySelector(".prosopo-widget__checkbox")).toBeNull();
 		expect(widget.querySelector(".prosopo-widget__logo")).toBeNull();
@@ -71,7 +99,7 @@ describe("createWidgetSkeletonElement", () => {
 	test("keeps the checkbox before the logo", () => {
 		// The content row is a space-between flex row; swapping the order would
 		// put the brand mark where the click target is expected.
-		const content = createWidgetSkeletonElement(lightTheme).querySelector(
+		const content = skeletonOf(lightTheme).querySelector(
 			".prosopo-widget__content",
 		);
 		expect(content?.children[0]?.className).toBe("prosopo-checkbox");
@@ -85,9 +113,11 @@ describe("createWidgetSkeletonElement", () => {
 		"%s interpolates its own palette into the styles",
 		(_n: string, theme: Theme) => {
 			const styles: string =
-				createWidgetSkeletonElement(theme).querySelector("style")
-					?.textContent ?? "";
-			expect(styles).toContain(theme.palette.background.default);
+				skeletonOf(theme).querySelector("style")?.textContent ?? "";
+			// The on-page widget sits on `surface`. `background.default` is the
+			// dialog container's role (surfaceContainerHigh), which is how M3
+			// separates a resting affordance from a modal container.
+			expect(styles).toContain(theme.palette.surface);
 			expect(styles).toContain(theme.font.color);
 			expect(styles).toContain(theme.font.fontFamily);
 			// Never the literal "undefined", which is what a renamed theme key would
@@ -98,35 +128,168 @@ describe("createWidgetSkeletonElement", () => {
 
 	test("pins the widget to the shared dimensions", () => {
 		const styles: string =
-			createWidgetSkeletonElement(lightTheme).querySelector("style")
-				?.textContent ?? "";
+			skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
 		expect(styles).toContain(WIDGET_MAX_WIDTH);
 		expect(styles).toContain(WIDGET_MIN_HEIGHT);
 		expect(styles).toContain(`height: ${WIDGET_OUTER_HEIGHT}px`);
+	});
+
+	describe("intrinsic width", () => {
+		// A host that sizes the widget by measuring it — an inline-block, a
+		// float, an auto-sized grid or flex item — asks how wide the widget
+		// wants to be. __wrapper is size contained so it answers with nothing,
+		// and every other box sizes in percentages, which resolve as `auto`
+		// against an indefinite width. __intrinsic answers in their place.
+		// Layout assertions live in intrinsicWidth.browser.test.ts; these pin
+		// the declarations that produce it.
+
+		test("states both intrinsic widths on a wrapping line", () => {
+			const styles: string =
+				skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
+			const row: Map<string, string> = declarationsFor(
+				styles,
+				".prosopo-widget__intrinsic",
+			);
+			// Wrapping is what keeps min-content at the floor rather than the
+			// sum: without it both boxes stay on one line and the widget
+			// overflows every host narrower than its natural width.
+			expect(row.get("display")).toBe("flex !important");
+			expect(row.get("flex-wrap")).toBe("wrap !important");
+			// It measures; it must never paint.
+			expect(row.get("height")).toBe("0 !important");
+			expect(row.get("overflow")).toBe("hidden !important");
+
+			const first: Map<string, string> = declarationsFor(
+				styles,
+				".prosopo-widget__intrinsic > i:first-child",
+			);
+			const last: Map<string, string> = declarationsFor(
+				styles,
+				".prosopo-widget__intrinsic > i:last-child",
+			);
+			// min-content: the wider box. max-content: the pair.
+			expect(first.get("width")).toBe(`${WIDGET_MIN_WIDTH} !important`);
+			expect(last.get("width")).toBe(
+				`calc(${WIDGET_MAX_WIDTH} - ${WIDGET_MIN_WIDTH}) !important`,
+			);
+		});
+
+		test("renders the row as a sibling of the contained wrapper", () => {
+			// Inside __wrapper it would be size contained too, and measure
+			// nothing. It has to sit in the box whose width is in question.
+			const outer: Element | null = skeletonOf(lightTheme).querySelector(
+				".prosopo-widget__outer",
+			);
+			const row: Element | null | undefined = outer?.querySelector(
+				":scope > .prosopo-widget__intrinsic",
+			);
+			expect(row).not.toBeNull();
+			expect(row?.children).toHaveLength(2);
+			// Empty measuring boxes, not content.
+			expect(row?.getAttribute("aria-hidden")).toBe("true");
+			expect(row?.textContent).toBe("");
+		});
+
+		test("leaves __outer free to fill or shrink", () => {
+			// A definite width here would set min-content as well as
+			// max-content, and the widget would overflow any shrink-to-fit host
+			// narrower than its natural width instead of shrinking into it.
+			const outer: Map<string, string> = declarationsFor(
+				skeletonOf(lightTheme).querySelector("style")?.textContent ?? "",
+				".prosopo-widget__outer",
+			);
+			expect(outer.get("width")).toBe("auto");
+			expect(outer.get("max-width")).toBe(WIDGET_MAX_WIDTH);
+		});
 	});
 
 	test("neutralises pseudo elements the embedding page may inject", () => {
 		// Host stylesheets frequently add ::after content to links and divs; the
 		// widget is not in a shadow root at this level, so it has to opt out.
 		const styles: string =
-			createWidgetSkeletonElement(lightTheme).querySelector("style")
-				?.textContent ?? "";
+			skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
 		expect(styles).toContain("content: none !important");
 	});
 
-	test("forces ltr regardless of the embedding page's direction", () => {
+	test("defaults to ltr regardless of the embedding page's direction", () => {
 		const styles: string =
-			createWidgetSkeletonElement(lightTheme).querySelector("style")
-				?.textContent ?? "";
+			skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
 		expect(styles).toContain("direction: ltr !important");
+	});
+
+	describe("direction", () => {
+		const rtlRule = (styles: string): string | undefined =>
+			styles
+				.split("}")
+				.find((rule: string) => rule.includes("direction: rtl !important"));
+
+		const contentMatchedByRtlRule = (parent: HTMLElement): Element | null => {
+			const skeleton: HTMLElement = skeletonOf(lightTheme);
+			parent.appendChild(skeleton);
+			document.body.appendChild(parent);
+			const styles: string = skeleton.querySelector("style")?.textContent ?? "";
+			const selector: string =
+				(rtlRule(styles) ?? "").split("{")[0]?.trim() ?? "";
+			return selector ? document.querySelector(selector) : null;
+		};
+
+		afterEach(() => {
+			document.body.innerHTML = "";
+			document.documentElement.removeAttribute("dir");
+		});
+
+		test("switches the content to rtl when its host is rtl", () => {
+			const host: HTMLElement = document.createElement("prosopo-procaptcha");
+			host.dir = "rtl";
+			expect(contentMatchedByRtlRule(host)?.className).toBe(
+				"prosopo-widget__content",
+			);
+		});
+
+		test("stays ltr when only the page is rtl", () => {
+			document.documentElement.dir = "rtl";
+			const host: HTMLElement = document.createElement("prosopo-procaptcha");
+			host.dir = "ltr";
+			expect(contentMatchedByRtlRule(host)).toBeNull();
+		});
+
+		test("stays ltr when an outer element is rtl but the host is not", () => {
+			const outer: HTMLElement = document.createElement("div");
+			outer.dir = "rtl";
+			const host: HTMLElement = document.createElement("prosopo-procaptcha");
+			outer.appendChild(host);
+			const skeleton: HTMLElement = skeletonOf(lightTheme);
+			host.appendChild(skeleton);
+			document.body.appendChild(outer);
+			const styles: string = skeleton.querySelector("style")?.textContent ?? "";
+			const selector: string =
+				(rtlRule(styles) ?? "").split("{")[0]?.trim() ?? "";
+			expect(selector).not.toBe("");
+			expect(document.querySelector(selector)).toBeNull();
+		});
+
+		test("uses no physical left/right margins", () => {
+			const skeleton: HTMLElement = skeletonOf(lightTheme);
+			const roots: ParentNode[] = [
+				skeleton,
+				...[...skeleton.querySelectorAll("*")].flatMap(
+					(element: Element): ParentNode[] =>
+						element.shadowRoot ? [element.shadowRoot] : [],
+				),
+			];
+			expect(roots.length).toBeGreaterThan(1);
+			const styles: string = roots
+				.flatMap((root: ParentNode) => [...root.querySelectorAll("style")])
+				.map((style: HTMLStyleElement) => style.textContent ?? "")
+				.join("\n");
+			expect(styles).not.toMatch(/margin-(left|right)\s*:/);
+		});
 	});
 
 	test("adds the test hook outside production", () => {
 		process.env.NODE_ENV = "development";
 		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector(
-				'[data-cy="captcha-checkbox"]',
-			),
+			skeletonOf(lightTheme).querySelector('[data-cy="captcha-checkbox"]'),
 		).not.toBeNull();
 	});
 
@@ -134,7 +297,7 @@ describe("createWidgetSkeletonElement", () => {
 		// It is read by the e2e suite; shipping it would expose an automation
 		// selector to the bots the widget exists to stop.
 		process.env.NODE_ENV = "production";
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		expect(widget.querySelector("[data-cy]")).toBeNull();
 		expect(widget.querySelector(".prosopo-widget__dimensions")).not.toBeNull();
 	});
@@ -143,19 +306,15 @@ describe("createWidgetSkeletonElement", () => {
 		// The mode is not captured at import time, so a bundler that sets it
 		// late still takes effect.
 		process.env.NODE_ENV = "production";
-		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector("[data-cy]"),
-		).toBeNull();
+		expect(skeletonOf(lightTheme).querySelector("[data-cy]")).toBeNull();
 		process.env.NODE_ENV = "development";
-		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector("[data-cy]"),
-		).not.toBeNull();
+		expect(skeletonOf(lightTheme).querySelector("[data-cy]")).not.toBeNull();
 	});
 
 	test("returns a detached element on each call", () => {
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		expect(widget.isConnected).toBe(false);
-		expect(widget).not.toBe(createWidgetSkeletonElement(lightTheme));
+		expect(widget).not.toBe(skeletonOf(lightTheme));
 	});
 });
 

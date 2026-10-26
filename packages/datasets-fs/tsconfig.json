@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo"
 	},
 	"include": [
 		"src",
@@ -29,9 +30,6 @@
 		},
 		{
 			"path": "../util-crypto"
-		},
-		{
-			"path": "../../dev/workspace"
 		}
 	]
 }

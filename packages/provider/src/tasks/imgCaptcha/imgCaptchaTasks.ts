@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -45,22 +46,30 @@ import {
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
+	type Session,
 	SimdReadingsStage,
 	type UserCommitment,
+	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
-import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
+import { randomAsHex } from "@prosopo/util-crypto";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import {
 	constructPairList,
-	containsIdenticalPairs,
+	peelCheckboxInputMethod,
 	peelCheckboxPrefix,
+	resolveInputMethods,
+	selectionsLookScripted,
 } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
@@ -68,6 +77,11 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -75,8 +89,8 @@ import {
 	enrichDnsEvent,
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
-import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { isSignatureValid } from "../signatureCheck.js";
 import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
@@ -108,7 +122,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 	): Promise<Captcha[]> {
 		const captchaDocs = await this.db.getRandomCaptcha(solved, datasetId, size);
 		if (!captchaDocs) {
-			throw new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "PROV-59",
+				message: "Failed to get captcha",
 				context: {
 					failedFuncName: this.getCaptchaWithProof.name,
 					datasetId,
@@ -137,7 +154,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 	}> {
 		const dataset = await this.db.getDatasetDetails(datasetId);
 		if (!dataset) {
-			throw new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "PROV-60",
+				message: "Failed to get dataset",
 				context: {
 					failedFuncName: this.getRandomCaptchasAndRequestHash.name,
 					dataset,
@@ -154,7 +174,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 		);
 
 		if (!solvedCount) {
-			throw new ProsopoEnvError("CONFIG.INVALID_CAPTCHA_NUMBER");
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "PROV-61",
+				message: "Please configure captchas configurations correctly",
+			});
 		}
 
 		const solved = await this.getCaptchaWithProof(datasetId, true, solvedCount);
@@ -238,14 +262,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 		clientMetaData?: ClientMetaData,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
-		const verification = signatureVerify(
-			stringToHex(timestamp.toString()),
-			userTimestampSignature,
-			userAccount,
-		);
-		if (!verification.isValid) {
+		if (
+			!isSignatureValid(
+				timestamp.toString(),
+				userTimestampSignature,
+				userAccount,
+			)
+		) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-			const err = new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
+			const err = new ProsopoError({
+				code: "UNAUTHORIZED",
+				errorSite: "PROV-62",
+				message: "Invalid signature",
 				context: { failedFuncName: this.dappUserSolution.name, userAccount },
 			});
 			this.logger.info(() => ({
@@ -256,15 +284,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// check that the requestHash signature is valid and signed by the provider
-		const providerRequestHashSignatureVerify = signatureVerify(
-			stringToHex(requestHash.toString()),
-			providerRequestHashSignature,
-			this.pair.address,
-		);
-
-		if (!providerRequestHashSignatureVerify.isValid) {
+		if (
+			!isSignatureValid(
+				requestHash.toString(),
+				providerRequestHashSignature,
+				this.pair.address,
+			)
+		) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
-			const err = new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
+			const err = new ProsopoError({
+				code: "UNAUTHORIZED",
+				errorSite: "PROV-63",
+				message: "Invalid signature",
 				context: {
 					failedFuncName: this.dappUserSolution.name,
 					userAccount,
@@ -283,18 +314,21 @@ export class ImgCaptchaManager extends CaptchaManager {
 			verified: false,
 		};
 
+		// Written to both the commitment and the linked session record so the
+		// clientSessionId the verify call correlates against lives on each.
+		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
+
 		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
 
-		// The detector lives only in provider pool bundles; resolve THIS session's
-		// bundle (promoted onto the session record at frictionless time) once and
-		// reuse it for both the SIMD readings and behavioural-data decrypts below.
-		// img submit may attach to multiple sessions, all sharing this bundle.
-		const sessionBundle = await this.resolveBundleBySessionId(
+		// The detector lives only in provider pool bundles; THIS session's bundle
+		// (promoted onto the session record at frictionless time) is resolved once
+		// and both payloads decode together. img submit may attach to multiple
+		// sessions, all sharing this bundle.
+		const decodedPayloads = await this.decodeSubmissionPayloads(
 			pendingRecord?.sessionId,
+			{ behavioural: behavioralData, simd: simdReadings },
 		);
-		const decodedSimdReadings = simdReadings
-			? await this.decryptSimdReadingsForAttach(simdReadings, sessionBundle)
-			: undefined;
+		const decodedSimdReadings = decodedPayloads.simd;
 		const pushSimdAttachIfAny = (
 			sessionId: string,
 			writes: Promise<void>[],
@@ -330,6 +364,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const pairs: [number, number][][] = checkboxCoordPair
 				? [[checkboxCoordPair], ...shapePairs]
 				: shapePairs;
+			const rawInputMethods = resolveInputMethods(
+				rawFlat,
+				receivedCaptchas.map((c) => c.inputMethods),
+			);
+			const inputMethods =
+				rawInputMethods && checkboxCoordPair
+					? peelCheckboxInputMethod(rawInputMethods)
+					: rawInputMethods;
+			const inputMethodsDeclared = receivedCaptchas.some(
+				(c) => c.inputMethods !== undefined,
+			);
 
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
@@ -337,26 +382,33 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const datasetId = at(storedCaptchas, 0).datasetId;
 
 			if (!datasetId) {
-				throw new ProsopoEnvError("CAPTCHA.ID_MISMATCH", {
+				throw new ProsopoError({
+					code: "INVALID_DATA",
+					errorSite: "PROV-64",
+					message: "captcha id mismatch",
 					context: { failedFuncName: this.dappUserSolution.name },
 				});
 			}
 
 			// Only do stuff if the request is in the local DB
-			// prevent this request hash from being used twice
-			await this.db.updatePendingImageCommitmentStatus(requestHash);
+			// prevent this request hash from being used twice. The flip is
+			// conditional on the request still being pending, so concurrent
+			// submissions (e.g. brute-forcing answers in parallel) get one try.
+			const claimedRequest =
+				await this.db.updatePendingImageCommitmentStatus(requestHash);
+			if (!claimedRequest) {
+				this.logger.info(() => ({
+					msg: "Request hash already consumed by a concurrent submission",
+				}));
+				return response;
+			}
 
 			// Process behavioral data if provided
 			let behavioralDataPacked: BehavioralDataPacked | undefined;
 			let deviceCapability: string | undefined;
 			if (behavioralData) {
 				try {
-					// Decrypt the behavioural data with this session's detector pool
-					// bundle (resolved above; no key pool).
-					const decryptedData = await this.decryptBehavioralData(
-						behavioralData,
-						sessionBundle,
-					);
+					const decryptedData = decodedPayloads.behavioural;
 
 					if (decryptedData) {
 						// Log behavioral analytics using unpacked data counts
@@ -369,6 +421,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 								mouseEventsCount: decryptedData.collector1?.length || 0,
 								touchEventsCount: decryptedData.collector2?.length || 0,
 								clickEventsCount: decryptedData.collector3?.length || 0,
+								scrollEventsCount: decryptedData.collector4?.length || 0,
 								deviceCapability: decryptedData.deviceCapability,
 							},
 						}));
@@ -378,6 +431,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							c1: decryptedData.collector1 || [],
 							c2: decryptedData.collector2 || [],
 							c3: decryptedData.collector3 || [],
+							c4: decryptedData.collector4 || [],
 							d: decryptedData.deviceCapability,
 						};
 
@@ -416,9 +470,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				deadlineTimestamp: pendingRecord.deadlineTimestamp,
 				...(behavioralDataPacked && { behavioralDataPacked }),
 				...(deviceCapability && { deviceCapability }),
-				...(clientMetaData?.hp && {
-					clientMetaData: { hp: clientMetaData.hp },
+				...(storedClientMetaData && {
+					clientMetaData: storedClientMetaData,
 				}),
+				...(inputMethodsDeclared && inputMethods && { inputMethods }),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
@@ -428,7 +483,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 						captcha.captchaId,
 					);
 					if (!solutionRecord) {
-						throw new ProsopoEnvError("CAPTCHA.SOLUTION_NOT_FOUND", {
+						throw new ProsopoError({
+							code: "SOLUTION_NOT_FOUND",
+							errorSite: "PROV-65",
 							context: { failedFuncName: this.dappUserSolution.name },
 						});
 					}
@@ -438,12 +495,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
-			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
+			if (
+				selectionsLookScripted(pairs, inputMethods) &&
+				process.env.NODE_ENV !== "test"
+			) {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
 					this.db.disapproveDappUserCommitment(
 						commitmentId,
-						"CAPTCHA.INVALID_SOLUTION",
+						ResultReason.CAPTCHA_INVALID_SOLUTION,
 						pairs,
 					),
 				];
@@ -455,6 +515,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
+							...(storedClientMetaData && {
+								clientMetaData: storedClientMetaData,
+							}),
 						}),
 					);
 					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
@@ -479,9 +542,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				)
 			) {
 				response = {
-					captchas: captchaIds.map((id) => ({
+					captchas: captchaIds.map((id, index) => ({
 						captchaId: id,
-						proof: tree.proof(id),
+						proof: tree.proof(at(tree.leaves, index).hash),
 					})),
 					verified: true,
 				};
@@ -494,6 +557,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
 							result: { status: CaptchaStatus.approved },
+							...(storedClientMetaData && {
+								clientMetaData: storedClientMetaData,
+							}),
 						}),
 					);
 					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
@@ -504,7 +570,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				const writePromises: Promise<void>[] = [
 					this.db.disapproveDappUserCommitment(
 						commitmentId,
-						"CAPTCHA.INVALID_SOLUTION",
+						ResultReason.CAPTCHA_INVALID_SOLUTION,
 						pairs,
 					),
 				];
@@ -516,6 +582,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 								status: CaptchaStatus.disapproved,
 								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 							},
+							...(storedClientMetaData && {
+								clientMetaData: storedClientMetaData,
+							}),
 						}),
 					);
 					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
@@ -552,11 +621,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 		const captchaIds = receivedCaptchas.map((captcha) => captcha.captchaId);
 		const storedCaptchas = await this.db.getCaptchaById(captchaIds);
 		if (!storedCaptchas || receivedCaptchas.length !== storedCaptchas.length) {
-			throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_ID", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "PROV-66",
+				message: "Invalid captcha id",
 				context: {
 					failedFuncName:
 						this.validateReceivedCaptchasAgainstStoredCaptchas.name,
-
 					captchas,
 				},
 			});
@@ -566,7 +637,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				(captcha) => captcha.datasetId === at(storedCaptchas, 0).datasetId,
 			)
 		) {
-			throw new ProsopoEnvError("CAPTCHA.DIFFERENT_DATASET_IDS", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "PROV-67",
+				message: "Dataset ids do not match",
 				context: {
 					failedFuncName:
 						this.validateReceivedCaptchasAgainstStoredCaptchas.name,
@@ -626,7 +700,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 		const dappUserSolution =
 			await this.db.getDappUserCommitmentById(commitmentId);
 		if (!dappUserSolution) {
-			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "SOLUTION_NOT_FOUND",
+				errorSite: "PROV-68",
+				message: "Dapp user solution not found",
 				context: {
 					failedFuncName: this.getDappUserCommitmentById.name,
 					commitmentId: commitmentId,
@@ -634,25 +711,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			});
 		}
 		return dappUserSolution;
-	}
-
-	/* Check if dapp user has verified solution in cache */
-	async getDappUserCommitmentByAccount(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserCommitment | undefined> {
-		const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
-			userAccount,
-			dappAccount,
-		);
-		if (dappUserSolutions.length > 0) {
-			for (const dappUserSolution of dappUserSolutions) {
-				if (dappUserSolution.result.status === CaptchaStatus.approved) {
-					return dappUserSolution;
-				}
-			}
-		}
-		return undefined;
 	}
 
 	async verifyImageCaptchaSolution(
@@ -663,21 +721,51 @@ export class ImgCaptchaManager extends CaptchaManager {
 		maxVerifiedTime?: number,
 		ip?: string,
 		disallowWebView?: boolean,
-		contextAwareEnabled = false,
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
+		// The session id the site rendered the widget with. When supplied, the
+		// solution must carry the same value in its `clientMetaData` or it is
+		// disapproved.
+		clientSessionId?: string,
 	): Promise<ImageVerificationResponse> {
 		// Bind the commitmentId/dapp context once so every log line in this
 		// method carries it without repeating the fields in each `data` block.
 		const logger = this.logger.with({ commitmentId, dapp });
 
-		const solution = await (commitmentId
-			? this.getDappUserCommitmentById(commitmentId)
-			: this.getDappUserCommitmentByAccount(user, dapp));
+		// An image token has carried its `commitmentId` since the Procaptcha
+		// token was introduced (#1263, 2024-06-06) — `Manager.ts` sets it
+		// unconditionally on every `onHuman` for this captcha type. It is
+		// `optional()` on the schema only because PoW shares the token shape and
+		// identifies its work by `challenge` instead.
+		//
+		// The fallback that used to stand here searched the account's entire
+		// history for any approved commitment. It predates the token and could
+		// only ever return the wrong record: for a returning user whose current
+		// solve was not yet approved it produced an approved commitment from an
+		// earlier visit, which carries no `clientSessionId`, so the correlation
+		// below compared the live session id against `undefined` and reported a
+		// replay that never happened. Seen in production at scale on the image
+		// path while PoW, which resolves its exact challenge record, saw
+		// effectively none of it.
+		//
+		// Verifying a token against a commitment it does not name is not a
+		// weaker answer, it is an answer to a different question. Without an id
+		// there is nothing to verify.
+		if (!commitmentId) {
+			logger.debug(() => ({
+				msg: "Not verified - token carried no commitmentId",
+			}));
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
+		}
+
+		const solution = await this.getDappUserCommitmentById(commitmentId);
 
 		// No solution exists
 		if (!solution) {
@@ -698,10 +786,20 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return {
 				status: "API.USER_ALREADY_VERIFIED",
 				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
 			};
 		}
 
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		// The claim is conditional on the commitment not being checked yet, so
+		// of several concurrent verifies of one token only one gets past here.
+		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
+		if (claimed === 0) {
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
+			};
+		}
 		// -- END WARNING --
 
 		// A solution exists but is disapproved
@@ -709,6 +807,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return {
 				status: solution.result.reason || "API.USER_NOT_VERIFIED",
 				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
 			};
 		}
 
@@ -729,6 +828,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return {
 				status: "API.USER_NOT_VERIFIED_TIME_EXPIRED",
 				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
 			};
 		}
 
@@ -737,15 +837,50 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// perform a single batch write at the end.
 		const commitmentUpdates: Partial<UserCommitment> = {};
 		let failStatus: ResultReason | undefined;
+		// Set only by the access-policy branch below, and stamped onto the
+		// session at the end so the audit page can name the rule behind an
+		// ACCESS_POLICY_BLOCK.
+		let matchedRule: Session["matchedRule"];
+
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				solution.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: "Client session mismatch in server image verification",
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						solution.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			commitmentUpdates.result = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CLIENT_SESSION_MISMATCH,
+			};
+			failStatus = ResultReason.CLIENT_SESSION_MISMATCH;
+		}
+
+		// Read before the hard-block check, which needs its head hash.
+		const sessionRecord = solution.sessionId
+			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
+			: undefined;
 
 		// Check user access policies for hard blocks
-		if (userAccessRulesStorage) {
+		if (!failStatus && userAccessRulesStorage) {
 			try {
 				const blockPolicy = await this.checkForHardBlock(
 					userAccessRulesStorage,
 					solution,
 					solution.userAccount,
 					solution.headers,
+					sessionRecord?.decryptedHeadHash,
 					solution.coords,
 					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
 					solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
@@ -765,6 +900,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failStatus = ResultReason.ACCESS_POLICY_BLOCK;
+					matchedRule = describeMatchedRule(blockPolicy);
 				}
 			} catch (error) {
 				logger.warn(() => ({
@@ -862,12 +998,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Walker fills simdReadings / dnsEvent / entropy fields from the origin
-		// when this is an escalation record. See CaptchaManager.getSessionRecordWithOriginFallback.
-		const sessionRecord = solution.sessionId
-			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
-			: undefined;
-
 		const enrichedDnsEvent = await enrichDnsEvent(
 			sessionRecord?.dnsEvent,
 			env.ipInfoService,
@@ -876,10 +1006,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		if (!failStatus) {
 			const check = await this.resolveTrafficFilterCheck(
-				env,
 				solution.ipInfo,
 				trafficFilter,
-				ip,
+				ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
@@ -1019,16 +1148,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				isApproved = false;
 				failureStatus = ResultReason.DISALLOWED_WEBVIEW;
 			}
-			if (
-				contextAwareEnabled &&
-				sessionRecord.reason ===
-					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
-			) {
-				logger.info(() => ({
-					msg: "Context aware validation failed",
-				}));
-				//return { status: "API.USER_NOT_VERIFIED", verified: false };
-			}
 		}
 
 		// Decision machine evaluation (only if still approved)
@@ -1052,11 +1171,23 @@ export class ImgCaptchaManager extends CaptchaManager {
 				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
 				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
 				simdReadings: sessionRecord?.simdReadings,
+				// Everything the detector reported for this session.
+				d: sessionRecord?.d,
 				frictionlessReason: sessionRecord?.reason,
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				currentUrl: sessionRecord?.currentUrl,
+				iframeUrl: sessionRecord?.iframeUrl,
 				coords: solution.coords,
+				// tcp-probe fields — see powTasks.ts for the reasoning.
+				...rawTlsSignalsFromRecord(sessionRecord),
+				// Which egress categories this site blocks. Gates the
+				// egress-sensitive TCP-stack deny rules — a VPN
+				// concentrator legitimately terminates the handshake, so
+				// on a site that accepts VPN users the observed stack
+				// says nothing about the client.
+				trafficPolicies: deriveTrafficPolicies(trafficFilter),
 			};
 
 			try {
@@ -1139,6 +1270,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 					{
 						serverChecked: true,
 						result: finalResult,
+						// Server-verify Disapprovals (traffic filter, IP validation,
+						// spam rules, decision-machine veto, etc.) are blocks —
+						// mark the session so the Overview chart and other
+						// aggregations pick them up without inspecting
+						// result.reason. User solution failures
+						// (CAPTCHA_INVALID_SOLUTION) are excluded — see
+						// `isBlockingCaptchaResult`.
+						...(isBlockingCaptchaResult(CaptchaType.image, finalResult) && {
+							blocked: true,
+						}),
+						...(matchedRule && { matchedRule }),
 					},
 					true,
 				),
@@ -1154,6 +1296,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
 			...(score && { score }),
+			...(solution.sessionId && { sessionId: solution.sessionId }),
 		};
 	}
 
@@ -1164,10 +1307,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 	override getVerificationResponse(
 		verified: boolean,
 		clientRecord: ClientRecord,
-		translateFn: (key: string) => string,
+		translateFn: TranslateFn,
 		score?: number,
 		commitmentId?: Hash,
 		reason?: string,
+		sessionId?: string,
 	): ImageVerificationResponse {
 		return {
 			...super.getVerificationResponse(
@@ -1176,6 +1320,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				translateFn,
 				score,
 				reason,
+				sessionId,
 			),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,

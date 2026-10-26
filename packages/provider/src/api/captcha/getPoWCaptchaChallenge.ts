@@ -1,17 +1,4 @@
-// Copyright 2021-2026 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
@@ -29,10 +16,30 @@ import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../blacklistRequestInspector.js";
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { errorCodeForReason } from "../errorCodeForReason.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
+import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
+import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -49,10 +56,11 @@ export default (
 			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-13",
+					message: "Error parsing captcha",
+					cause: err,
 				}),
 			);
 		}
@@ -73,6 +81,20 @@ export default (
 			return res.json(buildPowMaintenanceResponse(user, dapp));
 		}
 
+		// Reserved CI test site keys have no client record, so the lookup
+		// below would reject them as unregistered. The frictionless handler
+		// hands these keys an invisible PoW session, which lands right here,
+		// so without this the reserved key cannot complete a flow at all.
+		// Checked before `new Tasks(env, ...)` for the same reason as
+		// maintenance mode: the constructor calls `env.getDb()`.
+		if (isReservedTestSiteKey(dapp)) {
+			req.logger.warn(() => ({
+				msg: "Reserved TEST site key - returning dummy PoW challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildPowMaintenanceResponse(user, dapp));
+		}
+
 		const tasks = new Tasks(env, req.logger);
 
 		try {
@@ -80,10 +102,10 @@ export default (
 
 			if (!clientSettings) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-14",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -128,13 +150,21 @@ export default (
 			// getImageCaptchaChallenge for the full rationale (sanitiser
 			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE
 			// fires when a deferToVerify Block rule leaks into isValidRequest).
-			const userAccessPolicy = (
+			const accessPolicies =
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
-				)
-			).find((p) => !p.deferToVerify);
+					normalizeHeadersForMatching(req.headers),
+				);
+			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// A deferred rule must never reject at request time, so it is
+			// kept out of the validation above — but it still carries the
+			// difficulty it wants imposed, applied below when no enforcing
+			// policy supplies one.
+			const deferredParamsPolicy = accessPolicies.find(
+				(p) => p.deferToVerify === true,
+			);
 
 			const {
 				valid,
@@ -152,14 +182,10 @@ export default (
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
-						context: {
-							code: 400,
-							siteKey: dapp,
-							user,
-						},
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: errorCodeForReason(reason),
+						errorSite: "PROV-82",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
@@ -168,22 +194,35 @@ export default (
 
 			if (!origin) {
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: {
-							error: "Origin header not found",
-							code: 400,
-							siteKey: dapp,
-							user,
-						},
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-15",
+						message: "BadRequest",
+						context: { error: "Origin header not found", siteKey: dapp, user },
 					}),
 				);
 			}
 
+			// Evaluate the site's trafficFilter against the connecting IP.
+			// Only `challenge` policies affect the request-time gate — they
+			// contribute powDifficulty overrides. `block` policies are
+			// enforced at submit / verify time so the user still receives a
+			// captcha and produces a billable interaction.
+			const trafficVerdict = applyTrafficFilterAtRequestTime(
+				req.ipInfo,
+				clientSettings.settings?.trafficFilter,
+				req.logger,
+			);
+			const trafficPowDifficulty =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.powDifficulty
+					: undefined;
+
 			const difficulty =
+				trafficPowDifficulty ||
 				powDifficulty ||
 				userAccessPolicy?.powDifficulty ||
+				deferredParamsPolicy?.powDifficulty ||
 				clientSettings?.settings?.powDifficulty;
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,
@@ -230,6 +269,8 @@ export default (
 				req.ipInfo,
 			);
 
+			const padBytes = trafficVerdict.padBytes;
+
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
 				[ApiParams.status]: "ok",
 				[ApiParams.challenge]: challenge.challenge,
@@ -253,25 +294,23 @@ export default (
 					session: sessionId,
 				},
 			}));
+			res.locals.padBytes = padBytes;
 			recordCaptchaIssued(CaptchaType.pow);
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
 			recordCaptchaIssueError(CaptchaType.pow);
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha challenge request",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						user: req.body.user,
-						error: err,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-16",
+					message: "BadRequest",
+					cause: err,
+					context: { siteKey: req.body.dapp, user: req.body.user },
 				}),
 			);
 		}

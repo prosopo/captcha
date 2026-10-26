@@ -14,13 +14,8 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import {
-	ViteFrontendConfig,
-	VitePluginRemoveUnusedTranslations,
-} from "@prosopo/config";
+import { ViteFrontendConfig, VitePluginCopy } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
-import { at, flatten } from "@prosopo/util";
-import fg from "fast-glob";
 import { defineConfig } from "vite";
 
 // IIFE / classic-script build of the procaptcha bundle.
@@ -49,15 +44,15 @@ const copyDir = {
 	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
 };
 
-const localeFiles = await fg.glob(
-	`${workspaceRoot}/packages/locale/src/locales/**/*.json`,
-);
-
-const translationKeys = Object.keys(
-	flatten(JSON.parse(fs.readFileSync(at(localeFiles, 0), "utf-8"))),
-);
-
 export default defineConfig(async ({ command, mode }) => {
+	// Test-only escape hatch for the firefox cypress leg: cypress can only
+	// dispatch trusted input over the chrome devtools protocol (chromium
+	// only), so on firefox the specs click synthetically and the widget's
+	// isEventTrusted() gate would drop every one. Anything other than an
+	// explicit "1" on a non-production build compiles the allowance out.
+	const allowUntrustedEvents =
+		mode !== "production" && process.env.PROSOPO_ALLOW_UNTRUSTED_EVENTS === "1";
+
 	const frontendConfig = await ViteFrontendConfig(
 		packageName,
 		bundleName,
@@ -72,6 +67,10 @@ export default defineConfig(async ({ command, mode }) => {
 
 	return {
 		...frontendConfig,
+		define: {
+			...frontendConfig.define,
+			__PROSOPO_ALLOW_UNTRUSTED_EVENTS__: JSON.stringify(allowUntrustedEvents),
+		},
 		worker: {
 			format: "es",
 		},
@@ -97,22 +96,16 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 		},
 		plugins: [
-			{
-				name: "copy-locales-iife",
-				async writeBundle() {
-					const containingFolder = path.dirname(copyDir.destDir);
-					if (!fs.existsSync(containingFolder)) {
-						fs.mkdirSync(containingFolder, { recursive: true });
-					}
-					if (!fs.existsSync(copyDir.destDir)) {
-						fs.cpSync(copyDir.srcDir, copyDir.destDir, { recursive: true });
-					}
-				},
-			},
-			VitePluginRemoveUnusedTranslations(
-				translationKeys,
-				`${copyDir.destDir}/**/*.json`,
-			),
+			// Only the widget namespace: the browser renders nothing else, and
+			// the provider translates image labels itself. Copied whole: the
+			// provider sends any of these keys with an error for the widget to
+			// show, so stripping keys the bundle never names would leave those
+			// errors untranslated.
+			VitePluginCopy({
+				srcDir: copyDir.srcDir,
+				destDir: copyDir.destDir,
+				include: ["*/widget.json"],
+			}),
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),
 		],
 	};

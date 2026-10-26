@@ -8,6 +8,12 @@ services:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
             - MONGO_INITDB_DATABASE=prosopo
+        # Cap the json log file so a chatty container can't fill the host disk.
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
     provider:
         # TODO update provider image
         image: prosopo/provider:v1.0.5
@@ -19,6 +25,12 @@ services:
             - '3000:3000'
         depends_on:
             - database
+        # Cap the json log file so a chatty container can't fill the host disk.
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
 
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data-secrets.html
 # secrets:

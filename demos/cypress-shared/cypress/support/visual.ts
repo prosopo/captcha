@@ -75,6 +75,17 @@ Cypress.Commands.add(
 			ensureInView,
 		} = options;
 
+		// Baselines are generated in chrome (cypress-baselines.yml), and font
+		// rasterisation differs enough between engines that comparing them
+		// anywhere else is just noise. Other browsers still run the spec, they
+		// only skip the pixel assertion.
+		if (Cypress.browser.family !== "chromium") {
+			cy.log(`snap: skipped "${name}" — baselines are chrome-only`);
+			return subject
+				? cy.wrap(subject, { log: false })
+				: cy.wrap(null, { log: false });
+		}
+
 		injectPauseAnimationsStyle();
 		// One animation frame for the style to apply before screenshotting.
 		cy.wait(50, { log: false });

@@ -34,7 +34,7 @@
 // the widget from ever solving.
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { type Captcha, CaptchaType } from "@prosopo/types";
 import {
@@ -43,10 +43,10 @@ import {
 	getWidgetElement,
 } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("User access policy Block rules", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 
@@ -125,7 +125,7 @@ describe("User access policy Block rules", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"anyCaptcha",
 		);
-		cy.visit(Cypress.env("default_page"), {
+		cy.visit(Cypress.expose("default_page"), {
 			timeout: 30000,
 			failOnStatusCode: false,
 		});
@@ -148,10 +148,22 @@ describe("User access policy Block rules", () => {
 					response?.statusCode,
 					"Access-policy block should return 403 at the middleware",
 				).to.equal(403);
+				// requestId is generated per-request by requestLoggerMiddleware
+				// so support can find the request from a ticket.
 				expect(
-					response?.body,
-					"403 body should carry the { error: 'Forbidden' } shape from blockMiddleware",
-				).to.deep.equal({ error: "Forbidden" });
+					response?.body?.error?.code,
+					"403 body error.code should be FORBIDDEN",
+				).to.equal("FORBIDDEN");
+				expect(
+					response?.body?.error?.errorId,
+					"403 body error.errorId should name the block site",
+				).to.equal("FORBIDDEN:PROV-84");
+				expect(
+					response?.body?.error?.data?.requestId,
+					"403 body error.data.requestId should be set",
+				)
+					.to.be.a("string")
+					.and.not.equal("");
 			});
 	});
 
@@ -165,7 +177,7 @@ describe("User access policy Block rules", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"anyCaptcha",
 		);
-		cy.visit(Cypress.env("default_page"), {
+		cy.visit(Cypress.expose("default_page"), {
 			timeout: 30000,
 			failOnStatusCode: false,
 		});
@@ -213,10 +225,12 @@ describe("User access policy Block rules", () => {
 
 		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{ context: { datasetWithSolutionHashes } },
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-1",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 
 		cy.intercept("POST", "/signup").as("signup");
@@ -230,7 +244,7 @@ describe("User access policy Block rules", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"imageChallenge",
 		);
-		cy.visit(Cypress.env("default_page"), {
+		cy.visit(Cypress.expose("default_page"), {
 			timeout: 30000,
 			failOnStatusCode: false,
 		});

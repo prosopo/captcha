@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType } from "@prosopo/types";
+import { CaptchaType, ModeEnum } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { runConfiguredCaptchaTypeShortCircuit } from "../../../../../api/captcha/getFrictionlessCaptchaChallenge/shortCircuit.js";
 
@@ -54,7 +54,7 @@ const buildInput = (
 			ipAddress: { lower: 0n, type: "v4" } as never,
 			ipInfo: undefined,
 			flatHeaders: {},
-			sessionMode: undefined,
+			sessionMode: ModeEnum.visible,
 			userSitekeyIpHash: "hash",
 			logger: { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() },
 			...overrides,

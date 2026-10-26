@@ -137,6 +137,7 @@ const getUserScopeQuery = (
 // Fields that may contain special characters requiring escaping in Redis TAG queries
 const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
 	"coords",
+	"webBotAuthAgent",
 ]);
 
 // Fields indexed as NUMERIC in RediSearch — must use range syntax `@x:[N N]`,
@@ -197,6 +198,29 @@ const getPolicyScopeQuery = (
 		: "";
 };
 
+// Candidate-pool clause for the two hard-block callers.
+//
+// Verify (`includeDeferred`): a deferToVerify rule is skipped at request
+// time and enforced at verify, so it is a valid hard block whatever its
+// type — the pool must admit deferred Restrict rules too.
+//
+// Request time (middleware): deferred rules are never enforceable there,
+// so exclude them server-side rather than fetching and discarding them.
+// Rules with no `deferToVerify` field survive the negation (the field is
+// indexed INDEXMISSING).
+//
+// The union must be wrapped as a single group. `|` binds looser than the
+// implicit intersection, so an unwrapped `(@a:{x})|(@b:{y}) @ip:[…]`
+// parses as `@a:{x} OR (@b:{y} AND @ip:[…])` — the left side escapes the
+// scope and IP filters and matches every Block rule in the index. Both
+// `(@a:{x} | @b:{y})` and `((@a:{x})|(@b:{y}))` group correctly; this
+// form is the shorter one. Requires DIALECT 2, which every caller uses
+// (see REDIS_QUERY_DIALECT).
+export const getBlockPoolClause = (includeDeferred: boolean): string =>
+	includeDeferred
+		? `(@type:{${AccessPolicyType.Block}} | @deferToVerify:{true})`
+		: `@type:{${AccessPolicyType.Block}} -@deferToVerify:{true}`;
+
 /*
  * Search command example:
  *
@@ -219,7 +243,7 @@ export const getRulesRedisQuery = (
 	}
 
 	if (filter.blockOnly) {
-		queryParts.push(`@type:{${AccessPolicyType.Block}}`);
+		queryParts.push(getBlockPoolClause(filter.includeDeferred === true));
 	}
 
 	const policyScopeQuery = getPolicyScopeQuery(

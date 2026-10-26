@@ -1,5 +1,771 @@
 # @prosopo/procaptcha-bundle
 
+## 4.5.19
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/locale@3.13.1
+  - @prosopo/procaptcha-common@2.21.9
+  - @prosopo/procaptcha-frictionless@2.21.9
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+  - @prosopo/widget-skeleton@2.10.4
+
+## 4.5.18
+### Patch Changes
+
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+- Updated dependencies [96dbf9a]
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/procaptcha-frictionless@2.21.8
+  - @prosopo/procaptcha-common@2.21.8
+
+## 4.5.17
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/procaptcha-frictionless@2.21.7
+  - @prosopo/types@5.17.1
+  - @prosopo/procaptcha-common@2.21.7
+
+## 4.5.16
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- 67268f8: Name the procaptcha bundle's honeypot and shared fingerprint chunks from a seed instead of at random, so bundling the same source twice gives byte-identical output.
+  
+  The names come from the new `buildToken` helper in `@prosopo/config`: an HMAC of the package version (or `PROSOPO_BUILD_SEED`) keyed by the secret `PROSOPO_BUILD_TOKEN_KEY`. They still change every release, and without the key they cannot be worked out from this public source.
+- Updated dependencies [f31f0d5]
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/widget-skeleton@2.10.3
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/locale@3.12.0
+  - @prosopo/procaptcha-common@2.21.6
+  - @prosopo/procaptcha-frictionless@2.21.6
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
+## 4.5.15
+### Patch Changes
+
+- Updated dependencies [b6e9459]
+- Updated dependencies [3c5d196]
+- Updated dependencies [a5c953d]
+  - @prosopo/locale@3.11.1
+  - @prosopo/procaptcha-frictionless@2.21.5
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/util@3.3.15
+
+## 4.5.14
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/procaptcha-frictionless@2.21.4
+  - @prosopo/procaptcha-common@2.21.4
+
+## 4.5.13
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/procaptcha-frictionless@2.21.3
+  - @prosopo/types@5.16.1
+  - @prosopo/procaptcha-common@2.21.3
+
+## 4.5.12
+### Patch Changes
+
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/procaptcha-frictionless@2.21.2
+  - @prosopo/procaptcha-common@2.21.2
+
+## 4.5.11
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/procaptcha-common@2.21.1
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/locale@3.9.1
+  - @prosopo/procaptcha-frictionless@2.21.1
+  - @prosopo/widget-skeleton@2.10.1
+
+## 4.5.10
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/procaptcha-frictionless@2.21.0
+  - @prosopo/procaptcha-common@2.21.0
+  - @prosopo/types@5.15.0
+  - @prosopo/locale@3.9.0
+
+## 4.5.9
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [bdac756]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/procaptcha-common@2.20.0
+  - @prosopo/procaptcha-frictionless@2.20.0
+  - @prosopo/locale@3.8.0
+
+## 4.5.8
+### Patch Changes
+
+- 2e69b83: You can now pinch to zoom the image challenge. The panel set `touch-action: pan-y`, which lets a finger scroll it but tells the browser to ignore a pinch, so someone who could not make out a small tile had no way to get a closer look. It is now `pan-y pinch-zoom`, which keeps the scrolling and allows the zoom.
+  
+  Nothing else blocked zooming — the Protect challenge pages already allow it up to 5x — so this one property was the whole barrier. Confirmed honoured by Chrome on Android 14.
+- 2e69b83: The image challenge now grows to fit the screen it is on. Before, the popup sat at a fixed 322px whatever the device, because the box holding it shrank to wrap its contents and the panel inside could only reach the grid's 300px minimum. That left every image tile at 94.7px — on a phone with 344px of room going spare, and on a 1280px desktop where the panel is allowed to be 500px wide.
+  
+  Tiles now scale with the viewport: 102px on a Galaxy S22, 119px on an S22 Ultra, 107px on an iPhone SE, 154px on desktop. A screen narrower than the 300px minimum (a folding phone's cover display, say) still scrolls sideways exactly as before, and the floating placement is untouched.
+  
+  Measured in Chromium at each device's viewport and pixel ratio; the 3x3 grid still lays out as three rows on all of them.
+- Updated dependencies [1c13037]
+- Updated dependencies [2e69b83]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/procaptcha-common@2.19.0
+  - @prosopo/util@3.3.14
+  - @prosopo/procaptcha-frictionless@2.19.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/widget-skeleton@2.10.1
+
+## 4.5.7
+### Patch Changes
+
+- 4ea2ca9: Challenge popups now use the same text direction as the widget that opened them, so an Arabic or Hebrew widget gets a right-to-left popup. When a later widget on the page changes the shared language, earlier widgets now update their direction too instead of keeping the old one.
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 7b65240: If a challenge is left open until its time limit runs out, the widget used to close the challenge and untick itself without saying why. It now shows a "captcha solution has expired" message under the widget, in the widget's language, the same way a failed challenge does. The message is removed when the next challenge is solved. Sites that pass a `chalexpired-callback` are unaffected.
+- b38d55f: A failed challenge no longer opens a blocking, English-only `alert()`. By default the widget now shows the failure message under itself, in the widget's language and with `role="alert"` so screen readers announce it. For an invisible-mode button the message goes beside the button, so the button's label is left alone. The message is removed when the next challenge is solved. Sites that pass a `failed-callback` are unaffected.
+- 6d5b7f5: The widget now lays itself out right to left when its language is written right to left (Arabic today). The bundle sets `dir` on the widget from its language, and the checkbox, spinner and logo use start/end spacing so they mirror. The widget still ignores the page's own direction, so an English widget on an Arabic page stays left to right. `@prosopo/locale` gains `getLanguageDirection` for this.
+- Updated dependencies [ede4352]
+- Updated dependencies [4ea2ca9]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [7b65240]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b38d55f]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/types@5.12.0
+  - @prosopo/procaptcha-common@2.18.2
+  - @prosopo/util@3.3.13
+  - @prosopo/procaptcha-frictionless@2.18.7
+  - @prosopo/locale@3.6.2
+  - @prosopo/widget-skeleton@2.10.1
+  - @prosopo/dotenv@3.0.59
+
+## 4.5.6
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/procaptcha-common@2.18.1
+  - @prosopo/procaptcha-frictionless@2.18.6
+
+## 4.5.5
+### Patch Changes
+
+- ba4a43c: `procaptcha.remove()` on an invisible-mode widget cleared the whole host element. That element is usually the site's own submit button, so the button lost its label. In invisible mode, `remove()` now removes only the node the widget added. `reset()` also removes that node before it rebuilds, so the button no longer collects an extra widget node on every reset.
+- 4b4cdbf: Calling `procaptcha.reset()` again while a reset was still rebuilding the widget (for example from an error callback and a user click at the same time) left one replacement widget running but untracked, so `remove()` could never reach it. Overlapping resets of the same widget now share one rebuild, and a replacement that finishes after `remove()` is torn down instead of coming back.
+- 55480f3: `render(el, { language })` with a language Procaptcha doesn't support, such as `"he"`, now falls back to English. Before, the value failed config validation, `render()` rejected, and the widget's loading spinner never went away.
+- Updated dependencies [59b7e87]
+- Updated dependencies [294b480]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [caabd39]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/locale@3.6.1
+  - @prosopo/procaptcha-common@2.18.0
+  - @prosopo/util@3.3.12
+  - @prosopo/procaptcha-frictionless@2.18.5
+  - @prosopo/dotenv@3.0.58
+
+## 4.5.4
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/procaptcha-frictionless@2.18.4
+  - @prosopo/procaptcha-common@2.17.3
+
+## 4.5.3
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/procaptcha-common@2.17.2
+  - @prosopo/procaptcha-frictionless@2.18.3
+
+## 4.5.2
+### Patch Changes
+
+- Updated dependencies [3d45c37]
+- Updated dependencies [4cc28db]
+- Updated dependencies [d3b3286]
+  - @prosopo/widget-skeleton@2.10.0
+  - @prosopo/procaptcha-common@2.17.1
+  - @prosopo/procaptcha-frictionless@2.18.2
+
+## 4.5.1
+### Patch Changes
+
+- a9141c3: Stop a 250-byte helper from dragging 100KB of crypto onto the widget's critical path.
+  
+  The bundle entry imports `at()` from `@prosopo/util` — an array accessor that throws instead of returning undefined. The bundler puts a module in the chunk of whoever imports it, and `at()` had landed in the chunk holding the web2 account code. That made the entry load that chunk, which in turn loads the shared crypto and fingerprinting chunk, before the widget could draw anything.
+  
+  So the browser was fetching and parsing 100KB gzipped of signing and fingerprinting code before the checkbox appeared, none of which is needed until a visitor actually interacts.
+  
+  `@prosopo/util`'s helpers are now put in the chunk the entry already loads, which breaks that link. The crypto chunks still load — they are needed to solve a captcha — but now in a second wave, after the widget is on screen, alongside the first request to the provider rather than in front of it. `solverService` is deliberately left where it is, because it carries a hashing library only the proof-of-work flow needs.
+  
+  What the browser must fetch before the widget renders drops from 134KB to 34KB gzipped. Total bytes are unchanged.
+  
+  Checked by loading the built bundle in a real browser: the widget renders from the first eight chunks, the crypto chunks arrive afterwards, and there are no module errors — this chunking has previously been able to produce a load-order cycle that killed the widget, so that was specifically looked for.
+- a9141c3: Stop loading zod before the widget can draw itself. Takes another 13KB gzipped off the critical path.
+  
+  zod is 14KB gzipped and it was being downloaded and parsed before the checkbox appeared, because six small things on the startup path happened to use it:
+  
+  - two lists of strings in `@prosopo/logger` (log levels, output format)
+  - two lists of strings in `@prosopo/locale` (language codes, translation keys)
+  - two lists of two strings in `@prosopo/types` (start mode, challenge placement)
+  - one four-field object in `@prosopo/load-balancer` (a provider entry)
+  - an `instanceof ZodError` check in `@prosopo/common`
+  - `INPUT_LIMITS`, a plain table of numbers, that happened to live in the same file as zod-based string builders
+  
+  None of these need a validation library. They are now plain TypeScript: a list, a type, and where input is untrusted, a one-line guard. `INPUT_LIMITS` moved to its own file so reading it no longer drags the builders along.
+  
+  zod has not gone anywhere — the real request and response schemas in `@prosopo/types` still use it, and still validate exactly as before. It now arrives with the code that needs it, after the widget is on screen, rather than in front of it.
+  
+  Two API changes for anyone importing these directly:
+  
+  - `LanguageSchema`, `TranslationKeysSchema`, `StartModeSchema` and `Placement` are no longer exported as zod schemas. Use `isLanguage()`, `isStartMode()`, `isPlacement()` to check a value, and `LanguageCodes`, `translationKeys`, `StartModes`, `Placements` for the lists.
+  - `isZodError()` now recognises a zod error by its name rather than `instanceof`. That is strictly more tolerant: the name still matches when an error crosses a realm boundary or comes from a second copy of zod, which `instanceof` misses — it was already the fallback arm of the same check.
+  
+  Two behaviour notes: a malformed entry in the fetched provider list now throws a plain `Error` naming the entry, where it used to throw an untranslated zod error; and the language codes accepted are unchanged.
+  
+  Covered by the existing suites for every package touched (types, types-database, locale, logger, common, load-balancer, all five procaptcha packages, api, cli, api-express-router, server, and the provider's 1322 unit tests), all passing. The built bundle was also loaded in a real browser: the widget renders from the first eight chunks, zod arrives in the second wave, and the provider's error came back translated into German.
+- Updated dependencies [94929c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [e180281]
+- Updated dependencies [5e5fb9e]
+  - @prosopo/procaptcha-common@2.17.0
+  - @prosopo/locale@3.6.0
+  - @prosopo/types@5.10.0
+  - @prosopo/util@3.3.11
+  - @prosopo/widget-skeleton@2.9.0
+  - @prosopo/procaptcha-frictionless@2.18.1
+  - @prosopo/dotenv@3.0.57
+
+## 4.5.0
+### Minor Changes
+
+- 59c02da: Replace React with vanilla TS/DOM in the widget.
+  
+  The widget packages no longer depend on react, react-dom, @emotion or
+  react-i18next: every component is now a `mount*` function returning a handle
+  with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
+  which exposes i18next's `t` plus the events that used to trigger a re-render.
+  The rendered markup, styling and behaviour are unchanged — only the
+  implementation is.
+  
+  Everything the widget has gained since this rewrite started is carried over,
+  so nothing is lost by dropping React: the shared challenge surface (popup and
+  float placement, escape/outside-click dismissal and the dialog focus trap),
+  the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+  across the loading swap, the server-rendered puzzle imagery, `startMode:
+  "manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+  `execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+  session id, and the bounded session re-mint and reload handling in the
+  frictionless wrapper.
+
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/procaptcha-common@2.16.0
+  - @prosopo/procaptcha-frictionless@2.18.0
+  - @prosopo/locale@3.5.0
+  - @prosopo/types@5.9.2
+
+## 4.4.9
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/procaptcha-common@2.15.1
+  - @prosopo/procaptcha-frictionless@2.17.1
+
+## 4.4.8
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/procaptcha-common@2.15.0
+  - @prosopo/procaptcha-frictionless@2.17.0
+
+## 4.4.7
+### Patch Changes
+
+- c300bc9: Tests now clear the fake `document` and `window` globals without switching off type checking, so the last `any` suppressions in the bundle's tests are gone. No change to the published code.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/procaptcha-frictionless@2.16.5
+  - @prosopo/procaptcha-common@2.14.2
+
+## 4.4.6
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [08e2254]
+- Updated dependencies [4d45e3d]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/locale@3.4.3
+  - @prosopo/procaptcha-common@2.14.1
+  - @prosopo/procaptcha-frictionless@2.16.4
+  - @prosopo/types@5.8.4
+  - @prosopo/util@3.3.10
+  - @prosopo/dotenv@3.0.56
+
+## 4.4.5
+### Patch Changes
+
+- a4f3696: Let the webpack bundle resolve modules the way node does.
+  
+  `webpack.config.cjs` had two assumptions that only hold when this repo is the workspace root:
+  
+  - the `@polkadot/x-textdecoder` and `@polkadot/x-textencoder` aliases were built from a hard-coded `../../node_modules`, and
+  - `resolve.modules` was set to every `node_modules` directory found under the repo, to work around the shared config pinning it to this package's own `node_modules` (which switches off the upward walk entirely).
+  
+  Checked out as a submodule of captcha-private the hoisted install sits a level higher again, so the aliases pointed at a directory that does not exist and the build failed with 19 unresolved `@polkadot/util` imports. Listing every `node_modules` also made each nested install a global resolution root, so a transitive copy such as `@noble/curves`' own `@noble/hashes` could satisfy a bare `@noble/hashes/sha256` and then fail on its exports map.
+  
+  The aliases are now found by walking up for whichever `node_modules` actually contains them, and `resolve.modules` is webpack's default upward walk. The aliases stay because `@polkadot/extension-dapp`'s nested copy of `@polkadot/util` really is installed without them.
+  
+  No behaviour change in the emitted bundle; it is the same webpack build, resolving against the same packages. Covered by `bundle:webpack`, which is run in this repo's tests workflow and (now passing) in captcha-private's cache workflow.
+- Updated dependencies [028a158]
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [028a158]
+  - @prosopo/procaptcha-common@2.14.0
+  - @prosopo/types@5.8.3
+  - @prosopo/procaptcha-frictionless@2.16.3
+  - @prosopo/locale@3.4.2
+
+## 4.4.4
+### Patch Changes
+
+- Updated dependencies [124784f]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/procaptcha-common@2.13.3
+  - @prosopo/types@5.8.2
+  - @prosopo/procaptcha-frictionless@2.16.2
+
+## 4.4.3
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/procaptcha-common@2.13.2
+  - @prosopo/procaptcha-frictionless@2.16.1
+
+## 4.4.2
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [6c5b82f]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/procaptcha-frictionless@2.16.0
+  - @prosopo/procaptcha-common@2.13.1
+
+## 4.4.1
+### Patch Changes
+
+- Updated dependencies [46cca63]
+- Updated dependencies [9e06d72]
+  - @prosopo/procaptcha-frictionless@2.15.1
+
+## 4.4.0
+### Minor Changes
+
+- d288371: Let a site choose where a challenge opens, and which button triggers it.
+  
+  - `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` opens the challenge directly above the widget and keeps it pinned there as the page scrolls, leaves the page usable behind it, and dismisses on Escape or an outside click. An invisible widget always uses popup.
+  - `bind: "#selector"`, also `data-bind`. The matching host-page button triggers that one widget, in visible or invisible mode. The click's default action is prevented so a submit button does not post the form before a token exists.
+  - `execute(widgetId?)`. Called with no argument every widget responds, as before. Called with the id `render()` returns, only that widget runs. Implicitly rendered invisible buttons now trigger only their own widget.
+  
+  Behaviour changes for existing widgets:
+  
+  - Escape now closes the image and puzzle challenge in both placements. For the image captcha this runs the cancel path, which fires `onClose` and restarts frictionless.
+  - Image and puzzle now present on one shared `ChallengeSurface`. Both were already portalled to `document.body`, so neither moves in the page, but the markup around them changed: the outer layer keeps `prosopo-modalOuter` for the image captcha and also carries `prosopo-challenge-surface`, and a new `prosopo-challenge-content` element sits between it and `prosopo-modalInner`. A direct-child selector such as `.prosopo-modalOuter > .prosopo-modalInner` no longer matches, and the centring transform now lives on `prosopo-challenge-content` rather than on `prosopo-modalInner`.
+  
+  `createConfig` takes a named options object.
+
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/procaptcha-common@2.13.0
+  - @prosopo/procaptcha-frictionless@2.15.0
+  - @prosopo/dotenv@3.0.55
+
+## 4.3.0
+### Minor Changes
+
+- 80f73c1: Sites can now control when the widget starts working.
+  
+  By default the widget runs bot detection, starts the behavioural collectors and calls `/frictionless` as soon as it mounts. Rendering with `data-start-mode="manual"` (or `startMode: "manual"` in the render options) keeps all of that off the page load: the checkbox still appears immediately, at its final size, so nothing shifts, but the widget does nothing else until one of two things happens.
+  
+  - The site calls `window.procaptcha.start()`, optionally with a widget id, or dispatches a `procaptcha:start` event on `document`. The frictionless flow runs and the widget then waits for a click exactly as it does today.
+  - The visitor clicks the checkbox. The frictionless flow runs and whichever challenge the provider chooses opens straight away, carrying that click's position, so the visitor is never asked to click twice.
+  
+  Both triggers are one-shot: whichever comes first wins and the other is ignored. `window.procaptcha.execute()` also starts a manual widget, opening its challenge immediately. Widgets in the default `auto` mode are unaffected.
+
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/dotenv@3.0.54
+  - @prosopo/locale@3.4.1
+  - @prosopo/procaptcha-common@2.12.6
+  - @prosopo/procaptcha-frictionless@2.14.0
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+  - @prosopo/widget-skeleton@2.8.7
+
+## 4.2.5
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/procaptcha-common@2.12.5
+  - @prosopo/procaptcha-frictionless@2.13.23
+
+## 4.2.4
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/procaptcha-common@2.12.4
+  - @prosopo/procaptcha-frictionless@2.13.22
+
+## 4.2.3
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/procaptcha-common@2.12.3
+  - @prosopo/procaptcha-frictionless@2.13.21
+
+## 4.2.2
+### Patch Changes
+
+  - @prosopo/procaptcha-common@2.12.2
+  - @prosopo/procaptcha-frictionless@2.13.20
+
+## 4.2.1
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/procaptcha-common@2.12.1
+  - @prosopo/procaptcha-frictionless@2.13.19
+
+## 4.2.0
+### Minor Changes
+
+- 4b1cb19: Correlate a site-supplied session id across render and verify.
+  
+  A site can now hand the widget its own session identifier — Protect's JTI, or any per-user session id it already holds — and have the provider confirm at verify time that the token was earned in that same session. Render it with `data-sessionid="..."` or `renderOptions.sessionId`, resolved the same way `mode` and `language` already are, so implicit, explicit and invisible-button renders all pick it up. Pass the same value as the new trailing `clientSessionId` argument to `ProsopoServer.isVerified`.
+  
+  The widget attaches it to the solution as `clientMetaData.clientSessionId`. It is persisted on the captcha record (PoW, puzzle and image alike) and mirrored to a new top-level `clientMetaData` key on the session record — an object rather than a flat field, because more render-time metadata is expected to land there. It survives the PoW→image/puzzle escalation handoff, since the escalated widget is mounted with the same config.
+  
+  At verify, when the value is supplied and the solve does not carry exactly that value — including carrying none at all, which is what a token minted outside the site's session looks like — the token is disapproved with the new `ResultReason.CLIENT_SESSION_MISMATCH` (`API.CLIENT_SESSION_MISMATCH`, translated in all 31 locales), recorded on both the captcha record and the session.
+  
+  Omitting the id preserves existing behaviour, so this is opt-in and backward compatible. The verify request field is `clientSessionId` rather than `sessionId` because `VerificationResponse.sessionId` already means the provider's own frictionless session; same-named request and response fields meaning different things would be a trap for integrators.
+
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/procaptcha-common@2.12.0
+  - @prosopo/procaptcha-frictionless@2.13.18
+
+## 4.1.61
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/procaptcha-common@2.11.35
+  - @prosopo/procaptcha-frictionless@2.13.17
+
+## 4.1.60
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps): bump react and @types/react
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/locale@3.3.1
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/procaptcha-frictionless@2.13.16
+  - @prosopo/dotenv@3.0.53
+
+## 4.1.59
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/procaptcha-common@2.11.33
+  - @prosopo/procaptcha-frictionless@2.13.15
+
+## 4.1.58
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/procaptcha-common@2.11.32
+  - @prosopo/procaptcha-frictionless@2.13.14
+
+## 4.1.57
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/procaptcha-common@2.11.31
+  - @prosopo/procaptcha-frictionless@2.13.13
+
+## 4.1.56
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/procaptcha-common@2.11.30
+  - @prosopo/procaptcha-frictionless@2.13.12
+
+## 4.1.55
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/procaptcha-frictionless@2.13.11
+  - @prosopo/procaptcha-common@2.11.29
+
+## 4.1.54
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/procaptcha-common@2.11.28
+  - @prosopo/procaptcha-frictionless@2.13.10
+
+## 4.1.53
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+- Updated dependencies [1214dd3]
+  - @prosopo/types@5.1.2
+  - @prosopo/procaptcha-frictionless@2.13.9
+  - @prosopo/procaptcha-common@2.11.27
+
+## 4.1.52
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/procaptcha-common@2.11.26
+  - @prosopo/procaptcha-frictionless@2.13.8
+
+## 4.1.51
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/procaptcha-common@2.11.25
+  - @prosopo/procaptcha-frictionless@2.13.7
+
+## 4.1.50
+### Patch Changes
+
+- 9f73b93: Make `reset()` remount the widget instead of only tearing it down.
+  
+  `reset()` unmounted every React root and then called `start()`, which
+  re-renders only when the page uses implicit rendering. On an explicitly
+  rendered page nothing came back: the widget skeleton is plain DOM created
+  outside React, so it stayed on screen with no checkbox inside it, and no fresh
+  captcha request was ever made. Callers had to follow every `reset()` with their
+  own `render()` to recover.
+  
+  Widgets are now tracked with the element and render options that produced them,
+  so `reset()` can rebuild in place. `render()` returns a widget id, and both
+  `reset(widgetId)` and the new `remove(widgetId)` accept one to target a single
+  widget; omitting it applies to every widget on the page. `remove()` preserves
+  the old teardown-without-remount behaviour for callers that want the widget
+  gone. `reset()` no longer calls `start()`, which would have double-rendered
+  implicit widgets and attached another `load` listener on every call.
+- Updated dependencies [216f8cd]
+- Updated dependencies [cc3ffe3]
+  - @prosopo/types@5.0.4
+  - @prosopo/procaptcha-common@2.11.24
+  - @prosopo/procaptcha-frictionless@2.13.6
+
+## 4.1.49
+### Patch Changes
+
+- 729349e: Run the cypress suite in firefox as well as chrome whenever the PR is a release
+  PR, via a new cypress-firefox workflow. cypress.yml is untouched.
+  
+  The trusted-event checks scattered across the widget components now go through a
+  single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is
+  unchanged: it still returns early for synthetic input, unless the bundle was
+  built with `PROSOPO_ALLOW_UNTRUSTED_EVENTS=1`, which only the firefox CI leg
+  sets. Production builds pin the define to `false`, so the branch is folded away
+  at build time and the allowance cannot reach a shipped bundle.
+  
+  The allowance exists because cypress-real-events dispatches input over the chrome
+  devtools protocol, which cypress exposes for chromium browsers only — on firefox
+  the specs fall back to cypress' own synthetic clicks.
+- Updated dependencies [729349e]
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [9091a78]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+- Updated dependencies [8a4d6ad]
+  - @prosopo/procaptcha-common@2.11.23
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/widget-skeleton@2.8.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/procaptcha-frictionless@2.13.5
+  - @prosopo/dotenv@3.0.52
+
 ## 4.1.48
 ### Patch Changes
 

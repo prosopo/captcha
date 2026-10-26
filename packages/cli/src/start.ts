@@ -16,7 +16,7 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { getPair } from "@prosopo/keyring";
 import {
 	getClientList,
-	setClientEntropy,
+	runFrictionlessLadderMigration,
 	startProviderApi,
 	storeCaptchasExternally,
 	updateSpamEmailDomainsScheduler,
@@ -67,6 +67,15 @@ export async function start(
 	const maintenanceMode =
 		process.env.MAINTENANCE_MODE?.toLowerCase() === "true";
 
+	// TEMPORARY - one-shot rewrite of this provider's client records onto the
+	// two-rung frictionless score ladder. Client records are per-provider, so
+	// the central migration cannot reach them. Awaited so the records are
+	// tidy before the first request, but it never throws: the read path
+	// already understands the pre-ladder shape. Remove next release.
+	if (!maintenanceMode) {
+		await runFrictionlessLadderMigration(env.getDb(), env.logger);
+	}
+
 	// Start the scheduled jobs if they are defined
 	if (env.pair && !maintenanceMode) {
 		const cronScheduleStorage =
@@ -88,20 +97,6 @@ export async function start(
 					context: { failedFuncName: getClientList.name },
 				}));
 			});
-		}
-
-		const cronClientEntropySetter =
-			env.config.scheduledTasks?.clientEntropyScheduler?.schedule;
-		if (cronClientEntropySetter) {
-			setClientEntropy(env.pair, cronClientEntropySetter, env.config).catch(
-				(err) => {
-					env.logger.error(() => ({
-						msg: "Failed to start client entropy scheduler",
-						err,
-						context: { failedFuncName: setClientEntropy.name },
-					}));
-				},
-			);
 		}
 
 		const cronSpamEmailDomains =

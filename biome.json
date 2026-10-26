@@ -26,7 +26,9 @@
 			"./packages/provider/src/tasks/detection/decodePayload.js",
 			"./packages/provider/src/tasks/detection/decodeBehavior.js",
 			"./packages/provider/src/tasks/detection/decodeSimd.js",
-			"./packages/provider/fixtures/detector-pool/*"
+			"./packages/provider/fixtures/detector-pool/*",
+			"./packages/native-*/index.js",
+			"./packages/native-*/index.d.ts"
 		]
 	},
 	"linter": {

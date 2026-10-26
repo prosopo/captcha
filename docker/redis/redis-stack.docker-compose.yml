@@ -11,3 +11,9 @@ services:
       - '8001:8001' # Insight tool
     environment:
       - REDIS_ARGS=--requirepass root
+    # Cap the json log file so a chatty container can't fill the host disk.
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'

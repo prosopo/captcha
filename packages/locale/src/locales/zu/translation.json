@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Kwehlulekile ukufaka ikhodi ekhelini elingavumelekile",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Isibophezelo sesixazululo se-captcha asikho",
+		"SIGNER_UNDEFINED": "Osayinayo akachazwanga",
+		"CANNOT_FIND_KEYPAIR": "I-keypair ayitholakalanga",
+		"INVALID_DATA_FORMAT": "Ifomethi yedatha engavumelekile"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Kuceliwe imvelo engaziwa",
+		"INVALID_CAPTCHA_NUMBER": "Sicela usethe ukulungiselelwa kwe-captcha ngendlela efanele",
+		"INVALID_LOG_LEVEL": "Izinga lelogi elingavumelekile",
+		"INVALID_PACKAGE_DIR": "Uhla lwemibhalo lwephakheji olungavumelekile"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Iphutha lokuhlaziya iqoqo ledatha",
+		"SOLUTION_PARSE_ERROR": "Iphutha lokucubungula iqoqo ledatha",
+		"HASH_ERROR": "Iphutha lokwenza i-hash yeqoqo ledatha",
+		"DATASET_ID_UNDEFINED": "I-ID yeqoqo ledatha ayichazwanga",
+		"NOT_ENOUGH_LABELS": "Amalebula awanele",
+		"NOT_ENOUGH_IMAGES": "Izithombe azanele",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Inani lama-captcha eqoqweni ledatha lingaphansi kwenani elilungiselelwe",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Inani lezixazululo eqoqweni ledatha lingaphansi kwenani elilungiselelwe",
+		"DUPLICATE_IMAGE": "Kutholwe isithombe esiphindaphindiwe",
+		"MERKLE_ERROR": "Iphutha lokwakha isihlahla se-Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Kwehlulekile ukungenisa injini yesizindalwazi",
+		"DATABASE_UNDEFINED": "Iklayenti lesizindalwazi alixhunyiwe",
+		"DATABASE_HOST_UNDEFINED": "Ikheli lomsingathi wesizindalwazi alichazwanga",
+		"DATASET_LOAD_FAILED": "Ukulayisha iqoqo ledatha kwehlulekile",
+		"DATASET_GET_FAILED": "Kwehlulekile ukuthola iqoqo ledatha",
+		"CAPTCHA_GET_FAILED": "Kwehlulekile ukuthola ama-captcha",
+		"CAPTCHA_UPDATE_FAILED": "Kwehlulekile ukubuyekeza ama-captcha",
+		"IMAGE_GET_FAILED": "Kwehlulekile ukuthola isithombe",
+		"PENDING_RECORD_NOT_FOUND": "Awekho amarekhodi alindile atholakele",
+		"INVALID_HASH": "I-hash engavumelekile",
+		"SOLUTION_GET_FAILED": "Kwehlulekile ukuthola isixazululo",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Alitholakalanga iqoqo ledatha elinenani elidingekayo lezixazululo",
+		"SOLUTION_APPROVE_FAILED": "Kwehlulekile ukwamukela isixazululo",
+		"SOLUTION_FLAG_FAILED": "Kwehlulekile ukuphawula isixazululo njengesicutshunguliwe",
+		"TABLES_UNDEFINED": "Amathebula awachazwanga",
+		"CONNECTION_UNDEFINED": "Uxhumano aluchazwanga",
+		"COMMITMENT_FLAG_FAILED": "Kwehlulekile ukuphawula isibophezelo njengesicutshunguliwe",
+		"UNKNOWN": "Iphutha lesizindalwazi elingaziwa",
+		"QUERY_ERROR": "Umbuzo wesizindalwazi wehlulekile",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Uxhumano lwe-Redis lwemithetho yokufinyelela aluchazwanga",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Isitolo semithetho yokufinyelela komsebenzisi asichazwanga",
+		"SESSION_STORE_FAILED": "Kwehlulekile ukugcina iseshini",
+		"SESSION_CHECK_REMOVE_FAILED": "Kwehlulekile ukuhlola nokususa iseshini",
+		"SESSION_GET_FAILED": "Kwehlulekile ukuthola iseshini"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Awukwazi ukushintsha umsebenzisi ongumnikazi",
+		"CANNOT_DELETE_OWN_USER": "Awukwazi ukususa i-akhawunti yakho",
+		"CANNOT_DELETE_LAST_USER": "Awukwazi ukususa umsebenzisi wokugcina",
+		"USER_ALREADY_EXISTS": "Umsebenzisi usevele ukhona",
+		"NO_SUGGESTIONS_FOUND": "Azikho iziphakamiso ezitholakele",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Awukwazi ukuvala isayithi lokugcina elisebenzayo",
+		"DUPLICATE_SITE_NAME": "Isayithi elinaleli gama selivele likhona",
+		"INVALID_SITE_NAME": "Igama lesayithi lingaqukatha kuphela izinhlamvu, izinombolo, ama-underscore nama-hyphen"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Ipharamitha engavumelekile"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Ifayela alitholakalanga",
+		"FILE_ALREADY_EXISTS": "Ifayela selivele likhona",
+		"INVALID_DIR_FORMAT": "Ifomethi yohla lwemibhalo engavumelekile"
+	}
+}

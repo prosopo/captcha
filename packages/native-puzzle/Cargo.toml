@@ -1,0 +1,28 @@
+[package]
+name = "prosopo-native-puzzle"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2.16", default-features = false, features = ["napi9"] }
+napi-derive = "2.16"
+
+[build-dependencies]
+napi-build = "2.1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
+
+# Dependencies optimised even in debug: they compile once and are cached, so
+# tests run near release speed while our own crate still rebuilds quickly.
+# Releases keep full LTO via `build:release` (`NODE_ENV=production pnpm build`).
+[profile.dev.package."*"]
+debug = false
+opt-level = 2

@@ -145,10 +145,14 @@ describe("redisRulesReader ranked-path benchmark", () => {
 	let redisClient: RedisClientType;
 	let reader: RedisRulesReader;
 
+	// Every member is a no-op sink, except `with`, which has to return a child
+	// logger — setupRedisIndex calls `logger.with({ name })` and logs through
+	// the result. Returning the proxy itself keeps the child a sink too.
 	const mockLogger = new Proxy(
 		{},
 		{
-			get: () => () => {},
+			get: (_target, property) =>
+				property === "with" ? () => mockLogger : () => {},
 		},
 	) as unknown as Logger;
 

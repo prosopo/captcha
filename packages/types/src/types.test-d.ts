@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { assertType, describe, expectTypeOf, it } from "vitest";
-import {
-	INPUT_LIMITS,
-	boundedString,
-	safeLine,
-	safeText,
-} from "./api/sanitise.js";
+import { INPUT_LIMITS } from "./api/inputLimits.js";
+import { boundedString, safeLine, safeText } from "./api/sanitise.js";
 import { CaptchaType } from "./client/captchaType/captchaType.js";
 import type {
 	ClientSettingsSchema,

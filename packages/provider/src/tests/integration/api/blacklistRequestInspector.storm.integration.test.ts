@@ -190,10 +190,14 @@ describe("blacklistRequestInspector storm behaviour", () => {
 	let redisConnection: RedisConnection;
 	let accessRulesStorage: AccessRulesStorage;
 
+	// Every member is a no-op sink, except `with`, which has to return a child
+	// logger — the code under test calls `logger.with({...})` and logs through
+	// the result. Returning the proxy itself keeps the child a sink too.
 	const mockLogger = new Proxy(
 		{},
 		{
-			get: () => () => {},
+			get: (_target, property) =>
+				property === "with" ? () => mockLogger : () => {},
 		},
 	) as unknown as Logger;
 
@@ -246,6 +250,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 			accessRulesStorage,
 			{ numericIp: ipv4(999_997) },
 			"warmup",
+			{},
 			{ blockOnly: true },
 		);
 		// Warm-up populated the cache with a "no match" verdict for
@@ -276,6 +281,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 						accessRulesStorage,
 						HOT_SCOPE.userScope,
 						HOT_SCOPE.clientId,
+						{},
 						{ blockOnly: true },
 					);
 					const dur = performance.now() - start;
@@ -366,6 +372,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 			accessRulesStorage,
 			{ numericIp: ipv4(999_996) },
 			"warmup",
+			{},
 			{ blockOnly: true },
 		);
 		getVerdictCache().clear();
@@ -419,6 +426,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 						accessRulesStorage,
 						req.scope.userScope,
 						req.scope.clientId,
+						{},
 						{ blockOnly: true },
 					);
 					const dur = performance.now() - start;
@@ -523,6 +531,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 						accessRulesStorage,
 						HOT_SCOPE.userScope,
 						HOT_SCOPE.clientId,
+						{},
 						{ blockOnly: true },
 					),
 				),

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Language, TargetKey } from "@prosopo/locale";
 import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
@@ -22,6 +23,7 @@ import {
 	boolean,
 	coerce,
 	type input,
+	literal,
 	nativeEnum,
 	number,
 	object,
@@ -29,12 +31,14 @@ import {
 	record,
 	string,
 	union,
+	unknown,
 	type z,
 	type infer as zInfer,
 } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import { ApiParams } from "../api/params.js";
 import {
-	INPUT_LIMITS,
+	boundedArray,
 	boundedString,
 	safeLine,
 	safeText,
@@ -50,6 +54,7 @@ import {
 	type Captcha,
 	type DappAccount,
 	type DatasetID,
+	InputMethodSchema,
 	type PoWChallengeId,
 	PowChallengeIdSchema,
 	type UserAccount,
@@ -64,11 +69,19 @@ import type {
 	ChallengeSignature,
 	RequestHashSignature,
 } from "../procaptcha/index.js";
+import { OPEN_DETECTOR_FORMAT } from "./detection.js";
 
+/**
+ * An error as a client receives it. `code` is what the widget branches on and
+ * translates; `errorId` (`<CODE>:<SITE>`) is what a user quotes to support. A
+ * non-public error carries only `BACKEND_ERROR` and its errorId.
+ */
 export type ApiJsonError = {
-	message: string;
-	key?: string;
-	code: number;
+	code: string;
+	errorId: string;
+	status: number;
+	/** English, for public errors only. */
+	message?: string;
 	data?: Record<string, unknown>;
 };
 
@@ -90,6 +103,17 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	GetAudioCaptchaChallenge = "/v1/prosopo/provider/client/captcha/audio",
+	SubmitAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/solution",
+	VerifyAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/verify",
+	GetIconOrderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/icon-order",
+	SubmitIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/solution",
+	VerifyIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/verify",
+	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
+	// minted with captchaType=authenticated. Requires the operator to forward
+	// the client IP so the session's `ipAddress` binding can be enforced;
+	// a leaked authenticated token cannot be replayed from a different IP.
+	VerifyAuthenticatedSession = "/v1/prosopo/provider/client/authenticated/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -107,6 +131,9 @@ export enum PublicApiPaths {
 export const providerDetailsSchema = object({
 	version: string(),
 	message: string(),
+	// Identity of the node that answered. Optional because the fleet is
+	// mixed-version during a rolling deploy and older nodes omit it.
+	host: string().optional(),
 	redis: object({
 		actor: string(),
 		isReady: boolean(),
@@ -151,6 +178,11 @@ export enum AdminApiPaths {
 	// Hot-swaps the in-memory detector bundle pool (emergency push channel,
 	// avoids a redeploy to rotate the pool).
 	ReplaceDetectorPool = "/v1/prosopo/provider/admin/detector/pool/replace",
+	// Read a single session's current state from both Redis and Mongo.
+	// Test / diagnostic surface only — used by the cypress consistency
+	// suite to assert Redis and Mongo agree on captchaType at each stage
+	// of a captcha flow. Not called from any client code path.
+	GetSession = "/v1/prosopo/provider/admin/session/get",
 }
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
@@ -177,7 +209,32 @@ export const ProviderDefaultRateLimits = {
 		windowMs: 60000,
 		limit: 15000,
 	},
+	[ClientApiPaths.GetAudioCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitAudioCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyAudioCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.GetIconOrderCaptchaChallenge]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.SubmitIconOrderCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.VerifyAuthenticatedSession]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -194,6 +251,7 @@ export const ProviderDefaultRateLimits = {
 	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.GetSession]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
 	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
 	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
@@ -283,12 +341,33 @@ export interface CaptchaIdAndProof {
 	proof: string[][];
 }
 
+/**
+ * Caps on client-supplied arrays, well above what the widget sends, so a body
+ * cannot hold ~150k elements that zod then validates one by one.
+ * - datasetId: a 32-byte dataset hash as a byte array.
+ * - captchas: one per image round; sites configure a few dozen at most
+ *   (default ceiling 32).
+ * - solution: the selected tiles of one captcha grid (9 tiles in the stock
+ *   datasets).
+ * - puzzleEvents: one per pointer move during a single drag, sampled at the
+ *   display refresh rate, so a few hundred to a few thousand.
+ * - audioEvents: one per play, pause or key press.
+ */
+export const REQUEST_ARRAY_LIMITS = {
+	datasetId: 64,
+	captchas: 256,
+	solution: 64,
+	puzzleEvents: 10_000,
+	iconOrderEvents: 10_000,
+	audioEvents: 512,
+} as const;
+
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.datasetId]: union([
 		boundedString(INPUT_LIMITS.ID),
-		array(number()),
+		boundedArray(number(), REQUEST_ARRAY_LIMITS.datasetId),
 	]).optional(),
 	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
@@ -297,8 +376,23 @@ export const CaptchaRequestBody = object({
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
 export type CaptchaRequestBodyTypeOutput = output<typeof CaptchaRequestBody>;
 
+/**
+ * A captcha as sent to the widget. `target` is already in the request's
+ * language. The widget does not download image labels, so the provider also
+ * sends the label's key and English text, for logs and crash reports. Both are
+ * optional because older providers do not send them.
+ */
+export interface ChallengeCaptcha extends Captcha {
+	/** The label's catalogue key (`owl` for `TARGET.owl`), when it has one. */
+	targetKey?: TargetKey;
+	/** The label in English. */
+	targetEn?: string;
+}
+
 export interface CaptchaResponseBody extends ApiResponse {
-	[ApiParams.captchas]: Captcha[];
+	[ApiParams.captchas]: ChallengeCaptcha[];
+	/** The language `target` was translated into. */
+	[ApiParams.language]?: Language;
 	[ApiParams.requestHash]: string;
 	[ApiParams.timestamp]: string;
 	[ApiParams.signature]: {
@@ -306,13 +400,16 @@ export interface CaptchaResponseBody extends ApiResponse {
 	};
 }
 
-// Widget-controlled metadata sent alongside the captcha solution. The widget
-// only populates this when the honeypot input has been filled in (which
-// should only happen for bots). Server-side: persisted on the StoredCaptcha
-// record, no automatic verdict. The TS shape (`ClientMetaData`) lives in
+// Widget-controlled metadata sent alongside the captcha solution. `hp` is only
+// populated when the honeypot input has been filled in (which should only
+// happen for bots); `clientSessionId` is only populated when the site owner
+// rendered the widget with a session id. Server-side: persisted on the
+// StoredCaptcha record, no automatic verdict at submit time — the session
+// alignment check happens at verify. The TS shape (`ClientMetaData`) lives in
 // ./database.ts — this schema is the wire-level zod for request bodies.
 export const ClientMetaDataSchema = object({
 	[ApiParams.hp]: safeText(INPUT_LIMITS.TEXT).optional(),
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 // Request-body-level bounded variants of shared schemas. The shared schemas
@@ -326,14 +423,23 @@ const BoundedProcaptchaTokenSpec = boundedString(INPUT_LIMITS.TOKEN).startsWith(
 const BoundedCaptchaSolutionSchema = object({
 	captchaId: boundedString(INPUT_LIMITS.ID),
 	captchaContentId: boundedString(INPUT_LIMITS.ID),
-	solution: boundedString(INPUT_LIMITS.ID).array(),
+	solution: boundedArray(
+		boundedString(INPUT_LIMITS.ID),
+		REQUEST_ARRAY_LIMITS.solution,
+	),
 	salt: boundedString(INPUT_LIMITS.ID),
+	// Each entry pairs with a coordinate pair in the salt, which is itself
+	// bounded to INPUT_LIMITS.ID characters.
+	inputMethods: array(InputMethodSchema).max(INPUT_LIMITS.ID).optional(),
 });
 
 export const CaptchaSolutionBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.captchas]: array(BoundedCaptchaSolutionSchema),
+	[ApiParams.captchas]: boundedArray(
+		BoundedCaptchaSolutionSchema,
+		REQUEST_ARRAY_LIMITS.captchas,
+	),
 	[ApiParams.requestHash]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.signature]: object({
@@ -362,6 +468,10 @@ export const VerifySolutionBody = object({
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).optional(),
+	// The session id the site rendered the widget with. When supplied, the
+	// provider rejects the token unless the solved captcha carries the same
+	// value — see `ResultReason.CLIENT_SESSION_MISMATCH`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -384,6 +494,9 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
 	[ApiParams.reason]?: string;
+	// For log correlation only. Neither the token nor the verify request
+	// carries it, so the caller cannot know it without us echoing it back.
+	[ApiParams.sessionId]?: string;
 }
 
 export interface UpdateDecisionMachineResponse extends ApiResponse {
@@ -407,17 +520,33 @@ export interface GetPowCaptchaResponse extends ApiResponse {
 	};
 }
 
+/**
+ * The puzzle challenge carries imagery, never coordinates.
+ *
+ * `targetX`/`targetY` used to be sent here and the widget drew the target box
+ * straight from them, which meant any client could echo the answer back and
+ * pass without a browser. The target now exists only on the challenge record;
+ * the client receives a background with the notch already cut into it and works
+ * the position out visually. `tolerance` is likewise server-side only — the
+ * client has no use for it and publishing it just tells an attacker how close
+ * a guess has to be.
+ */
 export interface GetPuzzleCaptchaResponse extends ApiResponse {
 	[ApiParams.challenge]: PoWChallengeId;
-	[ApiParams.targetX]: number;
-	[ApiParams.targetY]: number;
+	/** Background with the notch cut into it, as a data URI. */
+	[ApiParams.background]: string;
+	/** The draggable piece on transparency, as a data URI. */
+	[ApiParams.piece]: string;
+	/** Piece bounding-box size in px. */
+	[ApiParams.pieceSize]: number;
 	[ApiParams.originX]: number;
 	[ApiParams.originY]: number;
-	[ApiParams.tolerance]: number;
 	[ApiParams.timestamp]: string;
 	[ApiParams.signature]: {
 		[ApiParams.provider]: ChallengeSignature;
 	};
+	/** Whether the widget may offer to swap this puzzle for an image challenge. */
+	[ApiParams.imageSwitchAvailable]?: boolean;
 }
 
 export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
@@ -425,11 +554,51 @@ export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.error]?: ApiJsonError;
 }
 
+/**
+ * Carries the clip, never the transcript: the answer stays on the challenge
+ * record, so there is no field a client could echo back.
+ */
+export interface GetAudioCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** RIFF/WAVE clip as a data URI. */
+	[ApiParams.clip]: string;
+	/** How many digits the user must type. */
+	[ApiParams.characterCount]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+/**
+ * Imagery only: icon positions and click order stay on the challenge record,
+ * so the widget gets nothing it could echo back.
+ */
+export interface GetIconOrderCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** Frame with targets and decoys composited, as a data URI. */
+	[ApiParams.background]: string;
+	/** Ordered legend strip on transparency, as a data URI. */
+	[ApiParams.legend]: string;
+	/** Edge length of one legend chip in px. */
+	[ApiParams.legendIconSize]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export type AudioCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
+
+export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
-		| CaptchaType.puzzle;
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder
+		| CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -439,10 +608,20 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.hp]?: string;
 	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
+	// Web Bot Auth: canonical Signature-Agent URL of the verified signer.
+	// Only present when captchaType === "authenticated". Rendered by the
+	// widget's badge so the operator can see WHICH agent verified.
+	agent?: string;
+	// Whether the site has the audio alternative on (`isAudioAlternativeEnabled`
+	// in the provider), sent only with a visual challenge.
+	audioAlternativeAvailable?: boolean;
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.captchaType]:
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	[ApiParams.sessionId]: string;
 }
 
@@ -460,6 +639,8 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
@@ -497,9 +678,18 @@ export const DnsEventBatchSchema = object({
 });
 export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
 
+// What the ingest endpoint accepts: events are validated one by one against
+// DnsEventSchema so a single malformed event is dropped rather than rejecting
+// the whole batch.
+export const DnsEventIngestBatchSchema = object({
+	events: array(unknown()),
+});
+export type DnsEventIngestBatch = output<typeof DnsEventIngestBatchSchema>;
+
 export interface DnsEventResponseBody extends ApiResponse {
 	stored: number;
 	errors: number;
+	dropped: number;
 }
 
 export const GetPowCaptchaChallengeRequestBody = object({
@@ -574,6 +764,25 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// server-side; not gated in the decision machine.
 	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 	[ApiParams.iframeUrl]: boundedString(INPUT_LIMITS.URL).optional(),
+	// Same wire semantics as VerifySolutionBody.clientSessionId — a per-render
+	// session id the client (Bumblebee's JTI, a customer widget's `sessionId`,
+	// anything else the site owner supplies) uses to bind a captcha token to
+	// the render it was earned in. Persisted onto the session's clientMetaData
+	// on every issuance path, so a session that is allowed frictionlessly or
+	// abandoned before a solve still carries it; /authenticated/verify rejects
+	// with API.CLIENT_SESSION_MISMATCH when the forwarded value doesn't match,
+	// so a token exfiltrated to a different render is dead on arrival even if
+	// it clears the IP-binding check.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	// The sessionId whose challenge the user asked to replace with the
+	// refresh control. Client-reported, so it can only ever make the next
+	// challenge harder (see `switchTypeAfterRefreshes`): a client that omits
+	// it is treated as a fresh visit, exactly as a page reload already is.
+	[ApiParams.refreshOf]: boundedString(INPUT_LIMITS.ID).optional(),
+	// The user pressed the puzzle's switch-to-image control rather than plain
+	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
+	// on a site with the switch enabled, and only ever moves puzzle to image.
+	[ApiParams.switchToImage]: boolean().optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -597,21 +806,35 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 	[ApiParams.detectorSessionId]?: string;
 	// The obfuscated, self-contained detector ESM, served inline.
 	[ApiParams.detectorScript]?: string;
+	[ApiParams.clientUrl]?: string;
+	[ApiParams.assetOrigin]?: string;
 }
 
 export const ReplaceDetectorPoolBody = object({
-	// Map of bundleId -> { js, privateKey, innerConfig, release }.
+	// Map of bundleId -> the bundle's js plus the server-side fields written
+	// alongside it by `bundle:pool`. A field missing here is stripped by this
+	// schema and the bundle can then no longer be decoded, so a field added to
+	// the build output has to be added here too.
 	bundles: record(
 		string(),
 		object({
 			js: string(),
 			privateKey: string(),
-			innerConfig: string(),
+			// Required for sealed bundles. Open-format bundles have no inner
+			// layer; the pool rejects a sealed bundle that arrives without it.
+			innerConfig: string().optional(),
+			format: literal(OPEN_DETECTOR_FORMAT).optional(),
 			// Release the bundle was built from, e.g. "3.6.64". The widget runs
 			// whatever the provider serves, so this is the only guard against a
 			// pool built from a different release. Optional for pools predating
 			// the stamp.
 			release: string().optional(),
+			// Opaque per-bundle decode parameter, paired with this bundle's js.
+			// Optional for pools built before it existed.
+			payloadLayout: string().optional(),
+			// Second opaque per-bundle decode parameter, same contract as
+			// `payloadLayout`. Optional for pools built before it existed.
+			keyMap: string().optional(),
 		}),
 	),
 });
@@ -663,7 +886,10 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	[ApiParams.challenge]: PowChallengeIdSchema,
 	[ApiParams.finalX]: number(),
 	[ApiParams.finalY]: number(),
-	[ApiParams.puzzleEvents]: array(PuzzleEventSchema),
+	[ApiParams.puzzleEvents]: boundedArray(
+		PuzzleEventSchema,
+		REQUEST_ARRAY_LIMITS.puzzleEvents,
+	),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: object({
 			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
@@ -693,6 +919,8 @@ export const ServerPuzzleCaptchaVerifyRequestBody = object({
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
@@ -702,6 +930,115 @@ export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
 export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
+
+/** `t` is milliseconds since the challenge was issued. */
+export const AudioEventSchema = object({
+	kind: union([
+		literal("play"),
+		literal("pause"),
+		literal("replay"),
+		literal("key"),
+	]),
+	t: number(),
+});
+
+export type AudioEvent = zInfer<typeof AudioEventSchema>;
+
+// The longest answer the settings allow is 8 digits; the margin absorbs
+// separators and whitespace the grader strips.
+const MAX_AUDIO_ANSWER_LENGTH = 32;
+
+export const SubmitAudioCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.answer]: string().max(MAX_AUDIO_ANSWER_LENGTH),
+	[ApiParams.replays]: number().int().min(0).max(1000).optional(),
+	[ApiParams.audioEvents]: boundedArray(
+		AudioEventSchema,
+		REQUEST_ARRAY_LIMITS.audioEvents,
+	).optional(),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+/**
+ * Grading needs exactly one click per target, so this only has to clear the
+ * largest possible target count; it stops a client submitting a grid of
+ * points for the hit test to search.
+ */
+export const MAX_ICON_CLICKS = 10;
+
+export const GetIconOrderCaptchaChallengeRequestBody =
+	GetPuzzleCaptchaChallengeRequestBody;
+
+export type GetIconOrderCaptchaChallengeRequestBodyType =
+	GetPuzzleCaptchaChallengeRequestBodyType;
+
+export type GetIconOrderCaptchaChallengeRequestBodyTypeOutput =
+	GetPuzzleCaptchaChallengeRequestBodyTypeOutput;
+
+export const IconOrderEventSchema = PuzzleEventSchema;
+
+export type IconOrderEvent = PuzzleEvent;
+
+/** One click in background pixels; its index in `clicks` is its order. */
+export const IconClickSchema = object({
+	x: number(),
+	y: number(),
+});
+
+export type IconClick = zInfer<typeof IconClickSchema>;
+
+export const SubmitIconOrderCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.clicks]: boundedArray(IconClickSchema, MAX_ICON_CLICKS),
+	[ApiParams.iconOrderEvents]: boundedArray(
+		IconOrderEventSchema,
+		REQUEST_ARRAY_LIMITS.iconOrderEvents,
+	),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+export type SubmitIconOrderCaptchaSolutionBodyType = input<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export type SubmitIconOrderCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export const ServerIconOrderCaptchaVerifyRequestBody =
+	ServerPuzzleCaptchaVerifyRequestBody;
+
+export type ServerIconOrderCaptchaVerifyRequestBodyType =
+	ServerPuzzleCaptchaVerifyRequestBodyType;
+
+export type ServerIconOrderCaptchaVerifyRequestBodyOutput =
+	ServerPuzzleCaptchaVerifyRequestBodyOutput;
 
 export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
@@ -833,11 +1170,31 @@ export type RemoveAllDecisionMachinesResponseType = z.infer<
 
 export const ToggleMaintenanceModeBody = object({
 	[ApiParams.enabled]: boolean(),
+	// Scopes the toggle to specific site keys instead of the whole node. Absent
+	// means the node-wide flag, which is what the deploy path uses. Scoped
+	// maintenance mode exists so one customer can be taken out of scoring
+	// without forcing a pass for everybody else on the node.
+	[ApiParams.siteKeys]: array(string()).optional(),
 });
 
 export type ToggleMaintenanceModeBodyOutput = output<
 	typeof ToggleMaintenanceModeBody
 >;
+
+// Diagnostic-only. Reads a single session record from both the Mongo
+// authoritative store and the Redis cache and returns both views so
+// consumers (currently the cypress consistency suite) can assert that
+// captchaType / bundleId / originSessionId / deleted etc. agree between
+// stores at each stage of a captcha flow.
+export const GetSessionBody = object({
+	sessionId: boundedString(INPUT_LIMITS.ID),
+});
+export type GetSessionBodyOutput = output<typeof GetSessionBody>;
+
+export interface GetSessionResponse extends ApiResponse {
+	mongo: Record<string, unknown> | null;
+	redis: Record<string, unknown> | null;
+}
 
 export type UpdateDecisionMachineBodyTypeOutput = output<
 	typeof UpdateDecisionMachineBody
