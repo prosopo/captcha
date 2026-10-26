@@ -56,6 +56,13 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				throw invalidSiteKeyError(siteKey);
 			}
 
+			// Handlers act on the site key in the body, so it must be the one
+			// whose origin allowlist is checked here. Otherwise a request can
+			// pass as the caller's own site while acting for another.
+			const bodySiteKey = bodyDapp(req.body);
+			if (bodySiteKey !== undefined && bodySiteKey !== siteKey)
+				throw invalidSiteKeyError(siteKey);
+
 			// Reserved CI test site keys have no DB record and no domain
 			// allowlist; let them through so the deterministic test flow works in
 			// every environment and from any origin.
@@ -112,6 +119,11 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 		}
 	};
 };
+
+const bodyDapp = (body: unknown): unknown =>
+	typeof body === "object" && body !== null && "dapp" in body
+		? body.dapp
+		: undefined;
 
 // If the origin is a Google Translate proxy URL, return the decoded original
 // origin(s) so the domain check can still match the site's allowed domains.
