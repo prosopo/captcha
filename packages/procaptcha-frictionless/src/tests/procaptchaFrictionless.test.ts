@@ -682,15 +682,21 @@ describe("a detection that lands after destroy", () => {
 	});
 
 	test("does not retry detection for a dead widget", async () => {
-		const detection$ = deferred();
-		widget = mountProcaptchaFrictionless(
-			container,
-			props(detection$.detectBot),
-		);
-		widget.destroy();
-		widget = undefined;
-		detection$.fail(new Error("provider down"));
-		await waitFor(() => detection$.calls() > 1);
-		expect(detection$.calls()).toBe(1);
+		const longestRetryBackoffMs = 10_000;
+		vi.useFakeTimers();
+		try {
+			const detection$ = deferred();
+			widget = mountProcaptchaFrictionless(
+				container,
+				props(detection$.detectBot),
+			);
+			widget.destroy();
+			widget = undefined;
+			detection$.fail(new Error("provider down"));
+			await vi.advanceTimersByTimeAsync(longestRetryBackoffMs);
+			expect(detection$.calls()).toBe(1);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });
