@@ -100,7 +100,15 @@ export interface IPApiResponse {
 	is_bogon: boolean;
 	is_mobile: boolean;
 	is_satellite: boolean;
+	/**
+	 * A real boolean, unlike the ipapi.is worker this replaced: that returned
+	 * the crawler's NAME through this field — "GoogleBot", "BaiduSpider" —
+	 * while every consumer typed it `boolean`, so `=== true` matched nothing.
+	 * The name is in `crawler`.
+	 */
 	is_crawler: boolean;
+	/** The declared crawler's name, present exactly when `is_crawler`. */
+	crawler?: string;
 	is_datacenter: boolean;
 	is_tor: boolean;
 	is_proxy: boolean;
@@ -135,6 +143,9 @@ export interface IPInfoResult {
 	isMobile: boolean;
 	isSatellite: boolean;
 	isCrawler: boolean;
+	/** The declared crawler's name where one is known: "GoogleBot". Set from
+	 *  the sidecar's `crawler`, or from the vendor's misnamed `is_crawler`. */
+	crawlerName?: string;
 
 	// Provider information
 	providerName?: string;

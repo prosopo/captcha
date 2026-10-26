@@ -443,6 +443,43 @@ describe("IpapiBackend.lookup responses", () => {
 	});
 });
 
+describe("the crawler name", () => {
+	// The worker this replaced returned the crawler's name through
+	// `is_crawler`, a field typed boolean, so `isCrawler === true` matched
+	// nothing and the name had nowhere to live. Ours answers both separately.
+	it("keeps the boolean and the name apart", async () => {
+		const result = expectValid(
+			await backend(
+				respondWith(baseResponse({ is_crawler: true, crawler: "GoogleBot" })),
+			).lookup(IP),
+		);
+
+		expect(result.isCrawler).toBe(true);
+		expect(result.crawlerName).toBe("GoogleBot");
+	});
+
+	// Some ranges are flagged without a name.
+	it("reports a crawler with no name as a crawler", async () => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ is_crawler: true }))).lookup(IP),
+		);
+
+		expect(result.isCrawler).toBe(true);
+		expect(result.crawlerName).toBeUndefined();
+	});
+
+	it("leaves a non-crawler false and unnamed", async () => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ is_crawler: false }))).lookup(
+				IP,
+			),
+		);
+
+		expect(result.isCrawler).toBe(false);
+		expect(result.crawlerName).toBeUndefined();
+	});
+});
+
 describe("IpapiBackend.lookup timeout", () => {
 	it("gives up on a hanging upstream and says so", async () => {
 		// An IP lookup sits in the request path: a backend that never answers
