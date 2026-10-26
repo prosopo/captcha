@@ -15,6 +15,10 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+	buildFingerprintProofFromComponents,
+	encodeFingerprintProof,
+} from "@prosopo/fingerprint";
 import type { I18nLookup } from "@prosopo/locale";
 import {
 	CaptchaType,
@@ -634,6 +638,58 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		).toHaveBeenCalledWith(
 			expect.not.objectContaining({ refreshOf: expect.anything() }),
 		);
+	});
+
+	describe("proof of fingerprint", () => {
+		const BUCKET = "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f";
+		const proof = encodeFingerprintProof(
+			buildFingerprintProofFromComponents({
+				timezone: { value: "Europe/London", duration: 1 },
+				colorDepth: { value: 24, duration: 1 },
+				deviceBucket: { value: BUCKET, duration: 1 },
+			}),
+		);
+
+		const send = async (fingerprintProof?: string) => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteFp",
+				settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+				payload(false),
+			);
+			const { req, res, next } = buildReqRes({
+				token: "tFp",
+				headHash: "hhFp",
+				dapp: "siteFp",
+				user: "u",
+				...(fingerprintProof !== undefined && { fingerprintProof }),
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			return tasksInstance.frictionlessManager.setSessionParams.mock
+				.calls[0]?.[0];
+		};
+
+		it("puts the verified summary on the session", async () => {
+			const params = await send(proof);
+
+			expect(params?.fingerprintSummary?.bucketId).toBe(BUCKET);
+		});
+
+		it("puts nothing on the session for a proof that does not verify", async () => {
+			const params = await send("not-a-proof");
+
+			expect(params).toBeDefined();
+			expect(params).not.toHaveProperty("fingerprintSummary");
+		});
+
+		it("puts nothing on the session when no proof was sent", async () => {
+			const params = await send();
+
+			expect(params).toBeDefined();
+			expect(params).not.toHaveProperty("fingerprintSummary");
+		});
 	});
 
 	it("reuses the cached session when no access policy conflicts with its captchaType", async () => {

@@ -660,6 +660,7 @@ describe("ImgCaptchaManager", () => {
 				salt: "0x00",
 				threshold: 0.8,
 				deadlineTimestamp: new Date(Date.now() + 10_000),
+				sessionId: "session-1",
 			} as unknown as PendingImageCaptchaRequest);
 			vi.spyOn(
 				imgCaptchaManager,
@@ -755,6 +756,34 @@ describe("ImgCaptchaManager", () => {
 
 			expect(storedCommitment()).toBeDefined();
 			expect(storedCommitment()?.inputMethods).toBeUndefined();
+		});
+
+		it("copies the session's fingerprint summary onto the commitment", async () => {
+			const fingerprintSummary = {
+				root: "0xroot",
+				groupHash: "0xgroup",
+				bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+			};
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue({
+				sessionId: "session-1",
+				fingerprintSummary,
+			} as unknown as Awaited<
+				ReturnType<typeof db.getSessionRecordBySessionId>
+			>);
+
+			await submit({ coords: [3, 4, 15, 25] }, { coords: [16, 26] });
+
+			expect(db.getSessionRecordBySessionId).toHaveBeenCalledWith("session-1");
+			expect(storedCommitment()?.fingerprintSummary).toStrictEqual(
+				fingerprintSummary,
+			);
+		});
+
+		it("stores no fingerprint summary when the session has none", async () => {
+			await submit({ coords: [3, 4, 15, 25] }, { coords: [16, 26] });
+
+			expect(storedCommitment()).toBeDefined();
+			expect(storedCommitment()).not.toHaveProperty("fingerprintSummary");
 		});
 
 		it("still rejects repeated (0, 0) from a widget that does not declare input methods", async () => {
