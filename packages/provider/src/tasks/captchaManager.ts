@@ -203,8 +203,8 @@ export class CaptchaManager {
 	 * Read a session and, if it's an escalation missing one of the
 	 * inherently-origin-populated fields, walk to `originSessionId` and fill
 	 * the gap. Intended for the decision-machine input read path only —
-	 * `simdReadings`, `dnsEvent` and the detector bag are
-	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
+	 * `simdReadings`, `dnsEvent`, `fingerprintSummary` and the detector bag
+	 * are populated on the origin session (SIMD via pow-submit's fire-and-forget
 	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
 	 * automatically end up on the escalation record because
 	 * `buildEscalation` reads the origin from Mongo before the async writes
@@ -238,8 +238,9 @@ export class CaptchaManager {
 		// the escalation copied it. The escalation's own keys always win.
 		const escalationData = session.d ?? {};
 		const needsData = session.d === undefined;
+		const needsFingerprint = session.fingerprintSummary === undefined;
 
-		if (!needsSimd && !needsDns && !needsData) {
+		if (!needsSimd && !needsDns && !needsData && !needsFingerprint) {
 			return session;
 		}
 
@@ -257,6 +258,10 @@ export class CaptchaManager {
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
 			...(mergedData !== undefined && { d: mergedData }),
+			...(needsFingerprint &&
+				origin.fingerprintSummary && {
+					fingerprintSummary: origin.fingerprintSummary,
+				}),
 		};
 	}
 
