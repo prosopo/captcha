@@ -21,6 +21,11 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+	type AssignDetectorBundleResponse,
+	ClientApiPaths,
+	DetectorScriptDelivery,
+} from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -45,10 +50,13 @@ vi.mock("../../tasks/index.js", () => ({
 	},
 }));
 
-const makeReq = (ip = "203.0.113.1"): Request & AugmentedRequest =>
+const makeReq = (
+	ip = "203.0.113.1",
+	body: Record<string, string> = { dapp: "site-key" },
+): Request & AugmentedRequest =>
 	({
 		ip,
-		body: { dapp: "site-key" },
+		body,
 		logger: { warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 	}) as unknown as Request & AugmentedRequest;
 
@@ -143,6 +151,32 @@ describe("assignDetectorBundle", () => {
 		expect(body.useProviderBundle).toBe(true);
 		expect(body.detectorScript).toBe("export default 1;");
 		expect(body.detectorSessionId).toBe(detSessionId);
+	});
+
+	it("returns a script path in place of the script when asked for URL delivery", async () => {
+		writePool(dir, 1);
+		initDetectorBundlePool(dir);
+		const { res, json } = makeRes();
+
+		await assignDetectorBundle(env)(
+			makeReq(undefined, {
+				dapp: "site-key",
+				detectorScriptDelivery: DetectorScriptDelivery.url,
+			}),
+			res,
+			next,
+		);
+
+		const [detSessionId] = cacheDetectorBundle.mock.calls[0] as [
+			string,
+			string,
+		];
+		const body = json.mock.calls[0]?.[0] as AssignDetectorBundleResponse;
+		expect(body.useProviderBundle).toBe(true);
+		expect(body.detectorScript).toBeUndefined();
+		expect(body.detectorScriptPath).toBe(
+			`${ClientApiPaths.GetDetectorScript}?detectorSessionId=${detSessionId}`,
+		);
 	});
 
 	it("falls back to bundled when the Redis binding cannot be stored", async () => {

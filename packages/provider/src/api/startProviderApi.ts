@@ -49,6 +49,7 @@ import { adminAuthOptions } from "./adminAuthOptions.js";
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
+import getDetectorScript from "./captcha/getDetectorScript.js";
 import { startCpuProfiler } from "./cpuProfiler.js";
 import { detectorPoolBodyParser } from "./detectorPoolBodyParser.js";
 import { domainMiddleware } from "./domainMiddleware.js";
@@ -129,8 +130,9 @@ export const getClientApiPathsExpectingProsopoHeaders =
 				// (it's needed to load the detector that mints it), so it can't
 				// carry the Prosopo-User header. It only hands out an obfuscated
 				// bundle keyed to an ephemeral session id; the site-key still
-				// rides in the body and it is rate-limited.
-				path.indexOf("detector/assign") === -1,
+				// rides in the body and it is rate-limited. The script fetch
+				// that follows it is a <script src>, which sends no headers.
+				path.indexOf("detector/") === -1,
 		);
 		return paths as ClientApiPaths[];
 	};
@@ -456,6 +458,11 @@ export async function startProviderApi(
 
 	// Blocking middleware will run on any routes defined after this point
 	apiApp.use(blockMiddleware(env));
+
+	// Ahead of the domain check: a <script src> cannot send the site-key header
+	// it needs, and the detectorSessionId it carries was minted by an assign
+	// call that already passed it.
+	apiApp.get(ClientApiPaths.GetDetectorScript, getDetectorScript(env));
 
 	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));

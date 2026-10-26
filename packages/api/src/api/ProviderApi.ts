@@ -32,6 +32,8 @@ import {
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
+	type DetectorLoadFailure,
+	type DetectorScriptDelivery,
 	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetFrictionlessCaptchaResponse,
@@ -597,14 +599,16 @@ export default class ProviderApi
 
 	/**
 	 * Assigns a precomputed detector bundle for this session. Returns
-	 * `useProviderBundle: false` when the provider has no pool (the client then
-	 * falls back to the bundled detector).
+	 * `useProviderBundle: false` when the provider has no pool, in which case
+	 * there is no detector to run.
 	 */
 	public async assignDetectorBundle(
 		dapp: string,
+		delivery?: DetectorScriptDelivery,
 	): Promise<AssignDetectorBundleResponse> {
 		const body: AssignDetectorBundleRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
+			...(delivery && { [ApiParams.detectorScriptDelivery]: delivery }),
 		};
 		return this.post(ClientApiPaths.AssignDetectorBundle, body, {
 			headers: {
@@ -626,6 +630,7 @@ export default class ProviderApi
 		clientSessionId?: string,
 		refreshOf?: string,
 		switchToImage?: boolean,
+		detectorLoadFailure?: DetectorLoadFailure,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
@@ -645,6 +650,9 @@ export default class ProviderApi
 			...(refreshOf && { [ApiParams.refreshOf]: refreshOf }),
 			...(refreshOf &&
 				switchToImage && { [ApiParams.switchToImage]: switchToImage }),
+			...(detectorLoadFailure && {
+				[ApiParams.detectorLoadFailure]: detectorLoadFailure,
+			}),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

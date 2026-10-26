@@ -14,7 +14,7 @@
 
 import type { ProviderApi } from "@prosopo/api";
 import { LANGUAGE_HEADER } from "@prosopo/locale";
-import type { EnvironmentTypes } from "@prosopo/types";
+import { DetectorScriptDelivery, type EnvironmentTypes } from "@prosopo/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const assignDetectorBundle = vi.fn();
@@ -67,7 +67,10 @@ describe("detectorPrefetch", () => {
 			provider,
 			assigned: { useProviderBundle: true },
 		});
-		expect(assignDetectorBundle).toHaveBeenCalledWith(SITE_KEY);
+		expect(assignDetectorBundle).toHaveBeenCalledWith(
+			SITE_KEY,
+			DetectorScriptDelivery.url,
+		);
 	});
 
 	it("sends the site's language with the assignment request", async () => {

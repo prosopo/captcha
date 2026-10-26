@@ -67,6 +67,7 @@ graph TB
             UnroutedEP["declared, no handler:<br/>.../client/status, .../client/events"]
             SpamEmailEP["POST .../client/spam/email"]
             DetectorAssignEP["POST .../client/detector/assign<br/>(assigns this session a pool bundle)"]
+            DetectorScriptEP["GET .../client/detector/script<br/>(serves the assigned bundle as a<br/>module script; skips the domain check)"]
         end
 
         subgraph AdminAPI["Admin API (requires JWT)"]
@@ -168,7 +169,9 @@ graph TB
     %% PROSOPO_DETECTOR_OPEN_FORMAT=1, which self-hosted nodes set.
     Detector -->|request a bundle| DetectorAssignEP
     DetectorAssignEP --> DetectorPool
-    DetectorPool -->|"per-session bundle + key"| Detector
+    DetectorPool -->|"per-session bundle + key,<br/>inline or as a script path"| Detector
+    Detector -->|"script tag for the path<br/>(falls back to an inline assign)"| DetectorScriptEP
+    DetectorScriptEP -->|"bundle bound to the session,<br/>only to an address mapping to it"| DetectorPool
     DetectorPoolMgmt -.->|replace in memory| DetectorPool
     FrictionlessTasks -->|"decrypt detector output<br/>with the assigned bundle's key"| DetectorPool
 

@@ -277,8 +277,9 @@ http://:9090 {
 		# literal, so this must sit above `reverse_proxy` to wrap its response.
 		#
 		# The detector-pool bundle is the reason this exists: ~830 KB of
-		# obfuscated JS returned inline from /detector/assign once per
-		# frictionless session, previously uncompressed. It still compresses well
+		# obfuscated JS returned inline from /detector/assign, or served from
+		# /detector/script, once per frictionless session, previously
+		# uncompressed. It still compresses well
 		# despite being obfuscated (the obfuscator's string-array encoding is very
 		# repetitive) — measured 2.6x with gzip and 3.1x with zstd, taking a
 		# single provider at 15k sessions/hour from ~9.15 TB/month of egress to

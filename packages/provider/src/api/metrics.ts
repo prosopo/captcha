@@ -100,6 +100,7 @@ interface ProviderMetrics {
 	captchaIssueErrorsTotal: Counter<"type">;
 	captchaVerifyTotal: Counter<"type" | "result" | "source">;
 	frictionlessRoutedTotal: Counter<"decision">;
+	detectorLoadFailuresTotal: Counter<"reason" | "recovered">;
 	botScore: Histogram<never>;
 	detectorTriggeredTotal: Counter<"detector">;
 	blockedRequestsTotal: Counter<"reason">;
@@ -157,6 +158,12 @@ const buildMetrics = (): ProviderMetrics => {
 		name: `${PREFIX}frictionless_routed_total`,
 		help: "Frictionless routing decisions (which captcha the user was sent to)",
 		labelNames: ["decision"] as const,
+		registers: [registry],
+	});
+	const detectorLoadFailuresTotal = new Counter({
+		name: `${PREFIX}detector_load_failures_total`,
+		help: "Frictionless requests whose widget reported a detector load failure, by reason and whether a fallback still produced a token",
+		labelNames: ["reason", "recovered"] as const,
 		registers: [registry],
 	});
 	const botScore = new Histogram({
@@ -257,6 +264,7 @@ const buildMetrics = (): ProviderMetrics => {
 		captchaIssueErrorsTotal,
 		captchaVerifyTotal,
 		frictionlessRoutedTotal,
+		detectorLoadFailuresTotal,
 		botScore,
 		detectorTriggeredTotal,
 		blockedRequestsTotal,
@@ -312,6 +320,17 @@ export const recordCaptchaVerify = (args: {
 export const recordFrictionlessDecision = (decision: string): void => {
 	if (!metricsEnabled()) return;
 	getMetrics().frictionlessRoutedTotal.inc({ decision });
+};
+
+export const recordDetectorLoadFailure = (
+	reason: string,
+	recovered: boolean,
+): void => {
+	if (!metricsEnabled()) return;
+	getMetrics().detectorLoadFailuresTotal.inc({
+		reason,
+		recovered: String(recovered),
+	});
 };
 
 export const recordBotScore = (score: number): void => {

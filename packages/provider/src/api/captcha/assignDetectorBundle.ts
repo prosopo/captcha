@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createHmac } from "node:crypto";
 import {
 	ApiParams,
 	AssignDetectorBundleRequestBody,
+	type AssignDetectorBundleRequestBodyOutput,
 	type AssignDetectorBundleResponse,
+	ClientApiPaths,
+	DetectorScriptDelivery,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
@@ -27,12 +29,9 @@ import {
 	getDetectorBundlePool,
 	getDetectorBundlePoolDir,
 } from "../../tasks/detection/bundlePool.js";
+import { bundleForClient } from "../../tasks/detection/clientBundle.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
-
-/** Pool position for this caller: a keyed hash of their address. */
-const clientIndex = (ip: string, secret: Buffer): number =>
-	createHmac("sha256", secret).update(ip).digest().readUIntBE(0, 6);
 
 type SiteConfig = {
 	[ApiParams.clientUrl]?: string;
@@ -41,16 +40,15 @@ type SiteConfig = {
 
 const siteConfig = async (
 	tasks: Tasks,
-	body: unknown,
+	body: AssignDetectorBundleRequestBodyOutput | undefined,
 	logger: AugmentedRequest["logger"],
 ): Promise<SiteConfig> => {
-	const parsed = AssignDetectorBundleRequestBody.safeParse(body);
-	if (!parsed.success) {
+	if (!body) {
 		return {};
 	}
 
 	try {
-		const client = await tasks.db.getClientRecord(parsed.data[ApiParams.dapp]);
+		const client = await tasks.db.getClientRecord(body[ApiParams.dapp]);
 		const clientUrl = client?.settings?.clientUrl;
 		const assetOrigin = client?.settings?.assetOrigin;
 		if (!clientUrl || !assetOrigin) {
@@ -68,6 +66,26 @@ const siteConfig = async (
 		}));
 		return {};
 	}
+};
+
+type ScriptDelivery =
+	| { [ApiParams.detectorScript]: string }
+	| { [ApiParams.detectorScriptPath]: string };
+
+const scriptDelivery = (
+	body: AssignDetectorBundleRequestBodyOutput | undefined,
+	detectorSessionId: string,
+	js: string,
+): ScriptDelivery => {
+	if (body?.[ApiParams.detectorScriptDelivery] !== DetectorScriptDelivery.url) {
+		return { [ApiParams.detectorScript]: js };
+	}
+	const query = new URLSearchParams({
+		[ApiParams.detectorSessionId]: detectorSessionId,
+	});
+	return {
+		[ApiParams.detectorScriptPath]: `${ClientApiPaths.GetDetectorScript}?${query}`,
+	};
 };
 
 /**
@@ -107,8 +125,10 @@ export default (env: ProviderEnvironment) =>
 				warn: (msg, data) => req.logger.warn(() => ({ msg, data })),
 			});
 
-			const { bundleId, bundle } = pool.at(
-				clientIndex(normalizeRequestIp(req.ip, req.logger), secret),
+			const { bundleId, bundle } = bundleForClient(
+				pool,
+				normalizeRequestIp(req.ip, req.logger),
+				secret,
 			);
 			const detectorSessionId = `det-${uuidv4()}`;
 
@@ -134,11 +154,13 @@ export default (env: ProviderEnvironment) =>
 				data: { bundleId, release: bundle.release, detectorSessionId },
 			}));
 
+			const parsed = AssignDetectorBundleRequestBody.safeParse(req.body);
+			const body = parsed.success ? parsed.data : undefined;
 			const response: AssignDetectorBundleResponse = {
 				[ApiParams.useProviderBundle]: true,
 				[ApiParams.detectorSessionId]: detectorSessionId,
-				[ApiParams.detectorScript]: bundle.js,
-				...(await siteConfig(tasks, req.body, req.logger)),
+				...scriptDelivery(body, detectorSessionId, bundle.js),
+				...(await siteConfig(tasks, body, req.logger)),
 				status: "ok",
 			};
 			return res.json(response);
