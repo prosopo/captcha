@@ -238,6 +238,13 @@ http://:9090 {
 		respond @crawler_client_api 403 {
 			close
 		}
+		@crawler_range_client_api {
+			path /v1/prosopo/provider/client/*
+			remote_ip 116.179.32.0/20
+		}
+		respond @crawler_range_client_api 403 {
+			close
+		}
 
 		# The detector-pool push (`@prosopo/catcher`'s `pool:add`) carries
 		# the whole pool in one body — a 100-bundle pool is ~86 MB of JSON,
