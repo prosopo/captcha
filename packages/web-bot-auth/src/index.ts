@@ -39,6 +39,7 @@ export {
 	parseSignatureInput,
 	parseSignature,
 	type SignatureInputEntry,
+	type CoveredComponent,
 	type ParamValue,
 } from "./structuredFields.js";
 export {

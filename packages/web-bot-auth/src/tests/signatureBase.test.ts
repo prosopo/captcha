@@ -13,21 +13,28 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { buildSignatureBase } from "../signatureBase.js";
+import {
+	type SignatureBaseInput,
+	buildSignatureBase,
+} from "../signatureBase.js";
+import { parseSignatureInput } from "../structuredFields.js";
+
+const coveredBy = (params: string) =>
+	parseSignatureInput(`sig1=${params}`)?.coveredComponents ?? [];
+
+const VALUES: SignatureBaseInput = {
+	authority: "example.com",
+	method: "POST",
+	targetUri: "https://example.com/v1/thing",
+	path: "/v1/thing",
+	signatureAgent: '"https://chatgpt.com"',
+};
 
 describe("buildSignatureBase", () => {
 	it("builds the RFC 9421 base for @authority + signature-agent", () => {
 		const params =
 			'("@authority" "signature-agent");created=1735689600;expires=1735693200;keyid="abc";alg="ed25519";tag="web-bot-auth"';
-		const base = buildSignatureBase(
-			["@authority", "signature-agent"],
-			{
-				authority: "example.com",
-				signatureAgent: '"https://chatgpt.com"',
-			},
-			params,
-		);
-		expect(base).toBe(
+		expect(buildSignatureBase(coveredBy(params), VALUES, params)).toBe(
 			[
 				'"@authority": example.com',
 				'"signature-agent": "https://chatgpt.com"',
@@ -36,27 +43,56 @@ describe("buildSignatureBase", () => {
 		);
 	});
 
+	it("includes @method, @target-uri and @path", () => {
+		const params = '("@target-uri" "@method" "@path");keyid="k"';
+		expect(buildSignatureBase(coveredBy(params), VALUES, params)).toBe(
+			[
+				'"@target-uri": https://example.com/v1/thing',
+				'"@method": POST',
+				'"@path": /v1/thing',
+				`"@signature-params": ${params}`,
+			].join("\n"),
+		);
+	});
+
 	it("preserves the covered-component order the signer chose", () => {
 		const params = '("signature-agent" "@authority");keyid="k"';
 		const base = buildSignatureBase(
-			["signature-agent", "@authority"],
+			coveredBy(params),
+			{ ...VALUES, signatureAgent: 'g="https://agent.bot.goog"' },
+			params,
+		);
+		expect(base.split("\n")[0]).toBe(
+			'"signature-agent": g="https://agent.bot.goog"',
+		);
+	});
+
+	it("covers only the keyed member of a dictionary signature-agent", () => {
+		const params = '("signature-agent";key="g");keyid="k"';
+		const base = buildSignatureBase(
+			coveredBy(params),
 			{
-				authority: "example.com",
-				signatureAgent: 'g="https://agent.bot.goog"',
+				...VALUES,
+				signatureAgent: 'a="https://other.example", g="https://agent.bot.goog"',
 			},
 			params,
 		);
-		const first = base.split("\n")[0];
-		expect(first).toBe('"signature-agent": g="https://agent.bot.goog"');
+		expect(base.split("\n")[0]).toBe(
+			'"signature-agent";key="g": "https://agent.bot.goog"',
+		);
+	});
+
+	it("throws when the keyed member is missing", () => {
+		const params = '("signature-agent";key="x");keyid="k"';
+		expect(() => buildSignatureBase(coveredBy(params), VALUES, params)).toThrow(
+			/no member "x"/,
+		);
 	});
 
 	it("throws on an unsupported covered component", () => {
-		expect(() =>
-			buildSignatureBase(
-				["@method"],
-				{ authority: "example.com", signatureAgent: '""' },
-				"()",
-			),
-		).toThrow(/unsupported covered component/);
+		const params = '("@query");keyid="k"';
+		expect(() => buildSignatureBase(coveredBy(params), VALUES, params)).toThrow(
+			/unsupported covered component/,
+		);
 	});
 });
