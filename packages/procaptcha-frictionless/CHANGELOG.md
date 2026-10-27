@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.22.1
+### Patch Changes
+
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+- Updated dependencies [6fa6155]
+- Updated dependencies [f019ec4]
+  - @prosopo/procaptcha-common@2.21.11
+  - @prosopo/types@5.20.1
+  - @prosopo/procaptcha-pow@2.14.1
+  - @prosopo/procaptcha-puzzle@2.17.11
+  - @prosopo/procaptcha-audio@0.2.12
+  - @prosopo/procaptcha-icon-order@0.2.12
+  - @prosopo/procaptcha-react@2.14.12
+  - @prosopo/api@4.8.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.5
+
 ## 2.22.0
 ### Minor Changes
 

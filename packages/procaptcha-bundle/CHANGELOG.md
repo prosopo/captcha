@@ -1,5 +1,20 @@
 # @prosopo/procaptcha-bundle
 
+## 4.5.21
+### Patch Changes
+
+- 4976eb9: Fix the classic-script bundle (`procaptcha.bundle.iife.js`), which threw `i18next_http_middleware is not defined` on load and never drew the widget.
+  
+  The browser build leaves a few server-only modules out (the i18next Express middleware and file backend, `node:path`, `node:url`). An ES module build simply drops an unused import, but an IIFE passes every left-out module into its wrapper as a global variable, and no page defines those. The IIFE build now swaps them for small stubs with the same exports, which throw a clear error only if called.
+  
+  `bundle:iife` now fails if the built bundle reads any outside global, so this can't ship again unnoticed.
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+- Updated dependencies [6fa6155]
+- Updated dependencies [f019ec4]
+  - @prosopo/procaptcha-common@2.21.11
+  - @prosopo/types@5.20.1
+  - @prosopo/procaptcha-frictionless@2.22.1
+
 ## 4.5.20
 ### Patch Changes
 

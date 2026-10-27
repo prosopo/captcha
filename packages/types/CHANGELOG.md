@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 5.20.1
+### Patch Changes
+
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+
 ## 5.20.0
 ### Minor Changes
 
