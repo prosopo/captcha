@@ -50,30 +50,40 @@ const copyDir = {
 // "i18next_http_middleware is not defined" before the widget ran a line. Here
 // they resolve to stubs with the same exports, which fail loudly only if
 // called.
-const SERVER_ONLY_STUBS: Record<string, string> = {
-	"i18next-http-middleware":
-		"export const handle = () => { unavailable(); }; export class LanguageDetector { constructor() { unavailable(); } }",
-	"i18next-fs-backend/cjs":
-		"export default class FsBackend { constructor() { unavailable(); } }",
-	"node:path":
-		"const path = new Proxy({}, { get: () => () => unavailable() }); export const join = () => unavailable(); export default path;",
-	"node:url":
-		"export const fileURLToPath = () => unavailable(); export const pathToFileURL = () => unavailable();",
-};
+const unavailable = (name: string): string =>
+	`const unavailable = () => { throw new Error("${name} is server-only and not available in the browser"); };`;
+
+const SERVER_ONLY_STUBS: ReadonlyMap<string, string> = new Map([
+	[
+		"i18next-http-middleware",
+		`${unavailable("i18next-http-middleware")} export const handle = () => { unavailable(); }; export class LanguageDetector { constructor() { unavailable(); } }`,
+	],
+	[
+		"i18next-fs-backend/cjs",
+		`${unavailable("i18next-fs-backend/cjs")} export default class FsBackend { constructor() { unavailable(); } }`,
+	],
+	[
+		"node:path",
+		`${unavailable("node:path")} const path = new Proxy({}, { get: () => () => unavailable() }); export const join = () => unavailable(); export default path;`,
+	],
+	[
+		"node:url",
+		`${unavailable("node:url")} export const fileURLToPath = () => unavailable(); export const pathToFileURL = () => unavailable();`,
+	],
+]);
 const STUB_PREFIX = "\0server-only-stub:";
+
+const isServerOnly = (id: string): boolean => SERVER_ONLY_STUBS.has(id);
 
 const serverOnlyStubs = (): Plugin => ({
 	name: "prosopo-server-only-stubs",
 	enforce: "pre",
-	resolveId: (id) => (id in SERVER_ONLY_STUBS ? STUB_PREFIX + id : null),
-	load: (id) => {
-		if (!id.startsWith(STUB_PREFIX)) return null;
-		const name = id.slice(STUB_PREFIX.length);
-		return `const unavailable = () => { throw new Error(${JSON.stringify(`${name} is server-only and not available in the browser`)}); };\n${SERVER_ONLY_STUBS[name]}`;
-	},
+	resolveId: (id) => (isServerOnly(id) ? STUB_PREFIX + id : null),
+	load: (id) =>
+		id.startsWith(STUB_PREFIX)
+			? (SERVER_ONLY_STUBS.get(id.slice(STUB_PREFIX.length)) ?? null)
+			: null,
 });
-
-const isServerOnly = (id: string): boolean => id in SERVER_ONLY_STUBS;
 
 type External = NonNullable<
 	NonNullable<UserConfig["build"]>["rollupOptions"]
