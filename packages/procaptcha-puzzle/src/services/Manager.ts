@@ -42,6 +42,7 @@ import {
 	type ProcaptchaStateUpdateFn,
 	type PuzzleEvent,
 	encodeProcaptchaOutput,
+	integrationHeaders,
 } from "@prosopo/types";
 import { embedData, sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -273,7 +274,10 @@ export const Manager = (
 					providerUrl,
 					getDappAccount(),
 					undefined,
-					widgetLanguageHeaders(getConfig().language),
+					{
+						...widgetLanguageHeaders(getConfig().language),
+						...integrationHeaders(getConfig().integration),
+					},
 				);
 
 				// Short-circuit a challenge fetch we already know the provider

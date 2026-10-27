@@ -53,4 +53,8 @@ export interface ProcaptchaRenderOptions {
 	// provider will reject the token unless the two agree.
 	sessionId?: string;
 	startMode?: StartMode;
+	// The platform embedding the widget, e.g. "mc4wp". Equivalent to the
+	// `data-integration` attribute. Sent to the provider in the
+	// x-prosopo-integration header.
+	integration?: string;
 }

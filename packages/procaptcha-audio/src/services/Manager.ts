@@ -42,6 +42,7 @@ import {
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
+	integrationHeaders,
 } from "@prosopo/types";
 import { embedData, sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -247,7 +248,10 @@ export const Manager = (
 					providerUrl,
 					getDappAccount(),
 					undefined,
-					widgetLanguageHeaders(getConfig().language),
+					{
+						...widgetLanguageHeaders(getConfig().language),
+						...integrationHeaders(getConfig().integration),
+					},
 				);
 
 				// The provider would reject a spent session, so go straight to the

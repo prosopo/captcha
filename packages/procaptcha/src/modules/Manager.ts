@@ -42,6 +42,7 @@ import {
 	type ProcaptchaStateUpdateFn,
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
+	integrationHeaders,
 } from "@prosopo/types";
 import { at, embedData, hashToHex } from "@prosopo/util";
 import { sleep } from "@prosopo/util";
@@ -608,12 +609,10 @@ export function Manager(
 			});
 		}
 		return {
-			providerApi: new ProviderApi(
-				providerUrl,
-				siteKey,
-				undefined,
-				widgetLanguageHeaders(config.language),
-			),
+			providerApi: new ProviderApi(providerUrl, siteKey, undefined, {
+				...widgetLanguageHeaders(config.language),
+				...integrationHeaders(config.integration),
+			}),
 			siteKey,
 		};
 	};

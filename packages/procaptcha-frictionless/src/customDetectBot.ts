@@ -26,6 +26,7 @@ import {
 	pickIpMode,
 	resolveClientSessionId,
 } from "@prosopo/procaptcha-common";
+import { integrationHeaders } from "@prosopo/types";
 import type {
 	BotDetectionFunction,
 	ProcaptchaClientConfigOutput,
@@ -246,7 +247,10 @@ const customDetectBot: BotDetectionFunction = async (
 		provider.provider.url,
 		config.account.address,
 		undefined,
-		widgetLanguageHeaders(config.language),
+		{
+			...widgetLanguageHeaders(config.language),
+			...integrationHeaders(config.integration),
+		},
 	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY
