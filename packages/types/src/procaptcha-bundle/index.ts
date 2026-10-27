@@ -15,6 +15,8 @@
 import type { Languages } from "@prosopo/locale";
 import type { StartMode } from "../config/startMode.js";
 
+export * from "./integration.js";
+
 // note: do not use any Zod-related types inside the interface,
 // as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
 export interface ProcaptchaRenderOptions {

@@ -31,6 +31,7 @@ import {
 	BUNDLE_VERSION_HEADER,
 	ClientApiPaths,
 	type CombinedApiPaths,
+	INTEGRATION_HEADER,
 } from "@prosopo/types";
 import {
 	AccessRuleApiRoutes,
@@ -95,6 +96,8 @@ const tlsFiles = (): { key: string; cert: string } | undefined => {
 /**
  * CORS for the client API. See the comment where it is applied.
  * `Prosopo-Lang` carries the widget's language list (see @prosopo/locale).
+ * A header missing from `allowedHeaders` fails the browser's preflight, so the
+ * provider must accept a new widget header before any widget sends it.
  */
 export const providerCorsOptions: CorsOptions = {
 	exposedHeaders: ["x-prosopo-meta"],
@@ -107,6 +110,7 @@ export const providerCorsOptions: CorsOptions = {
 		LANGUAGE_HEADER,
 		BUNDLE_VERSION_HEADER,
 		BUNDLE_ORIGIN_HEADER,
+		INTEGRATION_HEADER,
 		"Prosopo-Site-Key",
 		"Prosopo-User",
 		"x-prosopo-meta",
