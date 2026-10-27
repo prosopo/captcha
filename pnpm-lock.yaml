@@ -2038,9 +2038,6 @@ importers:
       '@prosopo/load-balancer':
         specifier: workspace:*
         version: link:../load-balancer
-      '@prosopo/locale':
-        specifier: workspace:*
-        version: link:../locale
       '@prosopo/procaptcha-common':
         specifier: workspace:*
         version: link:../procaptcha-common
@@ -2248,9 +2245,15 @@ importers:
       '@prosopo/load-balancer':
         specifier: workspace:*
         version: link:../load-balancer
+      '@prosopo/locale':
+        specifier: workspace:*
+        version: link:../locale
       '@prosopo/types':
         specifier: workspace:*
         version: link:../types
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
       '@prosopo/widget-skeleton':
         specifier: workspace:*
         version: link:../widget-skeleton

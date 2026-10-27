@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { ProviderApi } from "@prosopo/api";
-import { LANGUAGE_HEADER } from "@prosopo/locale";
+import { LANGUAGE_HEADER, widgetLanguageHeaders } from "@prosopo/locale";
 import type { EnvironmentTypes } from "@prosopo/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -31,6 +31,9 @@ vi.mock("@prosopo/api", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	widgetRequestHeaders: (
+		siteLanguage: string | undefined,
+	): Record<string, string> => widgetLanguageHeaders(siteLanguage),
 	getProcaptchaRandomActiveProvider: (
 		...args: [EnvironmentTypes, string | undefined]
 	) => getProcaptchaRandomActiveProvider(...args),

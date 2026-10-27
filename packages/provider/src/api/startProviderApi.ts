@@ -27,6 +27,8 @@ import { LANGUAGE_HEADER, i18nMiddleware } from "@prosopo/locale";
 import { parseLogLevel } from "@prosopo/logger";
 import {
 	AdminApiPaths,
+	BUNDLE_ORIGIN_HEADER,
+	BUNDLE_VERSION_HEADER,
 	ClientApiPaths,
 	type CombinedApiPaths,
 	INTEGRATION_HEADER,
@@ -106,6 +108,8 @@ export const providerCorsOptions: CorsOptions = {
 		"Content-Language",
 		"Content-Type",
 		LANGUAGE_HEADER,
+		BUNDLE_VERSION_HEADER,
+		BUNDLE_ORIGIN_HEADER,
 		INTEGRATION_HEADER,
 		"Prosopo-Site-Key",
 		"Prosopo-User",

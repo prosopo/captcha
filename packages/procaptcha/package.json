@@ -38,7 +38,6 @@
 		"@prosopo/common": "workspace:*",
 		"@prosopo/datasets": "workspace:*",
 		"@prosopo/load-balancer": "workspace:*",
-		"@prosopo/locale": "workspace:*",
 		"@prosopo/procaptcha-common": "workspace:*",
 		"@prosopo/types": "workspace:*",
 		"@prosopo/util": "workspace:*",

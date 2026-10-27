@@ -32,7 +32,9 @@
 	"dependencies": {
 		"@prosopo/account": "workspace:*",
 		"@prosopo/load-balancer": "workspace:*",
+		"@prosopo/locale": "workspace:*",
 		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
 		"@prosopo/widget-skeleton": "workspace:*"
 	},
 	"devDependencies": {

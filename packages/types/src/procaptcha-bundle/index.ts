@@ -54,3 +54,4 @@ export interface ProcaptchaRenderOptions {
 	sessionId?: string;
 	startMode?: StartMode;
 }
+export * from "./headers.js";
