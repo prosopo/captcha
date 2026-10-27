@@ -26,6 +26,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { z } from "zod";
+import { recordDnsSidecarBatch } from "../../tasks/dnsEvent/dnsSidecarHealth.js";
 import {
 	computeDnsAsymmetry,
 	enrichDnsEvent,
@@ -73,6 +74,9 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 		let dropped = 0;
 		const invalid: { index: number; issues: string[] }[] = [];
 		const now = new Date();
+		// Reaching here means the sidecar authenticated, which is what
+		// decision machines need to know before trusting a missing dnsEvent.
+		recordDnsSidecarBatch(now);
 
 		for (const [index, raw] of events.entries()) {
 			const parsed = DnsEventSchema.safeParse(raw);

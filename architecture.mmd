@@ -76,7 +76,7 @@ graph TB
             DetectorPoolMgmt["Detector Pool Replace<br/>(hot-swaps the in-memory pool)"]
             DecisionMachineMgmt["Decision Machine Management<br/>update / get / get-all /<br/>remove / remove-all"]
             MaintenanceToggle["Maintenance Mode Toggle"]
-            DnsEventEP["POST .../admin/dns/event<br/>(receives DNS event batches from the dns sidecar)"]
+            DnsEventEP["POST .../admin/dns/event<br/>(receives DNS event batches from the dns sidecar&#59;<br/>each batch marks the sidecar healthy for 5 min, read<br/>by decision machines as dnsSidecarHealthy)"]
         end
 
         subgraph UapAPI["User Access Policy API (requires JWT)"]

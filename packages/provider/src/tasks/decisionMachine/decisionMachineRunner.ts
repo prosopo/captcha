@@ -35,6 +35,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { z } from "zod";
 import { measureSync } from "../../api/metrics.js";
+import { isDnsSidecarHealthy } from "../dnsEvent/dnsSidecarHealth.js";
 
 const LOAD_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
@@ -264,7 +265,14 @@ export class DecisionMachineRunner {
 			const decision = await this.runArtifactExport(
 				artifact,
 				["decide", "default"],
-				{ input: { ...input, phase: input.phase ?? "verify" } },
+				{
+					input: {
+						...input,
+						phase: input.phase ?? "verify",
+						dnsSidecarHealthy:
+							input.dnsSidecarHealthy ?? isDnsSidecarHealthy(new Date()),
+					},
+				},
 				DecisionMachineOutputSchema,
 			);
 			return decision ?? DEFAULT_DECISION;

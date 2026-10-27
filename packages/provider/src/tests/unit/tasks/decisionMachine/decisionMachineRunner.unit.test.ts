@@ -31,6 +31,10 @@ import {
 	invalidateAllDecisionMachineArtifactCaches,
 	invalidateDecisionMachineScriptCache,
 } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+import {
+	recordDnsSidecarBatch,
+	resetDnsSidecarHealth,
+} from "../../../../tasks/dnsEvent/dnsSidecarHealth.js";
 
 const stubLogger = (): Logger => {
 	const noop = (): void => {};
@@ -364,6 +368,57 @@ describe("DecisionMachineRunner", () => {
 		});
 
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
+	});
+
+	describe("dnsSidecarHealthy", () => {
+		const echoArtifact = (): DecisionMachineArtifact =>
+			buildArtifact(
+				`module.exports = (input) => ({
+					decision: "allow",
+					tags: ["dnsSidecarHealthy:" + input.dnsSidecarHealthy],
+				});`,
+				DecisionMachineScope.Global,
+			);
+
+		beforeEach(() => {
+			resetDnsSidecarHealth();
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(echoArtifact());
+		});
+
+		it("is false when no DNS batch has arrived", async () => {
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:false"]);
+		});
+
+		it("is true after a recent DNS batch", async () => {
+			recordDnsSidecarBatch(new Date());
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:true"]);
+		});
+
+		it("keeps a caller-supplied value", async () => {
+			recordDnsSidecarBatch(new Date());
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+				dnsSidecarHealthy: false,
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:false"]);
+		});
 	});
 
 	describe("route", () => {
