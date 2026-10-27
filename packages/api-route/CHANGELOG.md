@@ -1,5 +1,12 @@
 # @prosopo/api-route
 
+## 2.6.67
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+  - @prosopo/logger@2.1.7
+
 ## 2.6.66
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/util-crypto
 
+## 13.6.3
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+
 ## 13.6.2
 ### Patch Changes
 

@@ -1,5 +1,19 @@
 # @prosopo/cypress-shared
 
+## 2.8.162
+### Patch Changes
+
+- 9672200: The image, frictionless and PoW cypress specs now take a visual snapshot of the captcha widget at its key states (before clicking, after passing, after failing) and compare it against committed baselines in chrome. Snapshots are cropped to the widget so the demo page around it can't make them flaky.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+
 ## 2.8.161
 ### Patch Changes
 

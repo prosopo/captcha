@@ -1,5 +1,33 @@
 # @prosopo/cli
 
+## 3.9.5
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [736e988]
+- Updated dependencies [ab3c124]
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [7cabc96]
+- Updated dependencies [f13677e]
+- Updated dependencies [3473baf]
+- Updated dependencies [77bd891]
+- Updated dependencies [cb7db6c]
+- Updated dependencies [76b6edd]
+  - @prosopo/provider@5.23.0
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/keyring@2.10.13
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/workspace@3.2.6
+  - @prosopo/api@4.8.0
+  - @prosopo/env@3.6.82
+
 ## 3.9.4
 ### Patch Changes
 

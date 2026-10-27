@@ -1,5 +1,30 @@
 # @prosopo/provider-mock
 
+## 2.8.209
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [736e988]
+- Updated dependencies [ab3c124]
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [7cabc96]
+- Updated dependencies [3473baf]
+- Updated dependencies [77bd891]
+- Updated dependencies [cb7db6c]
+- Updated dependencies [76b6edd]
+  - @prosopo/provider@5.23.0
+  - @prosopo/api-express-router@3.3.5
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/types@5.20.0
+  - @prosopo/types-database@5.13.0
+  - @prosopo/database@4.4.0
+
 ## 2.8.208
 ### Patch Changes
 
