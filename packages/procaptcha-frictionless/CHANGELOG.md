@@ -1,5 +1,56 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.22.0
+### Minor Changes
+
+- 78107d9: Record the fingerprint summary, and with it the device bucket, for every captcha type rather than only PoW.
+  
+  The proof of fingerprint was only built by the PoW widget and only read when a PoW solution was submitted, so sessions served a puzzle or an image never had a bucket. About half of puzzle drags could only be given one by finding a PoW the same account had solved.
+  
+  The widget now sends the proof with the frictionless request, best-effort and capped at a second so it never delays the captcha. The provider verifies and summarises it once, stores the summary on the session, and the PoW, puzzle and image records copy it from there. Escalation sessions inherit it. A proof sent with a PoW solution still replaces the one from the frictionless request.
+  
+  The summary is only recorded at the frictionless step, not passed to the routing machine there, so existing `deviceBucket` counter rules keep firing where they did before.
+
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- d6cc6fe: Pages with more than one widget no longer make every widget after the first fail with `No session found`. The provider hands the same live session to every /frictionless call from one user, IP and site key, and the first challenge used it up, so each later widget got a 400 and had to fetch a new session; clicking several at once could run a widget out of retries and reset it. Each widget now sends a slot number (0, 1, 2, … in page order, capped at 15) and the provider keeps one session per slot. The first widget keeps the old dedup key, so single-widget pages are unchanged, and a reload still reuses each widget's own session.
+- b2ee10d: Removing or resetting a frictionless widget while its bot-detection request is still running no longer lets that request finish the job. Before, a detection that came back after the widget was gone could still mount the Web Bot Auth badge and call `onHuman` with a token, call `onError`, keep retrying against other providers, or schedule a restart timer that nothing could cancel and that later called `onReset`. The widget now stops as soon as it is destroyed.
+- 0e4bc70: Let every widget on a page share one detector-bundle assignment instead of only the first.
+  
+  `takePrefetchedDetector` removed the in-flight entry on claim, so on a page carrying several widgets the first claimed the prefetch and every other widget issued its own provider resolve plus `assignDetectorBundle`. One production integration mounts a widget per form — eight on a property page — so a single page view cost eight assign calls rather than one, enough on its own to push ordinary visitors past a per-IP rate detector.
+  
+  Sharing is sound: `detectorSessionId` binds to a `bundleId` in Redis purely so the provider can resolve which cipher keys decrypt that widget's SIMD readings. Widgets sharing an assignment run the same bundle, so those are the right keys — it is a lookup, not a one-shot token.
+  
+  The guarantee the removal existed for is kept by two narrower mechanisms: a prefetch that rejects drops itself from the map, so no later widget inherits a failed pin, and entries go stale after 60s, so a widget rendered much later starts a fresh prefetch rather than reusing an aged provider pin. Retries were never affected either way — `customDetectBot` only claims on a first attempt.
+- 76b6edd: The widget now tells the provider which bundle it is and where it was loaded from, on every request:
+  
+  - `X-Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
+  - `X-Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
+  
+  Providers store request headers on the session and in the request logs, so together with the site key these show which sites self-host and which version each one runs.
+  
+  The provider now allows both headers in CORS. Every provider must run this version before the new bundle is published to the CDN: a widget sending these headers to an older provider fails the browser's preflight check and cannot load a captcha.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.4
+  - @prosopo/locale@3.13.2
+  - @prosopo/procaptcha-common@2.21.10
+  - @prosopo/types@5.20.0
+  - @prosopo/widget-skeleton@2.10.5
+  - @prosopo/api@4.8.0
+  - @prosopo/procaptcha-pow@2.14.0
+  - @prosopo/procaptcha-puzzle@2.17.10
+  - @prosopo/procaptcha-audio@0.2.11
+  - @prosopo/procaptcha-icon-order@0.2.11
+  - @prosopo/procaptcha-react@2.14.11
+
 ## 2.21.9
 ### Patch Changes
 

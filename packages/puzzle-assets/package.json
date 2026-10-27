@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/puzzle-assets",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"description": "Procedural imagery for the slider puzzle captcha",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",

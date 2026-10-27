@@ -1,5 +1,71 @@
 # @prosopo/provider
 
+## 5.23.0
+### Minor Changes
+
+- 78107d9: Record the fingerprint summary, and with it the device bucket, for every captcha type rather than only PoW.
+  
+  The proof of fingerprint was only built by the PoW widget and only read when a PoW solution was submitted, so sessions served a puzzle or an image never had a bucket. About half of puzzle drags could only be given one by finding a PoW the same account had solved.
+  
+  The widget now sends the proof with the frictionless request, best-effort and capped at a second so it never delays the captcha. The provider verifies and summarises it once, stores the summary on the session, and the PoW, puzzle and image records copy it from there. Escalation sessions inherit it. A proof sent with a PoW solution still replaces the one from the frictionless request.
+  
+  The summary is only recorded at the frictionless step, not passed to the routing machine there, so existing `deviceBucket` counter rules keep firing where they did before.
+
+### Patch Changes
+
+- 736e988: Client captcha requests are now refused when the site key in the request body differs from the `prosopo-site-key` header. The allowed-domain check reads the header, but the captcha handlers act on the site key in the body, so a page on one site could send its own site key in the header and another site's key in the body and get that other site's challenges without its domain being allowed. The same gap let the reserved test site keys, which skip the domain check, carry any site's key in the body.
+- ab3c124: Bump undici from 8.12.0 to 8.12.2
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- c69b636: Decision machines now get `dnsSidecarHealthy`. It is `true` when the provider got an authenticated DNS event batch in the last 5 minutes. Rules that deny on a missing `dnsEvent` can check it first, so a broken DNS sidecar (e.g. an expired admin JWT) no longer denies every real user.
+- d6cc6fe: Pages with more than one widget no longer make every widget after the first fail with `No session found`. The provider hands the same live session to every /frictionless call from one user, IP and site key, and the first challenge used it up, so each later widget got a 400 and had to fetch a new session; clicking several at once could run a widget out of retries and reset it. Each widget now sends a slot number (0, 1, 2, … in page order, capped at 15) and the provider keeps one session per slot. The first widget keeps the old dedup key, so single-widget pages are unchanged, and a reload still reuses each widget's own session.
+- 7cabc96: IP validation no longer reports an ISP change when the two addresses share an ASN. Dual-stack users whose IPv6 is delivered by a wholesaler under a different company name (e.g. KDDI customers in Japan, whose IPv6 block is named "Japan Internet Xing") were being rejected with `FAILED_IP_VALIDATION` on sites with `ispChangeAction: reject`. A matching provider name still counts as the same ISP, so operators that use separate ASNs for IPv4 and IPv6 keep passing.
+- 3473baf: Add a robustness fuzzer for the provider's client and verify API at `packages/provider/src/tests/fuzz/apiFuzz.ts`. Point it at a disposable provider and it sends every endpoint malformed bodies: wrong types, numeric extremes, NUL and lone-surrogate strings, prototype keys, Mongo operators, 4000-deep nesting and arrays that fill the 1MB body limit. It then replays the heaviest of those in concurrent bursts. While it runs it times `/healthz` to catch event-loop stalls and samples the provider's memory to spot steady growth. It exits non-zero if any request gets a 5xx or no response.
+- 77bd891: The provider accepts an `x-prosopo-integration` request header, which names the platform that embedded the widget (e.g. `mc4wp`). It is saved on the session with the other request headers and added to the provider's request logs as `integration`. The widget does not send it yet; this has to be deployed to providers first, because browsers block a header the provider does not allow.
+- cb7db6c: Accept the Web Bot Auth signatures that ChatGPT and Google's agents actually send. ChatGPT signs `@method` as well as `@authority`, and Google signs `@target-uri`, `@method` and one member of its `Signature-Agent` dictionary (`"signature-agent";key="g"`). The verifier only knew `@authority` and the whole `signature-agent` header, so every request from both was rejected as `bad-signature` — about 1,300 in the week to 2026-10-27 — and went through the ordinary captcha instead of the site's agent rules.
+  
+  The verifier now handles `@method`, `@target-uri`, `@path` and the `key` parameter. A signature covering anything else is rejected as `unsupported-component` rather than `bad-signature`, so the log says which it was.
+- 76b6edd: The widget now tells the provider which bundle it is and where it was loaded from, on every request:
+  
+  - `X-Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
+  - `X-Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
+  
+  Providers store request headers on the session and in the request logs, so together with the site key these show which sites self-host and which version each one runs.
+  
+  The provider now allows both headers in CORS. Every provider must run this version before the new bundle is published to the CDN: a widget sending these headers to an older provider fails the browser's preflight check and cannot load a captcha.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [cb7db6c]
+- Updated dependencies [76b6edd]
+  - @prosopo/api-express-router@3.3.5
+  - @prosopo/api-route@2.6.67
+  - @prosopo/audio-assets@0.2.4
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.13
+  - @prosopo/fingerprint@2.8.4
+  - @prosopo/icon-order-assets@0.2.4
+  - @prosopo/keyring@2.10.13
+  - @prosopo/load-balancer@2.11.17
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/puzzle-assets@0.2.5
+  - @prosopo/redis-client@1.0.44
+  - @prosopo/types@5.20.0
+  - @prosopo/types-database@5.13.0
+  - @prosopo/user-access-policy@3.15.9
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+  - @prosopo/database@4.4.0
+  - @prosopo/api@4.8.0
+  - @prosopo/web-bot-auth@0.1.6
+  - @prosopo/env@3.6.82
+  - @prosopo/captcha-severity@1.4.0
+  - @prosopo/ipinfo@0.4.26
+  - @prosopo/types-env@2.11.28
+
 ## 5.22.0
 ### Minor Changes
 
