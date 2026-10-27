@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { widgetLanguageHeaders } from "@prosopo/locale";
-import { BUNDLE_ORIGIN_HEADER, BUNDLE_VERSION_HEADER } from "@prosopo/types";
+import {
+	BUNDLE_ORIGIN_HEADER,
+	BUNDLE_VERSION_HEADER,
+	integrationHeaders,
+} from "@prosopo/types";
 import { version } from "@prosopo/util";
 
 /**
@@ -56,7 +60,9 @@ const BUNDLE_HEADERS = bundleHeaders(
 /** The headers the widget sends with every provider request. */
 export const widgetRequestHeaders = (
 	siteLanguage: string | undefined,
+	integration?: string,
 ): Record<string, string> => ({
 	...widgetLanguageHeaders(siteLanguage),
 	...BUNDLE_HEADERS,
+	...integrationHeaders(integration),
 });

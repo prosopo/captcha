@@ -23,6 +23,7 @@ import {
 } from "@prosopo/types";
 import { setClientSessionId } from "../clientSession.js";
 import { createConfig } from "../configCreator.js";
+import { setIntegration } from "../integration.js";
 import { resolveLanguage, setLanguage } from "../language.js";
 import { setStartMode } from "../startMode.js";
 import { setValidChallengeLength } from "../timeout.js";
@@ -98,6 +99,7 @@ class CaptchaRenderer {
 		setValidChallengeLength(renderOptions, element, config);
 		setLanguage(renderOptions, element, config);
 		setClientSessionId(renderOptions, element, config);
+		setIntegration(renderOptions, element, config);
 		setStartMode(renderOptions, element, config);
 	}
 }

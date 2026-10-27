@@ -99,6 +99,7 @@ export const prefetchDetector = (
 	ipMode: IpModeParam,
 	siteKey: string,
 	language?: Language,
+	integration?: string,
 ): void => {
 	const key = keyOf(environment, ipMode, siteKey);
 	if (freshEntry(key)) return;
@@ -113,7 +114,7 @@ export const prefetchDetector = (
 			provider.provider.url,
 			siteKey,
 			undefined,
-			widgetRequestHeaders(language),
+			widgetRequestHeaders(language, integration),
 		);
 		const assigned = await providerApi.assignDetectorBundle(siteKey);
 		return { provider, assigned };

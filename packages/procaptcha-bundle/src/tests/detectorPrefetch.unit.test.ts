@@ -71,6 +71,7 @@ describe("render", () => {
 			undefined,
 			SITE_KEY,
 			undefined,
+			undefined,
 		);
 	});
 
@@ -85,6 +86,23 @@ describe("render", () => {
 			undefined,
 			SITE_KEY,
 			"tr",
+			undefined,
+		);
+	});
+
+	it("passes the integration through to the prefetch", async () => {
+		const host: HTMLElement = document.createElement("mc4wp-procaptcha");
+		const element: HTMLDivElement = document.createElement("div");
+		host.appendChild(element);
+		await render(element, { siteKey: SITE_KEY });
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(mocks.prefetchDetector).toHaveBeenCalledWith(
+			expect.anything(),
+			undefined,
+			SITE_KEY,
+			undefined,
+			"mc4wp",
 		);
 	});
 
@@ -95,6 +113,7 @@ describe("render", () => {
 			expect.anything(),
 			"ipv4",
 			SITE_KEY,
+			undefined,
 			undefined,
 		);
 	});
