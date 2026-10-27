@@ -1341,6 +1341,7 @@ export const SESSION_PROJECTION = {
 	"headers.prosopo-user": 1,
 	"headers.prosopo-site-key": 1,
 	"headers.prosopo-type": 1,
+	"headers.x-prosopo-integration": 1,
 	"headers.x-tls-version": 1,
 } as const;
 
