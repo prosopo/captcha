@@ -1,5 +1,10 @@
 # @prosopo/workspace
 
+## 3.2.6
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+
 ## 3.2.5
 ### Patch Changes
 

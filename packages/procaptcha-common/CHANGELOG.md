@@ -1,5 +1,31 @@
 # @prosopo/procaptcha-common
 
+## 2.21.10
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- 76b6edd: The widget now tells the provider which bundle it is and where it was loaded from, on every request:
+  
+  - `X-Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
+  - `X-Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
+  
+  Providers store request headers on the session and in the request logs, so together with the site key these show which sites self-host and which version each one runs.
+  
+  The provider now allows both headers in CORS. Every provider must run this version before the new bundle is published to the CDN: a widget sending these headers to an older provider fails the browser's preflight check and cannot load a captcha.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/account@2.8.116
+  - @prosopo/load-balancer@2.11.17
+  - @prosopo/locale@3.13.2
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/widget-skeleton@2.10.5
+
 ## 2.21.9
 ### Patch Changes
 

@@ -1,5 +1,13 @@
 # @prosopo/locale
 
+## 3.13.2
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+- Updated dependencies [f13677e]
+  - @prosopo/util@3.4.0
+
 ## 3.13.1
 ### Patch Changes
 

@@ -1,5 +1,14 @@
 # @prosopo/util
 
+## 3.4.0
+### Minor Changes
+
+- f13677e: Solve PoW captchas across a pool of web workers. The nonce space is divided and conquered across the pool (worker `i` tries nonces `i, i+N, i+2N, …`), keeping the UI responsive on higher-difficulty challenges, with a synchronous fallback when web workers are unavailable. The pool defaults to 4 workers (`PROSOPO_POW_WORKERS`) and never uses more than one fewer than the device's cores, so the page keeps a core free. Adds the `solvePoWOffset` helper to `@prosopo/util`; `@prosopo/procaptcha-pow` now solves PoW challenges on a worker pool internally.
+
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+
 ## 3.3.17
 ### Patch Changes
 
