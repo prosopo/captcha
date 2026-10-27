@@ -19,6 +19,10 @@ import {
 	ApiDnsEventEndpoint,
 	dnsEventToFields,
 } from "../../../../api/admin/apiDnsEventEndpoint.js";
+import {
+	isDnsSidecarHealthy,
+	resetDnsSidecarHealth,
+} from "../../../../tasks/dnsEvent/dnsSidecarHealth.js";
 
 describe("dnsEventToFields", () => {
 	it("extracts resolverIp from a dns-kind event", () => {
@@ -67,6 +71,7 @@ describe("ApiDnsEventEndpoint", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		resetDnsSidecarHealth();
 		mergeSessionDnsEvent = vi.fn().mockResolvedValue(true);
 		mockLogger = {
 			info: vi.fn(),
@@ -76,6 +81,12 @@ describe("ApiDnsEventEndpoint", () => {
 		endpoint = new ApiDnsEventEndpoint({
 			mergeSessionDnsEvent,
 		} as never);
+	});
+
+	it("marks the sidecar healthy when a batch arrives", async () => {
+		expect(isDnsSidecarHealthy(new Date())).toBe(false);
+		await endpoint.processRequest({ events: [] }, mockLogger as never);
+		expect(isDnsSidecarHealthy(new Date())).toBe(true);
 	});
 
 	it("skips events with no jti", async () => {
