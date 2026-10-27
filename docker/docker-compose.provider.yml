@@ -216,6 +216,81 @@ services:
       options:
         max-size: '100m'
         max-file: '1'
+  # Scraped by vector's redis_metrics source. The exporter only reads
+  # REDIS_PASSWORD, so the env file carries it as a copy of
+  # REDIS_CONNECTION_PASSWORD; without it the exporter connects but every
+  # scrape returns redis_up 0.
+  redis-exporter:
+    container_name: redis-exporter
+    image: oliver006/redis_exporter:v1.62.0
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    environment:
+      REDIS_ADDR: redis://redis-stack:6379
+    labels:
+      - "vector.docker=true" # log docker events
+    depends_on:
+      - redis-stack
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.25'
+    expose:
+      - "9121"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.11
+        ipv6_address: fd00:aaaa::b
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+  # Scraped every 60s by vector's cadvisor_metrics source: per-container cpu,
+  # memory, disk and network, plus the whole machine as id="/". The root
+  # container is the only source of host-wide network and tcp figures, since
+  # vector's host_metrics sees only its own network namespace. Per-process
+  # and per-cpu metrics are left off to keep the series count down.
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    privileged: true # reads cgroup and device stats for every container
+    devices:
+      - /dev/kmsg
+    command:
+      - '--enable_metrics=cpu,memory,network,diskIO,disk,oom_event,tcp'
+      - '--housekeeping_interval=30s'
+      - '--store_container_labels=false'
+      - '--whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project'
+      - '--docker_only=true'
+    labels:
+      - "vector.docker=true" # log docker events
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    expose:
+      - "8080"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.12
+        ipv6_address: fd00:aaaa::c
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   vector:
     container_name: vector
     image: prosopo/vector:${VECTOR_IMAGE}
