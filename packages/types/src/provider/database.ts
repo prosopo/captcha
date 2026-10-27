@@ -260,6 +260,7 @@ export enum CaptchaLabel {
 	bot = "bot",
 	suspicious = "suspicious",
 	unknown = "unknown",
+	solver = "solver",
 }
 
 export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
