@@ -15,7 +15,6 @@
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoError, toPublicError } from "@prosopo/common";
-import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -28,6 +27,7 @@ import {
 	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
+	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import {
 	type Account,
@@ -42,7 +42,6 @@ import {
 	type ProcaptchaStateUpdateFn,
 	type PuzzleEvent,
 	encodeProcaptchaOutput,
-	integrationHeaders,
 } from "@prosopo/types";
 import { embedData, sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -274,10 +273,7 @@ export const Manager = (
 					providerUrl,
 					getDappAccount(),
 					undefined,
-					{
-						...widgetLanguageHeaders(getConfig().language),
-						...integrationHeaders(getConfig().integration),
-					},
+					widgetRequestHeaders(getConfig().language, getConfig().integration),
 				);
 
 				// Short-circuit a challenge fetch we already know the provider

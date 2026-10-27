@@ -21,7 +21,13 @@
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../locale"
+		},
+		{
 			"path": "../types"
+		},
+		{
+			"path": "../util"
 		},
 		{
 			"path": "../widget-skeleton"

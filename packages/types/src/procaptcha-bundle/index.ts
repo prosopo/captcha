@@ -58,3 +58,4 @@ export interface ProcaptchaRenderOptions {
 	// x-prosopo-integration header.
 	integration?: string;
 }
+export * from "./headers.js";

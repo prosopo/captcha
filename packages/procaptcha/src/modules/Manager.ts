@@ -15,7 +15,6 @@
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoError, toPublicError } from "@prosopo/common";
-import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -25,6 +24,7 @@ import {
 	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
+	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import {
 	type Account,
@@ -42,7 +42,6 @@ import {
 	type ProcaptchaStateUpdateFn,
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
-	integrationHeaders,
 } from "@prosopo/types";
 import { at, embedData, hashToHex } from "@prosopo/util";
 import { sleep } from "@prosopo/util";
@@ -609,10 +608,12 @@ export function Manager(
 			});
 		}
 		return {
-			providerApi: new ProviderApi(providerUrl, siteKey, undefined, {
-				...widgetLanguageHeaders(config.language),
-				...integrationHeaders(config.integration),
-			}),
+			providerApi: new ProviderApi(
+				providerUrl,
+				siteKey,
+				undefined,
+				widgetRequestHeaders(config.language, config.integration),
+			),
 			siteKey,
 		};
 	};

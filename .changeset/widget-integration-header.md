@@ -1,6 +1,7 @@
 ---
 "@prosopo/types": patch
 "@prosopo/procaptcha-bundle": patch
+"@prosopo/procaptcha-common": patch
 "@prosopo/procaptcha-frictionless": patch
 "@prosopo/procaptcha": patch
 "@prosopo/procaptcha-pow": patch

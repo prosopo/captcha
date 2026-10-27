@@ -1,5 +1,36 @@
 # @prosopo/types
 
+## 5.20.0
+### Minor Changes
+
+- 78107d9: Record the fingerprint summary, and with it the device bucket, for every captcha type rather than only PoW.
+  
+  The proof of fingerprint was only built by the PoW widget and only read when a PoW solution was submitted, so sessions served a puzzle or an image never had a bucket. About half of puzzle drags could only be given one by finding a PoW the same account had solved.
+  
+  The widget now sends the proof with the frictionless request, best-effort and capped at a second so it never delays the captcha. The provider verifies and summarises it once, stores the summary on the session, and the PoW, puzzle and image records copy it from there. Escalation sessions inherit it. A proof sent with a PoW solution still replaces the one from the frictionless request.
+  
+  The summary is only recorded at the frictionless step, not passed to the routing machine there, so existing `deviceBucket` counter rules keep firing where they did before.
+
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- c69b636: Decision machines now get `dnsSidecarHealthy`. It is `true` when the provider got an authenticated DNS event batch in the last 5 minutes. Rules that deny on a missing `dnsEvent` can check it first, so a broken DNS sidecar (e.g. an expired admin JWT) no longer denies every real user.
+- d6cc6fe: Pages with more than one widget no longer make every widget after the first fail with `No session found`. The provider hands the same live session to every /frictionless call from one user, IP and site key, and the first challenge used it up, so each later widget got a 400 and had to fetch a new session; clicking several at once could run a widget out of retries and reset it. Each widget now sends a slot number (0, 1, 2, … in page order, capped at 15) and the provider keeps one session per slot. The first widget keeps the old dedup key, so single-widget pages are unchanged, and a reload still reuses each widget's own session.
+- 77bd891: The provider accepts an `x-prosopo-integration` request header, which names the platform that embedded the widget (e.g. `mc4wp`). It is saved on the session with the other request headers and added to the provider's request logs as `integration`. The widget does not send it yet; this has to be deployed to providers first, because browsers block a header the provider does not allow.
+- 76b6edd: The widget now tells the provider which bundle it is and where it was loaded from, on every request:
+  
+  - `X-Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
+  - `X-Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
+  
+  Providers store request headers on the session and in the request logs, so together with the site key these show which sites self-host and which version each one runs.
+  
+  The provider now allows both headers in CORS. Every provider must run this version before the new bundle is published to the CDN: a widget sending these headers to an older provider fails the browser's preflight check and cannot load a captcha.
+- Updated dependencies [1966fc1]
+- Updated dependencies [f13677e]
+  - @prosopo/locale@3.13.2
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
 ## 5.19.0
 ### Minor Changes
 

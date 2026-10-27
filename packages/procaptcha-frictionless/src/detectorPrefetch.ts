@@ -39,13 +39,15 @@
  */
 
 import { ProviderApi } from "@prosopo/api";
-import { type Language, widgetLanguageHeaders } from "@prosopo/locale";
-import { getProcaptchaRandomActiveProvider } from "@prosopo/procaptcha-common";
+import type { Language } from "@prosopo/locale";
 import {
-	type AssignDetectorBundleResponse,
-	type EnvironmentTypes,
-	type RandomProvider,
-	integrationHeaders,
+	getProcaptchaRandomActiveProvider,
+	widgetRequestHeaders,
+} from "@prosopo/procaptcha-common";
+import type {
+	AssignDetectorBundleResponse,
+	EnvironmentTypes,
+	RandomProvider,
 } from "@prosopo/types";
 
 // `IpMode` is declared in @prosopo/load-balancer, which this package does not
@@ -112,10 +114,7 @@ export const prefetchDetector = (
 			provider.provider.url,
 			siteKey,
 			undefined,
-			{
-				...widgetLanguageHeaders(language),
-				...integrationHeaders(integration),
-			},
+			widgetRequestHeaders(language, integration),
 		);
 		const assigned = await providerApi.assignDetectorBundle(siteKey);
 		return { provider, assigned };

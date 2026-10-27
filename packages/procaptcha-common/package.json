@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-common",
-	"version": "2.21.9",
+	"version": "2.21.10",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/esm/index.js",
@@ -32,7 +32,9 @@
 	"dependencies": {
 		"@prosopo/account": "workspace:*",
 		"@prosopo/load-balancer": "workspace:*",
+		"@prosopo/locale": "workspace:*",
 		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
 		"@prosopo/widget-skeleton": "workspace:*"
 	},
 	"devDependencies": {

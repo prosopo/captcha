@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { IpMode } from "@prosopo/load-balancer";
-import type { ScrollEventPoint } from "@prosopo/types";
+import { BUNDLE_VERSION_HEADER, type ScrollEventPoint } from "@prosopo/types";
 import {
 	ApiParams,
 	type BehavioralData,
@@ -381,7 +381,9 @@ describe("start", () => {
 		const harness = build({ configInput: config({ language: "tr" }) });
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+		expect(mocks.providerApiHeaders).toEqual([
+			{ "Prosopo-Lang": "tr", [BUNDLE_VERSION_HEADER]: expect.any(String) },
+		]);
 	});
 
 	test("sends the browser's languages when the site set none", async () => {
@@ -389,7 +391,12 @@ describe("start", () => {
 		const harness = build();
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
+		expect(mocks.providerApiHeaders).toEqual([
+			{
+				"Prosopo-Lang": "tr-TR,en",
+				[BUNDLE_VERSION_HEADER]: expect.any(String),
+			},
+		]);
 	});
 
 	test("carries the frictionless provider through instead of picking one", async () => {
