@@ -16,7 +16,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { ViteFrontendConfig, VitePluginCopy } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
-import { defineConfig } from "vite";
+import { type Plugin, type UserConfig, defineConfig } from "vite";
 
 // IIFE / classic-script build of the procaptcha bundle.
 // Used as a `<script nomodule>` fallback so crawlers and runtimes that do not
@@ -42,6 +42,63 @@ for (const p of packages) {
 const copyDir = {
 	srcDir: `${workspaceRoot}/packages/locale/src/locales`,
 	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
+};
+
+// The frontend config leaves these server-only modules external. An ES module
+// build drops an external import nobody calls, but an IIFE passes every
+// external into its wrapper as a global variable, so the browser threw
+// "i18next_http_middleware is not defined" before the widget ran a line. Here
+// they resolve to stubs with the same exports, which fail loudly only if
+// called.
+const unavailable = (name: string): string =>
+	`const unavailable = () => { throw new Error("${name} is server-only and not available in the browser"); };`;
+
+const SERVER_ONLY_STUBS: ReadonlyMap<string, string> = new Map([
+	[
+		"i18next-http-middleware",
+		`${unavailable("i18next-http-middleware")} export const handle = () => { unavailable(); }; export class LanguageDetector { constructor() { unavailable(); } }`,
+	],
+	[
+		"i18next-fs-backend/cjs",
+		`${unavailable("i18next-fs-backend/cjs")} export default class FsBackend { constructor() { unavailable(); } }`,
+	],
+	[
+		"node:path",
+		`${unavailable("node:path")} const path = new Proxy({}, { get: () => () => unavailable() }); export const join = () => unavailable(); export default path;`,
+	],
+	[
+		"node:url",
+		`${unavailable("node:url")} export const fileURLToPath = () => unavailable(); export const pathToFileURL = () => unavailable();`,
+	],
+]);
+const STUB_PREFIX = "\0server-only-stub:";
+
+const isServerOnly = (id: string): boolean => SERVER_ONLY_STUBS.has(id);
+
+const serverOnlyStubs = (): Plugin => ({
+	name: "prosopo-server-only-stubs",
+	enforce: "pre",
+	resolveId: (id) => (isServerOnly(id) ? STUB_PREFIX + id : null),
+	load: (id) =>
+		id.startsWith(STUB_PREFIX)
+			? (SERVER_ONLY_STUBS.get(id.slice(STUB_PREFIX.length)) ?? null)
+			: null,
+});
+
+type External = NonNullable<
+	NonNullable<UserConfig["build"]>["rollupOptions"]
+>["external"];
+
+const withoutServerOnly = (external: External): External => {
+	if (external === undefined) return undefined;
+	if (typeof external === "function") {
+		return (id, importer, isResolved) =>
+			!isServerOnly(id) && external(id, importer, isResolved);
+	}
+	const entries = Array.isArray(external) ? external : [external];
+	return entries.filter(
+		(entry) => typeof entry !== "string" || !isServerOnly(entry),
+	);
 };
 
 export default defineConfig(async ({ command, mode }) => {
@@ -87,6 +144,9 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 			rollupOptions: {
 				...frontendConfig.build?.rollupOptions,
+				external: withoutServerOnly(
+					frontendConfig.build?.rollupOptions?.external,
+				),
 				output: {
 					...frontendConfig.build?.rollupOptions?.output,
 					entryFileNames: "procaptcha.bundle.iife.js",
@@ -96,6 +156,7 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 		},
 		plugins: [
+			serverOnlyStubs(),
 			// Only the widget namespace: the browser renders nothing else, and
 			// the provider translates image labels itself. Copied whole: the
 			// provider sends any of these keys with an error for the widget to
