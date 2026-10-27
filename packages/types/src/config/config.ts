@@ -363,6 +363,8 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// of the provider's own frictionless `sessionId`.
 		clientSessionId: string().optional(),
 		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
+		// See ProcaptchaRenderOptions.integration.
+		integration: string().optional(),
 	}),
 );
 

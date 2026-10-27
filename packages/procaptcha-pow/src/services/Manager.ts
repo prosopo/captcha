@@ -269,7 +269,7 @@ export const Manager = (
 					providerUrl,
 					getDappAccount(),
 					undefined,
-					widgetRequestHeaders(getConfig().language),
+					widgetRequestHeaders(getConfig().language, getConfig().integration),
 				);
 
 				// Non-blocking check (timeoutMs=0): only attach SIMD readings if

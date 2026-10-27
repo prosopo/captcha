@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { LANGUAGE_HEADER } from "@prosopo/locale";
-import { BUNDLE_ORIGIN_HEADER, BUNDLE_VERSION_HEADER } from "@prosopo/types";
+import {
+	BUNDLE_ORIGIN_HEADER,
+	BUNDLE_VERSION_HEADER,
+	INTEGRATION_HEADER,
+} from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	bundleHeaders,
@@ -89,5 +93,15 @@ describe("widgetRequestHeaders", () => {
 		const headers: Record<string, string> = widgetRequestHeaders("de");
 		expect(headers[LANGUAGE_HEADER]).toBe("de");
 		expect(headers[BUNDLE_VERSION_HEADER]).toEqual(expect.any(String));
+	});
+
+	it("names the integration when there is one", () => {
+		expect(widgetRequestHeaders("de", "mc4wp")[INTEGRATION_HEADER]).toBe(
+			"mc4wp",
+		);
+	});
+
+	it("sends no integration header without one", () => {
+		expect(widgetRequestHeaders("de")).not.toHaveProperty(INTEGRATION_HEADER);
 	});
 });
