@@ -39,8 +39,11 @@
  */
 
 import { ProviderApi } from "@prosopo/api";
-import { type Language, widgetLanguageHeaders } from "@prosopo/locale";
-import { getProcaptchaRandomActiveProvider } from "@prosopo/procaptcha-common";
+import type { Language } from "@prosopo/locale";
+import {
+	getProcaptchaRandomActiveProvider,
+	widgetRequestHeaders,
+} from "@prosopo/procaptcha-common";
 import type {
 	AssignDetectorBundleResponse,
 	EnvironmentTypes,
@@ -110,7 +113,7 @@ export const prefetchDetector = (
 			provider.provider.url,
 			siteKey,
 			undefined,
-			widgetLanguageHeaders(language),
+			widgetRequestHeaders(language),
 		);
 		const assigned = await providerApi.assignDetectorBundle(siteKey);
 		return { provider, assigned };

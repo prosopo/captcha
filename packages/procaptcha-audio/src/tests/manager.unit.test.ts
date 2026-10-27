@@ -17,6 +17,7 @@ import {
 	ApiParams,
 	type AudioCaptchaSolutionResponse,
 	type AudioEvent,
+	BUNDLE_VERSION_HEADER,
 	CaptchaType,
 	type ClientMetaData,
 	type EnvironmentTypes,
@@ -336,7 +337,9 @@ describe("start: getting to a challenge", () => {
 		const harness = build({ configInput: config({ language: "tr" }) });
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+		expect(mocks.providerApiHeaders).toEqual([
+			{ "Prosopo-Lang": "tr", [BUNDLE_VERSION_HEADER]: expect.any(String) },
+		]);
 	});
 
 	test("sends the browser's languages when the site set none", async () => {
@@ -344,7 +347,12 @@ describe("start: getting to a challenge", () => {
 		const harness = build();
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
+		expect(mocks.providerApiHeaders).toEqual([
+			{
+				"Prosopo-Lang": "tr-TR,en",
+				[BUNDLE_VERSION_HEADER]: expect.any(String),
+			},
+		]);
 	});
 
 	test("asks the provider named by the frictionless state, when there is one", async () => {
