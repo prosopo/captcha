@@ -229,6 +229,16 @@ http://:9090 {
 			X-Robots-Tag "none"
 		}
 
+		# Some crawlers send a Content-Length and never the body, so each request holds a
+		# connection for the full read_body timeout. Answer before reading the body.
+		@crawler_client_api {
+			path /v1/prosopo/provider/client/*
+			header_regexp User-Agent (?i)baiduspider
+		}
+		respond @crawler_client_api 403 {
+			close
+		}
+
 		# The detector-pool push (`@prosopo/catcher`'s `pool:add`) carries
 		# the whole pool in one body — a 100-bundle pool is ~86 MB of JSON,
 		# ~27 MB gzipped on the wire. The global `timeouts` block caps a
