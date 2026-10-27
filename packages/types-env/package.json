@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/types-env",
-	"version": "2.11.28",
+	"version": "2.11.29",
 	"description": "Types for prosopo environment",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
