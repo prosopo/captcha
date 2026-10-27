@@ -13,8 +13,8 @@
 
 The widget now tells the provider which bundle it is and where it was loaded from, on every request:
 
-- `Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
-- `Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
+- `X-Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
+- `X-Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
 
 Providers store request headers on the session and in the request logs, so together with the site key these show which sites self-host and which version each one runs.
 

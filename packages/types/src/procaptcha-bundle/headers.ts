@@ -15,5 +15,5 @@
 // Sent by the widget with every provider request. The provider must list both
 // in its CORS allowedHeaders before any widget sends them, or the browser
 // rejects the preflight and the widget cannot reach the provider.
-export const BUNDLE_VERSION_HEADER = "Prosopo-Bundle-Version";
-export const BUNDLE_ORIGIN_HEADER = "Prosopo-Bundle-Origin";
+export const BUNDLE_VERSION_HEADER = "X-Prosopo-Bundle-Version";
+export const BUNDLE_ORIGIN_HEADER = "X-Prosopo-Bundle-Origin";
