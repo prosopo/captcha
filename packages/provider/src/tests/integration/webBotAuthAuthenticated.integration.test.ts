@@ -64,7 +64,7 @@ import {
 	accessRuleInput,
 } from "@prosopo/user-access-policy";
 import { randomAsHex } from "@prosopo/util-crypto";
-import { buildSignatureBase } from "@prosopo/web-bot-auth";
+import { buildSignatureBase, parseSignatureInput } from "@prosopo/web-bot-auth";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { getVerdictCache } from "../../api/blacklistRequestInspector.js";
@@ -286,10 +286,16 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		const created = Math.floor(Date.now() / 1000);
 		const expires = created + expiresInSeconds;
 		const signatureAgent = `"${signerUrl}"`;
-		const params = `("@authority" "signature-agent");created=${created};expires=${expires};keyid="${KEY_ID}";alg="ed25519";tag="web-bot-auth"`;
+		const params = `("@authority" "@method" "signature-agent");created=${created};expires=${expires};keyid="${KEY_ID}";alg="ed25519";tag="web-bot-auth"`;
 		const base = buildSignatureBase(
-			["@authority", "signature-agent"],
-			{ authority, signatureAgent },
+			parseSignatureInput(`sig1=${params}`)?.coveredComponents ?? [],
+			{
+				authority,
+				method: "POST",
+				targetUri: `https://${authority}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`,
+				path: ClientApiPaths.GetFrictionlessCaptchaChallenge,
+				signatureAgent,
+			},
 			params,
 		);
 		const signature = ed25519.sign(new TextEncoder().encode(base), privateKey);
