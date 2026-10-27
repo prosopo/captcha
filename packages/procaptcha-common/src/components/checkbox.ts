@@ -86,6 +86,18 @@ const FAQ_LINK = process.env.PROSOPO_DOCS_URL
 		).href
 	: "https://docs.prosopo.io/en/basics/faq/";
 
+// localiseError appends the errorId as " (CODE:SITE)".
+const ERROR_CODE_SUFFIX = /^(.*\S)\s+\(([A-Z0-9_]+(?::[A-Z0-9_-]+)?)\)$/s;
+
+export const splitErrorCode = (
+	error: string,
+): { message: string; code?: string } => {
+	const match = ERROR_CODE_SUFFIX.exec(error);
+	return match?.[1] && match[2]
+		? { message: match[1], code: match[2] }
+		: { message: error };
+};
+
 /**
  * Whether nothing on the page holds focus, which is where the browser leaves it
  * when the focused element is removed.
@@ -183,6 +195,9 @@ const checkboxCss = (theme: Theme, names: CheckboxNames): string => `
 	color: ${theme.palette.onSurface};
 	position: relative;
 	display: flex !important;
+	flex-direction: column;
+	justify-content: center;
+	min-width: 0;
 	cursor: pointer;
 	user-select: none;
 	font-weight: normal;
@@ -391,15 +406,42 @@ export const mountCheckbox = (
 			// The error text carries a support code, so it has to be selectable —
 			// the label's `user-select: none` is overridden for this state only.
 			applyStyles(label, { userSelect: "text", cursor: "text" });
-			const link = createElement("a", {
-				attributes: { href: FAQ_LINK },
-				text: props.error,
-			});
-			applyStyles(link, {
+			const { message, code } = splitErrorCode(props.error);
+			// With no code to carry the FAQ link, the message itself carries it.
+			const text =
+				undefined === code
+					? createElement("a", {
+							attributes: { href: FAQ_LINK },
+							text: message,
+						})
+					: createElement("span", { text: message });
+			applyStyles(text, {
+				display: "block",
 				color: props.theme.palette.error.main,
 				userSelect: "text",
 			});
-			label.appendChild(link);
+			label.appendChild(text);
+			if (undefined !== code) {
+				// The code is one unbreakable token as long as the widget, so it
+				// sits on its own smaller line and may break anywhere.
+				const link = createElement("a", { attributes: { href: FAQ_LINK } });
+				// Prefer breaking after the colon, between the code and its site.
+				code.split(":").forEach((part: string, index: number) => {
+					if (index > 0) {
+						link.append(":", document.createElement("wbr"));
+					}
+					link.append(part);
+				});
+				applyStyles(link, {
+					display: "block",
+					marginTop: "2px",
+					fontSize: "0.75em",
+					color: props.theme.palette.onSurfaceVariant,
+					overflowWrap: "anywhere",
+					userSelect: "text",
+				});
+				label.appendChild(link);
+			}
 			return;
 		}
 		applyStyles(label, { userSelect: undefined, cursor: undefined });
