@@ -20,7 +20,6 @@ import {
 	encodeFingerprintProof,
 	getFingerprintProof,
 } from "@prosopo/fingerprint";
-import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -30,6 +29,7 @@ import {
 	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
+	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import {
 	type Account,
@@ -269,7 +269,7 @@ export const Manager = (
 					providerUrl,
 					getDappAccount(),
 					undefined,
-					widgetLanguageHeaders(getConfig().language),
+					widgetRequestHeaders(getConfig().language, getConfig().integration),
 				);
 
 				// Non-blocking check (timeoutMs=0): only attach SIMD readings if

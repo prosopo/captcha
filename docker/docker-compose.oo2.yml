@@ -1,37 +1,14 @@
+# Overlay: OpenObserve instance 2 on docker-compose.oo.yml. Use with:
+#   docker compose -f docker-compose.oo.yml -f docker-compose.oo2.yml \
+#     -f docker-compose.oo.<production|staging>.yml up -d
 services:
     caddy:
-        container_name: caddy
-        image: prosopo/caddy:latest
-        env_file:
-            - ../.env.${NODE_ENV}
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         ports:
             - '80:80'
             - '443:443'
         volumes:
             - ./oo2.Caddyfile:/etc/caddy/Caddyfile
-            - caddy_data:/data
-            - caddy_config:/config
-        networks:
-            external:
-            internal:
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        healthcheck:
-            # the image has no curl; the admin api listens on 2020 (see the Caddyfile)
-            test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2020/metrics" ]
-            interval: 5m
-            retries: 3
-            start_period: 30s
-            timeout: 10s
     oo:
-        container_name: oo
-        image: public.ecr.aws/zinclabs/openobserve:latest
-        env_file:
-            - ../.env.${NODE_ENV}
         environment:
             # Dashboard panels query with no row limit, so OpenObserve caps them at this and
             # silently drops time ranges past it (default 1000). Kept finite because it is also
@@ -39,21 +16,10 @@ services:
             ZO_QUERY_DEFAULT_LIMIT: 20000
             # The compactor deletes data older than this (default 3650). Per-stream retention set in the UI overrides it.
             ZO_COMPACT_DATA_RETENTION_DAYS: 90
-        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - ./oo_data:/data
         networks:
-            - internal
             - external
-        logging:
-            driver: 'json-file'
-            options:
-                max-size: '100m'
-                max-file: '1'
-        dns:
-            - 8.8.8.8
-            - 1.1.1.1
-            - 208.67.222.222
         healthcheck:
             # the image has no shell or curl; this cli command queries the running server's /node/status
             test: [ "CMD", "/openobserve", "node", "status" ]
@@ -61,10 +27,8 @@ services:
             timeout: 10s
             retries: 3
             start_period: 30s
-
 networks:
     internal:
-        name: internal
         internal: true
         driver: bridge
         ipam:
@@ -72,12 +36,8 @@ networks:
                 - subnet: 172.18.0.0/16
                   gateway: 172.18.0.1
     external:
-        name: external
         driver: bridge
         ipam:
             config:
                 - subnet: 172.19.0.0/16
                   gateway: 172.19.0.1
-volumes:
-    caddy_data:
-    caddy_config:

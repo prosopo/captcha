@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.10.5
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+
 ## 2.10.4
 ### Patch Changes
 

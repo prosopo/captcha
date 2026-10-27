@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -48,6 +49,9 @@ vi.mock("@prosopo/api", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	widgetRequestHeaders: (
+		siteLanguage: string | undefined,
+	): Record<string, string> => widgetLanguageHeaders(siteLanguage),
 	ExtensionLoader: vi.fn(async () => {
 		return class FakeExtension {
 			getAccount() {

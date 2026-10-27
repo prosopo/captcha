@@ -15,7 +15,7 @@ Then install pnpm 11 with `corepack enable`.
 ### Set up the containers
 
 ```bash
-docker compose --file ./docker/docker-compose.development.yml up -d
+docker compose --file ./docker/docker-compose.test.yml up -d
 ```
 
 ## Workspace Setup

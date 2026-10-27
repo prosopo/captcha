@@ -1,9 +1,8 @@
+# client-example-server stack. Layer an env overlay on top (keep overlays beside this file):
+#   docker compose -f docker-compose.client-example-server.yml -f docker-compose.client-example-server.<production|staging>.yml up -d
 services:
     server1:
         container_name: server1
-        profiles:
-            - production
-            - staging
         image: prosopo/client-example-server:latest
         labels:
             - "vector.provider=true" # enable logging as a provider
@@ -28,9 +27,6 @@ services:
             - 208.67.222.222
     caddy:
         container_name: caddy
-        profiles:
-            - production
-            - staging
         image: prosopo/caddy:${CADDY_IMAGE}
         env_file:
             - ../.env.${NODE_ENV}
@@ -54,7 +50,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            test: [ "CMD", "curl", "--fail", "localhost:2020/metrics" ] # ping the caddy admin api (the Caddyfile moves admin to :2020)
             interval: 5m
             retries: 3
             start_period: 30s

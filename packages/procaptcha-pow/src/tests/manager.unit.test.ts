@@ -16,6 +16,7 @@ import type { FingerprintProof } from "@prosopo/fingerprint";
 import type { pickIpMode } from "@prosopo/procaptcha-common";
 import {
 	ApiParams,
+	BUNDLE_VERSION_HEADER,
 	type BehavioralData,
 	CaptchaType,
 	type ClickEventPoint,
@@ -438,7 +439,9 @@ describe("start: choosing a provider", () => {
 		const harness = build({ configInput: config({ language: "tr" }) });
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+		expect(mocks.providerApiHeaders).toEqual([
+			{ "Prosopo-Lang": "tr", [BUNDLE_VERSION_HEADER]: expect.any(String) },
+		]);
 	});
 
 	test("sends the browser's languages when the site set none", async () => {
@@ -446,7 +449,12 @@ describe("start: choosing a provider", () => {
 		const harness = build();
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
+		expect(mocks.providerApiHeaders).toEqual([
+			{
+				"Prosopo-Lang": "tr-TR,en",
+				[BUNDLE_VERSION_HEADER]: expect.any(String),
+			},
+		]);
 	});
 
 	test("uses the provider the frictionless session already picked", async () => {

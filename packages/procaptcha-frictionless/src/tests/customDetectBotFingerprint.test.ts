@@ -19,6 +19,7 @@
  * is slow is left off rather than holding the captcha up.
  */
 
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import type { AssignDetectorBundleResponse } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -42,6 +43,9 @@ vi.mock("@prosopo/api", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	widgetRequestHeaders: (
+		siteLanguage: string | undefined,
+	): Record<string, string> => widgetLanguageHeaders(siteLanguage),
 	ExtensionLoader: vi.fn(async () => {
 		return class FakeExtension {
 			getAccount() {

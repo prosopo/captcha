@@ -27,11 +27,18 @@ import { decodeBase64 } from "./base64.js";
 
 export type ParamValue = string | number | boolean | Uint8Array;
 
+// One entry of the covered-components inner list. `identifier` is the item
+// exactly as the signer serialised it (`"signature-agent";key="g"`), which is
+// what RFC 9421 §2.5 puts on the left of each signature-base line.
+export type CoveredComponent = {
+	name: string;
+	params: Record<string, ParamValue>;
+	identifier: string;
+};
+
 export type SignatureInputEntry = {
 	label: string;
-	// Ordered list of covered component identifiers, quotes stripped
-	// (e.g. ["@authority", "signature-agent"]).
-	coveredComponents: string[];
+	coveredComponents: CoveredComponent[];
 	params: Record<string, ParamValue>;
 	// The raw "(...);params" substring — reused verbatim as the
 	// @signature-params value when reconstructing the signature base, so
@@ -149,30 +156,35 @@ const parseParams = (entries: string[]): Record<string, ParamValue> => {
 	return out;
 };
 
-const parseCoveredComponents = (innerList: string): string[] => {
-	// innerList looks like `("@authority" "signature-agent")`. Split on
-	// whitespace between quoted items and strip the quotes. Ignores any
-	// per-item parameters (Web Bot Auth doesn't use them).
+const parseCoveredComponents = (innerList: string): CoveredComponent[] => {
 	const inside = innerList.trim().replace(/^\(/, "").replace(/\)$/, "");
-	const items: string[] = [];
+	const items: CoveredComponent[] = [];
 	let i = 0;
 	while (i < inside.length) {
 		while (i < inside.length && /\s/.test(inside[i] ?? "")) i++;
 		if (i >= inside.length) break;
+		const start = i;
+		let name: string;
 		if (inside[i] === '"') {
 			const end = inside.indexOf('"', i + 1);
 			if (end === -1) throw new Error("unterminated quoted item");
-			items.push(unquote(inside.slice(i, end + 1)));
+			name = unquote(inside.slice(i, end + 1));
 			i = end + 1;
-			// Skip any per-item parameters up to next whitespace
-			while (i < inside.length && !/\s/.test(inside[i] ?? "")) i++;
 		} else {
-			// Unquoted token
-			let end = i;
-			while (end < inside.length && !/\s/.test(inside[end] ?? "")) end++;
-			items.push(inside.slice(i, end));
-			i = end;
+			while (i < inside.length && !/[\s;]/.test(inside[i] ?? "")) i++;
+			name = inside.slice(start, i);
 		}
+		const paramsStart = i;
+		while (i < inside.length && !/\s/.test(inside[i] ?? "")) i++;
+		const paramEntries = inside
+			.slice(paramsStart, i)
+			.split(";")
+			.filter((entry) => entry.length > 0);
+		items.push({
+			name,
+			params: parseParams(paramEntries),
+			identifier: inside.slice(start, i),
+		});
 	}
 	return items;
 };
@@ -193,18 +205,35 @@ const splitDictEntries = (header: string): string[] => {
 	return entries;
 };
 
+const splitDictEntry = (
+	entry: string,
+): { label: string; rawValue: string } | null => {
+	const eq = findUnquoted(entry, "=", 0);
+	if (eq === -1) return null;
+	return {
+		label: entry.slice(0, eq).trim(),
+		rawValue: entry.slice(eq + 1).trim(),
+	};
+};
+
 const parseFirstDictEntry = (
 	header: string,
 ): { label: string; rawValue: string } | null => {
-	const entries = splitDictEntries(header);
-	const first = entries[0];
-	if (!first) return null;
-	const eq = findUnquoted(first, "=", 0);
-	if (eq === -1) return null;
-	return {
-		label: first.slice(0, eq).trim(),
-		rawValue: first.slice(eq + 1).trim(),
-	};
+	const first = splitDictEntries(header)[0];
+	return first ? splitDictEntry(first) : null;
+};
+
+// RFC 9421 §2.1.2: a component carrying `;key="x"` covers only that member of
+// a dictionary header, serialised on its own.
+export const getDictionaryMember = (
+	header: string,
+	key: string,
+): string | null => {
+	for (const entry of splitDictEntries(header)) {
+		const member = splitDictEntry(entry);
+		if (member?.label === key) return member.rawValue;
+	}
+	return null;
 };
 
 export const parseSignatureInput = (

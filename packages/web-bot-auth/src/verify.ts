@@ -52,6 +52,7 @@ export type VerifyFailReason =
 	| "jwks-fetch-failed"
 	| "no-matching-key"
 	| "malformed-key"
+	| "unsupported-component"
 	| "bad-signature";
 
 const WEB_BOT_AUTH_TAG = "web-bot-auth";
@@ -170,9 +171,9 @@ export const verifyWebBotAuth = async (
 		return { verified: false, reason: "malformed-key" };
 	}
 
-	let authority: string;
+	let url: URL;
 	try {
-		authority = new URL(request.url).host.toLowerCase();
+		url = new URL(request.url);
 	} catch {
 		return { verified: false, reason: "bad-signature" };
 	}
@@ -181,11 +182,17 @@ export const verifyWebBotAuth = async (
 	try {
 		signatureBase = buildSignatureBase(
 			inputEntry.coveredComponents,
-			{ authority, signatureAgent: signatureAgentRaw },
+			{
+				authority: url.host.toLowerCase(),
+				method: request.method,
+				targetUri: request.url,
+				path: url.pathname,
+				signatureAgent: signatureAgentRaw,
+			},
 			inputEntry.serialisedValue,
 		);
 	} catch {
-		return { verified: false, reason: "bad-signature" };
+		return { verified: false, reason: "unsupported-component" };
 	}
 
 	const message = new TextEncoder().encode(signatureBase);

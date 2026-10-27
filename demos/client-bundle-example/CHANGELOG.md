@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.11.8
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+
 ## 2.11.7
 ### Patch Changes
 

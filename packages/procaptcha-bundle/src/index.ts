@@ -24,6 +24,7 @@ import {
 import { at } from "@prosopo/util";
 import type { BundleCaptchaHandle } from "./util/captcha/components/bundleCaptcha.js";
 import { extractParams } from "./util/config.js";
+import { siteIntegration } from "./util/integration.js";
 import { siteLanguage } from "./util/language.js";
 import { resolveStartMode } from "./util/startMode.js";
 import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
@@ -96,6 +97,7 @@ const startDetectorPrefetch = (
 	siteKey: string | null,
 	flags: { ipv4?: boolean; ipv6?: boolean; startMode?: StartModeEnum },
 	language: Language | undefined,
+	integration: string | undefined,
 ): void => {
 	if (!siteKey) return;
 	if (flags.startMode === StartModeEnum.manual) return;
@@ -109,6 +111,7 @@ const startDetectorPrefetch = (
 				common.pickIpMode(flags),
 				siteKey,
 				language,
+				integration,
 			);
 		})
 		.catch(() => undefined);
@@ -164,6 +167,7 @@ const implicitRender = async () => {
 			siteKey,
 			{ ipv4, ipv6, startMode },
 			siteLanguage(undefined, firstElement),
+			siteIntegration(undefined, firstElement),
 		);
 
 		const implicitRenderOptions: ProcaptchaRenderOptions = {
@@ -210,6 +214,7 @@ const implicitRender = async () => {
 				siteKey,
 				{ ipv4, ipv6, startMode },
 				siteLanguage(undefined, button),
+				siteIntegration(undefined, button),
 			);
 
 			const buttonRenderOptions: ProcaptchaRenderOptions = {
@@ -265,6 +270,7 @@ export const render = async (
 			startMode: resolveStartMode(renderOptions, element),
 		},
 		siteLanguage(renderOptions, element),
+		siteIntegration(renderOptions, element),
 	);
 
 	const hasInvisibleSize =

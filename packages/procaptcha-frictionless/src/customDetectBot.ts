@@ -19,12 +19,12 @@ import {
 	encodeFingerprintProof,
 	getFingerprintProof,
 } from "@prosopo/fingerprint";
-import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
 	pickIpMode,
 	resolveClientSessionId,
+	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
@@ -246,7 +246,7 @@ const customDetectBot: BotDetectionFunction = async (
 		provider.provider.url,
 		config.account.address,
 		undefined,
-		widgetLanguageHeaders(config.language),
+		widgetRequestHeaders(config.language, config.integration),
 	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY

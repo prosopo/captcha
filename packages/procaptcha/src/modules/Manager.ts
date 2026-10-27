@@ -15,7 +15,6 @@
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoError, toPublicError } from "@prosopo/common";
-import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -25,6 +24,7 @@ import {
 	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
+	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import {
 	type Account,
@@ -612,7 +612,7 @@ export function Manager(
 				providerUrl,
 				siteKey,
 				undefined,
-				widgetLanguageHeaders(config.language),
+				widgetRequestHeaders(config.language, config.integration),
 			),
 			siteKey,
 		};

@@ -1,0 +1,56 @@
+# Base OpenObserve stack: caddy in front of an `oo` server. Not runnable alone;
+# layer one instance overlay and one env overlay on top:
+#   docker compose -f docker-compose.oo.yml -f docker-compose.oo1.yml \
+#     -f docker-compose.oo.<production|staging>.yml up -d
+# docker-compose.oo2.yml is the other instance. Keep overlays beside this file:
+# their relative paths resolve against this directory.
+services:
+    caddy:
+        container_name: caddy
+        image: prosopo/caddy:latest
+        env_file:
+            - ../.env.${NODE_ENV}
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        volumes:
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            external:
+            internal:
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        healthcheck:
+            # the image has no curl; the admin api listens on 2020 (see the Caddyfile)
+            test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2020/metrics" ]
+            interval: 5m
+            retries: 3
+            start_period: 30s
+            timeout: 10s
+    oo:
+        container_name: oo
+        image: public.ecr.aws/zinclabs/openobserve:latest
+        env_file:
+            - ../.env.${NODE_ENV}
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        networks:
+            - internal
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '100m'
+                max-file: '1'
+        dns:
+            - 8.8.8.8
+            - 1.1.1.1
+            - 208.67.222.222
+networks:
+    internal:
+        name: internal
+    external:
+        name: external
+volumes:
+    caddy_data:
+    caddy_config:

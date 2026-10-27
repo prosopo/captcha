@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/audio-assets",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "Procedural speech synthesis for the audio captcha",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",

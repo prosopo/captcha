@@ -1,5 +1,26 @@
 # @prosopo/api-express-router
 
+## 3.3.5
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- 77bd891: The provider accepts an `x-prosopo-integration` request header, which names the platform that embedded the widget (e.g. `mc4wp`). It is saved on the session with the other request headers and added to the provider's request logs as `integration`. The widget does not send it yet; this has to be deployed to providers first, because browsers block a header the provider does not allow.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/api-route@2.6.67
+  - @prosopo/common@3.3.2
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+  - @prosopo/env@3.6.82
+
 ## 3.3.4
 ### Patch Changes
 

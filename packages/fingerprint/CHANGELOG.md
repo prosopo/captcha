@@ -1,5 +1,19 @@
 # @prosopo/fingerprint
 
+## 2.8.4
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/types@5.20.0
+  - @prosopo/util-crypto@13.6.3
+  - @prosopo/fingerprintjs@5.2.0
+
 ## 2.8.3
 ### Patch Changes
 

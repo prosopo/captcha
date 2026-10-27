@@ -154,6 +154,13 @@ export type DecisionMachineInput = {
 	// challenge record). Undefined for invalid lookups.
 	ipInfo?: IPInfoResponse;
 	dnsEvent?: EnrichedDnsEvent;
+	// Whether this provider's DNS sidecar delivered an authenticated event
+	// batch recently (see provider tasks/dnsEvent/dnsSidecarHealth.ts). Set by
+	// DecisionMachineRunner.decide(). A rule that denies on a missing
+	// `dnsEvent` must require this to be `true`: when the sidecar is broken no
+	// session has a dnsEvent, so denying would block every real user.
+	// Undefined on providers that predate the field.
+	dnsSidecarHealthy?: boolean;
 	// Session-derived fields forwarded from the Session record loaded at
 	// the verify path. Undefined when no frictionless session preceded.
 	score?: number;
