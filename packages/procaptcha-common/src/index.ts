@@ -15,6 +15,7 @@
 export * from "./providers.js";
 export * from "./clientMetaData.js";
 export * from "./requestHeaders.js";
+export * from "./usageBeacon.js";
 export * from "./protectSession.js";
 export * from "./events/activation.js";
 export * from "./events/trust.js";
