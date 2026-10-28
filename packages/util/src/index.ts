@@ -39,4 +39,5 @@ export * from "./date.js";
 export * from "./email.js";
 export * from "./domainValidation.js";
 export * from "./bigint.js";
+export * from "./parse.js";
 export * from "./arrayBufferToBase64.js";

@@ -3286,6 +3286,9 @@ importers:
       '@noble/hashes':
         specifier: 2.4.0
         version: 2.4.0
+      '@prosopo/result':
+        specifier: 0.1.0
+        version: 0.1.0
       ip-address:
         specifier: 10.7.4
         version: 10.7.4
@@ -5849,6 +5852,10 @@ packages:
 
   '@polkadot/x-ws@14.0.3':
     resolution: {integrity: sha512-tOPdkMye3iuXnuFtdNg5+iSu7Cz9LRL8z5psMuZpUpThMYChGsS2pDFtNvXOKU8ohhO+frY9VdJ9VBg1WL9Iug==}
+    engines: {node: '>=18'}
+
+  '@prosopo/result@0.1.0':
+    resolution: {integrity: sha512-n1VyAs4n2R0nTJ5V2jzBrXS8L6GeDQTsUy7Ay8AN9Zo9hBmmhST4TrdcFu7rXP99wI8sZV6di9HJaeeFBdq0Cw==}
     engines: {node: '>=18'}
 
   '@protobufjs/aspromise@1.1.2':
@@ -13836,6 +13843,8 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@prosopo/result@0.1.0': {}
+
   '@protobufjs/aspromise@1.1.2': {}
 
   '@protobufjs/base64@1.1.2': {}
@@ -14514,9 +14523,9 @@ snapshots:
       obug: 3.0.0
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.5.5)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@25.0.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
+      vitest: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
     optionalDependencies:
-      '@vitest/browser': 5.0.4(vite@8.1.6(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))(vitest@5.0.4)
+      '@vitest/browser': 5.0.4(vite@8.1.6(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))(vitest@5.0.4)
 
   '@vitest/expect@4.1.10':
     dependencies:
@@ -14616,7 +14625,7 @@ snapshots:
       pathe: 2.0.3
       sirv: 3.0.2
       tinyrainbow: 3.2.0
-      vitest: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.5.5)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@25.0.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
+      vitest: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
     optional: true
 
   '@vitest/ui@5.0.5(vitest@5.0.4)':

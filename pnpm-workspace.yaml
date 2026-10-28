@@ -47,8 +47,10 @@ fetchRetryFactor: 2
 # publish provenance than an earlier release of the same package.
 blockExoticSubdeps: true
 minimumReleaseAge: 10080
-# Already-locked versions that fall within the window at the time of writing.
+# Our own releases are consumed straight after publishing; the rest are
+# already-locked versions that fall within the window at the time of writing.
 minimumReleaseAgeExclude:
+  - "@prosopo/result@0.1.0"
   - "undici@6.29.0"
 trustPolicy: no-downgrade
 # Published before these packages started attaching provenance, so they read
