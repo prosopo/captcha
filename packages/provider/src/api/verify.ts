@@ -53,6 +53,7 @@ import { buildMaintenanceVerificationResponse } from "./captcha/maintenanceModeR
 import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
 import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
 import { summariseRequestBody } from "./requestBodySummary.js";
+import { siteVerifyHandler } from "./siteVerify.js";
 import {
 	isReservedTestSiteKey,
 	resolveTestSiteKeyVerdict,
@@ -355,6 +356,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		}));
 		userAccessRulesStorage = undefined as never;
 	}
+
+	// Ahead of the metrics wrapper so it sees, and labels, the per-type route
+	// this hands off to.
+	router.post(ClientApiPaths.SiteVerify, siteVerifyHandler);
 
 	// Records the outcome of every verify response (type + verified/failed +
 	// source) in one place by observing the JSON body, rather than threading a
