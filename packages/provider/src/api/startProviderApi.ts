@@ -320,6 +320,11 @@ export async function startProviderApi(
 	// batches) but bounds oversized-payload abuse before parsing; the
 	// per-field caps in @prosopo/types (`INPUT_LIMITS`) are the finer control.
 	apiApp.use(express.json({ limit: "1mb" }));
+	// Site backends call siteverify from any language, and many post forms.
+	apiApp.use(
+		ClientApiPaths.SiteVerify,
+		express.urlencoded({ extended: false, limit: "1mb" }),
+	);
 
 	// Put this first so that no middleware runs on it
 	apiApp.use(publicRouter(env));
