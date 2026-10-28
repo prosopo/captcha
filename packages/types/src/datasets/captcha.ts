@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
+import { parseInteger } from "@prosopo/util";
 import {
 	array,
 	custom,
@@ -155,12 +156,9 @@ export type PoWChallengeId =
 
 export const PowChallengeIdSchema = custom<PoWChallengeId>((val: string) => {
 	const valSplit = val.split(POW_SEPARATOR);
-	try {
-		Number.parseInt(valSplit[0] ?? "");
-		return valSplit.length === 4;
-	} catch (e) {
-		return false;
-	}
+	// The timestamp must be wholly an integer: parseInt never throws, so the
+	// try/catch this replaced validated nothing.
+	return valSplit.length === 4 && parseInteger(valSplit[0], { min: 0 }).ok;
 });
 
 export interface CaptchaSolution {

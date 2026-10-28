@@ -55,6 +55,15 @@ export const buildPool = (detectorJs: string, count: number): PoolBundles => {
 	return bundles;
 };
 
+/** `--count`: digits only, at least 1. parseInt read "4abc" as 4. */
+export const parseCount = (raw: string): number => {
+	const count = /^\d+$/.test(raw) ? Number(raw) : Number.NaN;
+	if (!Number.isSafeInteger(count) || count < 1) {
+		throw new Error("--count must be a positive integer");
+	}
+	return count;
+};
+
 const main = (): void => {
 	const { values } = parseArgs({
 		options: {
@@ -63,10 +72,7 @@ const main = (): void => {
 			force: { type: "boolean", default: false },
 		},
 	});
-	const count = Number.parseInt(values.count, 10);
-	if (!Number.isInteger(count) || count < 1) {
-		throw new Error("--count must be a positive integer");
-	}
+	const count = parseCount(values.count);
 	const detectorPath = fileURLToPath(
 		new URL("../dist/bundle/detector.js", import.meta.url),
 	);

@@ -14,6 +14,7 @@
 import * as path from "node:path";
 import { ViteBackendConfig } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
+import { parseInteger } from "@prosopo/util";
 import { defineConfig } from "vite";
 import { version } from "./package.json";
 
@@ -72,8 +73,12 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 		},
 		server: {
+			// A bad port fails here rather than reaching vite as NaN.
 			port: process.env.PROSOPO_SERVER_PORT
-				? Number(process.env.PROSOPO_SERVER_PORT)
+				? parseInteger(process.env.PROSOPO_SERVER_PORT, {
+						min: 0,
+						max: 65535,
+					}).expect("PROSOPO_SERVER_PORT")
 				: 9228,
 		},
 	});

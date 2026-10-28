@@ -22,7 +22,7 @@ import {
 	u8aToString,
 } from "@polkadot/util";
 import { blake2AsHex, isAddress } from "@polkadot/util-crypto";
-import { at, consoleTableWithWrapping } from "@prosopo/util";
+import { at, consoleTableWithWrapping, parseInteger } from "@prosopo/util";
 import { decodeAddress, encodeAddress } from "@prosopo/util-crypto";
 
 function isJSON(arg: string): boolean {
@@ -45,7 +45,9 @@ function isBN(arg: string): boolean {
 
 function main() {
 	const ss58Format = process.env.PROSOPO_SS58_FORMAT
-		? Number.parseInt(process.env.PROSOPO_SS58_FORMAT)
+		? parseInteger(process.env.PROSOPO_SS58_FORMAT, { min: 0 }).expect(
+				"PROSOPO_SS58_FORMAT",
+			)
 		: 42;
 	const arg = at(process.argv.slice(2), 0).trim();
 	const argIsHex = isHex(arg);

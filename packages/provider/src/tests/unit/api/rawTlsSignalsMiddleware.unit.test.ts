@@ -105,6 +105,16 @@ describe("getRawTlsSignals", () => {
 		expect(result.tcpWscale).toBe(7);
 	});
 
+	it("rejects values with trailing junk or a fraction", () => {
+		const headers: IncomingHttpHeaders = {
+			"x-tls-tcp-mss": "1460abc",
+			"x-tls-tcp-wscale": "7.5",
+		};
+		const result = getRawTlsSignals(headers, mockLogger());
+		expect(result.tcpMss).toBeUndefined();
+		expect(result.tcpWscale).toBeUndefined();
+	});
+
 	it("takes the first value when the header is repeated (string[])", () => {
 		const headers: IncomingHttpHeaders = {
 			"x-tls-tcp-mss": ["1452", "1460"],

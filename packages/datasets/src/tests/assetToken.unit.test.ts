@@ -115,6 +115,17 @@ describe("assetTokenOptionsFromEnv", () => {
 			DEFAULT_ASSET_TOKEN_TTL_SECONDS,
 		);
 	});
+
+	test.each(["30s", "1.5", "0", "-5", ""])(
+		"falls back to the default ttl for %j rather than a partial or expired one",
+		(value) => {
+			process.env.PROSOPO_ASSET_TOKEN_KEY = KEY;
+			process.env.PROSOPO_ASSET_TOKEN_TTL_SECONDS = value;
+			expect(assetTokenOptionsFromEnv()?.ttlSeconds).toBe(
+				DEFAULT_ASSET_TOKEN_TTL_SECONDS,
+			);
+		},
+	);
 });
 
 describe("downloadImage", () => {

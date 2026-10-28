@@ -217,6 +217,25 @@ describe("resolvePort", () => {
 		};
 		expect(resolvePort(config)).toBe(DEFAULT_PORT);
 	});
+
+	test("ignores a path after the port", () => {
+		const config: ProsopoServerConfigOutput = {
+			...serverConfig(),
+			serverUrl: "http://localhost:9300/api",
+		};
+		expect(resolvePort(config)).toBe(9300);
+	});
+
+	test.each(["9228abc", "-1", "99999", "1.5"])(
+		"defaults when the port segment is %j",
+		(port) => {
+			const config: ProsopoServerConfigOutput = {
+				...serverConfig(),
+				serverUrl: `http://localhost:${port}`,
+			};
+			expect(resolvePort(config)).toBe(DEFAULT_PORT);
+		},
+	);
 });
 
 describe("createApp", () => {

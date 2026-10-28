@@ -925,6 +925,9 @@ importers:
       '@prosopo/types':
         specifier: workspace:*
         version: link:../types
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { IncomingHttpHeaders } from "node:http";
+import { parseInteger } from "@prosopo/util";
 
 // Request bodies can be up to the express.json limit (1MB) and carry tokens,
 // signatures and other client secrets, so logs get a bounded, redacted
@@ -69,8 +70,9 @@ const redact = (value: unknown, depth: number): unknown => {
 };
 
 const contentLength = (headers: IncomingHttpHeaders): number | undefined => {
-	const bytes = Number(headers["content-length"]);
-	return Number.isFinite(bytes) ? bytes : undefined;
+	// Number("") is 0 and Number("1e3") is 1000; neither is a byte count.
+	const bytes = parseInteger(headers["content-length"], { min: 0 });
+	return bytes.ok ? bytes.value : undefined;
 };
 
 export const summariseRequestBody = (req: {

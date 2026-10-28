@@ -14,7 +14,7 @@
 
 import type { IPAddress } from "@prosopo/types";
 import { type CompositeIpAddress, IpAddressType } from "@prosopo/types";
-import { getIPAddress } from "@prosopo/util";
+import { getIPAddress, parseBigInt } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 
 const V6_SHIFT = 64n;
@@ -81,7 +81,13 @@ export const getIpAddressFromComposite = (
 	}
 };
 
-const getBigInt = (number: bigint | number | undefined) => BigInt(number || 0n);
+// Goes through the string form for the same Decimal128 reason as readPart
+// below. A part that still isn't an integer is corrupt data, so fail with a
+// message naming it rather than BigInt's bare SyntaxError.
+const getBigInt = (number: bigint | number | undefined): bigint =>
+	number === undefined || number === null
+		? 0n
+		: parseBigInt(number.toString()).expect("composite IP address part");
 
 /**
  * Mongo hands these back as Decimal128 rather than the `number | bigint` the

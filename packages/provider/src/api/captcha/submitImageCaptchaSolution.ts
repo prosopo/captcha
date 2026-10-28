@@ -20,7 +20,7 @@ import {
 	type DappUserSolutionResult,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { flatten, getIPAddress } from "@prosopo/util";
+import { flatten, getIPAddress, parseInteger } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
@@ -72,6 +72,23 @@ export default (env: ProviderEnvironment) =>
 		validateSiteKey(dapp);
 		validateAddr(user);
 
+		// The schema only bounds the length; parseInt would let "12abc" through
+		// as 12 and turn "abc" into NaN.
+		const requestTimestamp = parseInteger(parsed[ApiParams.timestamp], {
+			min: 0,
+		});
+		if (!requestTimestamp.ok) {
+			return next(
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-95",
+					message: "Invalid timestamp",
+					cause: requestTimestamp.error,
+					context: { body: summariseRequestBody(req) },
+				}),
+			);
+		}
+
 		// Reserved CI test site keys force a deterministic verdict before any DB
 		// lookup, so they work in every environment without a registered record.
 		const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
@@ -104,7 +121,7 @@ export default (env: ProviderEnvironment) =>
 					parsed[ApiParams.requestHash],
 					parsed[ApiParams.captchas],
 					parsed[ApiParams.signature].user.timestamp,
-					Number.parseInt(parsed[ApiParams.timestamp]),
+					requestTimestamp.value,
 					parsed[ApiParams.signature].provider.requestHash,
 					getIPAddress(req.ip || ""),
 					flatten(req.headers),

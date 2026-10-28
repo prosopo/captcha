@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/logger";
 import { PublicApiPaths } from "@prosopo/types";
 import type { IIpInfoService } from "@prosopo/types-env";
+import { parseInteger } from "@prosopo/util";
 import { z } from "zod";
 
 /**
@@ -95,8 +96,7 @@ const parsePositiveInt = (
 	fallback: number,
 ): number => {
 	if (raw === undefined) return fallback;
-	const parsed = Number.parseInt(raw, 10);
-	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+	return parseInteger(raw, { min: 1 }).unwrapOr(fallback);
 };
 
 const parseRoutes = (
