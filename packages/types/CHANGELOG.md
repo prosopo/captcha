@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 5.20.2
+### Patch Changes
+
+- 23ef59a: Add a `solver` captcha label, alongside `human`, `bot`, `suspicious` and `unknown`. It marks captchas solved by paid captcha-solving services (2captcha, anti-captcha, CapMonster), whose workers are often real people paid to solve, so neither `bot` nor `human` fits. Stored records accept the new value; existing labels are unchanged.
+- b52263f: The provider's request logs now include `bundleVersion` and `bundleOrigin`, the widget's `x-prosopo-bundle-version` and `x-prosopo-bundle-origin` headers, next to `integration`. Values that don't look like a release number (or `dev`), or an http(s) origin, are left out.
+  - @prosopo/locale@3.13.2
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
 ## 5.20.1
 ### Patch Changes
 

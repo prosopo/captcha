@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/scripts",
-	"version": "3.1.215",
+	"version": "3.1.216",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",

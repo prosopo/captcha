@@ -1,5 +1,36 @@
 # @prosopo/provider
 
+## 5.23.2
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/api-express-router@3.3.7
+  - @prosopo/api@4.8.2
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.2
+  - @prosopo/datasets@3.2.15
+  - @prosopo/env@3.6.84
+  - @prosopo/fingerprint@2.8.6
+  - @prosopo/ipinfo@0.4.28
+  - @prosopo/keyring@2.10.15
+  - @prosopo/load-balancer@2.11.19
+  - @prosopo/types-database@5.13.2
+  - @prosopo/types-env@2.11.30
+  - @prosopo/user-access-policy@3.15.11
+  - @prosopo/api-route@2.6.67
+  - @prosopo/audio-assets@0.2.4
+  - @prosopo/captcha-severity@1.4.0
+  - @prosopo/icon-order-assets@0.2.4
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/puzzle-assets@0.2.5
+  - @prosopo/redis-client@1.0.44
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+  - @prosopo/web-bot-auth@0.1.6
+
 ## 5.23.1
 ### Patch Changes
 
