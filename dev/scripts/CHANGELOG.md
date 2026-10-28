@@ -1,5 +1,27 @@
 # @prosopo/scripts
 
+## 3.1.216
+### Patch Changes
+
+- f53d027: A self-hosted widget (one built with `PROSOPO_PROVIDER_LIST`) now sends Prosopo a usage beacon on about one render in a thousand: a single `GET https://beacon.prosopo.io/v1/b.gif` carrying the page hostname, site key, bundle version and sample rate, with no referrer, cookies or visitor data. It lets us count self-hosted installs and the versions they run, so we can tell self-hosters about new releases and critical fixes. Hosted widgets never send it.
+  
+  Build the bundle with `PROSOPO_USAGE_BEACON=false` to turn it off. The generated self-hosted `.env` now includes the setting, and `SELF_HOSTING.md` documents exactly what is sent.
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/cli@3.9.7
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.15
+  - @prosopo/env@3.6.84
+  - @prosopo/keyring@2.10.15
+  - @prosopo/provider@5.23.2
+  - @prosopo/types-env@2.11.30
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
 ## 3.1.215
 ### Patch Changes
 

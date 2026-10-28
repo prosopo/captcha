@@ -1,5 +1,12 @@
 # @prosopo/detector
 
+## 3.5.67
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+
 ## 3.5.66
 ### Patch Changes
 
