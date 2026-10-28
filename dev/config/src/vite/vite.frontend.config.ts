@@ -87,6 +87,10 @@ export default async function (
 		"process.env.PROSOPO_PROVIDER_LIST": JSON.stringify(
 			process.env.PROSOPO_PROVIDER_LIST,
 		),
+		// `false` stops a self-hosted widget sending the usage beacon.
+		"process.env.PROSOPO_USAGE_BEACON": JSON.stringify(
+			process.env.PROSOPO_USAGE_BEACON,
+		),
 		"process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
 			process.env._DEV_ONLY_WATCH_EVENTS,
 		),
