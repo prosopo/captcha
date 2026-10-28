@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IUserData, Session, UserCommitment } from "@prosopo/types";
+import type { IUserData, ImageCaptcha, Session } from "@prosopo/types";
 import type { Document, Model } from "mongoose";
 import { assertType, describe, expectTypeOf, it } from "vitest";
 import {
@@ -23,6 +23,7 @@ import {
 	type IClientDatabase,
 	type IDatabase,
 	type IUserDataSlim,
+	type ImageCaptchaRecord,
 	type ScheduledTask,
 	type ScheduledTaskSchema,
 	type SessionRecord,
@@ -30,14 +31,13 @@ import {
 	type StoredSession,
 	TableNames,
 	type Tables,
-	type UserCommitmentRecord,
 	type UserDataRecord,
 } from "./index.js";
 
 describe("record types", () => {
 	it("are mongoose documents carrying the domain shape", () => {
-		expectTypeOf<UserCommitmentRecord>().toExtend<Document>();
-		expectTypeOf<UserCommitmentRecord>().toExtend<UserCommitment>();
+		expectTypeOf<ImageCaptchaRecord>().toExtend<Document>();
+		expectTypeOf<ImageCaptchaRecord>().toExtend<ImageCaptcha>();
 		expectTypeOf<SessionRecord>().toExtend<Session>();
 		expectTypeOf<UserDataRecord>().toExtend<IUserData>();
 	});
@@ -110,7 +110,7 @@ describe("database interfaces", () => {
 
 describe("CaptchaProperties", () => {
 	it("is fully partial, since a filter may name any subset", () => {
-		expectTypeOf<CaptchaProperties>().toExtend<Partial<UserCommitment>>();
+		expectTypeOf<CaptchaProperties>().toExtend<Partial<ImageCaptcha>>();
 		assertType<CaptchaProperties>({});
 	});
 });

@@ -28,22 +28,22 @@ import mongoose, { type IndexDefinition, type Schema } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { BannedDomainRecordSchema } from "./bannedDomain.js";
 import {
+	StoredImageCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	StoredSessionRecordSchema,
-	StoredUserCommitmentRecordSchema,
 } from "./captcha.js";
 import { UserDataSchema, UserSettingsSchema } from "./client.js";
 import {
 	CaptchaRecordSchema,
 	ClientRecordSchema,
 	CompositeIpAddressRecordSchemaObj,
+	ImageCaptchaRecordSchema,
 	PoWCaptchaRecordSchema,
 	PuzzleCaptchaRecordSchema,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
 	SessionRecordSchema,
-	UserCommitmentRecordSchema,
 	UserSolutionRecordSchema,
 } from "./provider.js";
 import { SpamEmailDomainRecordSchema } from "./spamEmailDomain.js";
@@ -803,7 +803,7 @@ describe("the stored-event schemas", () => {
 
 	it("index the session id on every stored captcha type", () => {
 		for (const schema of [
-			StoredUserCommitmentRecordSchema,
+			StoredImageCaptchaRecordSchema,
 			StoredPoWCaptchaRecordSchema,
 			StoredPuzzleCaptchaRecordSchema,
 		]) {
@@ -889,8 +889,8 @@ describe("fingerprint summary on every record that carries one", () => {
 	const schemas: [string, Schema][] = [
 		["SessionRecordSchema", SessionRecordSchema],
 		["StoredSessionRecordSchema", StoredSessionRecordSchema],
-		["UserCommitmentRecordSchema", UserCommitmentRecordSchema],
-		["StoredUserCommitmentRecordSchema", StoredUserCommitmentRecordSchema],
+		["ImageCaptchaRecordSchema", ImageCaptchaRecordSchema],
+		["StoredImageCaptchaRecordSchema", StoredImageCaptchaRecordSchema],
 		["PuzzleCaptchaRecordSchema", PuzzleCaptchaRecordSchema],
 		["StoredPuzzleCaptchaRecordSchema", StoredPuzzleCaptchaRecordSchema],
 		["PoWCaptchaRecordSchema", PoWCaptchaRecordSchema],

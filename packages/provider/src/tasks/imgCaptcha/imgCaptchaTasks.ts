@@ -39,6 +39,7 @@ import {
 	type IPInfoResponse,
 	type ISpamFilterRules,
 	type ITrafficFilter,
+	type ImageCaptcha,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -48,7 +49,6 @@ import {
 	ResultReason,
 	type Session,
 	SimdReadingsStage,
-	type UserCommitment,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
@@ -453,7 +453,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				}
 			}
 
-			const commit: UserCommitment = {
+			const commit: ImageCaptcha = {
 				id: commitmentId,
 				userAccount: userAccount,
 				dappAccount,
@@ -485,7 +485,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					fingerprintSummary: sessionRecord.fingerprintSummary,
 				}),
 			};
-			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
+			await this.db.storeImageCaptchaSolution(receivedCaptchas, commit);
 
 			const solutionRecords = await Promise.all(
 				storedCaptchas.map(async (captcha) => {
@@ -511,7 +511,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			) {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveImageCaptcha(
 						commitmentId,
 						ResultReason.CAPTCHA_INVALID_SOLUTION,
 						pairs,
@@ -560,7 +560,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				};
 				// Write commitment approval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.approveDappUserCommitment(commitmentId, pairs),
+					this.db.approveImageCaptcha(commitmentId, pairs),
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
@@ -578,7 +578,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			} else {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveImageCaptcha(
 						commitmentId,
 						ResultReason.CAPTCHA_INVALID_SOLUTION,
 						pairs,
@@ -704,18 +704,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 	/*
 	 * Get dapp user solution from database
 	 */
-	async getDappUserCommitmentById(
-		commitmentId: string,
-	): Promise<UserCommitment> {
-		const dappUserSolution =
-			await this.db.getDappUserCommitmentById(commitmentId);
+	async getImageCaptchaById(commitmentId: string): Promise<ImageCaptcha> {
+		const dappUserSolution = await this.db.getImageCaptchaById(commitmentId);
 		if (!dappUserSolution) {
 			throw new ProsopoError({
 				code: "SOLUTION_NOT_FOUND",
 				errorSite: "PROV-68",
 				message: "Dapp user solution not found",
 				context: {
-					failedFuncName: this.getDappUserCommitmentById.name,
+					failedFuncName: this.getImageCaptchaById.name,
 					commitmentId: commitmentId,
 				},
 			});
@@ -775,7 +772,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		const solution = await this.getDappUserCommitmentById(commitmentId);
+		const solution = await this.getImageCaptchaById(commitmentId);
 
 		// No solution exists
 		if (!solution) {
@@ -802,7 +799,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		// The claim is conditional on the commitment not being checked yet, so
 		// of several concurrent verifies of one token only one gets past here.
-		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
+		const claimed = await this.db.markImageCaptchasChecked([solution.id]);
 		if (claimed === 0) {
 			return {
 				status: "API.USER_ALREADY_VERIFIED",
@@ -845,7 +842,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Accumulate commitment updates in memory to batch writes.
 		// Instead of writing after each check, we collect all updates and
 		// perform a single batch write at the end.
-		const commitmentUpdates: Partial<UserCommitment> = {};
+		const commitmentUpdates: Partial<ImageCaptcha> = {};
 		let failStatus: ResultReason | undefined;
 		// Set only by the access-policy branch below, and stamped onto the
 		// session at the end so the audit page can name the rule behind an
@@ -1233,12 +1230,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// Batch writes: separate non-streaming updates from streaming result writes.
-		// - providedIp / metadata use updateDappUserCommitment (no central streaming)
+		// - providedIp / metadata use updateImageCaptcha (no central streaming)
 		// - approve/disapprove use dedicated methods that trigger centralStreamer
 		const writePromises: Promise<void>[] = [];
 
 		// Write non-streaming metadata fields if accumulated.
-		const sideUpdates: Partial<UserCommitment> = {};
+		const sideUpdates: Partial<ImageCaptcha> = {};
 		if (commitmentUpdates.providedIp) {
 			sideUpdates.providedIp = commitmentUpdates.providedIp;
 		}
@@ -1246,18 +1243,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 			sideUpdates.metadata = commitmentUpdates.metadata;
 		}
 		if (Object.keys(sideUpdates).length > 0) {
-			writePromises.push(
-				this.db.updateDappUserCommitment(solution.id, sideUpdates),
-			);
+			writePromises.push(this.db.updateImageCaptcha(solution.id, sideUpdates));
 		}
 
 		// Write result via the streaming-aware methods
 		if (commitmentId) {
 			if (isApproved) {
-				writePromises.push(this.db.approveDappUserCommitment(commitmentId));
+				writePromises.push(this.db.approveImageCaptcha(commitmentId));
 			} else if (commitmentUpdates.result) {
 				writePromises.push(
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveImageCaptcha(
 						commitmentId,
 						commitmentUpdates.result.reason,
 					),

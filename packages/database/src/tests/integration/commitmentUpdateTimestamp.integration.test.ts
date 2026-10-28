@@ -14,7 +14,7 @@
 
 import { LogLevel, getLogger } from "@prosopo/logger";
 import { CaptchaStatus, IpAddressType } from "@prosopo/types";
-import type { UserCommitmentRecord } from "@prosopo/types-database";
+import type { ImageCaptchaRecord } from "@prosopo/types-database";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ProviderDatabase } from "../../databases/provider.js";
@@ -28,7 +28,7 @@ class MongoOnlyProviderDatabase extends ProviderDatabase {
 
 const OLD = new Date("2026-01-01T00:00:00.000Z");
 
-describe("updateDappUserCommitment", () => {
+describe("updateImageCaptcha", () => {
 	let mongod: MongoMemoryServer;
 	let db: MongoOnlyProviderDatabase;
 
@@ -81,12 +81,12 @@ describe("updateDappUserCommitment", () => {
 	it.each([
 		["$set form", { metadata: { email: "a@b.c" } }],
 		["pipeline form", { userSubmitted: true }],
-	] satisfies [string, Partial<UserCommitmentRecord>][])(
+	] satisfies [string, Partial<ImageCaptchaRecord>][])(
 		"bumps lastUpdatedTimestamp (%s)",
 		async (label, updates) => {
 			const id = `bump-${label}`;
 			await seed(id);
-			await db.updateDappUserCommitment(id, updates);
+			await db.updateImageCaptcha(id, updates);
 			const doc = await read(id);
 			expect(doc.lastUpdatedTimestamp).toBeInstanceOf(Date);
 			expect((doc.lastUpdatedTimestamp as Date).getTime()).toBeGreaterThan(
@@ -103,10 +103,10 @@ describe("updateDappUserCommitment", () => {
 		// The sweep read the batch at this instant, before the update landed.
 		const sweepReadAt = new Date();
 		await new Promise((resolve) => setTimeout(resolve, 5));
-		await db.updateDappUserCommitment(id, {
+		await db.updateImageCaptcha(id, {
 			metadata: { email: "late@example.com" },
 		});
-		await db.markDappUserCommitmentsStored([id], sweepReadAt);
+		await db.markImageCaptchasStored([id], sweepReadAt);
 		const doc = await read(id);
 		expect(doc.pendingStage).toBe(true);
 		expect(doc.storedAtTimestamp).toBeUndefined();

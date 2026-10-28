@@ -19,17 +19,17 @@ import {
 	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type IconOrderCaptchaRecord,
+	type ImageCaptchaRecord,
 	type PoWCaptchaRecord,
 	type PuzzleCaptchaRecord,
 	StoredAudioCaptchaRecordSchema,
 	StoredIconOrderCaptchaRecordSchema,
+	StoredImageCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,
-	StoredUserCommitmentRecordSchema,
 	type Tables,
-	type UserCommitmentRecord,
 } from "@prosopo/types-database";
 import { Decimal128, Long } from "bson";
 
@@ -72,7 +72,7 @@ const CAPTCHA_TABLES = [
 	{
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
-		schema: StoredUserCommitmentRecordSchema,
+		schema: StoredImageCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.puzzlecaptcha,
@@ -216,7 +216,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 	async saveCaptchas(
 		sessionEvents: StoredSession[],
-		imageCaptchaEvents: UserCommitmentRecord[],
+		imageCaptchaEvents: ImageCaptchaRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
 		iconOrderCaptchaEvents: IconOrderCaptchaRecord[] = [],
@@ -385,7 +385,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		filter: QueryFilter<CaptchaProperties> = {},
 		limit = 100,
 	): Promise<{
-		userCommitmentRecords: UserCommitmentRecord[];
+		imageCaptchaRecords: ImageCaptchaRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
 		audioCaptchaRecords: AudioCaptchaRecord[];
@@ -397,7 +397,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			const commitmentResults = await this.tables.commitment
 				.find(filter)
 				.limit(limit)
-				.lean<UserCommitmentRecord[]>();
+				.lean<ImageCaptchaRecord[]>();
 
 			const powCaptchaResults = await this.tables.powcaptcha
 				.find(filter)
@@ -420,7 +420,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.lean<IconOrderCaptchaRecord[]>();
 
 			return {
-				userCommitmentRecords: commitmentResults,
+				imageCaptchaRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
 				puzzleCaptchaRecords: puzzleCaptchaResults,
 				audioCaptchaRecords: audioCaptchaResults,

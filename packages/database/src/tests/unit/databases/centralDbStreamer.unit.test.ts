@@ -14,10 +14,10 @@
 
 import type { Logger } from "@prosopo/logger";
 import type {
+	ImageCaptchaRecord,
 	PoWCaptchaRecord,
 	PuzzleCaptchaRecord,
 	StoredSession,
-	UserCommitmentRecord,
 } from "@prosopo/types-database";
 import {
 	type MockInstance,
@@ -224,7 +224,7 @@ describe("CentralDbStreamer", () => {
 			const record = {
 				id: "commitment-123",
 				lastUpdatedTimestamp: new Date("2026-01-15T00:00:00Z"),
-			} as unknown as UserCommitmentRecord;
+			} as unknown as ImageCaptchaRecord;
 			const markStored = vi
 				.fn<MarkStoredCallback>()
 				.mockResolvedValue(undefined);
@@ -248,7 +248,7 @@ describe("CentralDbStreamer", () => {
 			const record = {
 				id: "commitment-456",
 				lastUpdatedTimestamp: new Date("2026-04-01T00:00:00Z"),
-			} as unknown as UserCommitmentRecord;
+			} as unknown as ImageCaptchaRecord;
 			const getFullRecord = vi.fn().mockResolvedValue(record);
 			const markStored = vi
 				.fn<MarkStoredCallback>()

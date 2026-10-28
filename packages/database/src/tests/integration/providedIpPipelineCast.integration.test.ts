@@ -15,8 +15,8 @@
 import { LogLevel, getLogger } from "@prosopo/logger";
 import { CaptchaStatus, IpAddressType } from "@prosopo/types";
 import {
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
 } from "@prosopo/types-database";
 import { Long } from "bson";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -40,7 +40,7 @@ import { CaptchaDatabase } from "../../databases/captcha.js";
 // streamed.
 //
 // Root cause: PR #2681 ("lifecycle timestamps + submit→verify recency
-// window") converted `updateDappUserCommitment` from an ordinary `$set`
+// window") converted `updateImageCaptcha` from an ordinary `$set`
 // update to an aggregation-pipeline update (the second arg is now an
 // array). Mongoose skips schema casting entirely for pipeline updates, so
 // the `bigint → string → Decimal128` setter on
@@ -85,9 +85,9 @@ const isBsonLong = (v: unknown): v is Long =>
 		"_bsontype" in v &&
 		(v as { _bsontype: string })._bsontype === "Long");
 
-describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
+describe("updateImageCaptcha pipeline cast on providedIp.lower", () => {
 	let mongoDb: MongoMemoryDatabase;
-	let CommitmentModel: mongoose.Model<UserCommitmentRecord>;
+	let CommitmentModel: mongoose.Model<ImageCaptchaRecord>;
 
 	beforeAll(async () => {
 		mongoDb = new MongoMemoryDatabase("ignored", "captchastorage", logger);
@@ -95,9 +95,9 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		if (!mongoDb.connection) {
 			throw new Error("MongoMemoryDatabase failed to provide a connection");
 		}
-		CommitmentModel = mongoDb.connection.model<UserCommitmentRecord>(
+		CommitmentModel = mongoDb.connection.model<ImageCaptchaRecord>(
 			"Commitment",
-			UserCommitmentRecordSchema,
+			ImageCaptchaRecordSchema,
 		);
 	});
 
@@ -107,7 +107,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 
 	const seedCommitment = async (id: string): Promise<void> => {
 		// Seed via `Model.create` so `ipAddress` goes through the correct
-		// schema-cast path; this matches what `storeDappUserCommitment` does
+		// schema-cast path; this matches what `storeImageCaptchaSolution` does
 		// at provider boot of a fresh image-captcha session. The test then
 		// mutates `providedIp` separately via the buggy path.
 		await CommitmentModel.create({
@@ -132,11 +132,11 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		});
 	};
 
-	it("writes providedIp.lower as Decimal128 (not Long) via the fixed updateDappUserCommitment path (IPv6 case from production)", async () => {
+	it("writes providedIp.lower as Decimal128 (not Long) via the fixed updateImageCaptcha path (IPv6 case from production)", async () => {
 		const id = "commitment-pipeline-v6";
 		await seedCommitment(id);
 
-		// Mirror the *fixed* `ProviderDatabase.updateDappUserCommitment`
+		// Mirror the *fixed* `ProviderDatabase.updateImageCaptcha`
 		// (provider.ts:1336-1373): when the caller's `updates` carry no
 		// fields that need an `$ifNull` (e.g. only `providedIp` /
 		// `metadata`, which is exactly what `imgCaptchaTasks.ts:1029-1037`
@@ -163,7 +163,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		// deserialised the on-disk value into — Decimal128 stays Decimal128,
 		// Long stays Long (no promotion above MAX_SAFE_INTEGER).
 		const stored = await CommitmentModel.findOne({ id }).lean<
-			UserCommitmentRecord & ProvidedIpOnDisk
+			ImageCaptchaRecord & ProvidedIpOnDisk
 		>();
 
 		expect(stored).not.toBeNull();
@@ -196,7 +196,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		// around: pipeline-form updates (the second arg is an array)
 		// bypass schema casting entirely, so a `bigint` IP half lands on
 		// disk as BSON Long. This is the original bug. If a future
-		// refactor of `updateDappUserCommitment` switches back to the
+		// refactor of `updateImageCaptcha` switches back to the
 		// pipeline form without pre-converting bigints to Decimal128,
 		// Test 1 will go red and this test will stay green — telling you
 		// exactly which side regressed.
@@ -221,7 +221,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		);
 
 		const stored = await CommitmentModel.findOne({ id }).lean<
-			UserCommitmentRecord & ProvidedIpOnDisk
+			ImageCaptchaRecord & ProvidedIpOnDisk
 		>();
 		expect(stored?.providedIp).toBeDefined();
 		expect(isBsonLong(stored?.providedIp?.lower)).toBe(true);
@@ -235,7 +235,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		//    data — guarantees the fixture matches what's actually on
 		//    disk on each pronode.
 		// 2. Read it back via `.lean()` (mirrors
-		//    `getUnstoredDappUserCommitments`, `provider.ts:1259-1303`).
+		//    `getUnstoredImageCaptchas`, `provider.ts:1259-1303`).
 		// 3. Hand the lean doc to `CaptchaDatabase.saveCaptchas`, which
 		//    is what `ClientTasks.processClientTasks` does on the sweep
 		//    cron (`clientTasks.ts:142-147`).
@@ -263,7 +263,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 		);
 
 		const poisoned = await CommitmentModel.findOne({ id }).lean<
-			UserCommitmentRecord & ProvidedIpOnDisk
+			ImageCaptchaRecord & ProvidedIpOnDisk
 		>();
 		expect(poisoned).not.toBeNull();
 		if (!poisoned?.providedIp) return;
@@ -288,14 +288,14 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 			logger,
 		);
 		try {
-			await central.saveCaptchas([], [poisoned as UserCommitmentRecord], []);
+			await central.saveCaptchas([], [poisoned as ImageCaptchaRecord], []);
 
 			// Reconnect to read back — `saveCaptchas` closes the
 			// connection on its way out.
 			await central.connect();
 			const replayed = await central.tables.commitment
 				.findOne({ id })
-				.lean<UserCommitmentRecord & ProvidedIpOnDisk>();
+				.lean<ImageCaptchaRecord & ProvidedIpOnDisk>();
 			expect(replayed).not.toBeNull();
 			if (!replayed?.providedIp) {
 				throw new Error("central commitment doc missing providedIp");

@@ -16,20 +16,20 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type ImageCaptcha,
 	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
 	ScheduledTaskStatus,
 	Tier,
-	type UserCommitment,
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
+	type ImageCaptchaRecord,
 	type PoWCaptchaRecord,
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
-	type UserCommitmentRecord,
 } from "@prosopo/types-database";
 import { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -168,8 +168,8 @@ describe("ClientTaskManager", () => {
 			markFrictionlessTokenRecordsStored: vi.fn(),
 			getUnstoredSessionRecords: vi.fn().mockResolvedValue([]),
 			markSessionRecordsStored: vi.fn(),
-			getUnstoredDappUserCommitments: vi.fn().mockResolvedValue([]),
-			markDappUserCommitmentsStored: vi.fn(),
+			getUnstoredImageCaptchas: vi.fn().mockResolvedValue([]),
+			markImageCaptchasStored: vi.fn(),
 			markDappUserPoWCommitmentsStored: vi.fn(),
 			getUnstoredDappUserPoWCommitments: vi.fn().mockResolvedValue([]),
 			createScheduledTaskStatus: vi.fn(
@@ -256,20 +256,20 @@ describe("ClientTaskManager", () => {
 			msg: "Mongo env not set",
 		});
 
-		expect(providerDB.getUnstoredDappUserCommitments).not.toHaveBeenCalled();
+		expect(providerDB.getUnstoredImageCaptchas).not.toHaveBeenCalled();
 	});
 
 	it("paginates unstored commitments by `_id` keyset — subsequent fetches carry the last _id", async () => {
-		const page1: (Pick<UserCommitment, "id"> & { _id: string })[] = [
+		const page1: (Pick<ImageCaptcha, "id"> & { _id: string })[] = [
 			{ id: "c1", _id: "id-1" },
 			{ id: "c2", _id: "id-2" },
 		];
-		const page2: (Pick<UserCommitment, "id"> & { _id: string })[] = [
+		const page2: (Pick<ImageCaptcha, "id"> & { _id: string })[] = [
 			{ id: "c3", _id: "id-3" },
 		];
 
 		// biome-ignore lint/suspicious/noExplicitAny: mock-only shape
-		const commMock = providerDB.getUnstoredDappUserCommitments as any;
+		const commMock = providerDB.getUnstoredImageCaptchas as any;
 		commMock
 			.mockResolvedValueOnce(page1)
 			.mockResolvedValueOnce(page2)
@@ -287,17 +287,15 @@ describe("ClientTaskManager", () => {
 	});
 
 	it("should store commitments externally if mongoCaptchaUri is set", async () => {
-		const mockCommitments: Pick<UserCommitment, "id">[] = [
-			{ id: "commitment1" },
-		];
+		const mockCommitments: Pick<ImageCaptcha, "id">[] = [{ id: "commitment1" }];
 		const mockPoWCommitments: Pick<PoWCaptchaStored, "challenge">[] = [
 			{
 				challenge: "1234567___userAccount___dappAccount",
 			},
 		];
 
-		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
-			mockCommitments as UserCommitmentRecord[],
+		vi.mocked(providerDB.getUnstoredImageCaptchas).mockResolvedValueOnce(
+			mockCommitments as ImageCaptchaRecord[],
 		);
 
 		vi.mocked(providerDB.createScheduledTaskStatus).mockResolvedValueOnce(
@@ -314,10 +312,10 @@ describe("ClientTaskManager", () => {
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
+		expect(providerDB.getUnstoredImageCaptchas).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
 
-		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledWith(
+		expect(providerDB.markImageCaptchasStored).toHaveBeenCalledWith(
 			mockCommitments.map((c) => c.id),
 			expect.any(Date),
 		);
@@ -329,7 +327,7 @@ describe("ClientTaskManager", () => {
 
 	it("should not store commitments externally if they have been stored", async () => {
 		const mockCommitments: Pick<
-			UserCommitment,
+			ImageCaptcha,
 			"id" | "lastUpdatedTimestamp" | "storedAtTimestamp"
 		>[] = [
 			{
@@ -378,8 +376,8 @@ describe("ClientTaskManager", () => {
 			msg: "Test: Collections state updated",
 		}));
 
-		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
-			mockCommitments as UserCommitmentRecord[],
+		vi.mocked(providerDB.getUnstoredImageCaptchas).mockResolvedValueOnce(
+			mockCommitments as ImageCaptchaRecord[],
 		);
 		vi.mocked(
 			providerDB.getUnstoredDappUserPoWCommitments,
@@ -390,7 +388,7 @@ describe("ClientTaskManager", () => {
 		logger.info(() => ({ msg: "Test: storeCommitmentsExternal completed" }));
 
 		// Verification steps with logging
-		expect(providerDB.getUnstoredDappUserCommitments).toHaveBeenCalled();
+		expect(providerDB.getUnstoredImageCaptchas).toHaveBeenCalled();
 		expect(providerDB.getUnstoredDappUserPoWCommitments).toHaveBeenCalled();
 		logger.info(() => ({ msg: "Test: Verified DB queries were made" }));
 
@@ -405,7 +403,7 @@ describe("ClientTaskManager", () => {
 		);
 		logger.info(() => ({ msg: "Test: Verified task status creation" }));
 
-		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
+		expect(providerDB.markImageCaptchasStored).not.toHaveBeenCalled();
 		logger.info(() => ({
 			msg: "Test: Verified no image commitments were marked as stored (expected as they're old)",
 		}));
@@ -453,9 +451,7 @@ describe("ClientTaskManager", () => {
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
 
-		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
-			[],
-		);
+		vi.mocked(providerDB.getUnstoredImageCaptchas).mockResolvedValueOnce([]);
 
 		vi.mocked(
 			providerDB.getUnstoredDappUserPoWCommitments,
@@ -463,7 +459,7 @@ describe("ClientTaskManager", () => {
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(providerDB.markDappUserCommitmentsStored).not.toHaveBeenCalled();
+		expect(providerDB.markImageCaptchasStored).not.toHaveBeenCalled();
 		expect(providerDB.markDappUserPoWCommitmentsStored).not.toHaveBeenCalled();
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(

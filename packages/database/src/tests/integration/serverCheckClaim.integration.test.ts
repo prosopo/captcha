@@ -219,12 +219,12 @@ describe("server-check claims are single-use under concurrency", () => {
 
 		const claims: number[] = await Promise.all(
 			Array.from({ length: CONCURRENCY }, () =>
-				db.markDappUserCommitmentsChecked([id]),
+				db.markImageCaptchasChecked([id]),
 			),
 		);
 
 		expect(claims.filter((claimed) => claimed === 1)).toHaveLength(1);
-		const record = await db.getDappUserCommitmentById(id);
+		const record = await db.getImageCaptchaById(id);
 		expect(record?.serverChecked).toBe(true);
 	});
 

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { InputMethod, UserCommitmentSchema } from "@prosopo/types";
-import { UserCommitmentRecordSchema } from "@prosopo/types-database";
+import { ImageCaptchaSchema, InputMethod } from "@prosopo/types";
+import { ImageCaptchaRecordSchema } from "@prosopo/types-database";
 import mongoose from "mongoose";
 import { describe, expect, it } from "vitest";
 
 const Commitment = mongoose.model(
 	"InputMethodsCommitment",
-	UserCommitmentRecordSchema,
+	ImageCaptchaRecordSchema,
 );
 
 describe("commitment input methods", () => {
@@ -28,13 +28,13 @@ describe("commitment input methods", () => {
 			[InputMethod.keyboard],
 			[InputMethod.pointer, InputMethod.keyboard],
 		];
-		expect(UserCommitmentSchema.shape.inputMethods.parse(inputMethods)).toEqual(
+		expect(ImageCaptchaSchema.shape.inputMethods.parse(inputMethods)).toEqual(
 			inputMethods,
 		);
 	});
 
 	it("allows a commitment without input methods", () => {
-		expect(UserCommitmentSchema.shape.inputMethods.isOptional()).toBe(true);
+		expect(ImageCaptchaSchema.shape.inputMethods.isOptional()).toBe(true);
 	});
 
 	it("stores input methods in the shape of the coordinates", () => {
