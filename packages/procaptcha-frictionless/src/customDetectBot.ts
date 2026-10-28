@@ -246,7 +246,7 @@ const customDetectBot: BotDetectionFunction = async (
 		provider.provider.url,
 		config.account.address,
 		undefined,
-		widgetRequestHeaders(config.language),
+		widgetRequestHeaders(config.language, config.integration),
 	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY

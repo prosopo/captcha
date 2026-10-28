@@ -245,7 +245,7 @@ export const Manager = (
 					providerUrl,
 					getDappAccount(),
 					undefined,
-					widgetRequestHeaders(getConfig().language),
+					widgetRequestHeaders(getConfig().language, getConfig().integration),
 				);
 
 				// The provider would reject a spent session, so go straight to the

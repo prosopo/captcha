@@ -273,7 +273,7 @@ export const Manager = (
 					providerUrl,
 					getDappAccount(),
 					undefined,
-					widgetRequestHeaders(getConfig().language),
+					widgetRequestHeaders(getConfig().language, getConfig().integration),
 				);
 
 				// Short-circuit a challenge fetch we already know the provider

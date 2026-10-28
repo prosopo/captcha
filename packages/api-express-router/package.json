@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-express-router",
-	"version": "3.3.5",
+	"version": "3.3.6",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
 	"type": "module",

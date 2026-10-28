@@ -612,7 +612,7 @@ export function Manager(
 				providerUrl,
 				siteKey,
 				undefined,
-				widgetRequestHeaders(config.language),
+				widgetRequestHeaders(config.language, config.integration),
 			),
 			siteKey,
 		};

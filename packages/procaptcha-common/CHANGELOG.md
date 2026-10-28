@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-common
 
+## 2.21.11
+### Patch Changes
+
+- 6fa6155: The widget's error state no longer overflows. The message shows as plain text and the error code goes on a smaller line underneath, linking to the FAQ. It used to be one underlined link with the code inline, and the code ran past the widget's edge.
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/account@2.8.117
+  - @prosopo/load-balancer@2.11.18
+
 ## 2.21.10
 ### Patch Changes
 
