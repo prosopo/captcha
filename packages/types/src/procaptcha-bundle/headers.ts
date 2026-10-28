@@ -17,3 +17,32 @@
 // rejects the preflight and the widget cannot reach the provider.
 export const BUNDLE_VERSION_HEADER = "X-Prosopo-Bundle-Version";
 export const BUNDLE_ORIGIN_HEADER = "X-Prosopo-Bundle-Origin";
+
+const BUNDLE_VERSION =
+	/^(?:\d{1,4}\.\d{1,4}\.\d{1,4}(?:-[0-9A-Za-z.-]{1,32})?|dev)$/;
+const MAX_ORIGIN_LENGTH = 255;
+
+/** A release number ("3.9.6", "3.9.6-rc.1") or "dev"; anything else is dropped. */
+export const normaliseBundleVersion = (
+	value: string | undefined,
+): string | undefined => {
+	const version: string | undefined = value?.trim();
+	return version && BUNDLE_VERSION.test(version) ? version : undefined;
+};
+
+/** The http(s) origin of a URL-like value, or undefined. */
+export const normaliseBundleOrigin = (
+	value: string | undefined,
+): string | undefined => {
+	if (!value || value.length > MAX_ORIGIN_LENGTH) {
+		return undefined;
+	}
+	try {
+		const url = new URL(value);
+		return url.protocol === "https:" || url.protocol === "http:"
+			? url.origin
+			: undefined;
+	} catch {
+		return undefined;
+	}
+};
