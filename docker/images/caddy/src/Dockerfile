@@ -4,7 +4,7 @@ FROM caddy:2.11.4-builder@sha256:401121e61853cb9c7df83cba43e532e49a68e30f32921c7
 RUN apk add --no-cache gcc g++ make libpcap-dev libpcap
 RUN CGO_ENABLED=1 xcaddy build v2.11.4 \
     --with github.com/mholt/caddy-ratelimit@v0.1.0 \
-    --with github.com/prosopo/chaddy@v0.0.0-20261026113936-76b406a73e83 \
+    --with github.com/prosopo/chaddy@v0.0.0-20261029114251-8b7c3628aca1 \
     --with github.com/lolPants/caddy-requestid@v1.1.2 \
     --with github.com/mholt/caddy-l4@v0.1.2
 FROM caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52

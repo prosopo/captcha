@@ -21,7 +21,10 @@ import {
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
+	TRAFFIC_CATEGORIES,
+	type TrafficCategory,
 	type TrafficFilterMatch,
+	categoryToReason,
 	checkTrafficFilter,
 	resolveChallengePolicy,
 	resolvePadBytes,
@@ -787,7 +790,7 @@ describe("checkTrafficFilter", () => {
 			});
 		});
 
-		it("is blocked by its VPN flag when the operator names it in the denylist", () => {
+		it("is blocked as datacenter, not VPN, when only the datacenter denylist names it", () => {
 			const result = checkTrafficFilter(
 				baseInfo({
 					isDatacenter: true,
@@ -798,7 +801,7 @@ describe("checkTrafficFilter", () => {
 			);
 			expect(result).toMatchObject({
 				isBlocked: true,
-				reason: "API.VPN_BLOCKED",
+				reason: "API.DATACENTER_BLOCKED",
 			});
 		});
 
@@ -1010,6 +1013,183 @@ describe("checkTrafficFilter", () => {
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
+		});
+	});
+
+	describe("name lists on every category", () => {
+		const FLAG: Record<TrafficCategory, Partial<IPInfoResult>> = {
+			tor: { isTor: true },
+			vpn: { isVPN: true },
+			proxy: { isProxy: true },
+			datacenter: { isDatacenter: true },
+			abuser: { isAbuser: true, abuserScore: 0.9 },
+			crawler: { isCrawler: true },
+			satellite: { isSatellite: true },
+			mobile: { isMobile: true },
+		};
+		const named = (category: TrafficCategory): IPInfoResult =>
+			baseInfo({ ...FLAG[category], providerName: "Example Co" });
+		const relay = (category: TrafficCategory): IPInfoResult =>
+			baseInfo({
+				...FLAG[category],
+				isDatacenter: true,
+				datacenterName: "iCloud Private Relay",
+			});
+		const blockedAs = (category: TrafficCategory) => ({
+			isBlocked: true,
+			reason: categoryToReason(category),
+		});
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: blocks a flagged IP with no lists set",
+			(category: TrafficCategory) => {
+				expect(
+					checkTrafficFilter(named(category), { [category]: block }),
+				).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: nameAllowlist lets a matching IP through",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(named(category), {
+					[category]: { ...block, nameAllowlist: ["  example co "] },
+				});
+				expect(result).toEqual({ isBlocked: false, matches: [] });
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES.filter((c) => c !== "mobile"))(
+			"%s: an allowlisted IP falls through to its next flag",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(
+					baseInfo({
+						...FLAG[category],
+						isMobile: true,
+						providerName: "Example Co",
+					}),
+					{
+						[category]: { ...block, nameAllowlist: ["Example Co"] },
+						mobile: block,
+					},
+				);
+				expect(result).toMatchObject(blockedAs("mobile"));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: another category's allowlist does not apply",
+			(category: TrafficCategory) => {
+				const other: TrafficCategory = category === "vpn" ? "proxy" : "vpn";
+				const result = checkTrafficFilter(named(category), {
+					[category]: block,
+					[other]: { ...block, nameAllowlist: ["Example Co"] },
+				});
+				expect(result).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: nameDenylist wins over nameAllowlist",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(named(category), {
+					[category]: {
+						...block,
+						nameAllowlist: ["Example Co"],
+						nameDenylist: ["Example Co"],
+					},
+				});
+				expect(result).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES.filter((c) => c !== "tor"))(
+			"%s: iCloud Private Relay is exempt by default",
+			(category: TrafficCategory) => {
+				expect(checkTrafficFilter(relay(category), allBlocked)).toEqual({
+					isBlocked: false,
+					matches: [],
+				});
+			},
+		);
+
+		it("tor: iCloud Private Relay is not exempt", () => {
+			expect(checkTrafficFilter(relay("tor"), allBlocked)).toMatchObject(
+				blockedAs("tor"),
+			);
+		});
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: nameDenylist keeps iCloud Private Relay in",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(relay(category), {
+					...allBlocked,
+					[category]: { ...block, nameDenylist: ["iCloud Private Relay"] },
+				});
+				expect(result).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it("abuser: nameDenylist overrides the score threshold", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isAbuser: true,
+					abuserScore: 0.01,
+					providerName: "Example Co",
+				}),
+				{
+					abuser: { ...block, nameDenylist: ["Example Co"] },
+					abuserScoreThreshold: 0.5,
+				},
+			);
+			expect(result).toMatchObject(blockedAs("abuser"));
+		});
+
+		it("datacenter: nameDenylist overrides the ISP heuristic", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					providerName: "Example Co",
+				}),
+				{ datacenter: { ...block, nameDenylist: ["Example Co"] } },
+			);
+			expect(result).toMatchObject(blockedAs("datacenter"));
+		});
+
+		it("crawler: nameDenylist overrides the DNS-resolver skip", () => {
+			const result = checkTrafficFilter(
+				baseInfo(),
+				{
+					crawler: { ...block, nameDenylist: ["Example Co"] },
+				},
+				[named("crawler")],
+			);
+			expect(result).toMatchObject(blockedAs("crawler"));
+		});
+
+		it("datacenter: merges the legacy top-level lists", () => {
+			const ip = baseInfo({ isDatacenter: true, providerName: "Example Co" });
+			expect(
+				checkTrafficFilter(ip, {
+					datacenter: { ...block, nameAllowlist: ["Other Co"] },
+					datacenterNameAllowlist: ["Example Co"],
+				}),
+			).toEqual({ isBlocked: false, matches: [] });
+			expect(
+				checkTrafficFilter(ip, {
+					datacenter: { ...block, nameAllowlist: ["Example Co"] },
+					datacenterNameDenylist: ["Example Co"],
+				}),
+			).toMatchObject(blockedAs("datacenter"));
+		});
+
+		it("does not merge the legacy datacenter lists into other categories", () => {
+			const result = checkTrafficFilter(named("vpn"), {
+				vpn: block,
+				datacenterNameAllowlist: ["Example Co"],
+			});
+			expect(result).toMatchObject(blockedAs("vpn"));
 		});
 	});
 
