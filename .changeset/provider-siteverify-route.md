@@ -4,4 +4,6 @@
 "@prosopo/cli": patch
 ---
 
-Experimental: providers now accept siteverify requests directly at `POST /v1/prosopo/provider/client/site/verify`, taking the same body as the hosted `api.prosopo.io/siteverify` (token plus the site's secret key, JSON or form-encoded). The provider checks the secret belongs to the token's site key, signs the request with it and hands it to the normal verify route for the token's captcha type, so forwarding to the issuing provider works as before and the secret never leaves the provider it was sent to. Responses match the hosted endpoint, including leaving out the provider's session id. This is the first step towards retiring the siteverify Lambda; nothing routes traffic to it yet.
+Experimental: providers now accept siteverify requests directly at `POST /v1/prosopo/provider/client/site/verify`, taking the same body as the hosted siteverify endpoint (token plus the site's secret key, JSON or form-encoded). The provider checks the secret belongs to the token's site key, signs the request with it and hands it to the normal verify route for the token's captcha type, so forwarding to the issuing provider works as before and the secret never leaves the provider it was sent to. Responses match the hosted endpoint, including leaving out the provider's session id.
+
+The route is rate-limited per site key (from the `Prosopo-Site-Key` header, falling back to IP), as the PoW and image verify routes are, because calls reach it through shared egress IPs. Nothing routes traffic to it yet.
