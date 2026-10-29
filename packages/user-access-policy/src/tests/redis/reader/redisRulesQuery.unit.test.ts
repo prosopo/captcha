@@ -359,4 +359,14 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toContain("@clientId:{site-A}");
 		expect(query).toContain("@ja4Hash:{ja4Hash}");
 	});
+
+	it("escapes the group id, whose hyphens are otherwise a syntax error", () => {
+		const filter: AccessRulesFilter = {
+			groupId: "example-rule-group",
+		};
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("@groupId:{example\\-rule\\-group}");
+	});
 });
