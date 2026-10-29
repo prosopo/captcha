@@ -18,6 +18,7 @@ import {
 	type IUserSettings,
 	Tier,
 	iconOrderToleranceDefault,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -78,6 +79,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			puzzleTolerance: 15,
 			iconOrderTolerance: iconOrderToleranceDefault,
 			puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+			ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 		};

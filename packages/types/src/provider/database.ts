@@ -442,6 +442,7 @@ export const ScoreComponentsSchema = object({
 	triggeredDetectors: array(number()).optional(),
 	shadowDomPenalty: boolean().optional(),
 	dnsAsymmetry: number().optional(),
+	ipDetectorRisk: number().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
@@ -510,6 +511,8 @@ export interface ScoreComponents {
 	triggeredDetectors?: number[];
 	shadowDomPenalty?: boolean;
 	dnsAsymmetry?: number;
+	/** Amount added to the score from the IP's detector risk. */
+	ipDetectorRisk?: number;
 }
 
 // Zod schema for Session

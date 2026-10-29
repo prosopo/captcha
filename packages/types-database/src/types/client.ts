@@ -353,6 +353,12 @@ export const UserSettingsSchema = new Schema({
 		min: 0,
 		required: false,
 	},
+	ipDetectorRiskWeight: {
+		type: Number,
+		min: 0,
+		max: 1,
+		required: false,
+	},
 	spamFilter: {
 		enabled: { type: Boolean, default: false },
 		emailRules: {

@@ -38,6 +38,7 @@ import {
 	Tier,
 	TrafficFilterAction,
 	iconOrderToleranceDefault,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -66,6 +67,7 @@ const FULLY_POPULATED_SETTINGS = {
 	puzzleTolerance: 20,
 	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+	ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 	puzzle: {
 		decoyCount: 7,
 		decoyEdgeDarkness: 25,
