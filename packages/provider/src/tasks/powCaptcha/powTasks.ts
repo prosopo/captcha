@@ -643,6 +643,12 @@ export class PowCaptchaManager extends CaptchaManager {
 				...(sessionRecord.iframeUrl && {
 					iframeUrl: sessionRecord.iframeUrl,
 				}),
+				...(sessionRecord.scoreComponents?.triggeredDetectors?.length
+					? {
+							triggeredDetectors:
+								sessionRecord.scoreComponents.triggeredDetectors,
+						}
+					: {}),
 			},
 		};
 

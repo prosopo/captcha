@@ -40,6 +40,7 @@ import {
 import getHandler from "../../../api/captcha/getFrictionlessCaptchaChallenge.js";
 import { initDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
+import type { RoutingContext } from "../../../tasks/frictionless/routingMachine.js";
 
 // Minimal typed mocks to avoid `any`
 type MockFn = ReturnType<typeof vi.fn>;
@@ -1049,6 +1050,51 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			}),
 		);
 	});
+
+	it.each([
+		{ triggeredDetectors: [3, 7], expected: [3, 7] },
+		{ triggeredDetectors: [], expected: undefined },
+		{ triggeredDetectors: undefined, expected: undefined },
+	])(
+		"gives the routing machine triggered detectors $triggeredDetectors",
+		async ({
+			triggeredDetectors,
+			expected,
+		}: {
+			triggeredDetectors: number[] | undefined;
+			expected: number[] | undefined;
+		}) => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteRoutingDetectors",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+				},
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+				...payload(false),
+				triggeredDetectors,
+			});
+
+			const { req, res, next } = buildReqRes({
+				token: "tRoutingDetectors",
+				headHash: "hhRoutingDetectors",
+				dapp: "siteRoutingDetectors",
+				user: "u",
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).not.toHaveBeenCalled();
+			const ctx: RoutingContext =
+				tasksInstance.frictionlessManager.setRoutingContext.mock.calls.at(
+					-1,
+				)?.[0];
+			expect(ctx.raw.triggeredDetectors).toEqual(expected);
+		},
+	);
 
 	it("reuses the cached session when the routing machine returns the same captchaType", async () => {
 		const clientRecord = {
