@@ -248,6 +248,18 @@ const evaluateIpInfo = (
 		return matches;
 	}
 
+	// A relay egress IP is a partner CDN node shared by many Apple users, so
+	// its other flags describe the node, not the visitor. ipapi.is also marks
+	// some relay ranges as VPN, which would block those users outright.
+	// Naming relay in `datacenterNameDenylist` opts it back into the checks.
+	if (
+		ipInfo.isDatacenter &&
+		isPrivateRelay(ipInfo) &&
+		!isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)
+	) {
+		return matches;
+	}
+
 	if (ipInfo.isVPN) {
 		push("vpn", trafficFilter.vpn);
 		return matches;
@@ -260,13 +272,6 @@ const evaluateIpInfo = (
 
 	if (isEffectivelyDatacenter(ipInfo, trafficFilter)) {
 		push("datacenter", trafficFilter.datacenter);
-		return matches;
-	}
-
-	// A relay egress IP is a partner CDN node shared by many Apple users, so
-	// the lower flags (an abuser score in particular) describe the node, not
-	// the visitor. Relay owns the IP the way a VPN does.
-	if (ipInfo.isDatacenter && isPrivateRelay(ipInfo)) {
 		return matches;
 	}
 
@@ -311,6 +316,8 @@ const evaluateIpInfo = (
  * If the operator hasn't configured a policy for that top flag, the IP
  * passes cleanly — lower flags are not consulted. So an IP that's flagged
  * as both VPN and proxy is only acted on if the operator has a VPN policy.
+ * An iCloud Private Relay egress that is not a Tor exit matches nothing
+ * unless the operator names relay in `datacenterNameDenylist`.
  *
  * Exceptions: once a category owns the IP, its `exceptions` whose conditions
  * (country, in or out of the account's market, minimum abuser score) the IP

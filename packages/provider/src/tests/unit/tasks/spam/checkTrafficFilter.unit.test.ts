@@ -517,9 +517,9 @@ describe("checkTrafficFilter", () => {
 				baseInfo({
 					isTor: true,
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Example CDN",
 				}),
-				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
+				{ ...allBlocked, datacenterNameAllowlist: ["Example CDN"] },
 			);
 			expect(torResult).toMatchObject({
 				isBlocked: true,
@@ -530,9 +530,9 @@ describe("checkTrafficFilter", () => {
 				baseInfo({
 					isVPN: true,
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Example CDN",
 				}),
-				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
+				{ ...allBlocked, datacenterNameAllowlist: ["Example CDN"] },
 			);
 			expect(vpnResult).toMatchObject({
 				isBlocked: true,
@@ -756,13 +756,55 @@ describe("checkTrafficFilter", () => {
 			});
 		});
 
-		it("is still blocked by a higher-precedence VPN flag", () => {
+		it.each([
+			["VPN", { isVPN: true }],
+			["proxy", { isProxy: true }],
+			["VPN and proxy", { isVPN: true, isProxy: true }],
+		])("is not blocked when the vendor also flags it %s", (_, flags) => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "iCloud Private Relay",
+					...flags,
+				}),
+				allBlocked,
+			);
+			expect(result).toEqual({ isBlocked: false, matches: [] });
+		});
+
+		it("is still blocked by the Tor flag", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isTor: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+		});
+
+		it("is blocked by its VPN flag when the operator names it in the denylist", () => {
 			const result = checkTrafficFilter(
 				baseInfo({
 					isDatacenter: true,
 					isVPN: true,
 					datacenterName: "iCloud Private Relay",
 				}),
+				{ ...allBlocked, datacenterNameDenylist: ["iCloud Private Relay"] },
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.VPN_BLOCKED",
+			});
+		});
+
+		it("does not let a relay name on a VPN IP without the datacenter flag skip the VPN rule", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isVPN: true, providerName: "iCloud Private Relay" }),
 				allBlocked,
 			);
 			expect(result).toMatchObject({
