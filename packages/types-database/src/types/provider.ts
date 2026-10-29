@@ -72,6 +72,7 @@ import type mongoose from "mongoose";
 // Document._id carries; the two stopped matching structurally in mongoose 8.24.
 import { type Document, type Model, Schema, type Types } from "mongoose";
 import { any, date, nativeEnum, object, type infer as zInfer } from "zod";
+import type { AccountAttemptRecord } from "./accountAttempt.js";
 import { UserSettingsSchema } from "./client.js";
 import type { IDatabase } from "./mongo.js";
 import type { SpamEmailDomainRecord } from "./spamEmailDomain.js";
@@ -1499,6 +1500,18 @@ export interface IProviderDatabase extends IDatabase {
 		dappAccount: string,
 		emailNormalised: string,
 	): Promise<number>;
+
+	/**
+	 * This account's attempts in the last `windowMs`, newest first, from the
+	 * central attempt log every provider writes to. `undefined` when there is
+	 * no central connection or the read did not finish within `timeoutMs` —
+	 * callers must treat that as "unknown", never as "no attempts".
+	 */
+	readAccountAttempts(
+		account: string,
+		windowMs: number,
+		timeoutMs: number,
+	): Promise<AccountAttemptRecord[] | undefined>;
 
 	/**
 	 * Keyset-paginated sweep of pending PoW captchas. See

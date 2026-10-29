@@ -15,6 +15,7 @@
 import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
+	AccountAttemptRecordSchema,
 	type AudioCaptchaRecord,
 	type CaptchaProperties,
 	type ICaptchaDatabase,
@@ -56,6 +57,7 @@ enum TableNames {
 	puzzlecaptcha = "puzzlecaptcha",
 	audiocaptcha = "audiocaptcha",
 	iconordercaptcha = "iconordercaptcha",
+	accountattempt = "accountattempt",
 }
 
 const CAPTCHA_TABLES = [
@@ -88,6 +90,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.iconordercaptcha,
 		modelName: "IconOrderCaptcha",
 		schema: StoredIconOrderCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.accountattempt,
+		modelName: "AccountAttempt",
+		schema: AccountAttemptRecordSchema,
 	},
 ];
 

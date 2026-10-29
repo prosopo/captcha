@@ -55,6 +55,12 @@ import {
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import {
+	ACCOUNT_HISTORY_TIMEOUT_MS,
+	ACCOUNT_HISTORY_WINDOW_MS,
+	type AccountHistoryFields,
+	summariseAccountAttempts,
+} from "../utils/accountAttempts.js";
+import {
 	isAudioAlternativeAllowed,
 	isAudioAlternativeEnabled,
 } from "./audioAlternative.js";
@@ -1105,6 +1111,30 @@ export class CaptchaManager {
 	 */
 	async checkSpamEmail(email: string): Promise<boolean> {
 		return checkSpamEmailFn(email, this.db, this.config, this.logger);
+	}
+
+	/**
+	 * The account's attempts on every provider over the last ten minutes,
+	 * summarised for the decision machine. Empty when the central log cannot
+	 * be read in time, so the fields stay undefined rather than zero.
+	 */
+	async readAccountHistory(
+		account: string,
+		challenge: string,
+		requestedAt: Date,
+	): Promise<AccountHistoryFields> {
+		try {
+			const attempts = await this.db.readAccountAttempts(
+				account,
+				ACCOUNT_HISTORY_WINDOW_MS,
+				ACCOUNT_HISTORY_TIMEOUT_MS,
+			);
+			return attempts
+				? summariseAccountAttempts(attempts, challenge, requestedAt)
+				: {};
+		} catch {
+			return {};
+		}
 	}
 
 	/**

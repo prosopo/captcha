@@ -13,7 +13,9 @@
 // limitations under the License.
 
 import { type Logger, getLogger } from "@prosopo/logger";
+import { CaptchaStatus } from "@prosopo/types";
 import type {
+	AccountAttemptRecord,
 	AudioCaptchaRecord,
 	IconOrderCaptchaRecord,
 	PoWCaptchaRecord,
@@ -62,6 +64,7 @@ export class CentralDbStreamer {
 	 */
 	private static readonly CONNECT_TIMEOUT_MS = 45_000;
 	private static readonly SERVER_SELECTION_TIMEOUT_MS = 45_000;
+	private static readonly ACCOUNT_ATTEMPT_READ_LIMIT = 50;
 
 	constructor(mongoCaptchaUri: string, logger?: Logger) {
 		this.logger = logger || getLogger("info", "CentralDbStreamer");
@@ -129,6 +132,7 @@ export class CentralDbStreamer {
 		markStored?: MarkStoredCallback,
 	): void {
 		const timestamp = this.getRecordTimestamp(record);
+		this.streamAccountAttempt(record, "pow");
 		this.ensureConnected()
 			.then(() => {
 				const { _id, ...safeDoc } = record;
@@ -289,6 +293,7 @@ export class CentralDbStreamer {
 		markStored?: MarkStoredCallback,
 	): void {
 		const timestamp = this.getRecordTimestamp(record);
+		this.streamAccountAttempt(record, label);
 		this.ensureConnected()
 			.then(() => {
 				const { _id, ...safeDoc } = record;
@@ -324,6 +329,101 @@ export class CentralDbStreamer {
 					msg: `Failed to fetch ${label} record for central DB streaming`,
 				}));
 			});
+	}
+
+	/**
+	 * Upsert the account-attempt log entry for a captcha record once it has a
+	 * result. Records still pending carry no outcome and are skipped; the
+	 * submit and verify updates of one challenge land on the same document.
+	 */
+	private streamAccountAttempt(
+		record: Pick<
+			PoWCaptchaRecord,
+			| "challenge"
+			| "userAccount"
+			| "dappAccount"
+			| "requestedAtTimestamp"
+			| "result"
+			| "ipInfo"
+		>,
+		captchaType: string,
+	): void {
+		const status = record.result?.status;
+		if (
+			status !== CaptchaStatus.approved &&
+			status !== CaptchaStatus.disapproved
+		) {
+			return;
+		}
+		const attempt: AccountAttemptRecord = {
+			challenge: record.challenge,
+			account: record.userAccount,
+			dappAccount: record.dappAccount,
+			captchaType,
+			at: record.requestedAtTimestamp,
+			passed: status === CaptchaStatus.approved,
+			...(record.ipInfo && { ip: record.ipInfo.ip }),
+			...(record.ipInfo?.isValid &&
+				record.ipInfo.asnNumber !== undefined && {
+					asn: record.ipInfo.asnNumber,
+				}),
+		};
+		this.ensureConnected()
+			.then(() =>
+				this.db.tables.accountattempt.updateOne(
+					{ challenge: attempt.challenge },
+					{ $set: attempt },
+					{ upsert: true },
+				),
+			)
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: "Failed to stream account attempt to central DB",
+				}));
+			});
+	}
+
+	/**
+	 * Read an account's recent attempts from the central DB, newest first.
+	 *
+	 * Runs on the verify path, so it never waits for a connection: with no
+	 * live connection it returns `undefined` at once (the background writes
+	 * keep reconnecting), and a read slower than `timeoutMs` is abandoned.
+	 */
+	async readAccountAttempts(
+		account: string,
+		windowMs: number,
+		timeoutMs: number,
+	): Promise<AccountAttemptRecord[] | undefined> {
+		if (!this.db.connected) {
+			return undefined;
+		}
+		const read = this.db.tables.accountattempt
+			.find(
+				{ account, at: { $gte: new Date(Date.now() - windowMs) } },
+				{ _id: 0, __v: 0 },
+			)
+			.sort({ at: -1 })
+			.limit(CentralDbStreamer.ACCOUNT_ATTEMPT_READ_LIMIT)
+			.maxTimeMS(timeoutMs)
+			.lean<AccountAttemptRecord[]>()
+			.exec();
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const timedOut = new Promise<undefined>((resolve) => {
+			timer = setTimeout(() => resolve(undefined), timeoutMs);
+		});
+		try {
+			return await Promise.race([read, timedOut]);
+		} catch (err) {
+			this.logger.debug(() => ({
+				err,
+				msg: "Account attempt read from central DB failed",
+			}));
+			return undefined;
+		} finally {
+			clearTimeout(timer);
+		}
 	}
 
 	/**

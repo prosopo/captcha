@@ -14,6 +14,7 @@
 export * from "./mongo.js";
 export * from "./provider.js";
 export * from "./client.js";
+export * from "./accountAttempt.js";
 export * from "./captcha.js";
 export * from "./userAgent.js";
 export * from "./spamEmailDomain.js";

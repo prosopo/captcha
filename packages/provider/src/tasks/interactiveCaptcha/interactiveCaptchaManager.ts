@@ -551,6 +551,14 @@ export abstract class InteractiveCaptchaManager<
 			return notVerifiedResponse;
 		}
 
+		// Started now so the central read overlaps the local ones; it never
+		// rejects, so an early return below leaves nothing unhandled.
+		const accountHistoryRead = this.readAccountHistory(
+			challengeRecord.userAccount,
+			challengeRecord.challenge,
+			challengeRecord.requestedAtTimestamp,
+		);
+
 		// Read before the hard-block check, which needs its head hash.
 		const sessionRecord = challengeRecord.sessionId
 			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
@@ -814,6 +822,7 @@ export abstract class InteractiveCaptchaManager<
 				// on a site that accepts VPN users the observed stack
 				// says nothing about the client.
 				trafficPolicies: deriveTrafficPolicies(trafficFilter),
+				...(await accountHistoryRead),
 			};
 
 			const decision = await this.decisionMachineRunner.decide(

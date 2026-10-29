@@ -238,6 +238,15 @@ export type DecisionMachineInput = {
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
+	// This userAccount's history on every provider, from the central
+	// account-attempt log, excluding the attempt being verified. All four are
+	// undefined when the log could not be read in time — not zero — so a rule
+	// must not read a missing value as "no history". Accounts are fingerprint
+	// hashes: popular phone models pool many people under one account.
+	accountFailures10m?: number;
+	accountPrevAttemptAgeSeconds?: number;
+	accountPrevAttemptFailed?: boolean;
+	accountPrevAttemptAsn?: number;
 	// Everything the detector reported for the session this verify belongs
 	// to, as persisted on the Session record. Keys are whatever the detector
 	// chose to emit: nothing in this repo declares them, and a rule may read

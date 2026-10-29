@@ -830,6 +830,11 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Run alongside the checks below.
+		const accountHistoryRead = this.readAccountHistory(
+			challengeRecord.userAccount,
+			challengeRecord.challenge,
+			challengeRecord.requestedAtTimestamp,
+		);
 		const sessionRecordRead = challengeRecord.sessionId
 			? this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: Promise.resolve(undefined);
@@ -1126,6 +1131,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					// on a site that accepts VPN users the observed stack
 					// says nothing about the client.
 					trafficPolicies: deriveTrafficPolicies(trafficFilter),
+					...(await accountHistoryRead),
 				};
 
 				const decision = await this.decisionMachineRunner.decide(

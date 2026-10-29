@@ -58,6 +58,15 @@ describe("CentralDbStreamer", () => {
 	let mockCommitmentUpdateOne: MockInstance;
 	let mockSessionUpdateOne: MockInstance;
 	let mockPuzzleUpdateOne: MockInstance;
+	let mockAttemptUpdateOne: MockInstance;
+	let mockAttemptFind: MockInstance;
+	let attemptQuery: {
+		sort: MockInstance;
+		limit: MockInstance;
+		maxTimeMS: MockInstance;
+		lean: MockInstance;
+		exec: MockInstance;
+	};
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -68,6 +77,15 @@ describe("CentralDbStreamer", () => {
 		mockCommitmentUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 		mockSessionUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 		mockPuzzleUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
+		mockAttemptUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
+		attemptQuery = {
+			sort: vi.fn(() => attemptQuery),
+			limit: vi.fn(() => attemptQuery),
+			maxTimeMS: vi.fn(() => attemptQuery),
+			lean: vi.fn(() => attemptQuery),
+			exec: vi.fn().mockResolvedValue([]),
+		};
+		mockAttemptFind = vi.fn(() => attemptQuery);
 
 		streamer = new CentralDbStreamer(
 			"mongodb://localhost:27017/test",
@@ -86,6 +104,10 @@ describe("CentralDbStreamer", () => {
 			commitment: { updateOne: mockCommitmentUpdateOne },
 			session: { updateOne: mockSessionUpdateOne },
 			puzzlecaptcha: { updateOne: mockPuzzleUpdateOne },
+			accountattempt: {
+				updateOne: mockAttemptUpdateOne,
+				find: mockAttemptFind,
+			},
 		};
 	});
 
@@ -462,6 +484,131 @@ describe("CentralDbStreamer", () => {
 			// After concurrent update, lastUpdatedTimestamp = updatedAt
 			// Batch cron: storedAtTimestamp < lastUpdatedTimestamp → needs re-sync
 			expect(streamedAt < updatedAt).toBe(true);
+		});
+	});
+
+	describe("account attempt log", () => {
+		const makePowRecord = (
+			overrides?: Partial<PoWCaptchaRecord>,
+		): PoWCaptchaRecord =>
+			({
+				challenge: "123___user___dapp___1",
+				userAccount: "user1",
+				dappAccount: "dapp1",
+				difficulty: 4,
+				requestedAtTimestamp: new Date("2026-01-01T00:00:00Z"),
+				lastUpdatedTimestamp: new Date("2026-01-01T01:00:00Z"),
+				result: { status: "Pending" },
+				...overrides,
+			}) as unknown as PoWCaptchaRecord;
+
+		it("does not log an attempt that has no result yet", async () => {
+			streamer.streamPowRecord(makePowRecord());
+			await flush();
+			expect(mockAttemptUpdateOne).not.toHaveBeenCalled();
+		});
+
+		it("logs a failed PoW attempt keyed by challenge, with its IP and ASN", async () => {
+			streamer.streamPowRecord(
+				makePowRecord({
+					result: { status: "Disapproved" },
+					ipInfo: { isValid: true, ip: "203.0.113.7", asnNumber: 9009 },
+				} as unknown as Partial<PoWCaptchaRecord>),
+			);
+			await flush();
+			expect(mockAttemptUpdateOne).toHaveBeenCalledWith(
+				{ challenge: "123___user___dapp___1" },
+				{
+					$set: {
+						challenge: "123___user___dapp___1",
+						account: "user1",
+						dappAccount: "dapp1",
+						captchaType: "pow",
+						at: new Date("2026-01-01T00:00:00Z"),
+						passed: false,
+						ip: "203.0.113.7",
+						asn: 9009,
+					},
+				},
+				{ upsert: true },
+			);
+		});
+
+		it("keeps the IP but not an ASN from an invalid IP lookup", async () => {
+			streamer.streamPowRecord(
+				makePowRecord({
+					result: { status: "Approved" },
+					ipInfo: { isValid: false, ip: "203.0.113.7", error: "lookup failed" },
+				} as unknown as Partial<PoWCaptchaRecord>),
+			);
+			await flush();
+			const [, update] = mockAttemptUpdateOne.mock.calls[0] as [
+				unknown,
+				{ $set: Record<string, unknown> },
+			];
+			expect(update.$set.passed).toBe(true);
+			expect(update.$set.ip).toBe("203.0.113.7");
+			expect("asn" in update.$set).toBe(false);
+		});
+
+		it("labels puzzle attempts with their captcha type", async () => {
+			streamer.streamPuzzleRecord({
+				challenge: "p1",
+				userAccount: "user2",
+				dappAccount: "dapp1",
+				requestedAtTimestamp: new Date("2026-01-01T00:00:00Z"),
+				result: { status: "Disapproved" },
+			} as unknown as PuzzleCaptchaRecord);
+			await flush();
+			const [, update] = mockAttemptUpdateOne.mock.calls[0] as [
+				unknown,
+				{ $set: Record<string, unknown> },
+			];
+			expect(update.$set.captchaType).toBe("puzzle");
+			expect(update.$set.account).toBe("user2");
+		});
+
+		it("returns undefined at once when there is no central connection", async () => {
+			const result = await streamer.readAccountAttempts("user1", 600_000, 250);
+			expect(result).toBeUndefined();
+			expect(mockAttemptFind).not.toHaveBeenCalled();
+		});
+
+		it("reads the account's attempts in the window, newest first, bounded by the timeout", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: test access to private field
+			(streamer as any).db.connected = true;
+			const attempts = [{ challenge: "c1", account: "user1", passed: false }];
+			attemptQuery.exec.mockResolvedValue(attempts);
+			const result = await streamer.readAccountAttempts("user1", 600_000, 250);
+			expect(result).toEqual(attempts);
+			const [filter] = mockAttemptFind.mock.calls[0] as [
+				{ account: string; at: { $gte: Date } },
+			];
+			expect(filter.account).toBe("user1");
+			expect(Date.now() - filter.at.$gte.getTime()).toBeGreaterThanOrEqual(
+				600_000,
+			);
+			expect(attemptQuery.sort).toHaveBeenCalledWith({ at: -1 });
+			expect(attemptQuery.maxTimeMS).toHaveBeenCalledWith(250);
+		});
+
+		it("gives up and returns undefined when the read outlasts the timeout", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: test access to private field
+			(streamer as any).db.connected = true;
+			attemptQuery.exec.mockReturnValue(new Promise(() => undefined));
+			const started = Date.now();
+			const result = await streamer.readAccountAttempts("user1", 600_000, 30);
+			expect(result).toBeUndefined();
+			expect(Date.now() - started).toBeLessThan(1_000);
+		});
+
+		it("returns undefined rather than throwing when the read fails", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: test access to private field
+			(streamer as any).db.connected = true;
+			attemptQuery.exec.mockRejectedValue(new Error("boom"));
+			await expect(
+				streamer.readAccountAttempts("user1", 600_000, 250),
+			).resolves.toBeUndefined();
 		});
 	});
 });

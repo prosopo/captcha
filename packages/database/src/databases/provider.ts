@@ -64,6 +64,7 @@ import {
 } from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
+	type AccountAttemptRecord,
 	type AudioCaptchaRecord,
 	AudioCaptchaRecordSchema,
 	CaptchaRecordSchema,
@@ -2024,6 +2025,21 @@ export class ProviderDatabase
 			filter,
 			[{ $set: { ...baseSet, ...pipelineExprs } }],
 			{ updatePipeline: true },
+		);
+	}
+
+	readAccountAttempts(
+		account: string,
+		windowMs: number,
+		timeoutMs: number,
+	): Promise<AccountAttemptRecord[] | undefined> {
+		if (!this.centralStreamer) {
+			return Promise.resolve(undefined);
+		}
+		return this.centralStreamer.readAccountAttempts(
+			account,
+			windowMs,
+			timeoutMs,
 		);
 	}
 
