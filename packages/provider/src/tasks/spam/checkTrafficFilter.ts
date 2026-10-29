@@ -90,13 +90,13 @@ export const categoryToReason = (
 	category: TrafficCategory,
 ): TrafficBlockReason => CATEGORY_TO_REASON[category];
 
-// Match the allowlist / denylist against `datacenterName`, `providerName`
+// Match a name list against `datacenterName`, `providerName`
 // (`company.name`), and `asnOrganization` — case-insensitive, whitespace
 // trimmed. The upstream ipapi only populates `datacenter.datacenter` for
 // curated named ranges, so falling back to providerName and asnOrganization
 // lets the lists also catch generic CDN / cloud-provider IPs that come
 // back with `is_datacenter: true` but no datacenter name.
-const matchesDatacenterNameList = (
+const matchesNameList = (
 	ipInfo: IPInfoResult,
 	list: ReadonlyArray<string> | undefined,
 ): boolean => {
@@ -120,53 +120,87 @@ const matchesDatacenterNameList = (
 	return candidates.some((c) => normalisedList.includes(c));
 };
 
-// iCloud Private Relay puts many real Apple users behind each partner-CDN
-// egress IP, so it is allowlisted for every site without being configured.
-// An operator who wants it treated as datacenter names it in
-// `datacenterNameDenylist`, which wins over this as over any allowlist entry.
-const DEFAULT_DATACENTER_ALLOWLIST: ReadonlyArray<string> = [
-	"iCloud Private Relay",
-];
+const PRIVATE_RELAY_NAMES: ReadonlyArray<string> = ["iCloud Private Relay"];
 
 export const isPrivateRelay = (ipInfo: IPInfoResult): boolean =>
-	matchesDatacenterNameList(ipInfo, DEFAULT_DATACENTER_ALLOWLIST);
+	matchesNameList(ipInfo, PRIVATE_RELAY_NAMES);
 
-export const isDatacenterAllowlisted = (
+// Sites saved before the lists moved onto every category keep theirs in the
+// top-level datacenter fields.
+const nameAllowlist = (
+	trafficFilter: Partial<ITrafficFilter>,
+	category: TrafficCategory,
+): ReadonlyArray<string> => [
+	...(trafficFilter[category]?.nameAllowlist ?? []),
+	...((category === "datacenter" && trafficFilter.datacenterNameAllowlist) ||
+		[]),
+];
+
+const nameDenylist = (
+	trafficFilter: Partial<ITrafficFilter>,
+	category: TrafficCategory,
+): ReadonlyArray<string> => [
+	...(trafficFilter[category]?.nameDenylist ?? []),
+	...((category === "datacenter" && trafficFilter.datacenterNameDenylist) ||
+		[]),
+];
+
+export const isNameAllowlisted = (
 	ipInfo: IPInfoResult,
-	allowlist: ReadonlyArray<string> | undefined,
+	trafficFilter: Partial<ITrafficFilter>,
+	category: TrafficCategory,
+): boolean => matchesNameList(ipInfo, nameAllowlist(trafficFilter, category));
+
+export const isNameDenylisted = (
+	ipInfo: IPInfoResult,
+	trafficFilter: Partial<ITrafficFilter>,
+	category: TrafficCategory,
+): boolean => matchesNameList(ipInfo, nameDenylist(trafficFilter, category));
+
+// A relay egress IP is a partner CDN node shared by many Apple users, so its
+// flags describe the node, not the visitor — and ipapi.is marks some relay
+// ranges as VPN as well as datacenter. Relay egress is always hosting, so the
+// name alone is not trusted. Nothing about relay makes an IP a Tor exit, so
+// exempting Tor could only hide a real one.
+const isPrivateRelayExempt = (
+	ipInfo: IPInfoResult,
+	category: TrafficCategory,
 ): boolean =>
-	isPrivateRelay(ipInfo) || matchesDatacenterNameList(ipInfo, allowlist);
+	category !== "tor" && ipInfo.isDatacenter && isPrivateRelay(ipInfo);
 
-// Counterpart to `isDatacenterAllowlisted`. When the datacenter rule is
-// active and the IP's name matches an entry in `datacenterNameDenylist`,
-// the rule fires regardless of the `providerType === "isp"` suppression
-// and regardless of any allowlist entry for the same name. Denylist wins
-// so operators can opt named providers back into the rule that would
-// otherwise be exempted by the ISP heuristic.
-export const isDatacenterDenylisted = (
+/**
+ * Whether a category the IP is flagged with applies to it. The same rules
+ * hold for every category: the denylist keeps the IP in, overriding the
+ * category's own qualifier and any allowlist entry; otherwise the qualifier
+ * must hold and the IP must not be on the allowlist or be relay egress.
+ */
+export const categoryApplies = (
 	ipInfo: IPInfoResult,
-	denylist: ReadonlyArray<string> | undefined,
-): boolean => matchesDatacenterNameList(ipInfo, denylist);
+	trafficFilter: Partial<ITrafficFilter>,
+	category: TrafficCategory,
+	qualifies = true,
+): boolean => {
+	if (isNameDenylisted(ipInfo, trafficFilter, category)) return true;
+	if (!qualifies) return false;
+	if (isPrivateRelayExempt(ipInfo, category)) return false;
+	return !isNameAllowlisted(ipInfo, trafficFilter, category);
+};
 
-// True when the IP's datacenter flag survives its qualifiers:
-// `datacenterNameDenylist` forces a match; otherwise the IP must not be
-// classified `providerType === "isp"` and must not be on
-// `datacenterNameAllowlist`. Used by the datacenter step of the per-IP
-// precedence chain in `evaluateIpInfo`, and mirrored by
-// `computeDnsAsymmetry` to gate its datacenter signal on the same rules.
+// Consumer ISPs are sometimes flagged datacenter when their edge is
+// co-located, so the datacenter flag only qualifies on a non-ISP provider.
+// Shared with `computeDnsAsymmetry` so its datacenter signal follows the
+// same rules.
 export const isEffectivelyDatacenter = (
 	ipInfo: IPInfoResult,
 	trafficFilter: Partial<ITrafficFilter>,
-): boolean => {
-	if (!ipInfo.isDatacenter) return false;
-	if (isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)) {
-		return true;
-	}
-	return (
-		ipInfo.providerType !== "isp" &&
-		!isDatacenterAllowlisted(ipInfo, trafficFilter.datacenterNameAllowlist)
+): boolean =>
+	ipInfo.isDatacenter &&
+	categoryApplies(
+		ipInfo,
+		trafficFilter,
+		"datacenter",
+		ipInfo.providerType !== "isp",
 	);
-};
 
 const maxAbuserScore = (ipInfo: IPInfoResult): number =>
 	Math.max(ipInfo.abuserScore ?? 0, ipInfo.companyAbuserScore ?? 0);
@@ -211,97 +245,47 @@ const policyForIp = (
 	return exceptionPolicy;
 };
 
-// Highest-precedence flag set on the IP wins. Only that category's policy
-// is consulted; lower-precedence flags on the same IP are ignored, even
+// The first flag, in precedence order, whose category applies owns the IP.
+// Only that category's policy is consulted; lower flags are ignored, even
 // when active. An IP that's fundamentally a Tor exit or a VPN is that
 // category first — upstream flagging it as datacenter/abuser/etc. is
 // downstream categorisation the top flag already captures. So if the
-// operator hasn't configured a policy for the top flag, the IP passes.
+// operator hasn't configured a policy for the owning flag, the IP passes.
 //
-// A few flags carry qualifying conditions that reject the flag itself:
-// abuser with score below threshold, datacenter with providerType='isp'
-// (and no denylist match, no allowlist bypass), crawler on DNS extras.
-// When those conditions disqualify the flag, evaluation falls through to
-// the next flag — the IP is not really that category.
+// A flag whose category does not apply (see `categoryApplies`) does not own
+// the IP and evaluation falls through to the next flag.
 const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
 	isDnsExtra = false,
 ): TrafficFilterMatch[] => {
-	const matches: TrafficFilterMatch[] = [];
-	if (!ipInfo || !ipInfo.isValid) return matches;
+	if (!ipInfo || !ipInfo.isValid) return [];
 
-	const push = (
-		category: TrafficCategory,
-		policy: ITrafficCategoryPolicy | undefined,
-	): void => {
-		if (!policy) return;
-		const marketCountries = trafficFilter.marketCountries ?? [];
-		matches.push({
-			category,
-			policy: policyForIp(policy, ipInfo, marketCountries),
-		});
-	};
+	const abuserScoreThreshold =
+		trafficFilter.abuserScoreThreshold ??
+		trafficFilterAbuserScoreThresholdDefault;
+	const flags: ReadonlyArray<[TrafficCategory, boolean, boolean]> = [
+		["tor", ipInfo.isTor, true],
+		["vpn", ipInfo.isVPN, true],
+		["proxy", ipInfo.isProxy, true],
+		["datacenter", ipInfo.isDatacenter, ipInfo.providerType !== "isp"],
+		["abuser", ipInfo.isAbuser, maxAbuserScore(ipInfo) >= abuserScoreThreshold],
+		// Public DNS resolvers share IP space with search crawlers.
+		["crawler", ipInfo.isCrawler, !isDnsExtra],
+		["satellite", ipInfo.isSatellite, true],
+		["mobile", ipInfo.isMobile, true],
+	];
 
-	if (ipInfo.isTor) {
-		push("tor", trafficFilter.tor);
-		return matches;
-	}
-
-	// A relay egress IP is a partner CDN node shared by many Apple users, so
-	// its other flags describe the node, not the visitor. ipapi.is also marks
-	// some relay ranges as VPN, which would block those users outright.
-	// Naming relay in `datacenterNameDenylist` opts it back into the checks.
-	if (
-		ipInfo.isDatacenter &&
-		isPrivateRelay(ipInfo) &&
-		!isDatacenterDenylisted(ipInfo, trafficFilter.datacenterNameDenylist)
-	) {
-		return matches;
-	}
-
-	if (ipInfo.isVPN) {
-		push("vpn", trafficFilter.vpn);
-		return matches;
-	}
-
-	if (ipInfo.isProxy) {
-		push("proxy", trafficFilter.proxy);
-		return matches;
-	}
-
-	if (isEffectivelyDatacenter(ipInfo, trafficFilter)) {
-		push("datacenter", trafficFilter.datacenter);
-		return matches;
-	}
-
-	if (ipInfo.isAbuser) {
-		const threshold =
-			trafficFilter.abuserScoreThreshold ??
-			trafficFilterAbuserScoreThresholdDefault;
-		if (maxAbuserScore(ipInfo) >= threshold) {
-			push("abuser", trafficFilter.abuser);
-			return matches;
-		}
-	}
-
-	// Public DNS resolvers share IP space with search crawlers.
-	if (ipInfo.isCrawler && !isDnsExtra) {
-		push("crawler", trafficFilter.crawler);
-		return matches;
-	}
-
-	if (ipInfo.isSatellite) {
-		push("satellite", trafficFilter.satellite);
-		return matches;
-	}
-
-	if (ipInfo.isMobile) {
-		push("mobile", trafficFilter.mobile);
-		return matches;
-	}
-
-	return matches;
+	const owner = flags.find(
+		([category, flagged, qualifies]) =>
+			flagged && categoryApplies(ipInfo, trafficFilter, category, qualifies),
+	);
+	if (!owner) return [];
+	const [category] = owner;
+	const policy = trafficFilter[category];
+	if (!policy) return [];
+	const marketCountries = trafficFilter.marketCountries ?? [];
+	return [{ category, policy: policyForIp(policy, ipInfo, marketCountries) }];
 };
 
 /**
@@ -310,14 +294,12 @@ const evaluateIpInfo = (
  * carries the policy `action` — `block` fires at submit time; `challenge`
  * fires at request time to override captcha type + params.
  *
- * Per-IP precedence: within a single IP, the highest-precedence flag set on
- * that IP wins and is the only category that emits a match. Order (highest
- * first): Tor, VPN, proxy, datacenter, abuser, crawler, satellite, mobile.
- * If the operator hasn't configured a policy for that top flag, the IP
+ * Per-IP precedence: within a single IP, the highest-precedence flag whose
+ * category applies wins and is the only category that emits a match. Order
+ * (highest first): Tor, VPN, proxy, datacenter, abuser, crawler, satellite,
+ * mobile. If the operator hasn't configured a policy for that flag, the IP
  * passes cleanly — lower flags are not consulted. So an IP that's flagged
  * as both VPN and proxy is only acted on if the operator has a VPN policy.
- * An iCloud Private Relay egress that is not a Tor exit matches nothing
- * unless the operator names relay in `datacenterNameDenylist`.
  *
  * Exceptions: once a category owns the IP, its `exceptions` whose conditions
  * (country, in or out of the account's market, minimum abuser score) the IP
@@ -326,19 +308,15 @@ const evaluateIpInfo = (
  * e.g. proxies blocked, but challenged in the market unless their abuser
  * score is high.
  *
- * Qualifying conditions: a flag that fails its qualifier does not "own"
- * the IP and evaluation falls through to the next flag. The abuser flag
- * needs `abuserScore` (or `companyAbuserScore`) at or above
- * `abuserScoreThreshold`; the datacenter flag needs the IP to not be an
- * ISP (`providerType !== "isp"`) or to be on `datacenterNameDenylist`,
- * and to not be on `datacenterNameAllowlist`; the crawler flag is skipped
- * on DNS extras because public DNS resolvers share IP space with search
- * crawlers.
- *
- * Datacenter name lists: `datacenterNameAllowlist` lets operators opt named
- * consumer relays out of the datacenter rule (iCloud Private Relay is out by
- * default); `datacenterNameDenylist` opts named providers back in, including
- * iCloud Private Relay, and even when the ISP heuristic would exempt them.
+ * Whether a flagged category applies is decided the same way for every
+ * category. Its `nameDenylist` keeps the IP in. Otherwise the category's
+ * qualifier must hold — datacenter needs a non-ISP provider, abuser needs
+ * `abuserScore` (or `companyAbuserScore`) at or above `abuserScoreThreshold`,
+ * crawler is skipped on DNS extras because public DNS resolvers share IP
+ * space with search crawlers — and the IP must be neither on the category's
+ * `nameAllowlist` nor iCloud Private Relay egress (exempt from every
+ * category but Tor). A category that does not apply falls through to the
+ * next flag.
  *
  * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
  * confirmed the DNS path matched the connection path (`pathValid: true`),

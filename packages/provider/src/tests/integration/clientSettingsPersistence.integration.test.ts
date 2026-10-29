@@ -128,7 +128,11 @@ const FULLY_POPULATED_SETTINGS = {
 		},
 	},
 	trafficFilter: {
-		vpn: { action: TrafficFilterAction.Block },
+		vpn: {
+			action: TrafficFilterAction.Block,
+			nameAllowlist: ["VPN by Google"],
+			nameDenylist: ["Example VPN"],
+		},
 		proxy: { action: TrafficFilterAction.Block },
 		tor: { action: TrafficFilterAction.Block },
 		abuser: { action: TrafficFilterAction.Block },
@@ -137,6 +141,7 @@ const FULLY_POPULATED_SETTINGS = {
 			action: TrafficFilterAction.Challenge,
 			captchaType: CaptchaType.image,
 			solvedImagesCount: 5,
+			nameAllowlist: ["Cloudflare, Inc."],
 		},
 		datacenterNameAllowlist: ["iCloud Private Relay"],
 		datacenterNameDenylist: ["ScrapyIPLeaser"],
