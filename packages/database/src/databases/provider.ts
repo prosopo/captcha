@@ -1199,9 +1199,19 @@ export class ProviderDatabase
 							record as PuzzleCaptchaRecord,
 							markStored,
 						),
+					// The render inputs are patched on after the record is first
+					// streamed, so only an update can carry them to the central
+					// copy the portal redraws from. They are read here and on no
+					// other path: verify never needs them.
 					streamUpdate: (challenge, markStored) =>
 						this.centralStreamer?.streamPuzzleUpdate(
-							() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+							() =>
+								this.getInteractiveCaptchaRecordByChallenge<PuzzleCaptchaRecord>(
+									this.interactiveCollection(CaptchaType.puzzle),
+									challenge,
+									"streamPuzzleUpdate",
+									{ render: 1 },
+								),
 							markStored,
 						),
 				};
@@ -1448,6 +1458,7 @@ export class ProviderDatabase
 		collection: InteractiveCaptchaCollection,
 		challenge: string,
 		failedFuncName: string,
+		extraProjection: Record<string, 1> = {},
 	): Promise<T | null> {
 		if (!this.tables) {
 			throw new ProsopoError({
@@ -1487,6 +1498,7 @@ export class ProviderDatabase
 						// See the PoW projection above — same verify-time read.
 						clientMetaData: 1,
 						...collection.answerProjection,
+						...extraProjection,
 					},
 				)
 				.lean<T>();
