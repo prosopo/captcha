@@ -760,19 +760,24 @@ const countryCodesSchema = array(
 // filter's `marketCountries`: true matches inside the market, false outside
 // it, and neither matches while the market is unknown. `minAbuserScore`
 // compares against the higher of the IP's own and its company's abuser
-// score, inclusive.
+// score, inclusive. `mobile` tests the IP's `isMobile`: `mobile: false` keeps
+// a block off carrier networks, whose shared addresses carry real phones
+// alongside the rented SIMs that put them on proxy lists.
 export const TrafficCategoryExceptionSchema =
 	TrafficCategoryActionSchema.extend({
 		countries: countryCodesSchema.min(1).optional(),
 		inMarket: boolean().optional(),
 		minAbuserScore: number().min(0).max(1).optional(),
+		mobile: boolean().optional(),
 	}).refine(
 		(exception) =>
 			exception.countries !== undefined ||
 			exception.inMarket !== undefined ||
-			exception.minAbuserScore !== undefined,
+			exception.minAbuserScore !== undefined ||
+			exception.mobile !== undefined,
 		{
-			message: "An exception needs countries, inMarket or minAbuserScore",
+			message:
+				"An exception needs countries, inMarket, minAbuserScore or mobile",
 		},
 	);
 

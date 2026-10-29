@@ -659,6 +659,16 @@ describe("TrafficFilterSchema", () => {
 		expect(filter.proxy?.exceptions?.[0]?.countries).toEqual(["GB"]);
 	});
 
+	it("accepts an exception conditioned only on mobile", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [{ mobile: true, action: TrafficFilterAction.Challenge }],
+			},
+		});
+		expect(filter.proxy?.exceptions?.[0]?.mobile).toBe(true);
+	});
+
 	it("accepts an exception conditioned only on the market", () => {
 		const filter = TrafficFilterSchema.parse({
 			proxy: {
