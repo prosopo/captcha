@@ -368,9 +368,12 @@ export async function startProviderApi(
 				);
 			} else if (
 				path === ClientApiPaths.VerifyImageCaptchaSolutionDapp ||
-				path === ClientApiPaths.VerifyPowCaptchaSolution
+				path === ClientApiPaths.VerifyPowCaptchaSolution ||
+				path === ClientApiPaths.SiteVerify
 			) {
-				// For verify, key on site key to prevent rate limiting API calls from lambdas
+				// For verify, key on site key: calls arrive through shared egress IPs
+				// (the siteverify Lambda, the Bunny siteverify router), and keying on
+				// IP would limit every site behind one of them as a single caller.
 				apiApp.use(
 					enumPath,
 					rateLimit({
