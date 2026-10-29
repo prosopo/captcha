@@ -1476,6 +1476,91 @@ describe("checkTrafficFilter", () => {
 			},
 		);
 
+		describe("an exception conditioned on mobile", () => {
+			// Twickets' shape: in-market proxies are challenged, and blocked
+			// once the abuser score is high, except on carrier networks.
+			const mobileSpared: ITrafficFilter = {
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [
+						{
+							inMarket: true,
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.pow,
+						},
+						{
+							inMarket: true,
+							minAbuserScore: 0.1,
+							mobile: false,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+				marketCountries: ["GB"],
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			};
+
+			it("blocks a high-scoring proxy that is not on a mobile network", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "GB", abuserScore: 0.27 }),
+					mobileSpared,
+				);
+				expect(result).toMatchObject({
+					isBlocked: true,
+					reason: "API.PROXY_BLOCKED",
+				});
+			});
+
+			it("only challenges the same proxy on a mobile network", () => {
+				const result = checkTrafficFilter(
+					baseInfo({
+						isProxy: true,
+						isMobile: true,
+						countryCode: "GB",
+						abuserScore: 0.27,
+					}),
+					mobileSpared,
+				);
+				expect(result.isBlocked).toBe(false);
+				expect(result.matches).toEqual([
+					{
+						category: "proxy",
+						policy: {
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.pow,
+						},
+					},
+				]);
+			});
+
+			it("applies a mobile: true exception only on mobile networks", () => {
+				const mobileOnly: ITrafficFilter = {
+					proxy: {
+						action: TrafficFilterAction.Block,
+						exceptions: [
+							{
+								mobile: true,
+								action: TrafficFilterAction.Challenge,
+								captchaType: CaptchaType.image,
+							},
+						],
+					},
+					abuserScoreThreshold: 0.2,
+					skipExtrasOnValidDnsPath: true,
+				};
+				expect(
+					checkTrafficFilter(
+						baseInfo({ isProxy: true, isMobile: true }),
+						mobileOnly,
+					).isBlocked,
+				).toBe(false);
+				expect(
+					checkTrafficFilter(baseInfo({ isProxy: true }), mobileOnly),
+				).toMatchObject({ isBlocked: true, reason: "API.PROXY_BLOCKED" });
+			});
+		});
+
 		describe("when several exceptions match", () => {
 			// Proxies blocked; in the market, challenged unless the abuser
 			// score is high. Both exceptions match a high-scoring GB proxy.

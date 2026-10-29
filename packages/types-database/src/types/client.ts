@@ -204,6 +204,7 @@ const TrafficCategoryExceptionSchema = TrafficCategoryActionSchema.clone().add({
 	countries: { type: [String], default: undefined, required: false },
 	inMarket: { type: Boolean, required: false },
 	minAbuserScore: { type: Number, min: 0, max: 1, required: false },
+	mobile: { type: Boolean, required: false },
 });
 
 export const TrafficCategoryPolicySchema =
