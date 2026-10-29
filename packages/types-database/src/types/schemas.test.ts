@@ -689,6 +689,41 @@ describe("UserSettingsSchema", () => {
 		expect(doc.trafficFilter.vpn.puzzle.pieceScale.max).toBe(0.2);
 	});
 
+	it.each([
+		"vpn",
+		"proxy",
+		"tor",
+		"abuser",
+		"datacenter",
+		"mobile",
+		"satellite",
+		"crawler",
+	])("persists the name lists on the %s category", (category: string) => {
+		const doc = settings({
+			trafficFilter: {
+				[category]: {
+					action: TrafficFilterAction.Block,
+					nameAllowlist: ["VPN by Google"],
+					nameDenylist: ["Proxy Lease Ltd"],
+				},
+			},
+		});
+		expect([...doc.trafficFilter[category].nameAllowlist]).toEqual([
+			"VPN by Google",
+		]);
+		expect([...doc.trafficFilter[category].nameDenylist]).toEqual([
+			"Proxy Lease Ltd",
+		]);
+	});
+
+	it("leaves the name lists absent when a category sets none", () => {
+		const doc = settings({
+			trafficFilter: { vpn: { action: TrafficFilterAction.Block } },
+		});
+		expect(doc.trafficFilter.vpn.nameAllowlist).toBeUndefined();
+		expect(doc.trafficFilter.vpn.nameDenylist).toBeUndefined();
+	});
+
 	it("persists exceptions on a traffic filter category", () => {
 		const doc = settings({
 			trafficFilter: {

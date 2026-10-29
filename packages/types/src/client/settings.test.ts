@@ -692,6 +692,32 @@ describe("TrafficFilterSchema", () => {
 		expect(filter.datacenterNameDenylist).toBeUndefined();
 	});
 
+	it.each(["nameAllowlist", "nameDenylist"])(
+		"accepts %s on every category and rejects an empty or overlong entry",
+		(key: string) => {
+			for (const category of [
+				"vpn",
+				"proxy",
+				"tor",
+				"abuser",
+				"datacenter",
+				"mobile",
+				"satellite",
+				"crawler",
+			]) {
+				const withList = (list: string[]): boolean =>
+					TrafficFilterSchema.safeParse({
+						[category]: { action: TrafficFilterAction.Block, [key]: list },
+					}).success;
+				expect(withList(["VPN by Google"])).toBe(true);
+				expect(withList([])).toBe(true);
+				expect(withList([""])).toBe(false);
+				expect(withList(["a".repeat(129)])).toBe(false);
+				expect(withList(new Array(51).fill("a"))).toBe(false);
+			}
+		},
+	);
+
 	it.each(["datacenterNameAllowlist", "datacenterNameDenylist"])(
 		"rejects an empty or overlong entry in %s",
 		(key: string) => {

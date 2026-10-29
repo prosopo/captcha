@@ -213,6 +213,8 @@ export const TrafficCategoryPolicySchema =
 			default: undefined,
 			required: false,
 		},
+		nameAllowlist: { type: [String], default: undefined, required: false },
+		nameDenylist: { type: [String], default: undefined, required: false },
 	});
 
 export const UserSettingsSchema = new Schema({
