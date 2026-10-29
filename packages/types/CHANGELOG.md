@@ -1,5 +1,14 @@
 # @prosopo/types
 
+## 5.21.0
+### Minor Changes
+
+- b18a733: Routing machines now see which detectors fired, as `raw.triggeredDetectors`.
+  
+  The provider already stored the triggered detectors on the session but never passed them to the routing machine, so a routing rule could not act on a single detector. They are now passed on the first request, on the post-PoW route and on the dedup replay. On the last two they come from the stored session.
+- fb7e3ec: A traffic-filter exception can now be conditioned on whether the IP is on a mobile network (`mobile: true` or `mobile: false`). This lets a site block high-scoring proxies everywhere except on carrier networks, where one shared address carries real phones alongside the rented SIMs that put it on proxy lists.
+- 25a151e: Every traffic-filter category (VPN, proxy, Tor, abuser, datacenter, mobile, satellite, crawler) now has the same two name lists. `nameAllowlist` takes a matching network out of that category, for example letting "VPN by Google" past a VPN block. `nameDenylist` keeps a matching network in that category even when it would otherwise be let out. Until now only the datacenter category had these lists. The old top-level `datacenterNameAllowlist` and `datacenterNameDenylist` still work and count as the datacenter category's lists. iCloud Private Relay is let through by every category except Tor unless a site denylists it.
+
 ## 5.20.2
 ### Patch Changes
 
