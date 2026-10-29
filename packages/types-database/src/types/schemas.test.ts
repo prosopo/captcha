@@ -745,6 +745,25 @@ describe("UserSettingsSchema", () => {
 		expect(exception.action).toBe(TrafficFilterAction.Block);
 	});
 
+	it("persists an exception's mobile condition", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [
+						{
+							inMarket: true,
+							minAbuserScore: 0.1,
+							mobile: false,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+			},
+		});
+		expect(doc.trafficFilter.proxy.exceptions[0].mobile).toBe(false);
+	});
+
 	it("leaves exceptions absent when none are configured", () => {
 		const doc = settings({
 			trafficFilter: { proxy: { action: TrafficFilterAction.Block } },
