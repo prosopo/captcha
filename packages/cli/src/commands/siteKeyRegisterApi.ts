@@ -23,6 +23,7 @@ import {
 	frictionlessImageThresholdDefault,
 	frictionlessTypesDefault,
 	iconOrderToleranceDefault,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -146,6 +147,7 @@ export default (
 						puzzleTolerance: puzzleToleranceDefault,
 						iconOrderTolerance: iconOrderToleranceDefault,
 						puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+						ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 						disallowWebView: false,
 						verifiedTimeout: 60000,
 						solutionTimeout: 60000,

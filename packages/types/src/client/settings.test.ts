@@ -49,6 +49,7 @@ import {
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	imageThresholdDefault,
+	ipDetectorRiskWeightDefault,
 	isCaptchaTypeFeatureEnabled,
 	isWidgetFeatureEnabled,
 	powDifficultyDefault,
@@ -368,6 +369,32 @@ describe("ClientSettingsSchema", () => {
 			ClientSettingsSchema.safeParse({ ...minimal, autoBanScoreThreshold: -1 })
 				.success,
 		).toBe(false);
+	});
+
+	it("defaults the IP detector risk weight to 0", () => {
+		expect(ipDetectorRiskWeightDefault).toBe(0);
+		expect(parse(minimal).ipDetectorRiskWeight).toBe(0);
+	});
+
+	it("accepts an IP detector risk weight from 0 to 1", () => {
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 0 }).ipDetectorRiskWeight,
+		).toBe(0);
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 0.5 }).ipDetectorRiskWeight,
+		).toBe(0.5);
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 1 }).ipDetectorRiskWeight,
+		).toBe(1);
+	});
+
+	it("rejects an IP detector risk weight outside 0 to 1", () => {
+		for (const ipDetectorRiskWeight of [-0.1, 1.1]) {
+			expect(
+				ClientSettingsSchema.safeParse({ ...minimal, ipDetectorRiskWeight })
+					.success,
+			).toBe(false);
+		}
 	});
 
 	it("accepts many domains and does not deduplicate them", () => {

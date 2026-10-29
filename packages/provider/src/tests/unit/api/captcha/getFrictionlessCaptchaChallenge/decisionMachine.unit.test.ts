@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { IPInfoResult, ScoreComponents } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { hashUserAgentMock, timestampTooOldMock, timestampDecayMock } =
@@ -508,6 +509,148 @@ describe("runDecisionMachine", () => {
 		expect(
 			input.tasks.frictionlessManager.sendImageCaptcha,
 		).not.toHaveBeenCalled();
+	});
+
+	describe("IP detector risk", () => {
+		// pow ≤ 0.5 < puzzle < 1 ≤ image
+		const ipInfoWithRisk = (detectorRisk?: number): IPInfoResult => ({
+			ip: "203.0.113.7",
+			isValid: true,
+			isVPN: false,
+			isTor: false,
+			isProxy: false,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+			isCrawler: false,
+			...(detectorRisk !== undefined && { detectorRisk }),
+		});
+
+		const withRisk = (
+			botScore: number,
+			detectorRisk: number | undefined,
+			ipDetectorRiskWeight: number | undefined,
+			extraSettings: Record<string, number> = {},
+		) =>
+			buildInput({
+				botScore,
+				ipInfo: ipInfoWithRisk(detectorRisk),
+				clientRecord: {
+					settings: {
+						imageMaxRounds: 8,
+						disallowWebView: false,
+						...(ipDetectorRiskWeight !== undefined && {
+							ipDetectorRiskWeight,
+						}),
+						...extraSettings,
+					},
+				},
+			});
+
+		type DecisionLog = { msg: string; data?: Record<string, unknown> };
+
+		const decisionLog = (
+			info: ReturnType<typeof vi.fn>,
+		): Record<string, unknown> | undefined =>
+			info.mock.calls
+				.map(([build]: unknown[]) => (build as () => DecisionLog)())
+				.find((entry: DecisionLog) => entry.msg === "Frictionless decision")
+				?.data;
+
+		it("leaves the score alone with the default weight", async () => {
+			const input = withRisk(0.4, 0.9, undefined);
+			const { req, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+			expect(
+				input.tasks.frictionlessManager.updateScore,
+			).not.toHaveBeenCalled();
+			expect(decisionLog(req.logger.info)).toMatchObject({
+				decision: "default_pow",
+				rawBotScore: 0.4,
+				effectiveBotScore: 0.4,
+				ipDetectorRisk: 0.9,
+				ipDetectorRiskWeight: 0,
+			});
+		});
+
+		it("leaves the score alone with an explicit weight of 0", async () => {
+			const input = withRisk(0.4, 0.9, 0);
+			const { handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+			expect(
+				input.tasks.frictionlessManager.updateScore,
+			).not.toHaveBeenCalled();
+		});
+
+		it("adds weight times risk to the score", async () => {
+			const input = withRisk(0.4, 0.4, 0.5);
+			const { req, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(
+				input.tasks.frictionlessManager.sendPuzzleCaptcha,
+			).toHaveBeenCalled();
+			const [score, components]: [number, ScoreComponents] = input.tasks
+				.frictionlessManager.updateScore.mock.calls[0] as [
+				number,
+				ScoreComponents,
+			];
+			expect(score).toBeCloseTo(0.6);
+			expect(components.ipDetectorRisk).toBeCloseTo(0.2);
+			const log = decisionLog(req.logger.info);
+			expect(log?.decision).toBe("bot_score_puzzle_band");
+			expect(log?.rawBotScore).toBe(0.4);
+			expect(log?.effectiveBotScore).toBeCloseTo(0.6);
+		});
+
+		it("caps the raised score at 1", async () => {
+			const input = withRisk(0.9, 1, 1);
+			const { handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(input.tasks.frictionlessManager.updateScore).toHaveBeenCalledWith(
+				1,
+				expect.objectContaining({ ipDetectorRisk: expect.closeTo(0.1) }),
+			);
+			expect(
+				input.tasks.frictionlessManager.sendImageCaptcha,
+			).toHaveBeenCalledWith(
+				expect.objectContaining({ reason: "BOT_SCORE_ABOVE_THRESHOLD" }),
+			);
+		});
+
+		it("never lowers a score already above 1", async () => {
+			const input = withRisk(1.3, 1, 1);
+			const { handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(
+				input.tasks.frictionlessManager.updateScore,
+			).not.toHaveBeenCalled();
+		});
+
+		it("adds nothing when the address has no risk", async () => {
+			const input = withRisk(0.4, undefined, 0.5);
+			const { req, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+			expect(
+				input.tasks.frictionlessManager.updateScore,
+			).not.toHaveBeenCalled();
+			expect(decisionLog(req.logger.info)).toMatchObject({
+				effectiveBotScore: 0.4,
+				ipDetectorRisk: null,
+			});
+		});
+
+		it("never reaches the auto-ban check", async () => {
+			const input = withRisk(0.4, 1, 1, { autoBanScoreThreshold: 0.5 });
+			const { handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("auto-ban threshold (post-penalty)", () => {
