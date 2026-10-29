@@ -229,11 +229,19 @@ http://:9090 {
 			X-Robots-Tag "none"
 		}
 
-		# Some crawlers send a Content-Length and never the body, so each request holds a
+		# Crawlers can never pass a captcha, so turn them away before they cost provider
+		# CPU. Some send a Content-Length and never the body, so each request holds a
 		# connection for the full read_body timeout. Answer before reading the body.
+		#
+		# Deployments set the user-agent regexes from a maintained list; unset, only Baidu
+		# is blocked. Requests signed with Web Bot Auth (Signature-Agent) and AI agents
+		# acting for a user always reach the provider, which checks them against the
+		# site's verified-agent rules.
 		@crawler_client_api {
 			path /v1/prosopo/provider/client/*
-			header_regexp User-Agent (?i)baiduspider
+			header_regexp crawler User-Agent "{$CADDY_CRAWLER_UA_REGEX:(?i)baiduspider}"
+			not header Signature-Agent *
+			not header_regexp agent User-Agent "{$CADDY_AGENT_UA_REGEX:a^}"
 		}
 		respond @crawler_client_api 403 {
 			close
