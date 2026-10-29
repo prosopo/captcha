@@ -28,6 +28,7 @@ import {
 	ResultReason,
 	Tier,
 	TrafficFilterAction,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
@@ -65,6 +66,7 @@ const defaultUserSettings: IUserSettings = {
 	puzzleTolerance: 15,
 	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+	ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 	disallowWebView: false,
 };
 

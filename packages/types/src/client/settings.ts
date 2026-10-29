@@ -74,6 +74,8 @@ export const puzzleToleranceDefault = 15;
 export const puzzleMaxDifficultyDefault = 3;
 export const puzzleMaxDifficultyMax = 4;
 
+export const ipDetectorRiskWeightDefault = 0;
+
 // Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
 // `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
 // authoritative bounds and defaults; the renderer just receives resolved
@@ -916,6 +918,13 @@ export const ClientSettingsSchema = object({
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
+	// How much of the IP's detector risk is added to the session's bot score
+	// before the score ladder is applied. 0 leaves the score untouched.
+	ipDetectorRiskWeight: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(ipDetectorRiskWeightDefault),
 	// Tolerance in pixels between the release point and the puzzle target
 	// centre (Euclidean distance). Default 15 matches what real solvers
 	// actually hit. The ceiling is deliberately larger than the puzzle
