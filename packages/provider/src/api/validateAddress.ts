@@ -12,33 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError } from "@prosopo/common";
-import type { TranslationKey } from "@prosopo/locale";
-import type { Logger } from "@prosopo/logger";
+import { type ErrorCode, ProsopoError } from "@prosopo/common";
 import { validateAddress } from "@prosopo/util-crypto";
 
-export const validateSiteKey = (siteKey: string, logger?: Logger) => {
-	return validateAddr(siteKey, "API.INVALID_SITE_KEY", logger);
-};
+export const validateSiteKey = (siteKey: string) =>
+	validateAddr(siteKey, "SITE_KEY_INVALID");
 
 export const validateAddr = (
 	address: string,
-	translationKey: TranslationKey = "CONTRACT.INVALID_ADDRESS",
-	logger?: Logger,
+	code: ErrorCode = "INVALID_REQUEST",
 ) => {
+	let valid = false;
+	let cause: unknown;
 	try {
-		const valid = validateAddress(address, false, 42);
-
-		if (!valid) {
-			throw new ProsopoApiError(translationKey, {
-				context: { code: 400, siteKey: address },
-				logger,
-			});
-		}
+		valid = validateAddress(address, false, 42);
 	} catch (err) {
-		throw new ProsopoApiError(translationKey, {
-			context: { code: 400, siteKey: address },
-			logger,
-		});
+		cause = err;
 	}
+	if (!valid)
+		throw new ProsopoError({
+			code,
+			errorSite: "PROV-35",
+			cause,
+			context: { siteKey: address },
+		});
 };

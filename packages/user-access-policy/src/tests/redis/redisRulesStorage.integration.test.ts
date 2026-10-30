@@ -43,6 +43,7 @@ import {
 } from "#policy/redis/redisRulesWriter.js";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
 import {
+	type AccessRulesFilter,
 	type AccessRulesReader,
 	type AccessRulesWriter,
 	FilterScopeMatch,
@@ -1802,6 +1803,114 @@ describe("redisAccessRulesStorage", () => {
 					r.description === "Too Many Requests",
 			);
 			expect(targetFound).toBeDefined();
+		});
+
+		test("returns a global rule's exclusions on the request-time path so the ranker can apply them", async () => {
+			const numericIp = 1482864477n;
+			const excludedSite = getUniqueString();
+
+			const excludingGlobalRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				description: "excluding",
+				excludedClientIds: [excludedSite, getUniqueString()],
+			};
+			const plainGlobalRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				description: "plain",
+			};
+			const excludedSitesOwnRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				clientId: excludedSite,
+				description: "own",
+			};
+
+			await insertRules([
+				excludingGlobalRule,
+				plainGlobalRule,
+				excludedSitesOwnRule,
+			]);
+
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: excludedSite },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: { numericIp },
+					userScopeMatch: FilterScopeMatch.Greedy,
+					blockOnly: true,
+				},
+				true,
+			);
+
+			expect(found.map((rule) => rule.description).sort()).toEqual([
+				"excluding",
+				"own",
+				"plain",
+			]);
+			expect(
+				found.find((rule) => rule.description === "excluding")
+					?.excludedClientIds,
+			).toEqual(excludingGlobalRule.excludedClientIds);
+		});
+
+		test("finds rule ids by a hyphenated group id", async () => {
+			const groupedRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				asn: 64512,
+				groupId: "example-rule-group",
+			};
+			const otherGroupRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				asn: 64512,
+				groupId: "other-rule-group",
+			};
+
+			await insertRules([groupedRule, otherGroupRule]);
+
+			const ruleIds = await accessRulesReader.findRuleIds({
+				groupId: "example-rule-group",
+				userScope: { asn: 64512 },
+				userScopeMatch: FilterScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			expect(ruleIds).toEqual([
+				getAccessRuleRedisKey(groupedRule).slice(
+					ACCESS_RULE_REDIS_KEY_PREFIX.length,
+				),
+			]);
+		});
+
+		test("rejects rather than finding no rule ids when the search fails", async () => {
+			const filter: AccessRulesFilter = {
+				userScope: { ja4Hash: "unbalanced}brace" },
+			};
+
+			await expect(accessRulesReader.findRuleIds(filter)).rejects.toThrow();
+		});
+	});
+
+	describe("writer exclusions", () => {
+		test("re-pushing a rule without exclusions clears the previous list", async () => {
+			const writer = new RedisRulesWriter(redisClient, mockLogger);
+			const rule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp: 100n,
+			};
+			const ruleKey = getAccessRuleRedisKey(rule);
+
+			await writer.insertRules([
+				{ rule: { ...rule, excludedClientIds: ["site-a"] } },
+			]);
+			expect(await redisClient.hGet(ruleKey, "excludedClientIds")).toBe(
+				"site-a",
+			);
+
+			await writer.insertRules([{ rule }]);
+
+			expect(await redisClient.hGet(ruleKey, "excludedClientIds")).toBeNull();
 		});
 	});
 

@@ -134,7 +134,9 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 
 		const registerPromise = registerSiteKeys(db, records);
 
-		await expect(registerPromise).rejects.toThrowError("API.INVALID_SITE_KEY");
+		await expect(registerPromise).rejects.toMatchObject({
+			code: "SITE_KEY_INVALID",
+		});
 	});
 
 	it("should not call updateClientRecords if a site key is invalid", async () => {
@@ -147,9 +149,9 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 		];
 		const db = getMockDb();
 
-		await expect(registerSiteKeys(db, records)).rejects.toThrowError(
-			"API.INVALID_SITE_KEY",
-		);
+		await expect(registerSiteKeys(db, records)).rejects.toMatchObject({
+			code: "SITE_KEY_INVALID",
+		});
 		expect(db.updateClientRecords).not.toHaveBeenCalled();
 	});
 });

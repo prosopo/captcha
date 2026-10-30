@@ -275,6 +275,54 @@ describe("Frictionless Task Manager", () => {
 			);
 		});
 
+		it("records the fingerprint summary on the session at issuance", async () => {
+			// The proof now arrives with the frictionless request, so the bucket
+			// exists for every session, not only those that went on to a PoW.
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+			const fingerprintSummary = {
+				root: "0xroot",
+				groupHash: "0xgroup",
+				bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+			};
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-fp",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-fp",
+				fingerprintSummary,
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ fingerprintSummary }),
+			);
+		});
+
+		it("leaves the fingerprint summary off a session that sent no proof", async () => {
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+
+			const session = await frictionlessTaskManager.createSession({
+				token: "tok-no-fp",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				siteKey: "siteKey-no-fp",
+				captchaType: CaptchaType.image,
+			});
+
+			expect(session).not.toHaveProperty("fingerprintSummary");
+		});
+
 		it("leaves clientMetaData off a session the widget reported none for", async () => {
 			// Absent rather than an empty subdocument, so a reader can tell
 			// "no session id" from "session id we failed to record".
@@ -486,6 +534,40 @@ describe("Frictionless Task Manager", () => {
 			expect(response).toHaveProperty("captchaType", CaptchaType.puzzle);
 			expect(response).toHaveProperty("sessionId");
 			expect(response).toHaveProperty("status", "ok");
+		});
+
+		it("offers the audio alternative only on a visual challenge of an opted-in site", async () => {
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+			const sessionParams = {
+				token: "mockToken123",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("127.0.0.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "mockSiteKey",
+			};
+
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			frictionlessTaskManager.setAudioAlternativeEnabled(true);
+			const image = await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			const pow = await frictionlessTaskManager.sendPowCaptcha({
+				powDifficulty: undefined,
+			});
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			frictionlessTaskManager.setAudioAlternativeEnabled(false);
+			const imageOff = await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(image).toHaveProperty("audioAlternativeAvailable", true);
+			expect(pow).not.toHaveProperty("audioAlternativeAvailable");
+			expect(imageOff).not.toHaveProperty("audioAlternativeAvailable");
 		});
 
 		it("should throw when sendPuzzleCaptcha is called without session params", async () => {

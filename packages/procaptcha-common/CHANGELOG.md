@@ -1,5 +1,295 @@
 # @prosopo/procaptcha-common
 
+## 2.22.4
+### Patch Changes
+
+- 186debd: Record what the visitor does on the page from the moment the procaptcha script loads, and add it to the behavioural data sent with each solve.
+  
+  The detector's trackers only start once a widget renders. On sites that render it late, everything before that was missing. A checkout that mounts the widget when Buy is pressed, for example, loses the visitor's scroll down the page and the tap on Buy. A quick tap on the checkbox before detection finished was lost too. Those visitors were then judged on one or two stray events, or none at all, and sent to an image or puzzle challenge. The script now records mouse, touch, press and scroll events until detection finishes, then puts them in front of the detector's own data, dropping any event both recorded.
+
+## 2.22.3
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/account@2.8.121
+  - @prosopo/load-balancer@2.11.22
+
+## 2.22.2
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/account@2.8.120
+  - @prosopo/load-balancer@2.11.21
+
+## 2.22.1
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/account@2.8.119
+  - @prosopo/load-balancer@2.11.20
+
+## 2.22.0
+### Minor Changes
+
+- f53d027: A self-hosted widget (one built with `PROSOPO_PROVIDER_LIST`) now sends Prosopo a usage beacon on about one render in a thousand: a single `GET https://beacon.prosopo.io/v1/b.gif` carrying the page hostname, site key, bundle version and sample rate, with no referrer, cookies or visitor data. It lets us count self-hosted installs and the versions they run, so we can tell self-hosters about new releases and critical fixes. Hosted widgets never send it.
+  
+  Build the bundle with `PROSOPO_USAGE_BEACON=false` to turn it off. The generated self-hosted `.env` now includes the setting, and `SELF_HOSTING.md` documents exactly what is sent.
+
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/account@2.8.118
+  - @prosopo/load-balancer@2.11.19
+  - @prosopo/locale@3.13.2
+  - @prosopo/util@3.4.0
+  - @prosopo/widget-skeleton@2.10.5
+
+## 2.21.11
+### Patch Changes
+
+- 6fa6155: The widget's error state no longer overflows. The message shows as plain text and the error code goes on a smaller line underneath, linking to the FAQ. It used to be one underlined link with the code inline, and the code ran past the widget's edge.
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/account@2.8.117
+  - @prosopo/load-balancer@2.11.18
+
+## 2.21.10
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- 76b6edd: The widget now tells the provider which bundle it is and where it was loaded from, on every request:
+  
+  - `X-Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
+  - `X-Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
+  
+  Providers store request headers on the session and in the request logs, so together with the site key these show which sites self-host and which version each one runs.
+  
+  The provider now allows both headers in CORS. Every provider must run this version before the new bundle is published to the CDN: a widget sending these headers to an older provider fails the browser's preflight check and cannot load a captcha.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/account@2.8.116
+  - @prosopo/load-balancer@2.11.17
+  - @prosopo/locale@3.13.2
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/widget-skeleton@2.10.5
+
+## 2.21.9
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/account@2.8.115
+  - @prosopo/load-balancer@2.11.16
+  - @prosopo/types@5.19.0
+  - @prosopo/widget-skeleton@2.10.4
+
+## 2.21.8
+### Patch Changes
+
+- 96dbf9a: The widget's controls were smaller than a fingertip. Tapping the empty space around the "I am human" box now ticks it, so the area that responds is the full 58px row instead of the 28px box. The challenge's Cancel/Next buttons are now at least 44px tall (were 40px) and the reload button is 44px (was 40px).
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/account@2.8.114
+  - @prosopo/load-balancer@2.11.15
+
+## 2.21.7
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/account@2.8.113
+  - @prosopo/load-balancer@2.11.14
+
+## 2.21.6
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [f31f0d5]
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/widget-skeleton@2.10.3
+  - @prosopo/account@2.8.112
+  - @prosopo/load-balancer@2.11.13
+  - @prosopo/types@5.17.0
+
+## 2.21.5
+### Patch Changes
+
+- Updated dependencies [a5c953d]
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/types@5.16.3
+  - @prosopo/account@2.8.111
+  - @prosopo/load-balancer@2.11.12
+
+## 2.21.4
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/account@2.8.110
+  - @prosopo/load-balancer@2.11.11
+
+## 2.21.3
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+  - @prosopo/account@2.8.109
+  - @prosopo/load-balancer@2.11.10
+
+## 2.21.2
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+  - @prosopo/account@2.8.108
+  - @prosopo/load-balancer@2.11.9
+
+## 2.21.1
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/account@2.8.107
+  - @prosopo/types@5.15.1
+  - @prosopo/load-balancer@2.11.8
+  - @prosopo/widget-skeleton@2.10.1
+
+## 2.21.0
+### Minor Changes
+
+- 4570692: Let a user swap the puzzle captcha for an image challenge, on sites where Prosopo has switched it on.
+  
+  Sites get a new staff-only setting, `widgetFeatureFlags.puzzleImageSwitch`. It is off by default and has no stored default. When it is on and the site allows image challenges, the puzzle response says `imageSwitchAvailable: true`. The puzzle then shows a small grid icon next to its title, with a "Switch to an image challenge" tooltip on hover or keyboard focus. After two wrong answers or refreshes in a row, the icon fills with the primary colour and its tooltip shows without a hover, because a touch screen has no hover. The tooltip goes away once the user starts moving the piece.
+  
+  Pressing it re-mints the session the same way refresh does, with `switchToImage: true`. The provider only honours that when the request is a refresh of a puzzle session on the same site and the switch is on. The new session is then an image challenge with reason `PUZZLE_USER_SWITCH`. Like the refresh limit, it only ever moves from puzzle to image, so a client that fakes the request can only make its own challenge harder.
+  
+  Also fixes a wrong puzzle answer restarting the whole widget. The user was sent back to the checkbox instead of getting a new puzzle with "Not quite — try again", and a wasted `/frictionless` request went out. The puzzle now retries in place.
+
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/account@2.8.106
+  - @prosopo/load-balancer@2.11.7
+
+## 2.20.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/account@2.8.105
+  - @prosopo/load-balancer@2.11.6
+
+## 2.19.0
+### Minor Changes
+
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+
+### Patch Changes
+
+- 2e69b83: The image challenge now grows to fit the screen it is on. Before, the popup sat at a fixed 322px whatever the device, because the box holding it shrank to wrap its contents and the panel inside could only reach the grid's 300px minimum. That left every image tile at 94.7px — on a phone with 344px of room going spare, and on a 1280px desktop where the panel is allowed to be 500px wide.
+  
+  Tiles now scale with the viewport: 102px on a Galaxy S22, 119px on an S22 Ultra, 107px on an iPhone SE, 154px on desktop. A screen narrower than the 300px minimum (a folding phone's cover display, say) still scrolls sideways exactly as before, and the floating placement is untouched.
+  
+  Measured in Chromium at each device's viewport and pixel ratio; the 3x3 grid still lays out as three rows on all of them.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/account@2.8.104
+  - @prosopo/load-balancer@2.11.5
+  - @prosopo/widget-skeleton@2.10.1
+
 ## 2.18.2
 ### Patch Changes
 

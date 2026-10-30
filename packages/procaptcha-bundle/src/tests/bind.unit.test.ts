@@ -26,6 +26,7 @@ vi.mock("@prosopo/procaptcha-frictionless", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	startPageBehaviourCapture: vi.fn(),
 	getWindowCallback: vi.fn(),
 	pickIpMode: vi.fn(() => undefined),
 }));

@@ -19,13 +19,50 @@ import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import codeSnippetInjector from "./src/plugins/code-snippet-injector.js";
 import formFillerInjector from "./src/plugins/form-filler-injector.js";
+import languageInjector from "./src/plugins/language-injector.js";
 import layoutInjector from "./src/plugins/layout-injector.js";
 import placementInjector from "./src/plugins/placement-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
-loadEnv();
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// A .env.<mode> found by searching up from here wins. The private repo's root
+// one carries no demo site keys, so the committed env.<mode> beside this file
+// fills in whatever is still unset.
+loadEnv();
+loadEnv(__dirname, "env");
+
+const DEMO_SITE_KEY_VARS = [
+	"PROSOPO_SITE_KEY_FRICTIONLESS",
+	"PROSOPO_SITE_KEY_POW",
+	"PROSOPO_SITE_KEY_IMAGE",
+	"PROSOPO_SITE_KEY_PUZZLE",
+] as const;
+
+const assertDemoSiteKeysSet = (mode: string) => {
+	const missing = DEMO_SITE_KEY_VARS.filter((name) => !process.env[name]);
+	if (missing.length > 0) {
+		throw new Error(
+			`Refusing to build the demos for mode "${mode}" without ${missing.join(", ")}: every page would ship data-sitekey="undefined".`,
+		);
+	}
+};
+
+const DEPLOYED_MODES = ["production", "staging"];
+const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
+
+const assertDemoServerUrlPublic = (mode: string) => {
+	if (!DEPLOYED_MODES.includes(mode)) {
+		return;
+	}
+	const serverUrl = process.env.PROSOPO_SERVER_URL;
+	if (!serverUrl || LOOPBACK_HOSTS.includes(new URL(serverUrl).hostname)) {
+		throw new Error(
+			`Refusing to build the demos for mode "${mode}" with PROSOPO_SERVER_URL=${serverUrl}: visitors' form submissions would fail and their browser would ask for local network access.`,
+		);
+	}
+};
+
 const certPath = path.resolve(__dirname, "../../certs");
 const keyPath = path.join(certPath, "server.key");
 const crtPath = path.join(certPath, "server.crt");
@@ -93,6 +130,11 @@ function moveDirectoryContents(
 }
 
 export default defineConfig(({ command, mode }) => {
+	if (command === "build") {
+		assertDemoSiteKeysSet(mode);
+		assertDemoServerUrlPublic(mode);
+	}
+
 	// Check if certificates exist
 	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
 
@@ -120,6 +162,12 @@ export default defineConfig(({ command, mode }) => {
 			),
 			"import.meta.env.PROSOPO_SITE_KEY_PUZZLE": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_PUZZLE,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_AUDIO": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_AUDIO,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_ICONORDER": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_ICONORDER,
 			),
 			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_POW,
@@ -158,7 +206,7 @@ export default defineConfig(({ command, mode }) => {
 			commonjsOptions: {
 				transformMixedEsModules: true,
 			},
-			outDir: "dist",
+			outDir: "dist/bundle",
 			emptyOutDir: false,
 			rollupOptions: {
 				input: {
@@ -223,6 +271,24 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-puzzle-explicit.html",
 					),
+					"audio-implicit": path.resolve(__dirname, "src/audio-implicit.html"),
+					"audio-explicit": path.resolve(__dirname, "src/audio-explicit.html"),
+					"invisible-audio-implicit": path.resolve(
+						__dirname,
+						"src/invisible-audio-implicit.html",
+					),
+					"invisible-audio-explicit": path.resolve(
+						__dirname,
+						"src/invisible-audio-explicit.html",
+					),
+					"icon-order-implicit": path.resolve(
+						__dirname,
+						"src/icon-order-implicit.html",
+					),
+					"icon-order-explicit": path.resolve(
+						__dirname,
+						"src/icon-order-explicit.html",
+					),
 				},
 			},
 		},
@@ -232,39 +298,40 @@ export default defineConfig(({ command, mode }) => {
 			codeSnippetInjector(),
 			statusLogInjector(),
 			placementInjector(),
+			languageInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {
 					// This runs after all other plugins have processed files
-					console.log("Copying additional files from src to dist...");
+					console.log("Copying additional files from src to dist/bundle...");
 					// Only copy assets and other non-HTML files since HTML files are processed by Vite
 					const srcAssetsDir = path.resolve(__dirname, "src/assets");
 
-					const destAssetsDir = path.resolve(__dirname, "dist/assets");
+					const destAssetsDir = path.resolve(__dirname, "dist/bundle/assets");
 					if (fs.existsSync(srcAssetsDir)) {
 						copyDirContents(srcAssetsDir, destAssetsDir);
 					}
 
 					// Copy any other necessary directories
 					const srcPluginsDir = path.resolve(__dirname, "src/plugins");
-					const destPluginsDir = path.resolve(__dirname, "dist/plugins");
+					const destPluginsDir = path.resolve(__dirname, "dist/bundle/plugins");
 					if (fs.existsSync(srcPluginsDir)) {
 						copyDirContents(srcPluginsDir, destPluginsDir);
 					}
 
 					// Final step: move any content from dist/src to dist root
-					const distSrcDir = path.resolve(__dirname, "dist/src");
-					const distDir = path.resolve(__dirname, "dist");
+					const distSrcDir = path.resolve(__dirname, "dist/bundle/src");
+					const distDir = path.resolve(__dirname, "dist/bundle");
 					if (fs.existsSync(distSrcDir)) {
-						console.log("Moving files from dist/src to dist root...");
+						console.log("Moving files from dist/bundle/src to dist/bundle...");
 						moveDirectoryContents(distSrcDir, distDir, true);
 
 						// Try to remove the now-empty dist/src directory
 						try {
 							fs.rmdirSync(distSrcDir);
-							console.log("Removed empty dist/src directory");
+							console.log("Removed empty dist/bundle/src directory");
 						} catch (err) {
-							console.warn("Could not remove dist/src directory:", err);
+							console.warn("Could not remove dist/bundle/src directory:", err);
 						}
 					}
 				},

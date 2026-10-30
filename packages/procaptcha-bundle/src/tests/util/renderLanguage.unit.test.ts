@@ -47,6 +47,7 @@ const i18n: Ti18n = {
 	isInitialized: true,
 	t: (key: string) => key,
 	changeLanguage: () => Promise.resolve(),
+	exists: (): boolean => false,
 	hasLoadedNamespace: () => true,
 	on: () => undefined,
 	off: () => undefined,
@@ -89,8 +90,14 @@ const render = (language: string): ProcaptchaClientConfigInput => {
 };
 
 describe("render language", () => {
-	test("an unsupported language falls back to English instead of failing the mount", () => {
-		expect(render("he").language).toBe("en");
+	test("an unsupported language is left to the browser instead of failing the mount", () => {
+		// No config.language: the widget then negotiates navigator.languages,
+		// then English, so a bad attribute does not override the browser.
+		expect(render("tlh").language).toBeUndefined();
+	});
+
+	test("a list takes the first supported language", () => {
+		expect(render("tlh, tr-TR").language).toBe("tr");
 	});
 
 	test("a supported language is kept", () => {

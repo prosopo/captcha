@@ -1,5 +1,330 @@
 # @prosopo/database
 
+## 4.5.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/types-database@5.16.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.14
+
+## 4.4.4
+### Patch Changes
+
+- 11a38cc: Copy each puzzle's render inputs (piece size, board size, decoy settings and the two seeds) to the central database, so the portal can redraw the exact puzzle a user was served.
+  
+  The inputs are added to the local record after it has first been sent to central. The follow-up update re-read the record with a fixed list of fields that left them out, so no central puzzle record ever had them. The update stream now asks for them as well. Every other read is unchanged, so verify still never touches them.
+  
+  The seeds rebuild the clean background and give away the answer. The portal's audit API strips them for everyone except superadmins, and only returns them once a puzzle can no longer be solved (prosopo/captcha-private#5719). That change has to be deployed before this one.
+- Updated dependencies [e6b2206]
+- Updated dependencies [8bf0957]
+  - @prosopo/user-access-policy@3.15.13
+  - @prosopo/types@5.22.0
+  - @prosopo/types-database@5.15.0
+  - @prosopo/common@3.3.2
+
+## 4.4.3
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/types-database@5.14.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.12
+
+## 4.4.2
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/types-database@5.13.2
+  - @prosopo/user-access-policy@3.15.11
+  - @prosopo/logger@2.1.7
+  - @prosopo/redis-client@1.0.44
+  - @prosopo/util@3.4.0
+
+## 4.4.1
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/types-database@5.13.1
+  - @prosopo/user-access-policy@3.15.10
+
+## 4.4.0
+### Minor Changes
+
+- 78107d9: Record the fingerprint summary, and with it the device bucket, for every captcha type rather than only PoW.
+  
+  The proof of fingerprint was only built by the PoW widget and only read when a PoW solution was submitted, so sessions served a puzzle or an image never had a bucket. About half of puzzle drags could only be given one by finding a PoW the same account had solved.
+  
+  The widget now sends the proof with the frictionless request, best-effort and capped at a second so it never delays the captcha. The provider verifies and summarises it once, stores the summary on the session, and the PoW, puzzle and image records copy it from there. Escalation sessions inherit it. A proof sent with a PoW solution still replaces the one from the frictionless request.
+  
+  The summary is only recorded at the frictionless step, not passed to the routing machine there, so existing `deviceBucket` counter rules keep firing where they did before.
+
+### Patch Changes
+
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/redis-client@1.0.44
+  - @prosopo/types@5.20.0
+  - @prosopo/types-database@5.13.0
+  - @prosopo/user-access-policy@3.15.9
+  - @prosopo/util@3.4.0
+
+## 4.3.0
+### Minor Changes
+
+- 915f30b: Traffic filter categories can now have exceptions. An exception matches visitors by country, by whether their country is inside or outside the account's market, by a minimum abuser score, or any mix of these. It then replaces the category's block or challenge action. When several exceptions match, the harshest wins: a block beats any challenge, and a stricter captcha beats a milder one. So the order of the list does not matter. For example, block proxies, but challenge those from the account's market unless their abuser score is at least 0.5.
+  
+  The account's market countries now travel to providers inside each site's traffic filter, including when a provider pulls updated sites from the portal database. An exception that depends on the market never matches while the account has no market set.
+  
+  `@prosopo/captcha-severity` gains `policyHarshness` and `harshestPolicy`. They rank a policy that may block, and the access rules now use them too, with the same ordering as before.
+
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/common@3.3.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/redis-client@1.0.43
+  - @prosopo/types-database@5.12.0
+  - @prosopo/types@5.19.0
+  - @prosopo/user-access-policy@3.15.8
+  - @prosopo/util@3.3.17
+
+## 4.2.10
+### Patch Changes
+
+- d02b3bc: The image challenge endpoint now answers 400 `INVALID_REQUEST` when the caller sends a `datasetId` that is not a stored dataset: an unknown hex id, a non-hex string or a byte array. Before, the id was only looked up once challenge generation had started, so a bad id came back as a 500. The response does not echo the id. If looking up the dataset fails for another reason, such as the database being unreachable, the endpoint still returns 500. Requests that leave `datasetId` out still use the provider's default dataset.
+  
+  `getDatasetDetails` now throws `RECORD_NOT_FOUND` rather than `DB_QUERY_FAILED` when no dataset matches, so a missing dataset can be told apart from a failed query.
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/types-database@5.11.2
+  - @prosopo/common@3.3.0
+  - @prosopo/user-access-policy@3.15.7
+
+## 4.2.9
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/types-database@5.11.1
+  - @prosopo/common@3.3.0
+  - @prosopo/user-access-policy@3.15.6
+
+## 4.2.8
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- 860948c: Server-side verify (what siteverify calls) now does far less waiting. A PoW verify used to make about 19 database and ip-lookup calls one after another; it now makes about 6, and a rejected verify fewer. Changes:
+  
+  - The ip lookup that runs on every request is skipped on verify routes. Nothing on verify used it, and the caller there is the site's server, not the user.
+  - The session record is read once instead of twice, and the client record once instead of twice.
+  - DNS enrichment and the user's ip lookup run alongside the access-rule check instead of after it. The ip lookup is skipped once a check has already failed.
+  - The verify answers without waiting for its two bookkeeping writes, unless 500 are already waiting, so a slow database cannot pile them up in memory. The single-use claim is still made before anything else, so a token still verifies only once.
+  - Decision-machine artifacts are cached per process. They were cached per request, so every verify read them from Mongo. Saving or deleting a machine clears the cache.
+  - Client records are cached for 30 seconds and the cache is cleared by every client-record write in the process.
+  - Successful ip lookups are cached for 10 minutes, so an address is not looked up twice in one verify, or again at verify after the challenge looked it up.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/common@3.3.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/redis-client@1.0.42
+  - @prosopo/types@5.17.0
+  - @prosopo/types-database@5.11.0
+  - @prosopo/user-access-policy@3.15.5
+  - @prosopo/util@3.3.16
+
+## 4.2.7
+### Patch Changes
+
+- Updated dependencies [3c5d196]
+  - @prosopo/user-access-policy@3.15.4
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/types-database@5.10.6
+  - @prosopo/logger@2.1.4
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/util@3.3.15
+
+## 4.2.6
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/types-database@5.10.5
+  - @prosopo/user-access-policy@3.15.3
+
+## 4.2.5
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/types-database@5.10.4
+  - @prosopo/user-access-policy@3.15.2
+
+## 4.2.4
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/types-database@5.10.3
+  - @prosopo/user-access-policy@3.15.1
+
+## 4.2.3
+### Patch Changes
+
+- Updated dependencies [460ca67]
+  - @prosopo/user-access-policy@3.15.0
+  - @prosopo/types-database@5.10.2
+
+## 4.2.2
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/types@5.15.1
+  - @prosopo/types-database@5.10.1
+  - @prosopo/user-access-policy@3.14.18
+  - @prosopo/util@3.3.15
+  - @prosopo/common@3.1.65
+  - @prosopo/logger@2.1.4
+
+## 4.2.1
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/types-database@5.10.0
+  - @prosopo/user-access-policy@3.14.17
+  - @prosopo/common@3.1.64
+
+## 4.2.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/types-database@5.9.0
+  - @prosopo/user-access-policy@3.14.16
+  - @prosopo/common@3.1.63
+
+## 4.1.4
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/types-database@5.8.0
+  - @prosopo/util@3.3.14
+  - @prosopo/common@3.1.62
+  - @prosopo/user-access-policy@3.14.15
+  - @prosopo/logger@2.1.3
+  - @prosopo/redis-client@1.0.40
+
 ## 4.1.3
 ### Patch Changes
 

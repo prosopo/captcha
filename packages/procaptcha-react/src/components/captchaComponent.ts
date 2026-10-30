@@ -13,11 +13,13 @@
 // limitations under the License.
 import type { Translator } from "@prosopo/locale";
 import {
+	type AudioAlternativeOffer,
 	type Component,
 	type StyleMap,
 	applyAttributes,
 	applyStyles,
 	createElement,
+	mountAudioAlternativeSlot,
 	mountReloadButton,
 	threeColumnBasis,
 	wrapRandomly,
@@ -54,6 +56,8 @@ export interface CaptchaComponentProps {
 	onReload: () => void;
 	themeColor: "light" | "dark";
 	translator: Translator;
+	/** Renders "use audio instead" under the action row. Absent hides it. */
+	audioAlternative?: AudioAlternativeOffer;
 }
 
 const outerStyle = (theme: Theme): StyleMap => ({
@@ -224,6 +228,15 @@ export const mountCaptchaComponent = (
 		children: [decoy(controls)],
 	});
 
+	// Below the action row so it reads as an alternative to the whole
+	// challenge, not as a fourth action on it.
+	const audioAlternativeRow = createElement("div", {
+		style: {
+			textAlign: "center",
+			paddingBottom: `${theme.spacing.unit * 2}px`,
+		},
+	});
+
 	const inner = createElement("div", {
 		style: {
 			backgroundColor: theme.palette.background.default,
@@ -234,7 +247,12 @@ export const mountCaptchaComponent = (
 			marginRight: `${jittered(theme.spacing.unit)}px`,
 			justifyContent: "center",
 		},
-		children: [decoy(headerRow), decoy(gridHost), decoy(controlsRow)],
+		children: [
+			decoy(headerRow),
+			decoy(gridHost),
+			decoy(controlsRow),
+			audioAlternativeRow,
+		],
 	});
 
 	const root = createElement("div", {
@@ -270,6 +288,11 @@ export const mountCaptchaComponent = (
 		text: props.translator.t("WIDGET.SUBMIT"),
 	});
 
+	const audioAlternative = mountAudioAlternativeSlot(audioAlternativeRow, {
+		offer: props.audioAlternative,
+		theme,
+	});
+
 	const render = () => {
 		const activeTheme = themeOf(props.themeColor);
 		applyStyles(root, outerStyle(activeTheme));
@@ -287,8 +310,6 @@ export const mountCaptchaComponent = (
 
 		const t = props.translator.t;
 		targetLabel.textContent = `${currentCaptcha().target} `;
-		// `:` then a non-breaking space, matching the `&nbsp;` the JSX carried
-		// between the label and the target word.
 		promptText.textContent = `${t("WIDGET.SELECT_ALL")}:\u00a0`;
 		promptText.appendChild(targetLabel);
 		hintText.textContent = t("WIDGET.IF_NONE_CLICK_NEXT");
@@ -324,6 +345,11 @@ export const mountCaptchaComponent = (
 			onClick: () => (isLastRound() ? props.onSubmit() : props.onNext()),
 			text: isLastRound() ? t("WIDGET.SUBMIT") : t("WIDGET.NEXT"),
 		});
+
+		audioAlternative.update({
+			offer: props.audioAlternative,
+			theme: activeTheme,
+		});
 	};
 
 	render();
@@ -339,6 +365,7 @@ export const mountCaptchaComponent = (
 			cancelButton.destroy();
 			reloadButton.destroy();
 			nextButton.destroy();
+			audioAlternative.destroy();
 			root.parentNode?.removeChild(root);
 		},
 	};

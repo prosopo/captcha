@@ -15,12 +15,16 @@
 import {
 	CaptchaType,
 	type IPInfoResult,
+	type ITrafficCategoryException,
 	type ITrafficFilter,
 	TrafficFilterAction,
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
+	TRAFFIC_CATEGORIES,
+	type TrafficCategory,
 	type TrafficFilterMatch,
+	categoryToReason,
 	checkTrafficFilter,
 	resolveChallengePolicy,
 	resolvePadBytes,
@@ -486,7 +490,7 @@ describe("checkTrafficFilter", () => {
 			const missing = checkTrafficFilter(
 				baseInfo({
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Amazon AWS",
 				}),
 				allBlocked,
 			);
@@ -498,7 +502,7 @@ describe("checkTrafficFilter", () => {
 			const empty = checkTrafficFilter(
 				baseInfo({
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Amazon AWS",
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: [] },
 			);
@@ -516,9 +520,9 @@ describe("checkTrafficFilter", () => {
 				baseInfo({
 					isTor: true,
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Example CDN",
 				}),
-				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
+				{ ...allBlocked, datacenterNameAllowlist: ["Example CDN"] },
 			);
 			expect(torResult).toMatchObject({
 				isBlocked: true,
@@ -529,9 +533,9 @@ describe("checkTrafficFilter", () => {
 				baseInfo({
 					isVPN: true,
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Example CDN",
 				}),
-				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
+				{ ...allBlocked, datacenterNameAllowlist: ["Example CDN"] },
 			);
 			expect(vpnResult).toMatchObject({
 				isBlocked: true,
@@ -676,6 +680,140 @@ describe("checkTrafficFilter", () => {
 				],
 			);
 			expect(result).toMatchObject({ isBlocked: false });
+		});
+	});
+
+	describe("iCloud Private Relay", () => {
+		it.each([
+			["datacenterName", { datacenterName: "iCloud Private Relay" }],
+			["providerName", { providerName: "iCloud Private Relay" }],
+		])(
+			"passes the datacenter rule with no allowlist configured (%s)",
+			(_, name) => {
+				const result = checkTrafficFilter(
+					baseInfo({ isDatacenter: true, ...name }),
+					allBlocked,
+				);
+				expect(result).toEqual({ isBlocked: false, matches: [] });
+			},
+		);
+
+		it("is not challenged when the datacenter rule challenges", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				{
+					datacenter: {
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.image,
+					},
+				},
+			);
+			expect(result.matches).toEqual([]);
+		});
+
+		it("is blocked when the operator names it in the denylist", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				{ ...allBlocked, datacenterNameDenylist: ["icloud private relay"] },
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it.each([
+			["every category blocked", allBlocked],
+			["only the submit-time default abuser rule", { abuser: block }],
+		])("is not checked against the abuser rule (%s)", (_, filter) => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isAbuser: true,
+					abuserScore: 0.003,
+					datacenterName: "iCloud Private Relay",
+				}),
+				{ ...filter, abuserScoreThreshold: 0 },
+			);
+			expect(result).toEqual({ isBlocked: false, matches: [] });
+		});
+
+		it("does not let a relay name on an IP without the datacenter flag skip the abuser rule", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isAbuser: true,
+					abuserScore: 1,
+					providerName: "iCloud Private Relay",
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.ABUSER_BLOCKED",
+			});
+		});
+
+		it.each([
+			["VPN", { isVPN: true }],
+			["proxy", { isProxy: true }],
+			["VPN and proxy", { isVPN: true, isProxy: true }],
+		])("is not blocked when the vendor also flags it %s", (_, flags) => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "iCloud Private Relay",
+					...flags,
+				}),
+				allBlocked,
+			);
+			expect(result).toEqual({ isBlocked: false, matches: [] });
+		});
+
+		it("is still blocked by the Tor flag", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isTor: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+		});
+
+		it("is blocked as datacenter, not VPN, when only the datacenter denylist names it", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isVPN: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				{ ...allBlocked, datacenterNameDenylist: ["iCloud Private Relay"] },
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("does not let a relay name on a VPN IP without the datacenter flag skip the VPN rule", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isVPN: true, providerName: "iCloud Private Relay" }),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.VPN_BLOCKED",
+			});
 		});
 	});
 
@@ -878,6 +1016,183 @@ describe("checkTrafficFilter", () => {
 		});
 	});
 
+	describe("name lists on every category", () => {
+		const FLAG: Record<TrafficCategory, Partial<IPInfoResult>> = {
+			tor: { isTor: true },
+			vpn: { isVPN: true },
+			proxy: { isProxy: true },
+			datacenter: { isDatacenter: true },
+			abuser: { isAbuser: true, abuserScore: 0.9 },
+			crawler: { isCrawler: true },
+			satellite: { isSatellite: true },
+			mobile: { isMobile: true },
+		};
+		const named = (category: TrafficCategory): IPInfoResult =>
+			baseInfo({ ...FLAG[category], providerName: "Example Co" });
+		const relay = (category: TrafficCategory): IPInfoResult =>
+			baseInfo({
+				...FLAG[category],
+				isDatacenter: true,
+				datacenterName: "iCloud Private Relay",
+			});
+		const blockedAs = (category: TrafficCategory) => ({
+			isBlocked: true,
+			reason: categoryToReason(category),
+		});
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: blocks a flagged IP with no lists set",
+			(category: TrafficCategory) => {
+				expect(
+					checkTrafficFilter(named(category), { [category]: block }),
+				).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: nameAllowlist lets a matching IP through",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(named(category), {
+					[category]: { ...block, nameAllowlist: ["  example co "] },
+				});
+				expect(result).toEqual({ isBlocked: false, matches: [] });
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES.filter((c) => c !== "mobile"))(
+			"%s: an allowlisted IP falls through to its next flag",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(
+					baseInfo({
+						...FLAG[category],
+						isMobile: true,
+						providerName: "Example Co",
+					}),
+					{
+						[category]: { ...block, nameAllowlist: ["Example Co"] },
+						mobile: block,
+					},
+				);
+				expect(result).toMatchObject(blockedAs("mobile"));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: another category's allowlist does not apply",
+			(category: TrafficCategory) => {
+				const other: TrafficCategory = category === "vpn" ? "proxy" : "vpn";
+				const result = checkTrafficFilter(named(category), {
+					[category]: block,
+					[other]: { ...block, nameAllowlist: ["Example Co"] },
+				});
+				expect(result).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: nameDenylist wins over nameAllowlist",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(named(category), {
+					[category]: {
+						...block,
+						nameAllowlist: ["Example Co"],
+						nameDenylist: ["Example Co"],
+					},
+				});
+				expect(result).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it.each(TRAFFIC_CATEGORIES.filter((c) => c !== "tor"))(
+			"%s: iCloud Private Relay is exempt by default",
+			(category: TrafficCategory) => {
+				expect(checkTrafficFilter(relay(category), allBlocked)).toEqual({
+					isBlocked: false,
+					matches: [],
+				});
+			},
+		);
+
+		it("tor: iCloud Private Relay is not exempt", () => {
+			expect(checkTrafficFilter(relay("tor"), allBlocked)).toMatchObject(
+				blockedAs("tor"),
+			);
+		});
+
+		it.each(TRAFFIC_CATEGORIES)(
+			"%s: nameDenylist keeps iCloud Private Relay in",
+			(category: TrafficCategory) => {
+				const result = checkTrafficFilter(relay(category), {
+					...allBlocked,
+					[category]: { ...block, nameDenylist: ["iCloud Private Relay"] },
+				});
+				expect(result).toMatchObject(blockedAs(category));
+			},
+		);
+
+		it("abuser: nameDenylist overrides the score threshold", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isAbuser: true,
+					abuserScore: 0.01,
+					providerName: "Example Co",
+				}),
+				{
+					abuser: { ...block, nameDenylist: ["Example Co"] },
+					abuserScoreThreshold: 0.5,
+				},
+			);
+			expect(result).toMatchObject(blockedAs("abuser"));
+		});
+
+		it("datacenter: nameDenylist overrides the ISP heuristic", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					providerName: "Example Co",
+				}),
+				{ datacenter: { ...block, nameDenylist: ["Example Co"] } },
+			);
+			expect(result).toMatchObject(blockedAs("datacenter"));
+		});
+
+		it("crawler: nameDenylist overrides the DNS-resolver skip", () => {
+			const result = checkTrafficFilter(
+				baseInfo(),
+				{
+					crawler: { ...block, nameDenylist: ["Example Co"] },
+				},
+				[named("crawler")],
+			);
+			expect(result).toMatchObject(blockedAs("crawler"));
+		});
+
+		it("datacenter: merges the legacy top-level lists", () => {
+			const ip = baseInfo({ isDatacenter: true, providerName: "Example Co" });
+			expect(
+				checkTrafficFilter(ip, {
+					datacenter: { ...block, nameAllowlist: ["Other Co"] },
+					datacenterNameAllowlist: ["Example Co"],
+				}),
+			).toEqual({ isBlocked: false, matches: [] });
+			expect(
+				checkTrafficFilter(ip, {
+					datacenter: { ...block, nameAllowlist: ["Example Co"] },
+					datacenterNameDenylist: ["Example Co"],
+				}),
+			).toMatchObject(blockedAs("datacenter"));
+		});
+
+		it("does not merge the legacy datacenter lists into other categories", () => {
+			const result = checkTrafficFilter(named("vpn"), {
+				vpn: block,
+				datacenterNameAllowlist: ["Example Co"],
+			});
+			expect(result).toMatchObject(blockedAs("vpn"));
+		});
+	});
+
 	describe("per-IP precedence", () => {
 		it("picks Tor over every other flag when all are set", () => {
 			// Precedence order: tor > vpn > proxy > datacenter > abuser > crawler
@@ -1050,6 +1365,371 @@ describe("checkTrafficFilter", () => {
 			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+	});
+
+	describe("exceptions", () => {
+		const challenge = { action: TrafficFilterAction.Challenge } as const;
+
+		const proxyChallengedInGbOnly: ITrafficFilter = {
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [
+					{
+						countries: ["GB"],
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.image,
+					},
+				],
+			},
+			abuserScoreThreshold: 0.2,
+			skipExtrasOnValidDnsPath: true,
+		};
+
+		it("challenges a GB proxy with the exception's captcha settings", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isProxy: true, countryCode: "GB" }),
+				proxyChallengedInGbOnly,
+			);
+			expect(result.isBlocked).toBe(false);
+			expect(result.matches).toEqual([
+				{
+					category: "proxy",
+					policy: {
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.image,
+					},
+				},
+			]);
+		});
+
+		it("matches the country code case-insensitively", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isProxy: true, countryCode: "gb" }),
+				proxyChallengedInGbOnly,
+			);
+			expect(result.isBlocked).toBe(false);
+		});
+
+		it.each([["FR"], [undefined]])(
+			"blocks a proxy whose country is %s",
+			(countryCode: string | undefined) => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode }),
+					proxyChallengedInGbOnly,
+				);
+				expect(result).toMatchObject({
+					isBlocked: true,
+					reason: "API.PROXY_BLOCKED",
+				});
+			},
+		);
+
+		const gbHighScoreBlocked: ITrafficFilter = {
+			proxy: {
+				...challenge,
+				exceptions: [
+					{
+						countries: ["GB"],
+						minAbuserScore: 0.5,
+						action: TrafficFilterAction.Block,
+					},
+				],
+			},
+			abuserScoreThreshold: 0.2,
+			skipExtrasOnValidDnsPath: true,
+		};
+
+		it.each([
+			[{ abuserScore: 0.5 }],
+			[{ abuserScore: 0.1, companyAbuserScore: 0.7 }],
+		])(
+			"blocks a GB proxy whose abuser score reaches the minimum (%o)",
+			(scores: Partial<IPInfoResult>) => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "GB", ...scores }),
+					gbHighScoreBlocked,
+				);
+				expect(result).toMatchObject({
+					isBlocked: true,
+					reason: "API.PROXY_BLOCKED",
+				});
+			},
+		);
+
+		it.each([
+			[{ countryCode: "GB", abuserScore: 0.49 }],
+			[{ countryCode: "GB" }],
+			[{ countryCode: "US", abuserScore: 0.9 }],
+		])(
+			"challenges a proxy that misses either condition (%o)",
+			(info: Partial<IPInfoResult>) => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, ...info }),
+					gbHighScoreBlocked,
+				);
+				expect(result.isBlocked).toBe(false);
+				expect(result.matches).toEqual([
+					{ category: "proxy", policy: gbHighScoreBlocked.proxy },
+				]);
+			},
+		);
+
+		describe("an exception conditioned on mobile", () => {
+			// Twickets' shape: in-market proxies are challenged, and blocked
+			// once the abuser score is high, except on carrier networks.
+			const mobileSpared: ITrafficFilter = {
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [
+						{
+							inMarket: true,
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.pow,
+						},
+						{
+							inMarket: true,
+							minAbuserScore: 0.1,
+							mobile: false,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+				marketCountries: ["GB"],
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			};
+
+			it("blocks a high-scoring proxy that is not on a mobile network", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "GB", abuserScore: 0.27 }),
+					mobileSpared,
+				);
+				expect(result).toMatchObject({
+					isBlocked: true,
+					reason: "API.PROXY_BLOCKED",
+				});
+			});
+
+			it("only challenges the same proxy on a mobile network", () => {
+				const result = checkTrafficFilter(
+					baseInfo({
+						isProxy: true,
+						isMobile: true,
+						countryCode: "GB",
+						abuserScore: 0.27,
+					}),
+					mobileSpared,
+				);
+				expect(result.isBlocked).toBe(false);
+				expect(result.matches).toEqual([
+					{
+						category: "proxy",
+						policy: {
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.pow,
+						},
+					},
+				]);
+			});
+
+			it("applies a mobile: true exception only on mobile networks", () => {
+				const mobileOnly: ITrafficFilter = {
+					proxy: {
+						action: TrafficFilterAction.Block,
+						exceptions: [
+							{
+								mobile: true,
+								action: TrafficFilterAction.Challenge,
+								captchaType: CaptchaType.image,
+							},
+						],
+					},
+					abuserScoreThreshold: 0.2,
+					skipExtrasOnValidDnsPath: true,
+				};
+				expect(
+					checkTrafficFilter(
+						baseInfo({ isProxy: true, isMobile: true }),
+						mobileOnly,
+					).isBlocked,
+				).toBe(false);
+				expect(
+					checkTrafficFilter(baseInfo({ isProxy: true }), mobileOnly),
+				).toMatchObject({ isBlocked: true, reason: "API.PROXY_BLOCKED" });
+			});
+		});
+
+		describe("when several exceptions match", () => {
+			// Proxies blocked; in the market, challenged unless the abuser
+			// score is high. Both exceptions match a high-scoring GB proxy.
+			const highScoreBlock = {
+				inMarket: true,
+				minAbuserScore: 0.5,
+				action: TrafficFilterAction.Block,
+			};
+			const inMarketChallenge = {
+				inMarket: true,
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+			};
+			const filterWith = (
+				exceptions: ITrafficCategoryException[],
+			): ITrafficFilter => ({
+				proxy: { action: TrafficFilterAction.Block, exceptions },
+				marketCountries: ["GB"],
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			});
+
+			it.each([
+				["block listed first", [highScoreBlock, inMarketChallenge]],
+				["challenge listed first", [inMarketChallenge, highScoreBlock]],
+			])(
+				"blocks with %s, so the order of the list does not matter",
+				(_order: string, exceptions: ITrafficCategoryException[]) => {
+					const highScore = baseInfo({
+						isProxy: true,
+						countryCode: "GB",
+						abuserScore: 0.7,
+					});
+					const lowScore = baseInfo({
+						isProxy: true,
+						countryCode: "GB",
+						abuserScore: 0.1,
+					});
+					expect(
+						checkTrafficFilter(highScore, filterWith(exceptions)).isBlocked,
+					).toBe(true);
+					expect(
+						checkTrafficFilter(lowScore, filterWith(exceptions)).matches,
+					).toEqual([
+						{
+							category: "proxy",
+							policy: {
+								action: TrafficFilterAction.Challenge,
+								captchaType: CaptchaType.puzzle,
+							},
+						},
+					]);
+				},
+			);
+
+			it("takes the stricter captcha between two matching challenges", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "GB" }),
+					filterWith([
+						{
+							countries: ["GB"],
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.pow,
+							powDifficulty: 10,
+						},
+						{
+							inMarket: true,
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.image,
+						},
+					]),
+				);
+				expect(result.matches[0]?.policy.captchaType).toBe(CaptchaType.image);
+			});
+
+			it("keeps the earlier of two equally harsh exceptions", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "GB" }),
+					filterWith([
+						{
+							countries: ["GB"],
+							action: TrafficFilterAction.Challenge,
+							padBytes: 1024,
+						},
+						{
+							inMarket: true,
+							action: TrafficFilterAction.Challenge,
+							padBytes: 2048,
+						},
+					]),
+				);
+				expect(result.matches[0]?.policy.padBytes).toBe(1024);
+			});
+		});
+
+		describe("inMarket", () => {
+			const marketFilter = (
+				inMarket: boolean,
+				marketCountries?: string[],
+			): ITrafficFilter => ({
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [{ inMarket, action: TrafficFilterAction.Challenge }],
+				},
+				marketCountries,
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			});
+
+			it.each([
+				[true, "GB", false],
+				[true, "FR", true],
+				[false, "FR", false],
+				[false, "GB", true],
+			])(
+				"with inMarket %s, a proxy from %s is blocked: %s",
+				(inMarket: boolean, countryCode: string, blocked: boolean) => {
+					const result = checkTrafficFilter(
+						baseInfo({ isProxy: true, countryCode }),
+						marketFilter(inMarket, ["GB", "IE"]),
+					);
+					expect(result.isBlocked).toBe(blocked);
+				},
+			);
+
+			it.each([[true], [false]])(
+				"never matches inMarket %s while the account has no market",
+				(inMarket: boolean) => {
+					for (const marketCountries of [undefined, []]) {
+						const result = checkTrafficFilter(
+							baseInfo({ isProxy: true, countryCode: "GB" }),
+							marketFilter(inMarket, marketCountries),
+						);
+						expect(result.isBlocked).toBe(true);
+					}
+				},
+			);
+
+			it("never matches an IP with no country", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true }),
+					marketFilter(false, ["GB"]),
+				);
+				expect(result.isBlocked).toBe(true);
+			});
+
+			it("strips the condition from the policy it returns", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "IE" }),
+					marketFilter(true, ["GB", "IE"]),
+				);
+				expect(result.matches).toEqual([
+					{
+						category: "proxy",
+						policy: { action: TrafficFilterAction.Challenge },
+					},
+				]);
+			});
+		});
+
+		it("judges a DNS extra IP by its own country", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isProxy: true, countryCode: "GB" }),
+				proxyChallengedInGbOnly,
+				[baseInfo({ ip: "5.6.7.8", isProxy: true, countryCode: "DE" })],
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.PROXY_BLOCKED",
 			});
 		});
 	});

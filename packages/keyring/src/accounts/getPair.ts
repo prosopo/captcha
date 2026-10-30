@@ -14,7 +14,7 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { PolkadotSecretJSON } from "@prosopo/types";
 import type { KeyringPair, KeyringPair$Json } from "@prosopo/types";
 import { mnemonicValidate } from "@prosopo/util-crypto";
@@ -51,13 +51,20 @@ export function getPair(
 			const keyring = new Keyring({ type: content[1], ss58Format });
 			return keyring.addFromJson(json as KeyringPair$Json);
 		} catch (e) {
-			throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY", {
-				context: { error: e },
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "KEYR-1",
+				message: "Missing secret key",
+				cause: e,
 			});
 		}
 	} else if (typeof secret === "object") {
 		return keyring.addFromJson(secret as KeyringPair$Json);
 	} else {
-		throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY");
+		throw new ProsopoError({
+			code: "CONFIG_INVALID",
+			errorSite: "KEYR-2",
+			message: "Missing secret key",
+		});
 	}
 }

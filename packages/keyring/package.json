@@ -1,29 +1,27 @@
 {
 	"name": "@prosopo/keyring",
-	"version": "2.10.0",
+	"version": "2.10.18",
 	"description": "Keypair generator for Prosopo",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"type": "module",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
+		"build:types": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"repository": {
 		"type": "git",
@@ -38,24 +36,24 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/util": "14.0.3",
-		"@prosopo/common": "3.1.61",
-		"@prosopo/types": "5.12.0",
-		"@prosopo/util": "3.3.13",
-		"@prosopo/util-crypto": "13.6.0",
-		"dotenv": "16.4.5"
+		"@prosopo/common": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
+		"dotenv": "18.0.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.11",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.11"
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"sideEffects": false
 }

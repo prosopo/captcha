@@ -1,5 +1,206 @@
 # @prosopo/fingerprint
 
+## 2.8.9
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+
+## 2.8.8
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+
+## 2.8.7
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+
+## 2.8.6
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/fingerprintjs@5.2.0
+  - @prosopo/util-crypto@13.6.3
+
+## 2.8.5
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+
+## 2.8.4
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/types@5.20.0
+  - @prosopo/util-crypto@13.6.3
+  - @prosopo/fingerprintjs@5.2.0
+
+## 2.8.3
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/types@5.19.0
+  - @prosopo/util-crypto@13.6.2
+  - @prosopo/fingerprintjs@5.2.0
+
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+
+## 2.8.1
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+
+## 2.8.0
+### Minor Changes
+
+- 2bcf2fe: Store a compact summary of each verified proof of fingerprint on the PoW record,
+  and add a device grouping value to the proof.
+  
+  Until now the proof was checked and discarded, so nothing it disclosed survived
+  the request. `summariseFingerprintProof` reduces a proof to its commitment root,
+  the values it disclosed, and a hash over the subset of those values listed in
+  `GROUP_KEYS`, and the provider writes that onto the captcha record.
+  
+  The proof now also discloses `deviceBucket`, a new component from
+  `@prosopo/fingerprintjs`. It is a 128 bit hash of the device traits that stay the
+  same between sessions: platform, screen resolution, colour depth, core count and
+  installed fonts. Disclosing it lets us tell that two visits came from the same
+  kind of device without being told the platform, the screen size or the font list,
+  which disclosing those values individually would have done. It is stored as
+  `bucketId`.
+  
+  `deviceBucket` is excluded from the visitorId. The account address is a pure
+  function of the visitorId, so folding a new component in would rotate every
+  account on record and orphan its sighting history. `forIdentity` drops it before
+  hashing, and there is a test asserting the visitorId does not move.
+  
+  The summary reaches the decision machines as well as the database. It is
+  computed once, at the provider boundary, and handed to both, so the machine and
+  the stored record cannot disagree about what a proof disclosed, and a 7.8KB
+  proof is parsed and Merkle-checked once per submission instead of twice. Rules
+  read it as `input.raw.fingerprintSummary`.
+  
+  There is also a new counter dimension, `deviceBucket`. One bucket on its own
+  says nothing, so counting is the whole point: a rule can now ask how much
+  traffic a kind of device has produced in a window, which no per-request field
+  can answer. The solve hook writes the counter whenever a proof disclosed a
+  bucket, and a rule naming the dimension on a request that disclosed none is
+  skipped rather than read as zero, so an `lte` clause does not match every
+  client that proved nothing.
+  
+  The proof itself is still not stored. Each disclosure carries a full Merkle path,
+  which is large and spent once verified: at current traffic, retaining proofs
+  would add roughly 70GB over the collection's one-month TTL against under 3GB for
+  the summary.
+  
+  A summary is only produced for a proof that passes structural verification, so
+  every stored value is one that hashes to the committed root. Bounding what those
+  values may be is separate and unchanged.
+  
+  `@prosopo/fingerprint` gains a `./summary` entry point so server-side callers can
+  import this without the browser-only fingerprinting sources. The new field is
+  declared on the Mongoose schema: `strict: true` silently drops undeclared paths,
+  so omitting it would mean writing the field and never storing it.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/types@5.17.0
+  - @prosopo/util-crypto@13.6.1
+  - @prosopo/fingerprintjs@5.2.0
+
+## 2.7.65
+### Patch Changes
+
+  - @prosopo/types@5.16.3
+  - @prosopo/fingerprintjs@5.2.0
+  - @prosopo/util-crypto@13.6.0
+
+## 2.7.64
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+
+## 2.7.63
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+
+## 2.7.62
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+
+## 2.7.61
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/fingerprintjs@5.2.0
+  - @prosopo/util-crypto@13.6.0
+
+## 2.7.60
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+
+## 2.7.59
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+
+## 2.7.58
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/fingerprintjs@5.2.0
+  - @prosopo/util-crypto@13.6.0
+
 ## 2.7.57
 ### Patch Changes
 

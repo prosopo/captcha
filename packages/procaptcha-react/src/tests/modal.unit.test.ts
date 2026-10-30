@@ -159,4 +159,16 @@ describe("stacking", () => {
 		expect(panel?.style.maxHeight).toBe("100%");
 		expect(panel?.style.overflowY).toBe("auto");
 	});
+
+	test("centres the challenge on a screen wider than it is", () => {
+		// The panel fills the surface, so the challenge only ends up in the
+		// middle if it centres itself in the width the surface leaves it.
+		// Without this it rendered hard against the left edge of the page.
+		const inner = render(true).content;
+
+		expect(inner.style.width).toBe("100%");
+		expect(inner.style.maxWidth).toBe("500px");
+		expect(inner.style.marginLeft).toBe("auto");
+		expect(inner.style.marginRight).toBe("auto");
+	});
 });

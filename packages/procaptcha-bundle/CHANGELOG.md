@@ -1,5 +1,295 @@
 # @prosopo/procaptcha-bundle
 
+## 4.6.4
+### Patch Changes
+
+- 186debd: Record what the visitor does on the page from the moment the procaptcha script loads, and add it to the behavioural data sent with each solve.
+  
+  The detector's trackers only start once a widget renders. On sites that render it late, everything before that was missing. A checkout that mounts the widget when Buy is pressed, for example, loses the visitor's scroll down the page and the tap on Buy. A quick tap on the checkbox before detection finished was lost too. Those visitors were then judged on one or two stray events, or none at all, and sent to an image or puzzle challenge. The script now records mouse, touch, press and scroll events until detection finishes, then puts them in front of the detector's own data, dropping any event both recorded.
+- Updated dependencies [186debd]
+  - @prosopo/procaptcha-common@2.22.4
+  - @prosopo/procaptcha-frictionless@2.23.1
+
+## 4.6.3
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/procaptcha-frictionless@2.23.0
+  - @prosopo/procaptcha-common@2.22.3
+
+## 4.6.2
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/procaptcha-common@2.22.2
+  - @prosopo/procaptcha-frictionless@2.22.4
+
+## 4.6.1
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/procaptcha-common@2.22.1
+  - @prosopo/procaptcha-frictionless@2.22.3
+
+## 4.6.0
+### Minor Changes
+
+- f53d027: A self-hosted widget (one built with `PROSOPO_PROVIDER_LIST`) now sends Prosopo a usage beacon on about one render in a thousand: a single `GET https://beacon.prosopo.io/v1/b.gif` carrying the page hostname, site key, bundle version and sample rate, with no referrer, cookies or visitor data. It lets us count self-hosted installs and the versions they run, so we can tell self-hosters about new releases and critical fixes. Hosted widgets never send it.
+  
+  Build the bundle with `PROSOPO_USAGE_BEACON=false` to turn it off. The generated self-hosted `.env` now includes the setting, and `SELF_HOSTING.md` documents exactly what is sent.
+
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+- Updated dependencies [f53d027]
+  - @prosopo/types@5.20.2
+  - @prosopo/procaptcha-common@2.22.0
+  - @prosopo/procaptcha-frictionless@2.22.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/util@3.4.0
+  - @prosopo/widget-skeleton@2.10.5
+
+## 4.5.21
+### Patch Changes
+
+- 4976eb9: Fix the classic-script bundle (`procaptcha.bundle.iife.js`), which threw `i18next_http_middleware is not defined` on load and never drew the widget.
+  
+  The browser build leaves a few server-only modules out (the i18next Express middleware and file backend, `node:path`, `node:url`). An ES module build simply drops an unused import, but an IIFE passes every left-out module into its wrapper as a global variable, and no page defines those. The IIFE build now swaps them for small stubs with the same exports, which throw a clear error only if called.
+  
+  `bundle:iife` now fails if the built bundle reads any outside global, so this can't ship again unnoticed.
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+- Updated dependencies [6fa6155]
+- Updated dependencies [f019ec4]
+  - @prosopo/procaptcha-common@2.21.11
+  - @prosopo/types@5.20.1
+  - @prosopo/procaptcha-frictionless@2.22.1
+
+## 4.5.20
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- 76b6edd: The widget now tells the provider which bundle it is and where it was loaded from, on every request:
+  
+  - `X-Prosopo-Bundle-Version`: the release the bundle was built from, or `dev` for a local build.
+  - `X-Prosopo-Bundle-Origin`: the origin the widget's code came from. `https://js.prosopo.io` is the hosted bundle. Anything else is a site serving its own copy, or building our npm packages into its app.
+  
+  Providers store request headers on the session and in the request logs, so together with the site key these show which sites self-host and which version each one runs.
+  
+  The provider now allows both headers in CORS. Every provider must run this version before the new bundle is published to the CDN: a widget sending these headers to an older provider fails the browser's preflight check and cannot load a captcha.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [b2ee10d]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [0e4bc70]
+- Updated dependencies [76b6edd]
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/procaptcha-common@2.21.10
+  - @prosopo/procaptcha-frictionless@2.22.0
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/widget-skeleton@2.10.5
+
+## 4.5.19
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/locale@3.13.1
+  - @prosopo/procaptcha-common@2.21.9
+  - @prosopo/procaptcha-frictionless@2.21.9
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+  - @prosopo/widget-skeleton@2.10.4
+
+## 4.5.18
+### Patch Changes
+
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+- Updated dependencies [96dbf9a]
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/procaptcha-frictionless@2.21.8
+  - @prosopo/procaptcha-common@2.21.8
+
+## 4.5.17
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/procaptcha-frictionless@2.21.7
+  - @prosopo/types@5.17.1
+  - @prosopo/procaptcha-common@2.21.7
+
+## 4.5.16
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- 67268f8: Name the procaptcha bundle's honeypot and shared fingerprint chunks from a seed instead of at random, so bundling the same source twice gives byte-identical output.
+  
+  The names come from the new `buildToken` helper in `@prosopo/config`: an HMAC of the package version (or `PROSOPO_BUILD_SEED`) keyed by the secret `PROSOPO_BUILD_TOKEN_KEY`. They still change every release, and without the key they cannot be worked out from this public source.
+- Updated dependencies [f31f0d5]
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/widget-skeleton@2.10.3
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/locale@3.12.0
+  - @prosopo/procaptcha-common@2.21.6
+  - @prosopo/procaptcha-frictionless@2.21.6
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
+## 4.5.15
+### Patch Changes
+
+- Updated dependencies [b6e9459]
+- Updated dependencies [3c5d196]
+- Updated dependencies [a5c953d]
+  - @prosopo/locale@3.11.1
+  - @prosopo/procaptcha-frictionless@2.21.5
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/util@3.3.15
+
+## 4.5.14
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/procaptcha-frictionless@2.21.4
+  - @prosopo/procaptcha-common@2.21.4
+
+## 4.5.13
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/procaptcha-frictionless@2.21.3
+  - @prosopo/types@5.16.1
+  - @prosopo/procaptcha-common@2.21.3
+
+## 4.5.12
+### Patch Changes
+
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/procaptcha-frictionless@2.21.2
+  - @prosopo/procaptcha-common@2.21.2
+
+## 4.5.11
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/procaptcha-common@2.21.1
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/locale@3.9.1
+  - @prosopo/procaptcha-frictionless@2.21.1
+  - @prosopo/widget-skeleton@2.10.1
+
+## 4.5.10
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/procaptcha-frictionless@2.21.0
+  - @prosopo/procaptcha-common@2.21.0
+  - @prosopo/types@5.15.0
+  - @prosopo/locale@3.9.0
+
+## 4.5.9
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [bdac756]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/procaptcha-common@2.20.0
+  - @prosopo/procaptcha-frictionless@2.20.0
+  - @prosopo/locale@3.8.0
+
+## 4.5.8
+### Patch Changes
+
+- 2e69b83: You can now pinch to zoom the image challenge. The panel set `touch-action: pan-y`, which lets a finger scroll it but tells the browser to ignore a pinch, so someone who could not make out a small tile had no way to get a closer look. It is now `pan-y pinch-zoom`, which keeps the scrolling and allows the zoom.
+  
+  Nothing else blocked zooming — the Protect challenge pages already allow it up to 5x — so this one property was the whole barrier. Confirmed honoured by Chrome on Android 14.
+- 2e69b83: The image challenge now grows to fit the screen it is on. Before, the popup sat at a fixed 322px whatever the device, because the box holding it shrank to wrap its contents and the panel inside could only reach the grid's 300px minimum. That left every image tile at 94.7px — on a phone with 344px of room going spare, and on a 1280px desktop where the panel is allowed to be 500px wide.
+  
+  Tiles now scale with the viewport: 102px on a Galaxy S22, 119px on an S22 Ultra, 107px on an iPhone SE, 154px on desktop. A screen narrower than the 300px minimum (a folding phone's cover display, say) still scrolls sideways exactly as before, and the floating placement is untouched.
+  
+  Measured in Chromium at each device's viewport and pixel ratio; the 3x3 grid still lays out as three rows on all of them.
+- Updated dependencies [1c13037]
+- Updated dependencies [2e69b83]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/procaptcha-common@2.19.0
+  - @prosopo/util@3.3.14
+  - @prosopo/procaptcha-frictionless@2.19.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/widget-skeleton@2.10.1
+
 ## 4.5.7
 ### Patch Changes
 

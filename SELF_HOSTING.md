@@ -17,15 +17,18 @@ Full guide, including server-side verification and the optional extras:
 
 ## 1. Clone and generate your environment file
 
-One script generates the provider account, the site key account and strong random passwords for Mongo and Redis, then
-fills in everything else from the hostname you give it.
+Clone with submodules, install, and build the workspace once. The env script and every later step use the built
+packages. Then one script generates the provider account, the site key account and strong random passwords for Mongo and
+Redis, and fills in everything else from the hostname you give it.
 
 ```bash
-git clone https://github.com/prosopo/captcha
+git clone --recurse-submodules https://github.com/prosopo/captcha
 cd captcha
-npm ci
+corepack enable
+pnpm install --frozen-lockfile
+pnpm run build:all
 
-npx tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
+pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 ```
 
 ```
@@ -46,10 +49,11 @@ Options: `--output <path>`, `--force` to overwrite.
 
 ## 2. Start the stack
 
-The compose file ships with the repo, so there is nothing to paste:
+The compose file, `docker-compose.self-hosted.yml`, ships with the repo. Your `.env` sets `COMPOSE_FILE` to it, so this
+and every later `docker compose` command finds it without `-f`. Run them from the repository root.
 
 ```bash
-docker compose -f docker-compose.self-hosted.yml up -d
+docker compose up -d
 curl localhost:9229/healthz     # {"ok":true,"host":"captcha.example.com"}
 ```
 
@@ -67,7 +71,8 @@ missing those two DNS records doesn't break the main one — you'll just see ACM
 `bundle pool directory does not exist` and `No datasets found in database` are expected on a self-hosted node. They mean
 "no bot detector" and "no image dataset"; neither affects `pow` or `puzzle`.
 
-Pin different versions with `PROSOPO_PROVIDER_IMAGE_VERSION` and `CADDY_IMAGE_VERSION` in your `.env`.
+`PROSOPO_PROVIDER_IMAGE_VERSION` in your `.env` is set to the release your checkout documents. When you pull a newer
+checkout, change it to match. `CADDY_IMAGE_VERSION` pins Caddy the same way.
 
 ## 3. Register a site key
 
@@ -92,15 +97,34 @@ and `reason` from the verification response — use `enterprise` if you want the
 The CDN bundle is compiled to talk to Prosopo's fleet, so build your own with `PROSOPO_PROVIDER_LIST` baked in:
 
 ```bash
-npm run build:all
-
 NODE_ENV=production \
 PROSOPO_PROVIDER_LIST=https://captcha.example.com \
-npm run -w @prosopo/procaptcha-bundle bundle
+pnpm --filter @prosopo/procaptcha-bundle run bundle
 ```
 
-A widget built this way never contacts Prosopo — it skips the hosted provider list and the `/healthz` discovery call
-and goes straight to the providers you named. Set the same variable on your verifier, where it is read at runtime.
+A widget built this way skips the hosted provider list and the `/healthz` discovery call and goes straight to the
+providers you named. Set the same variable on your verifier, where it is read at runtime.
+
+### Usage beacon
+
+On about one widget render in a thousand, a self-hosted widget sends Prosopo a single request:
+
+```
+GET https://beacon.prosopo.io/v1/b.gif?host=<page hostname>&sitekey=<site key>&v=<bundle version>&p=0.001
+```
+
+That is everything it sends. It does not send the page path, cookies, the visitor's identity or anything from the
+captcha itself, and it is sent with no referrer. We use it to count self-hosted installs and the versions they run,
+so we can tell you when there is a new release or a fix you need.
+
+To turn it off, build with `PROSOPO_USAGE_BEACON=false`:
+
+```bash
+NODE_ENV=production \
+PROSOPO_PROVIDER_LIST=https://captcha.example.com \
+PROSOPO_USAGE_BEACON=false \
+pnpm --filter @prosopo/procaptcha-bundle run bundle
+```
 
 For several providers, pass comma-separated URLs, or the provider-list JSON if you want per-node weights. See the
 [`@prosopo/load-balancer` README](packages/load-balancer).
@@ -108,11 +132,170 @@ For several providers, pass comma-separated URLs, or the provider-list JSON if y
 Host `packages/procaptcha-bundle/dist/bundle/`, then:
 
 ```html
-<script src="https://your-cdn.example.com/procaptcha.bundle.js" async defer></script>
+<script type="module" src="https://your-cdn.example.com/procaptcha.bundle.js" async defer></script>
 <div class="procaptcha" data-sitekey="5Fpd..."></div>
 ```
 
 The CAPTCHA type comes from the site key record, not the page.
+
+The bundle is an ES module split into chunks, so `type="module"` is required and the whole `dist/bundle/` directory must
+be hosted together.
+
+## No server? Run it on Cloudflare's free plan
+
+Steps 2 and 4 assume a server with a public IP and ports 80 and 443 open. If you don't have one, any machine that can
+run Docker will do — a spare PC, a home server — with Cloudflare in front of it. You need a free Cloudflare account and
+nothing else: no domain, no public IP, no open ports, no certificates.
+
+One Worker on your free `workers.dev` subdomain serves the widget and forwards API calls to your provider through a
+Cloudflare Tunnel. The tunnel connects outbound from your machine, so nothing is exposed on your network. Cloudflare
+handles HTTPS, so Caddy is not used.
+
+Do step 1 up to `pnpm run build:all`, but don't generate the environment file yet — you'll generate it below with
+the Worker's hostname. Then, from the repository root:
+
+```bash
+npx wrangler@4.151.3 login
+npx wrangler@4.151.3 tunnel create procaptcha        # note the ID it prints
+```
+
+Open the tunnel in the Cloudflare dashboard (**Zero Trust → Networks → Tunnels → procaptcha**). Its install command
+contains `--token <token>`; copy the token. You don't need to add a public hostname.
+
+Your Worker will be at `procaptcha.<subdomain>.workers.dev`, where `<subdomain>` is shown in the dashboard under
+**Workers & Pages**. Generate the environment file for that hostname, with `--cloudflare`:
+
+```bash
+pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts \
+  --host procaptcha.<subdomain>.workers.dev --cloudflare
+```
+
+Paste the token into `CLOUDFLARE_TUNNEL_TOKEN` in `.env`, then start the stack. `--cloudflare` has already set
+`COMPOSE_FILE` to add [`docker-compose.self-hosted.cloudflare.yml`](docker-compose.self-hosted.cloudflare.yml), which
+runs `cloudflared` and leaves Caddy out:
+
+```bash
+docker compose up -d
+```
+
+Let Workers reach the provider through the tunnel, and put the service ID it prints into
+[`docker/cloudflare/wrangler.jsonc`](docker/cloudflare/wrangler.jsonc) in place of `REPLACE_WITH_YOUR_VPC_SERVICE_ID`:
+
+```bash
+npx wrangler@4.151.3 vpc service create procaptcha-provider \
+  --type http --tunnel-id <tunnel ID> --hostname provider --http-port 9229
+```
+
+Register your site key as in [step 3](#3-register-a-site-key), adding the Worker's hostname to `--domains` so its demo
+page works: `--domains example.com procaptcha.<subdomain>.workers.dev`.
+
+Build the widget against the Worker and deploy it:
+
+```bash
+NODE_ENV=production \
+PROSOPO_PROVIDER_LIST=https://procaptcha.<subdomain>.workers.dev \
+pnpm --filter @prosopo/procaptcha-bundle run bundle
+
+npx wrangler@4.151.3 deploy --config docker/cloudflare/wrangler.jsonc
+```
+
+Open `https://procaptcha.<subdomain>.workers.dev/?sitekey=<your site key>`. The demo page shows whether the provider is
+reachable, renders the CAPTCHA, and shows the response token once it is solved. On your own site, load the widget from
+the Worker:
+
+```html
+<script type="module" src="https://procaptcha.<subdomain>.workers.dev/procaptcha.bundle.js" async defer></script>
+<div class="procaptcha" data-sitekey="5Fpd..."></div>
+```
+
+Server-side verification is unchanged; `PROSOPO_PROVIDER_LIST` in your `.env` already points at the Worker.
+
+Worth knowing before you rely on it:
+
+- Workers VPC, which lets the Worker reach the tunnel, is in open beta.
+- The free Workers plan has a daily request allowance. Each solve is a handful of requests, so check the current limit
+  against your traffic.
+- The Worker passes each visitor's address to the provider in `X-Forwarded-For`. Without that, the provider would see
+  every visitor as the tunnel, and per-IP rate limits and rules would apply to all of them together.
+- The provider only runs while your machine does.
+
+## Bring your own detector
+
+The steps above serve a fixed challenge to everyone. To score visitors yourself, load a detector of your own and register
+the site key as `frictionless`. The provider then picks a challenge per visitor from your detector's score.
+
+[`demos/detector-botd`](demos/detector-botd) is a working example built on [BotD](https://github.com/fingerprintjs/BotD).
+It reports a score of `1` when BotD flags the browser as automated (headless Chrome, Selenium, Playwright, PhantomJS and
+others) and `0` otherwise. It makes no requests to anyone but your provider.
+
+```bash
+pnpm --filter @prosopo/detector-botd run build
+pnpm --filter @prosopo/detector-botd run pool --out detector-pool.json
+
+docker compose exec -T provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js detector_pool_set < detector-pool.json
+docker compose restart provider
+
+docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js site_key_register \
+  "$(grep '^PROSOPO_SITE_KEY=' .env | cut -d= -f2)" enterprise \
+  --captcha_type frictionless \
+  --domains example.com \
+  --pow_difficulty 4 \
+  --frictionless_threshold 0.5 \
+  --frictionless_image_threshold 2 \
+  --image_threshold 0.8
+```
+
+`pool` builds four bundles, each with its own RSA keypair: the public key goes into the bundle's JavaScript and the
+private key stays on your provider. You never handle the encryption yourself. The provider gives each visitor one of the
+bundles, and the detector encrypts what it reports with that bundle's key.
+
+The pool is read from stdin, not copied in as a file, because the provider container does not run as root and could not
+read a copied file. It is stored in the `detector_pool` volume, so it survives restarts and upgrades. Run the same
+commands again to replace it.
+
+The provider's score thresholds decide what each visitor gets:
+
+- below `--frictionless_threshold` (0.5): invisible proof of work
+- between that and `--frictionless_image_threshold`: a slider puzzle
+- at or above `--frictionless_image_threshold`: an image challenge
+
+The example sets the image threshold to `2`, above any score BotD gives, so flagged browsers get a puzzle. Leave it at its
+default of `1` only if you have [loaded an image dataset](#image-captchas); without one, visitors routed to an image
+challenge get an error.
+
+### Writing your own
+
+Replace `collectSignals` in [`demos/detector-botd/src/detector.ts`](demos/detector-botd/src/detector.ts) and rebuild the
+pool. It returns a `score` and a `d` object:
+
+```ts
+const collectSignals = async (): Promise<Signals> => ({
+  score: navigator.webdriver ? 1 : 0,
+  d: { webDriver: navigator.webdriver, languages: navigator.languages.length },
+});
+```
+
+Everything in `d` is stored on the session and passed to decision and routing machines as `input.d`, so a rule can act on
+`input.d.botKind` or any key you add. Nothing on the provider declares the keys.
+Values must be plain JSON: keys containing `.` or starting with `$` are dropped, and a `d` larger than 8 KB is dropped
+whole.
+
+The rest of the file handles the contract with the widget and the provider: the visitor's account, a hash of the user
+agent and of `document.head`, a timestamp, and the encryption. Keep it as it is.
+
+### What a self-built detector can and cannot do
+
+Your detector runs in the visitor's browser, and its public key ships inside the bundle. Anyone who reads the bundle can
+send any score they like. The provider checks that a token was made for this visitor, this browser and this page in the
+last ten minutes, but it cannot check that the score is honest. That is true of every client-side detector; ours resists
+it with obfuscation and per-bundle rotation, which the example does not attempt.
+
+So a detector like this one stops off-the-shelf automation — default headless browsers and frameworks that make no effort
+to hide — and it gives your rules signals to work with. It will not stop someone who studies your bundle and targets your
+site.
+
+`PROSOPO_DETECTOR_OPEN_FORMAT=1`, set in the self-hosted compose file, is what lets the provider load these bundles. A
+provider without it ignores them.
 
 ## Image CAPTCHAs
 
@@ -122,7 +305,7 @@ The CAPTCHA type comes from the site key record, not the page.
 A dataset holds image **URLs**, not images. You host the images yourself and the dataset points at them.
 
 ```bash
-npm run -w @prosopo/datasets-fs build
+pnpm --filter @prosopo/datasets-fs run build
 cd packages/datasets-fs
 
 node dist/cli.js flatten --in ./data --out ./flat --overwrite
@@ -175,9 +358,10 @@ changes nothing about an existing dataset or its verification.
 
 ## What this does not give you
 
-A self-hosted node serves challenges and validates solutions. It does not decide who is a bot.
+A self-hosted node serves challenges and validates solutions. Unless you load a detector, it does not decide who is a
+bot.
 
-Frictionless scoring needs the client-side detector, which is closed source and not in the public image. An explicit
+Our frictionless scoring needs our client-side detector, which is closed source and not in the public image. An explicit
 `captcha_type` bypasses that path entirely, so `pow` and `puzzle` behave exactly as they do on the managed service, and
 a site key left on `frictionless` against a detector-less provider falls back to proof of work.
 
@@ -187,5 +371,5 @@ automatically, with access rules, traffic filters and analytics to tune it. None
 self-hosted challenge is a fixed obstacle in front of your form — good against opportunistic automation, but it does not
 adapt to an attacker who is targeting you specifically.
 
-[Contact us](https://prosopo.io/contact/) if you want an obfuscated detector bundle for your own node. Bring-your-own
-detector support is planned.
+A [detector of your own](#bring-your-own-detector) adds scoring on signals you choose. [Contact us](https://prosopo.io/contact/)
+if you want our obfuscated detector bundle for your own node.

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Shared, unit-testable pieces of the ProcaptchaFrictionless recovery path
-// for CAPTCHA.NO_SESSION_FOUND on the inner widget. The React component
+// for NO_SESSION_FOUND on the inner widget. The React component
 // mutates refs directly; these helpers isolate the logic that decides how a
 // re-mount should be parameterised so it can be exercised without a renderer.
 
@@ -50,7 +50,7 @@ export const normaliseRetryCoords = (
 
 /**
  * How many times a single outer widget will re-mint a session in response to
- * `CAPTCHA.NO_SESSION_FOUND` on the inner widget before giving up and handing
+ * `NO_SESSION_FOUND` on the inner widget before giving up and handing
  * over to the terminal fallback.
  *
  * This used to be one-shot per outer widget lifetime, which stranded users:

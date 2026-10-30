@@ -18,10 +18,12 @@ import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The HTTP outcome the router produces for a request, after `handleErrors` has
-// turned any thrown ProsopoApiError into a status code + JSON body.
+// turned any thrown ProsopoError into a status code + JSON body.
 interface RouteOutcome {
 	status: number;
-	body: { error?: { code?: number; key?: string } } | undefined;
+	body:
+		| { error?: { code?: string; errorId?: string; status?: number } }
+		| undefined;
 }
 
 interface MockResponse {
@@ -100,7 +102,7 @@ const callRoute = async (
 		path,
 		headers: {},
 		body,
-		i18n: { t: (key: string): string => key },
+		i18n: { t: (key: string): string => key, exists: (): boolean => false },
 		logger: {
 			info: vi.fn(),
 			warn: vi.fn(),
@@ -141,14 +143,14 @@ describe("verify routes reject a malformed token with 400, not 500", () => {
 	];
 
 	for (const [name, path] of routes) {
-		it(`${name}: undecodable token -> 400 CAPTCHA.PARSE_ERROR`, async () => {
+		it(`${name}: undecodable token -> 400 INVALID_REQUEST`, async () => {
 			const { status, body } = await callRoute(path, malformedBody);
 
 			// The regression answered 500 (API.BAD_REQUEST) here: a malformed
 			// token is bad client input, so it must be a 400.
 			expect(status).toBe(400);
-			expect(body?.error?.code).toBe(400);
-			expect(body?.error?.key).toBe("CAPTCHA.PARSE_ERROR");
+			expect(body?.error?.status).toBe(400);
+			expect(body?.error?.errorId).toBe("INVALID_REQUEST:PROV-37");
 		});
 	}
 });

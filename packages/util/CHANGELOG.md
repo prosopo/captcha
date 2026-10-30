@@ -1,5 +1,86 @@
 # @prosopo/util
 
+## 3.4.0
+### Minor Changes
+
+- f13677e: Solve PoW captchas across a pool of web workers. The nonce space is divided and conquered across the pool (worker `i` tries nonces `i, i+N, i+2N, …`), keeping the UI responsive on higher-difficulty challenges, with a synchronous fallback when web workers are unavailable. The pool defaults to 4 workers (`PROSOPO_POW_WORKERS`) and never uses more than one fewer than the device's cores, so the page keeps a core free. Adds the `solvePoWOffset` helper to `@prosopo/util`; `@prosopo/procaptcha-pow` now solves PoW challenges on a worker pool internally.
+
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+
+## 3.3.17
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 3.3.16
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+
+## 3.3.15
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+
+## 3.3.14
+### Patch Changes
+
+- a17e8eb: Move the repo from npm to pnpm 11.
+  
+  - `pnpm-workspace.yaml` replaces the `workspaces` field and `.npmrc`, and `pnpm-lock.yaml` replaces `package-lock.json` (converted with `pnpm import`, so versions are unchanged).
+  - Internal `@prosopo/*` dependencies use `workspace:*`. `pnpm publish` (which `changeset publish` now runs) swaps each for the exact version, so published manifests are the same as before. Member packages no longer declare an npm engine.
+  - `@prosopo/config`'s `getDependencies` walks the installed `node_modules` tree instead of parsing `npm ls`, so bundle externals are computed the same way under any package manager.
+  - `@prosopo/workspace` exports `getWorkspacePatterns`, which builds glob patterns from the workspace's `pnpm-workspace.yaml` (keeping its exclusions); the lint commands use it instead of `package.json`'s `workspaces`.
+  - `verifyDepsBeforeRun` is off, because inside captcha-private a script run here would otherwise install captcha standalone over the parent's `node_modules`.
+  - Packages that relied on npm hoisting for types or tools now declare them.
+  - `@prosopo/util` declares the `url` package. `isMain` imports `url`, which Node serves from its built-in module and browser bundlers resolve to this package; npm used to provide it by hoisting.
+
 ## 3.3.13
 ### Patch Changes
 

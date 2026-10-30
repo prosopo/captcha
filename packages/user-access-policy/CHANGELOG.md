@@ -1,5 +1,247 @@
 # @prosopo/user-access-policy
 
+## 3.15.14
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/api@4.8.5
+  - @prosopo/common@3.3.2
+
+## 3.15.13
+### Patch Changes
+
+- e6b2206: Deleting access rules by group now works when the group id contains a hyphen, and a failed delete is reported as a failure.
+  
+  The group id went into the redis search unescaped, so a group such as `example-rule-group` made the search a syntax error. The error was swallowed and the provider answered that it had deleted nothing, which the rule push counted as success: the rule stayed live on the provider while its record was removed from the portal. The search now escapes the group id, and a search that errors makes the delete fail so the push retries it.
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+
+## 3.15.12
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/api@4.8.3
+  - @prosopo/common@3.3.2
+
+## 3.15.11
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/api@4.8.2
+  - @prosopo/common@3.3.2
+  - @prosopo/api-route@2.6.67
+  - @prosopo/logger@2.1.7
+  - @prosopo/redis-client@1.0.44
+  - @prosopo/util@3.4.0
+
+## 3.15.10
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/api@4.8.1
+  - @prosopo/common@3.3.2
+
+## 3.15.9
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/api-route@2.6.67
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/redis-client@1.0.44
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/api@4.8.0
+
+## 3.15.8
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/api@4.7.7
+  - @prosopo/api-route@2.6.66
+  - @prosopo/common@3.3.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/redis-client@1.0.43
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+
+## 3.15.7
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+
+## 3.15.6
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+
+## 3.15.5
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/api@4.7.4
+  - @prosopo/api-route@2.6.65
+  - @prosopo/common@3.3.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/redis-client@1.0.42
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
+## 3.15.4
+### Patch Changes
+
+- 3c5d196: Make the Web Bot Auth agent pass work end to end. Driving a signing agent through the demo site turned up six things that stopped an allowed agent getting through, or let a blocked one past:
+  
+  - A site set to a fixed captcha type (PoW, image, puzzle, icon order), or a provider with no detector bundles, served its challenge before the signature was checked. A verified agent's Allow and Block rules are now applied first.
+  - An agent with an existing challenge session for the same user, IP and site got that session back. A matching Allow rule now replaces it with a fresh authenticated session.
+  - An agent whose page sent no detector token failed with "Failed to store session". The session now gets a generated token, the way the other no-detector paths do.
+  - A provider that sees clients as IPv4-mapped IPv6 (`::ffff:1.2.3.4`) rejected every verify, because the site forwards the plain `1.2.3.4`. The IP check now treats the two as the same address.
+  - Deleting or filtering access rules by `webBotAuthAgent` sent Redis an unescaped URL, which is a query syntax error, so nothing was deleted. Removing an Agent Trust rule in the portal left it in force.
+  - The widget issued the token at page load and never refreshed it. In invisible mode it drew the badge and fired the callback before the user did anything; it now draws nothing and issues the token on execute(). In both modes the pass now expires and renews like a solved PoW, so an agent that takes more than three minutes to fill a form no longer fails with "not recent".
+  
+  Rejected signatures are now logged with the reason.
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/api@4.7.3
+  - @prosopo/api-route@2.6.64
+  - @prosopo/logger@2.1.4
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/util@3.3.15
+
+## 3.15.3
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/api@4.7.2
+
+## 3.15.2
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/api@4.7.1
+
+## 3.15.1
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/api@4.7.0
+
+## 3.15.0
+### Minor Changes
+
+- 460ca67: Global access rules can now name clients they don't apply to.
+  
+  A rule with no `clientId` used to apply to every site with no exceptions, so the only way to spare one customer from a platform-wide ban was to delete the ban for everyone. Rules now take an optional `excludedClientIds` list. A request from a listed site skips that global rule, while the site's own rules and every other site are unaffected. The insert API accepts the list on a rule group.
+  
+  `rankCandidateRules` drops a global rule for the clients it lists; the Redis lookup still fetches it, because negating the list inside the lookup's union is mis-evaluated by RediSearch 2.8 and can drop unrelated global rules. The list is left out of the rule's key hash, so changing the list rewrites the same rule instead of leaving the old version enforcing the old list. Re-pushing a rule without a list clears any list it had.
+  
+  Providers that predate this change ignore the field and treat the rule as a plain global rule. Deploy the providers before anything starts writing exclusions, or the excluded sites stay blocked until they are updated.
+
+## 3.14.18
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/api@4.6.1
+  - @prosopo/api-route@2.6.64
+  - @prosopo/common@3.1.65
+  - @prosopo/logger@2.1.4
+
+## 3.14.17
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+
+## 3.14.16
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/api@4.5.0
+  - @prosopo/common@3.1.63
+
+## 3.14.15
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/common@3.1.62
+  - @prosopo/api-route@2.6.63
+  - @prosopo/logger@2.1.3
+  - @prosopo/redis-client@1.0.40
+
 ## 3.14.14
 ### Patch Changes
 

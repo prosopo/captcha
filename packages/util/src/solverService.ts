@@ -101,41 +101,44 @@ export const hashMeetsDifficulty = (
 	difficulty: number,
 ): boolean => hashMeetsMask(hash, difficultyMask(difficulty));
 
-export const solvePoW = async (
-	data: string,
-	difficulty: number,
-): Promise<number> => {
-	const mask = difficultyMask(difficulty);
-
-	// Encode the constant suffix once and reuse a single message buffer, only
-	// rewriting the nonce's decimal digits each iteration. The digit count only
-	// grows at powers of ten, where the buffer is reallocated.
-	const encoder = new TextEncoder();
-	const dataBytes = encoder.encode(data);
-
-	let nonce = 0;
+// Builds the `nonce + data` message for each attempt. The constant suffix is
+// encoded once into a single reused buffer and only the nonce's decimal digits
+// are rewritten per call. Nonces must not decrease between calls: the buffer
+// only grows, at powers of ten, when the nonce gains a digit.
+const nonceMessageWriter = (data: string): ((nonce: number) => Uint8Array) => {
+	const dataBytes = new TextEncoder().encode(data);
 	let digits = 1;
+	let rollover = 10;
 	let message = new Uint8Array(digits + dataBytes.length);
 	message.set(dataBytes, digits);
-	let rollover = 10;
 
-	while (true) {
-		if (nonce === rollover) {
-			// the decimal representation gained a digit; grow the buffer
+	return (nonce: number): Uint8Array => {
+		while (nonce >= rollover) {
 			digits += 1;
 			rollover *= 10;
 			message = new Uint8Array(digits + dataBytes.length);
 			message.set(dataBytes, digits);
 		}
 
-		// write the nonce's decimal digits into the leading `digits` bytes
 		let n = nonce;
 		for (let i = digits - 1; i >= 0; i--) {
 			message[i] = 48 + (n % 10); // 48 === '0'.charCodeAt(0)
 			n = Math.floor(n / 10);
 		}
+		return message;
+	};
+};
 
-		if (hashMeetsMask(sha256(message), mask)) {
+export const solvePoW = async (
+	data: string,
+	difficulty: number,
+): Promise<number> => {
+	const mask = difficultyMask(difficulty);
+	const messageFor = nonceMessageWriter(data);
+	let nonce = 0;
+
+	while (true) {
+		if (hashMeetsMask(sha256(messageFor(nonce)), mask)) {
 			return nonce;
 		}
 
@@ -145,6 +148,58 @@ export const solvePoW = async (
 			// browser handles UI rendering between Macrotasks
 			await newMacrotask();
 		}
+	}
+};
+
+/**
+ * Solve a PoW challenge while only trying a subset of the nonce space.
+ *
+ * Starting from `start`, only nonces `start, start + step, start + 2*step, ...`
+ * are tried. This allows the work to be divided across multiple solvers (e.g.
+ * web workers): with `step` workers, worker `i` uses `start = i` so that every
+ * nonce is covered exactly once across the pool with no overlap.
+ *
+ * Unlike `solvePoW`, this is synchronous and never yields to the event loop: it
+ * is intended to run inside a web worker, where blocking the (worker) thread
+ * does not affect the page's UI responsiveness.
+ *
+ * @param data - the challenge data appended to the nonce before hashing
+ * @param difficulty - the PoW difficulty (see `targetForDifficulty`)
+ * @param start - the first nonce to try (the worker's offset)
+ * @param step - the gap between consecutive nonces tried (the worker count)
+ */
+export const solvePoWOffset = (
+	data: string,
+	difficulty: number,
+	start: number,
+	step: number,
+): number => {
+	if (!Number.isInteger(start) || start < 0) {
+		throw new Error(
+			`solvePoWOffset: start must be a non-negative integer, got ${start}`,
+		);
+	}
+	if (!Number.isInteger(step) || step < 1) {
+		throw new Error(
+			`solvePoWOffset: step must be a positive integer, got ${step}`,
+		);
+	}
+	if (!Number.isFinite(difficulty) || difficulty < 0) {
+		throw new Error(
+			`solvePoWOffset: difficulty must be a non-negative number, got ${difficulty}`,
+		);
+	}
+
+	const mask = difficultyMask(difficulty);
+	const messageFor = nonceMessageWriter(data);
+	let nonce = start;
+
+	while (true) {
+		if (hashMeetsMask(sha256(messageFor(nonce)), mask)) {
+			return nonce;
+		}
+
+		nonce += step;
 	}
 };
 

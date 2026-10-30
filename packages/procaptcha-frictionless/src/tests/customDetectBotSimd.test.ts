@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // `vi.mock` is hoisted; share state via `vi.hoisted` so the factories can
@@ -36,6 +37,18 @@ vi.mock("@prosopo/api", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	PAGE_BEHAVIOUR_LIMITS: { mouse: 1000, touch: 500, press: 200, scroll: 500 },
+	getPageBehaviour: vi.fn(() => undefined),
+	mergeBehaviourPoints: vi.fn(
+		<T>(early: readonly T[], tracked: readonly T[]): T[] => [
+			...early,
+			...tracked,
+		],
+	),
+	stopPageBehaviourCapture: vi.fn(),
+	widgetRequestHeaders: (
+		siteLanguage: string | undefined,
+	): Record<string, string> => widgetLanguageHeaders(siteLanguage),
 	ExtensionLoader: vi.fn(async () => {
 		return class FakeExtension {
 			getAccount() {

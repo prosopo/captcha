@@ -1,5 +1,202 @@
 # @prosopo/cypress-shared
 
+## 2.8.167
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+
+## 2.8.166
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+
+## 2.8.165
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+
+## 2.8.164
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/util@3.4.0
+
+## 2.8.163
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+
+## 2.8.162
+### Patch Changes
+
+- 9672200: The image, frictionless and PoW cypress specs now take a visual snapshot of the captcha widget at its key states (before clicking, after passing, after failing) and compare it against committed baselines in chrome. Snapshots are cropped to the widget so the demo page around it can't make them flaky.
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+
+## 2.8.161
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+
+## 2.8.160
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+
+## 2.8.159
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+
+## 2.8.158
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
+## 2.8.157
+### Patch Changes
+
+  - @prosopo/types@5.16.3
+  - @prosopo/util@3.3.15
+
+## 2.8.156
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+
+## 2.8.155
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+
+## 2.8.154
+### Patch Changes
+
+- c505f59: Add an end-to-end test that runs the image captcha in Turkish. It checks that the widget picks up the browser's language, that `data-language` beats the browser, that the first supported code in a `data-language` list wins, and that an unsupported language falls back to English, with the challenge labels coming back translated from the provider.
+- 1634139: `getLanguageDirection` now knows every right-to-left language and script in CLDR 48, not just ten languages, including ones we have no translation for yet (Hebrew, Persian, Urdu, Pashto, Kurdish and so on). It also reads script subtags (`pa-Arab` is right to left, `az-Latn` left to right), regions whose usual script is Arabic (`pa-PK`, `uz-AF`), and old codes such as `iw` for Hebrew. Where the browser has `Intl.Locale` text info, a language it says is right to left is laid out that way too, so languages added to CLDR later work without a code change. The language e2e test now also checks that an Arabic widget, chosen by the browser or by `data-language`, is laid out right to left.
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+
+## 2.8.153
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+
+## 2.8.152
+### Patch Changes
+
+- 4570692: Let a user swap the puzzle captcha for an image challenge, on sites where Prosopo has switched it on.
+  
+  Sites get a new staff-only setting, `widgetFeatureFlags.puzzleImageSwitch`. It is off by default and has no stored default. When it is on and the site allows image challenges, the puzzle response says `imageSwitchAvailable: true`. The puzzle then shows a small grid icon next to its title, with a "Switch to an image challenge" tooltip on hover or keyboard focus. After two wrong answers or refreshes in a row, the icon fills with the primary colour and its tooltip shows without a hover, because a touch screen has no hover. The tooltip goes away once the user starts moving the piece.
+  
+  Pressing it re-mints the session the same way refresh does, with `switchToImage: true`. The provider only honours that when the request is a refresh of a puzzle session on the same site and the switch is on. The new session is then an image challenge with reason `PUZZLE_USER_SWITCH`. Like the refresh limit, it only ever moves from puzzle to image, so a client that fakes the request can only make its own challenge harder.
+  
+  Also fixes a wrong puzzle answer restarting the whole widget. The user was sent back to the checkbox instead of getting a new puzzle with "Not quite — try again", and a wasted `/frictionless` request went out. The puzzle now retries in place.
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+
+## 2.8.151
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- bdac756: The checkbox can be clicked as soon as the widget appears, instead of spinning until bot detection has finished.
+  
+  Detection downloads and runs a detector bundle before the widget knows which challenge to show, which took around three seconds on staging. The checkbox used to sit in its loading state for all of that. Now it is live from the first paint. A click made while detection is still running switches the box to "Checking", is remembered along with where the user clicked, and is replayed on whichever challenge detection picks, so the user never has to click twice.
+  
+  This includes a click made after detection has answered but while the chosen challenge's code is still downloading. That click was being dropped, because the widget checked for a held click before the download rather than after it.
+  
+  It also includes a click whose press begins on the placeholder just as the challenge is ready. Swapping the box out mid-press made the browser deliver the click to neither box, so the swap now waits, for up to a second, for the press to finish.
+  
+  Nothing about what a token needs has changed: no challenge opens and no token is issued until detection has produced a verdict, so clicking early does not let a bot skip it. Synthetic clicks are still ignored, and a detection failure still falls back the same way it did before.
+  
+  Tests: the checkbox is live while detection is pending; a click during detection shows the spinner and opens the chosen challenge with the click position once detection lands; a keyboard activation is held the same way; a synthetic click is ignored. `manualStart.test.ts` is renamed `startMode.test.ts`, since it now covers both start modes.
+  
+  The e2e `clickIAmHuman` helper now waits on `/captcha/image` rather than any `/captcha/*` request. Cypress now clicks the checkbox before `/frictionless` has answered, so the broad pattern was catching that response instead of the image challenge.
+  
+  The e2e checkbox helpers also click straight off a fresh query, rather than through a wrapped element. The widget swaps its placeholder checkbox for the challenge's own once detection answers, and a wrapped element that has left the page reports a (0, 0) position, so the click landed on the page corner.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+
+## 2.8.150
+### Patch Changes
+
+- 1c13037: Add `captchaTypeFeatureFlags` to site settings, starting with `puzzle`. Setting
+  `puzzle: false` stops a site being served the puzzle captcha by any path: its
+  configured `captchaType`, `frictionlessTypes`, access policies, the traffic
+  filter, routing machines, PoW escalation, and puzzle sessions that already
+  exist. A site pinned to puzzle gets an image captcha instead (or PoW if image is
+  also off). The field is optional and has no stored default, so sites that never
+  set it behave exactly as before. The flag is meant for Prosopo staff, not site
+  owners.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+
 ## 2.8.149
 ### Patch Changes
 

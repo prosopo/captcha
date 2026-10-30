@@ -1,5 +1,366 @@
 # @prosopo/provider-mock
 
+## 2.8.214
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/types-database@5.16.0
+  - @prosopo/database@4.5.0
+  - @prosopo/provider@5.26.0
+  - @prosopo/api-express-router@3.3.10
+  - @prosopo/common@3.3.2
+
+## 2.8.213
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+- Updated dependencies [11a38cc]
+  - @prosopo/types@5.22.0
+  - @prosopo/types-database@5.15.0
+  - @prosopo/provider@5.25.0
+  - @prosopo/database@4.4.4
+  - @prosopo/api-express-router@3.3.9
+  - @prosopo/common@3.3.2
+
+## 2.8.212
+### Patch Changes
+
+- Updated dependencies [3815778]
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/provider@5.24.0
+  - @prosopo/types@5.21.0
+  - @prosopo/types-database@5.14.0
+  - @prosopo/api-express-router@3.3.8
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.3
+
+## 2.8.211
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/api-express-router@3.3.7
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.2
+  - @prosopo/provider@5.23.2
+  - @prosopo/types-database@5.13.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+
+## 2.8.210
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/api-express-router@3.3.6
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.1
+  - @prosopo/provider@5.23.1
+  - @prosopo/types-database@5.13.1
+
+## 2.8.209
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [736e988]
+- Updated dependencies [ab3c124]
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [7cabc96]
+- Updated dependencies [3473baf]
+- Updated dependencies [77bd891]
+- Updated dependencies [cb7db6c]
+- Updated dependencies [76b6edd]
+  - @prosopo/provider@5.23.0
+  - @prosopo/api-express-router@3.3.5
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/types@5.20.0
+  - @prosopo/types-database@5.13.0
+  - @prosopo/database@4.4.0
+
+## 2.8.208
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [870fab7]
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/provider@5.22.0
+  - @prosopo/api-express-router@3.3.4
+  - @prosopo/common@3.3.1
+  - @prosopo/database@4.3.0
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/locale@3.13.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/types-database@5.12.0
+  - @prosopo/types@5.19.0
+
+## 2.8.207
+### Patch Changes
+
+- Updated dependencies [5c9792b]
+- Updated dependencies [4201cf0]
+  - @prosopo/provider@5.21.1
+
+## 2.8.206
+### Patch Changes
+
+- 0d94ae6: Pin Node to 24.22.1 in every Docker image and CI workflow, the first 24.x release with the fix for CVE-2026-111497 (an out-of-bounds write in the bundled Brotli decoder that can lead to remote code execution).
+  
+  Before this, everything asked for plain `24`, which does not guarantee a patched build. Docker reuses a cached base image, and `setup-node` uses whatever 24.x a runner already has cached.
+  
+  The provider image needed more than a tag bump. Its runtime, `gcr.io/distroless/nodejs24-debian12`, is stuck on Node 24.14.0 and will not get the fix. It now runs on `nodejs24-debian13`, pinned by digest because distroless publishes no Node version tags. The builder moves to `node:24.22.1-trixie-slim` so both stages still use the same Debian release and glibc. Sharp and the native ja4, merkle and puzzle addons were checked loading on the new runtime.
+
+## 2.8.205
+### Patch Changes
+
+- Updated dependencies [d02b3bc]
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+  - @prosopo/provider@5.21.0
+  - @prosopo/database@4.2.10
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/api-express-router@3.3.3
+  - @prosopo/types-database@5.11.2
+  - @prosopo/common@3.3.0
+
+## 2.8.204
+### Patch Changes
+
+- Updated dependencies [749fe8a]
+  - @prosopo/provider@5.20.2
+  - @prosopo/api-express-router@3.3.2
+
+## 2.8.203
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/api-express-router@3.3.1
+  - @prosopo/provider@5.20.1
+  - @prosopo/types@5.17.1
+  - @prosopo/types-database@5.11.1
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.9
+
+## 2.8.202
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [22f0721]
+- Updated dependencies [860948c]
+  - @prosopo/api-express-router@3.3.0
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.8
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/locale@3.12.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/provider@5.20.0
+  - @prosopo/types@5.17.0
+  - @prosopo/types-database@5.11.0
+
+## 2.8.201
+### Patch Changes
+
+- Updated dependencies [5421e87]
+- Updated dependencies [a00fb86]
+  - @prosopo/provider@5.19.4
+
+## 2.8.200
+### Patch Changes
+
+- Updated dependencies [ebcd4ed]
+- Updated dependencies [b6e9459]
+- Updated dependencies [3c5d196]
+  - @prosopo/provider@5.19.3
+  - @prosopo/locale@3.11.1
+  - @prosopo/api-express-router@3.2.9
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/types-database@5.10.6
+  - @prosopo/database@4.2.7
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/logger@2.1.4
+
+## 2.8.199
+### Patch Changes
+
+- Updated dependencies [24e89e1]
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/provider@5.19.2
+  - @prosopo/locale@3.11.0
+  - @prosopo/api-express-router@3.2.8
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/types-database@5.10.5
+  - @prosopo/database@4.2.6
+
+## 2.8.198
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/api-express-router@3.2.7
+  - @prosopo/common@3.2.1
+  - @prosopo/provider@5.19.1
+  - @prosopo/types@5.16.1
+  - @prosopo/types-database@5.10.4
+  - @prosopo/database@4.2.5
+
+## 2.8.197
+### Patch Changes
+
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/provider@5.19.0
+  - @prosopo/api-express-router@3.2.6
+  - @prosopo/types-database@5.10.3
+  - @prosopo/database@4.2.4
+
+## 2.8.196
+### Patch Changes
+
+- Updated dependencies [460ca67]
+  - @prosopo/provider@5.18.0
+  - @prosopo/database@4.2.3
+  - @prosopo/types-database@5.10.2
+  - @prosopo/api-express-router@3.2.5
+
+## 2.8.195
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/database@4.2.2
+  - @prosopo/provider@5.17.1
+  - @prosopo/types@5.15.1
+  - @prosopo/types-database@5.10.1
+  - @prosopo/api-express-router@3.2.4
+  - @prosopo/common@3.1.65
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/locale@3.9.1
+  - @prosopo/logger@2.1.4
+
+## 2.8.194
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/provider@5.17.0
+  - @prosopo/types@5.15.0
+  - @prosopo/types-database@5.10.0
+  - @prosopo/locale@3.9.0
+  - @prosopo/api-express-router@3.2.3
+  - @prosopo/common@3.1.64
+  - @prosopo/database@4.2.1
+
+## 2.8.193
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/types-database@5.9.0
+  - @prosopo/database@4.2.0
+  - @prosopo/provider@5.16.0
+  - @prosopo/locale@3.8.0
+  - @prosopo/api-express-router@3.2.2
+  - @prosopo/common@3.1.63
+
+## 2.8.192
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [2118584]
+- Updated dependencies [1ce9482]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/types-database@5.8.0
+  - @prosopo/provider@5.15.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/api-express-router@3.2.1
+  - @prosopo/common@3.1.62
+  - @prosopo/database@4.1.4
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/logger@2.1.3
+
 ## 2.8.191
 ### Patch Changes
 

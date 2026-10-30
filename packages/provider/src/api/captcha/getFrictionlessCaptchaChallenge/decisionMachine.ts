@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaType,
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
+	ipDetectorRiskWeightDefault,
 	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -39,6 +42,7 @@ import {
 	getRoundsFromTriggeredDetectors,
 } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
+import { applyIpDetectorRisk } from "./ipDetectorRisk.js";
 
 export type DecisionMachineInput = {
 	tasks: Tasks;
@@ -253,7 +257,10 @@ export const runDecisionMachine = async (
 			ipInfo,
 			headers: flatHeaders,
 		});
-		return res.status(401).json({ error: "Unauthorized" });
+		return sendProsopoError(
+			res,
+			new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-88" }),
+		);
 	}
 
 	if (webViewTripped) {
@@ -309,6 +316,27 @@ export const runDecisionMachine = async (
 		);
 	}
 
+	const ipDetectorRiskWeight =
+		clientRecord.settings.ipDetectorRiskWeight ?? ipDetectorRiskWeightDefault;
+	const rawBotScore = botScore;
+	const ipDetectorRiskOutcome = applyIpDetectorRisk(
+		botScore,
+		scoreComponents,
+		ipInfo,
+		ipDetectorRiskWeight,
+	);
+	if (ipDetectorRiskOutcome.score !== botScore) {
+		botScore = ipDetectorRiskOutcome.score;
+		scoreComponents = ipDetectorRiskOutcome.scoreComponents;
+		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+	}
+	const scoreAudit = {
+		rawBotScore,
+		effectiveBotScore: botScore,
+		ipDetectorRisk: ipDetectorRiskOutcome.detectorRisk ?? null,
+		ipDetectorRiskWeight,
+	};
+
 	// Rounds an image challenge would carry from here on: the sitekey's
 	// baseline plus one per signal that fired, clamped into its bounds.
 	// Computed once because the puzzle band uses it too — a puzzle session
@@ -342,6 +370,7 @@ export const runDecisionMachine = async (
 				botThreshold: input.botThreshold,
 				botImageThreshold,
 				token: input.token,
+				...scoreAudit,
 			},
 		}));
 		recordFrictionlessDecision("bot_score_puzzle_band");
@@ -376,6 +405,7 @@ export const runDecisionMachine = async (
 				captchaType: CaptchaType.image,
 				solvedImagesCount: scoredImageRounds,
 				triggeredDetectorCount: input.triggeredDetectors?.length ?? 0,
+				...scoreAudit,
 			},
 		}));
 		recordFrictionlessDecision("bot_score_above_threshold");
@@ -401,6 +431,7 @@ export const runDecisionMachine = async (
 				decision: "missing_current_url",
 				captchaType: CaptchaType.image,
 				token: input.token,
+				...scoreAudit,
 			},
 		}));
 		recordFrictionlessDecision("missing_current_url");
@@ -425,6 +456,7 @@ export const runDecisionMachine = async (
 		data: {
 			decision: "default_pow",
 			captchaType: CaptchaType.pow,
+			...scoreAudit,
 		},
 	}));
 	recordFrictionlessDecision("default_pow");

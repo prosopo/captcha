@@ -1,5 +1,302 @@
 # @prosopo/client-example-server
 
+## 2.7.191
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/database@4.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.18
+  - @prosopo/server@2.14.7
+
+## 2.7.190
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+- Updated dependencies [11a38cc]
+  - @prosopo/types@5.22.0
+  - @prosopo/database@4.4.4
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.17
+  - @prosopo/server@2.14.6
+
+## 2.7.189
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.3
+  - @prosopo/keyring@2.10.16
+  - @prosopo/server@2.14.5
+
+## 2.7.188
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.2
+  - @prosopo/keyring@2.10.15
+  - @prosopo/server@2.14.4
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+
+## 2.7.187
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.1
+  - @prosopo/keyring@2.10.14
+  - @prosopo/server@2.14.3
+
+## 2.7.186
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [f13677e]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/keyring@2.10.13
+  - @prosopo/logger@2.1.7
+  - @prosopo/server@2.14.2
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/database@4.4.0
+
+## 2.7.185
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/common@3.3.1
+  - @prosopo/database@4.3.0
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/keyring@2.10.12
+  - @prosopo/logger@2.1.6
+  - @prosopo/server@2.14.1
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+
+## 2.7.184
+### Patch Changes
+
+- 0d94ae6: Pin Node to 24.22.1 in every Docker image and CI workflow, the first 24.x release with the fix for CVE-2026-111497 (an out-of-bounds write in the bundled Brotli decoder that can lead to remote code execution).
+  
+  Before this, everything asked for plain `24`, which does not guarantee a patched build. Docker reuses a cached base image, and `setup-node` uses whatever 24.x a runner already has cached.
+  
+  The provider image needed more than a tag bump. Its runtime, `gcr.io/distroless/nodejs24-debian12`, is stuck on Node 24.14.0 and will not get the fix. It now runs on `nodejs24-debian13`, pinned by digest because distroless publishes no Node version tags. The builder moves to `node:24.22.1-trixie-slim` so both stages still use the same Debian release and glibc. Sharp and the native ja4, merkle and puzzle addons were checked loading on the new runtime.
+
+## 2.7.183
+### Patch Changes
+
+- Updated dependencies [d02b3bc]
+- Updated dependencies [159766a]
+- Updated dependencies [f695b3a]
+  - @prosopo/database@4.2.10
+  - @prosopo/types@5.18.0
+  - @prosopo/server@2.14.0
+  - @prosopo/common@3.3.0
+  - @prosopo/keyring@2.10.11
+
+## 2.7.182
+### Patch Changes
+
+  - @prosopo/server@2.13.8
+  - @prosopo/types@5.17.1
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.9
+  - @prosopo/keyring@2.10.10
+
+## 2.7.181
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [860948c]
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.8
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/keyring@2.10.9
+  - @prosopo/logger@2.1.5
+  - @prosopo/server@2.13.7
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
+## 2.7.180
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/server@2.13.6
+  - @prosopo/types@5.16.3
+  - @prosopo/database@4.2.7
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+  - @prosopo/util@3.3.15
+
+## 2.7.179
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/server@2.13.5
+  - @prosopo/database@4.2.6
+  - @prosopo/keyring@2.10.7
+
+## 2.7.178
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/server@2.13.4
+  - @prosopo/types@5.16.1
+  - @prosopo/database@4.2.5
+  - @prosopo/keyring@2.10.6
+
+## 2.7.177
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/server@2.13.3
+  - @prosopo/database@4.2.4
+  - @prosopo/keyring@2.10.5
+
+## 2.7.176
+### Patch Changes
+
+  - @prosopo/database@4.2.3
+
+## 2.7.175
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/database@4.2.2
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/common@3.1.65
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/keyring@2.10.4
+  - @prosopo/logger@2.1.4
+  - @prosopo/server@2.13.2
+
+## 2.7.174
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/server@2.13.1
+  - @prosopo/common@3.1.64
+  - @prosopo/database@4.2.1
+  - @prosopo/keyring@2.10.3
+
+## 2.7.173
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/database@4.2.0
+  - @prosopo/server@2.13.0
+  - @prosopo/keyring@2.10.2
+  - @prosopo/common@3.1.63
+
+## 2.7.172
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+  - @prosopo/common@3.1.62
+  - @prosopo/database@4.1.4
+  - @prosopo/keyring@2.10.1
+  - @prosopo/server@2.12.15
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/logger@2.1.3
+
 ## 2.7.171
 ### Patch Changes
 

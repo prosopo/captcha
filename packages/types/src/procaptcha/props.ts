@@ -39,7 +39,7 @@ import type { Account, Callbacks } from "./manager.js";
  * telemetry the direct image/puzzle path preserves.
  */
 export type ProcaptchaEscalationHandler = (
-	captchaType: CaptchaType.image | CaptchaType.puzzle,
+	captchaType: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
 	sessionId: string,
 	coords?: { x: number; y: number },
 ) => void;
@@ -113,13 +113,14 @@ export type ProcaptchaCallbacks = Partial<Callbacks>;
 export interface ReloadOptions {
 	showRetry?: boolean;
 	refresh?: boolean;
+	switchToImage?: boolean;
 }
 
 export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
 	callbacks: ProcaptchaCallbacks;
-	i18n: Ti18n;
+	i18n?: Ti18n;
 	frictionlessState?: FrictionlessState;
 	// display an error message
 	errorMessage?: string;
@@ -133,7 +134,7 @@ export interface ProcaptchaProps {
 	// escalation so the user doesn't have to click the checkbox a second time.
 	autoStart?: boolean;
 	// Called by the inner widget when the provider returns
-	// CAPTCHA.NO_SESSION_FOUND on the challenge fetch. The frictionless
+	// NO_SESSION_FOUND on the challenge fetch. The frictionless
 	// wrapper re-runs the frictionless flow to mint a new sessionId and
 	// re-mounts the widget in place. Coords are the checkbox click position
 	// the user already made — preserved so the retried submit still carries
@@ -151,6 +152,9 @@ export interface ProcaptchaProps {
 	// without this the user is told to "Drag the piece to the target" as if
 	// nothing had happened.
 	startShowRetry?: boolean;
+	// How many challenges in a row this user has had replaced, by a wrong
+	// answer or a refresh, carried across re-mounts for the same reason.
+	startReplacementCount?: number;
 	// Called by the inner widget when it needs a replacement challenge: the
 	// user pressed reload, or the puzzle rejected their answer. The
 	// frictionless wrapper owns the response: the sessionId behind the
@@ -163,6 +167,12 @@ export interface ProcaptchaProps {
 	// `showRetry` asks the re-mounted widget to keep the retry prompt up.
 	// `refresh` marks the user asking for a different challenge rather than
 	// getting one wrong, so the provider can count the refreshes.
+	// `switchToImage` asks for that replacement to be an image challenge.
 	// When absent the widget falls back to the manager's own reload behaviour.
 	onReload?: (x?: number, y?: number, options?: ReloadOptions) => void;
+	// Whether to offer "use audio instead"; set by the frictionless wrapper.
+	audioAlternativeAvailable?: boolean;
+	// The wrapper mints a fresh session and mounts the audio widget: the
+	// provider consumed the visual challenge's session when it issued it.
+	onRequestAudioAlternative?: () => void;
 }

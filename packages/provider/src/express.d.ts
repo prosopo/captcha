@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { I18nLookup, TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse, TcpProbeRecord } from "@prosopo/types";
-import type { TFunction } from "i18next";
 export interface AugmentedRequest {
-	t: TFunction;
-	i18n: {
-		t: TFunction;
-	};
+	t: TranslateFn;
+	i18n: I18nLookup;
 	user?: string;
 	siteKey?: string;
 	ja4: string;
@@ -44,19 +42,31 @@ export interface AugmentedRequest {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds; still sent by a chaddy
+	// older than prosopo/chaddy#16.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	tcpProbe?: TcpProbeRecord;
 }
 
 declare global {
 	namespace Express {
 		interface Request {
-			t: TFunction;
-			i18n: {
-				t: TFunction;
-			};
+			t: TranslateFn;
+			i18n: I18nLookup;
 			user?: string;
 			siteKey?: string;
 			ja4: string;
@@ -71,9 +81,21 @@ declare global {
 			observedTtl?: number;
 			tcpMss?: number;
 			tcpWscale?: number;
+			tcpWindow?: number;
+			tcpOptsKinds?: number[];
+			tcpOptsPresent?: number;
+			tcpOptsCount?: number;
+			tcpTsval?: number;
+			tcpTsecr?: number;
+			tcpFlags?: number;
+			tcpDataOffsetResv?: number;
+			tcpUrgPtr?: number;
+			ipIdent?: number;
+			ipTotalLen?: number;
+			ipFragFlags?: number;
+			ipTos?: number;
 			tcpOptsFlags?: number;
 			tcpOptsOrder?: number;
-			tcpWindow?: number;
 			tcpProbe?: TcpProbeRecord;
 		}
 		interface Locals {

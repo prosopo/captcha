@@ -2,10 +2,10 @@
 # fetch happens in the builder; the runtime image is distroless and contains
 # only the Node runtime, this bundle and its one dependency.
 #
-# The builder is `node:24-slim` rather than `node:24` for the same reason the
+# The builder is a slim image rather than `node:24` for the same reason the
 # runtime is distroless: `node:24` is 1.63 GB of build toolchain that a
 # pre-bundled JS file and a single prebuilt-binary dependency never touch.
-FROM node:24-slim AS builder
+FROM node:24.22.1-trixie-slim AS builder
 
 WORKDIR /build
 
@@ -20,7 +20,13 @@ RUN apt-get update && \
 
 COPY ./packages/cli/dist/bundle/ ./
 
-COPY ./packages/locale/dist/locales/ ./locales/
+COPY ./packages/locale/dist/esm/locales/ ./locales/
+
+# Created here so it reaches the runtime image owned by the runtime user. A
+# named volume mounted on it starts with that ownership; one mounted on a path
+# the image lacks is created root-owned, and the provider cannot write a pool
+# into it. The self-hosted compose file mounts its pool volume here.
+RUN mkdir -p data/detector-pool
 
 # Download the GeoLite2 databases into the same directory. One layer rather
 # than three so the intermediate states are not retained.
@@ -48,8 +54,11 @@ RUN echo '#!/nodejs/bin/node' | cat - provider.cli.bundle.js > temp && \
     npm i --include=optional --os=linux --cpu=x64 --no-fund --no-audit && \
     npm cache clean --force
 
-# `nodejs24-debian12` matches the builder's Debian release, so the glibc the
-# native addons were resolved against is the same one that loads them. All
+# `nodejs24-debian13` matches the builder's Debian release (trixie), so the
+# glibc the native addons were resolved against is the same one that loads
+# them. Debian 12 is not an option: its distroless image stopped at Node
+# 24.14.0, before the CVE-2026-111497 Brotli fix in 24.22.1. Distroless
+# publishes no Node version tags, so the digest is what pins 24.22.1. All
 # four (@img/sharp, native-ja4, native-merkle, native-puzzle) are
 # linux-x64-gnu; an Alpine/musl runtime would break every one.
 #
@@ -64,7 +73,7 @@ RUN echo '#!/nodejs/bin/node' | cat - provider.cli.bundle.js > temp && \
 # CLI commands must name node explicitly (see above), and container
 # healthchecks cannot use curl — they run `node -e "fetch(...)"` instead. Every
 # call site in this repo and in the ansible playbooks has been moved over.
-FROM gcr.io/distroless/nodejs24-debian12:nonroot
+FROM gcr.io/distroless/nodejs24-debian13:nonroot@sha256:78f07ef1b5ea71ad7c055df15d0dd8997f2d288f9158623c4d4ae3d765b7d50d
 
 WORKDIR /usr/src/app
 

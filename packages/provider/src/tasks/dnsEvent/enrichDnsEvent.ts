@@ -21,8 +21,10 @@ import type {
 } from "@prosopo/types";
 import { trafficFilterAbuserScoreThresholdDefault } from "@prosopo/types";
 import {
-	isDatacenterAllowlisted,
-	isDatacenterDenylisted,
+	categoryApplies,
+	isEffectivelyDatacenter,
+	isNameDenylisted,
+	isPrivateRelay,
 } from "../spam/checkTrafficFilter.js";
 
 export type { EnrichedDnsEvent };
@@ -92,8 +94,9 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  * datacenter ranges (Google/Cloudflare/consumer-VPN DNS), so signal
  * counting has to consider the operator's stance:
  *
- *   - datacenter category must be configured; `providerType === "isp"`
- *     short-circuits; `datacenterNameAllowlist` skips; `datacenterNameDenylist`
+ *   - datacenter category must be configured and must apply the way the
+ *     traffic filter decides it (`categoryApplies`): the ISP heuristic, the
+ *     allowlist and iCloud Private Relay skip; the datacenter `nameDenylist`
  *     forces the signal through (denylist wins over all other exemptions)
  *   - a higher-precedence flag the operator has left **unconfigured** (VPN,
  *     proxy, Tor, crawler) on the same resolver IP shields the datacenter
@@ -102,13 +105,13 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  *     or challenge) do *not* shield, because the operator is treating that
  *     category as suspicious in its own right.
  *   - abuser is not shielded by any other category: its signal counts
- *     whenever the abuser category is configured and the score meets the
- *     threshold.
+ *     whenever the abuser category is configured and applies.
  *
  * `pathValid` is a protocol signal, not a category — it always contributes
  * regardless of trafficFilter. When `trafficFilter` is omitted, all
- * datacenter / abuser flags count (preserves the pre-gating behaviour for
- * admin / diagnostic recompute callers).
+ * datacenter / abuser flags count except iCloud Private Relay's datacenter
+ * flag (preserves the pre-gating behaviour for admin / diagnostic recompute
+ * callers).
  */
 export const computeDnsAsymmetry = (
 	enriched: EnrichedDnsEvent | undefined,
@@ -121,13 +124,13 @@ export const computeDnsAsymmetry = (
 
 	const countDc = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isDatacenter) return false;
-		if (!trafficFilter) return true;
+		// The verify-time recompute only ever raises the score this path
+		// stores, so a relay exemption left to the gated path never lands.
+		if (!trafficFilter) return !isPrivateRelay(ip);
 		if (trafficFilter.datacenter === undefined) return false;
 		// Denylist wins over shielding and over the ISP / allowlist checks —
 		// an explicitly named provider counts as DC no matter what.
-		if (isDatacenterDenylisted(ip, trafficFilter.datacenterNameDenylist)) {
-			return true;
-		}
+		if (isNameDenylisted(ip, trafficFilter, "datacenter")) return true;
 		// Policy-aware shielding: a higher-precedence flag the operator has
 		// left unconfigured (i.e. is allowing) "explains" why this resolver
 		// is on a datacenter range and suppresses the DC signal. When the
@@ -142,8 +145,7 @@ export const computeDnsAsymmetry = (
 		) {
 			return false;
 		}
-		if (ip.providerType === "isp") return false;
-		return !isDatacenterAllowlisted(ip, trafficFilter.datacenterNameAllowlist);
+		return isEffectivelyDatacenter(ip, trafficFilter);
 	};
 
 	const countAbuser = (ip: IPInfoResponse | undefined): boolean => {
@@ -154,7 +156,7 @@ export const computeDnsAsymmetry = (
 			trafficFilter.abuserScoreThreshold ??
 			trafficFilterAbuserScoreThresholdDefault;
 		const maxScore = Math.max(ip.abuserScore ?? 0, ip.companyAbuserScore ?? 0);
-		return maxScore >= threshold;
+		return categoryApplies(ip, trafficFilter, "abuser", maxScore >= threshold);
 	};
 
 	if (countDc(enriched.resolverIpInfo)) score += 0.3;

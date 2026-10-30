@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Translator } from "@prosopo/locale";
+import { type Translator, createUntranslatedI18n } from "@prosopo/locale";
 import type { Component } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
 import { lightTheme } from "@prosopo/widget-skeleton";
@@ -58,7 +58,7 @@ const translator = (): Translator => ({
 	},
 	isReady: () => true,
 	subscribe: () => () => undefined,
-	i18n: {} as Translator["i18n"],
+	i18n: createUntranslatedI18n(),
 });
 
 let canvas: Component<PuzzleCanvasProps> | undefined;
@@ -324,6 +324,92 @@ describe("the refresh control", () => {
 	test("stays out of what a screen reader reads for the piece", () => {
 		render(props({ onRefresh: vi.fn<() => void>() }));
 		expect(pieceDescription()).not.toContain("different puzzle");
+	});
+});
+
+describe("the switch to an image challenge", () => {
+	const switchControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[aria-label="Switch to an image challenge"]',
+		);
+
+	test("is not drawn when the puzzle cannot be switched", () => {
+		render(props());
+		expect(switchControl()).toBeNull();
+	});
+
+	test("asks for an image challenge when pressed", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	const switchTooltip = (): HTMLElement =>
+		required(
+			overlay().querySelector<HTMLElement>('[role="tooltip"]'),
+			"the switch tooltip",
+		);
+
+	// Refresh always comes with the switch, and the dialog opens with focus on
+	// it; without it the switch would take focus and show its tooltip.
+	const withRefresh = { onRefresh: vi.fn<() => void>() };
+
+	test("keeps its tooltip for hover until the user looks to be struggling", () => {
+		render(props({ ...withRefresh, onSwitchToImage: vi.fn<() => void>() }));
+		expect(switchTooltip().style.display).toBe("none");
+	});
+
+	test("shows its tooltip unprompted once the user looks to be struggling", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		expect(switchTooltip().style.display).toBe("block");
+		expect(switchTooltip().textContent).toBe("Switch to an image challenge");
+	});
+
+	test("puts the tooltip away once the user starts dragging", () => {
+		render(
+			props({
+				...withRefresh,
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		mouseDown(20, 100);
+		expect(switchTooltip().style.display).toBe("none");
+	});
+
+	test("is hidden and inert while a solution is in flight", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage, submitting: true }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is ignored mid-drag", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		mouseDown(20, 100);
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is offered to a screen reader after a miss once highlighted", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+				showRetry: true,
+			}),
+		);
+		expect(document.body.querySelector("output")?.textContent).toContain(
+			"You can also switch to an image challenge.",
+		);
 	});
 });
 
@@ -700,5 +786,54 @@ describe("after it goes away", () => {
 		mouseMove(150, 90);
 		mouseUp();
 		expect(onComplete).not.toHaveBeenCalled();
+	});
+});
+
+describe("the audio alternative", () => {
+	const onRequestAudio = vi.fn<() => void>();
+	const offer = { onRequestAudio, label: "Use audio instead" };
+
+	const audioControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[data-cy="prosopo-audio-alternative"]',
+		);
+
+	const board = (): HTMLElement => required(piece().parentElement, "the board");
+
+	test("is absent when the site has not offered it", () => {
+		render(props());
+		expect(audioControl()).toBeNull();
+		expect(board().style.borderRadius).toBe("0 0 20px 20px");
+	});
+
+	test("sits below the board, which squares off its corners for it", () => {
+		render(props({ audioAlternative: offer }));
+		const control = required(audioControl(), "the audio alternative");
+		expect(control.textContent).toBe("Use audio instead");
+		expect(
+			board().compareDocumentPosition(control) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(board().style.borderRadius).toBe("0");
+	});
+
+	test("asks for audio without submitting the puzzle", () => {
+		render(props({ audioAlternative: offer }));
+		required(audioControl(), "the audio alternative").click();
+		expect(onRequestAudio).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("goes away when a later render withdraws the offer", () => {
+		render(props({ audioAlternative: offer }));
+		render(props());
+		expect(audioControl()).toBeNull();
+		expect(board().style.borderRadius).toBe("0 0 20px 20px");
+	});
+
+	test("is removed with the canvas", () => {
+		render(props({ audioAlternative: offer }));
+		destroy();
+		expect(audioControl()).toBeNull();
 	});
 });

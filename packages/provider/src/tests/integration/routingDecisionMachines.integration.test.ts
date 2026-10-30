@@ -32,6 +32,7 @@ import {
 	encodeCounterKey,
 } from "@prosopo/types";
 import { randomAsHex } from "@prosopo/util-crypto";
+import type { Response } from "undici";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { reservePort, testFetch } from "./testUtils.js";
 

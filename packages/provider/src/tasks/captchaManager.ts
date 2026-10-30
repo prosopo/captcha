@@ -13,15 +13,17 @@
 // limitations under the License.
 
 import type { RedisWriteQueue } from "@prosopo/database";
-import type { TranslationKey } from "@prosopo/locale";
+import type { TranslateFn, TranslationKey } from "@prosopo/locale";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
-	type CaptchaType,
+	CaptchaType,
+	type CompositeIpAddress,
 	type EnrichedDnsEvent,
 	type IPInfoResponse,
 	type ITrafficFilter,
 	type KeyringPair,
+	type OpenDetectorFormat,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
@@ -29,15 +31,13 @@ import {
 	type SimdReadingsStage,
 	Tier,
 	TrafficFilterAction,
-	type UserCommitment,
+	isCaptchaTypeFeatureEnabled,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
 	IProviderDatabase,
 	IUserDataSlim,
-	PoWCaptchaRecord,
 	ProjectedSession,
-	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
@@ -54,6 +54,10 @@ import {
 	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import {
+	isAudioAlternativeAllowed,
+	isAudioAlternativeEnabled,
+} from "./audioAlternative.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
@@ -74,7 +78,10 @@ import {
  */
 export interface PoolBundleDecrypt {
 	key: string;
-	innerConfig: string;
+	// Absent on open-format bundles, which carry no inner layer and produce no
+	// SIMD or behavioural payloads.
+	innerConfig?: string;
+	format?: OpenDetectorFormat;
 	/**
 	 * Opaque per-bundle decode parameter from the bundle's `{id}.json`. Only
 	 * meaningful to the decoder, and only alongside the bundle it was built
@@ -116,6 +123,13 @@ const findHardBlockPolicy = (
 		return policy.type === AccessPolicyType.Block && !policy.captchaType;
 	});
 };
+
+/** The fields `checkForHardBlock` reads; every captcha record has them. */
+export interface HardBlockRecordView {
+	dappAccount: string;
+	ipAddress: CompositeIpAddress;
+	ja4: string;
+}
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -189,8 +203,8 @@ export class CaptchaManager {
 	 * Read a session and, if it's an escalation missing one of the
 	 * inherently-origin-populated fields, walk to `originSessionId` and fill
 	 * the gap. Intended for the decision-machine input read path only —
-	 * `simdReadings`, `dnsEvent` and the detector bag are
-	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
+	 * `simdReadings`, `dnsEvent`, `fingerprintSummary` and the detector bag
+	 * are populated on the origin session (SIMD via pow-submit's fire-and-forget
 	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
 	 * automatically end up on the escalation record because
 	 * `buildEscalation` reads the origin from Mongo before the async writes
@@ -224,8 +238,9 @@ export class CaptchaManager {
 		// the escalation copied it. The escalation's own keys always win.
 		const escalationData = session.d ?? {};
 		const needsData = session.d === undefined;
+		const needsFingerprint = session.fingerprintSummary === undefined;
 
-		if (!needsSimd && !needsDns && !needsData) {
+		if (!needsSimd && !needsDns && !needsData && !needsFingerprint) {
 			return session;
 		}
 
@@ -243,6 +258,10 @@ export class CaptchaManager {
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
 			...(mergedData !== undefined && { d: mergedData }),
+			...(needsFingerprint &&
+				origin.fingerprintSummary && {
+					fingerprintSummary: origin.fingerprintSummary,
+				}),
 		};
 	}
 
@@ -449,6 +468,33 @@ export class CaptchaManager {
 			},
 		}));
 
+		// Ahead of the session lookup so a session minted before the type was
+		// switched off is refused rather than consumed and served. Audio also
+		// needs the site owner's switch, which is checked here for the same
+		// reason: refusing it later would spend the visual session it trades.
+		const typeEnabled =
+			requestedCaptchaType === CaptchaType.audio
+				? isAudioAlternativeEnabled(clientSettings.settings)
+				: isCaptchaTypeFeatureEnabled(
+						requestedCaptchaType,
+						clientSettings.settings?.captchaTypeFeatureFlags,
+					);
+		if (!typeEnabled) {
+			this.logger.warn(() => ({
+				msg: "Captcha type is switched off for this site",
+				data: {
+					account: clientSettings.account,
+					requestedCaptchaType,
+					sessionId,
+				},
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
+
 		// User Access Policies override default behaviour, but only for
 		// sessionless requests. When a sessionId is present the session record
 		// is authoritative for captchaType: it was minted by frictionless /
@@ -510,7 +556,7 @@ export class CaptchaManager {
 				// puzzle from postPow. Real-world widgets and dapps that
 				// don't fully wire `onEscalate` keep calling /captcha/*
 				// with the original sessionId — without this fallback they
-				// see CAPTCHA.NO_SESSION_FOUND and the user lands on the
+				// see NO_SESSION_FOUND and the user lands on the
 				// FAQ page.
 				const escalationSessionId =
 					await this.writeQueue.getCachedSessionEscalation(sessionId);
@@ -672,7 +718,14 @@ export class CaptchaManager {
 			}
 
 			// Check the captcha type of the session is the same as the requested captcha type
-			if (sessionRecord.captchaType !== requestedCaptchaType) {
+			if (
+				sessionRecord.captchaType !== requestedCaptchaType &&
+				!isAudioAlternativeAllowed(
+					requestedCaptchaType,
+					sessionRecord.captchaType,
+					clientSettings.settings,
+				)
+			) {
 				this.logger.warn(() => ({
 					msg: "Session captcha type does not match requested type",
 					data: {
@@ -704,6 +757,19 @@ export class CaptchaManager {
 		}
 
 		// No Session ID
+
+		// Audio is only served in exchange for a visual session.
+		if (requestedCaptchaType === CaptchaType.audio) {
+			this.logger.warn(() => ({
+				msg: "Sessionless audio captcha request rejected",
+				data: { account: clientSettings.account },
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
 
 		// Sessionless request: policy captchaType (if pinned by an active
 		// restrict rule) still takes precedence over the client's configured
@@ -756,7 +822,7 @@ export class CaptchaManager {
 	getVerificationResponse(
 		verified: boolean,
 		clientRecord: ClientRecord,
-		translateFn: (key: string) => string,
+		translateFn: TranslateFn,
 		score?: number,
 		reason?: string,
 		sessionId?: string,
@@ -819,7 +885,8 @@ export class CaptchaManager {
 		return bundle
 			? {
 					key: bundle.privateKey,
-					innerConfig: bundle.innerConfig,
+					...(bundle.innerConfig && { innerConfig: bundle.innerConfig }),
+					...(bundle.format && { format: bundle.format }),
 					...(bundle.payloadLayout && {
 						payloadLayout: bundle.payloadLayout,
 					}),
@@ -915,6 +982,7 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
+		if (!bundle.innerConfig) return null;
 		try {
 			return await decode<SimdReadingsResult>("simd", [
 				encryptedData,
@@ -940,6 +1008,7 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
+		if (!bundle.innerConfig) return null;
 		try {
 			const result = await decode<BehavioralDataResult>("behaviour", [
 				encryptedData,
@@ -974,9 +1043,11 @@ export class CaptchaManager {
 	 */
 	async checkForHardBlock(
 		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: PoWCaptchaRecord | PuzzleCaptchaRecord | UserCommitment,
+		challengeRecord: HardBlockRecordView,
 		userAccount: string,
 		headers: RequestHeaders,
+		// From the session the caller has already read for its own checks.
+		headHash: string | undefined,
 		coords?: [number, number][][],
 		countryCode?: string,
 		asn?: number,
@@ -984,15 +1055,6 @@ export class CaptchaManager {
 		// the matched rule (scope fields included) onto the record they
 		// disapprove, so the audit page can name the exact policy.
 	): Promise<AccessRule | undefined> {
-		// Get headHash from session record if available
-		let headHash: string | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
-			);
-			headHash = sessionRecord?.decryptedHeadHash;
-		}
-
 		// Serialize coords to string for querying
 		const coordsString = coords ? JSON.stringify(coords) : undefined;
 
@@ -1055,8 +1117,9 @@ export class CaptchaManager {
 	 *   time (ipInfoMiddleware → storeXxxRecord), so by default we reuse it
 	 *   instead of hitting the sidecar again.
 	 * - If the dapp's server passed up the end user's current IP via the
-	 *   verify call, look that up fresh — it's the "now" IP for filtering
-	 *   and may differ from the IP that originally requested the captcha.
+	 *   verify call, the caller looks that up fresh and passes the result as
+	 *   `currentIpInfo` — it's the "now" IP for filtering and may differ from
+	 *   the IP that originally requested the captcha.
 	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
 	 *   are enriched and passed alongside the primary IP.
 	 * - The abuser category defaults to `{action:"block"}` so abusive
@@ -1070,10 +1133,9 @@ export class CaptchaManager {
 	 * the verdict.
 	 */
 	async resolveTrafficFilterCheck(
-		env: ProviderEnvironment,
 		recordIpInfo: IPInfoResponse | undefined,
 		trafficFilter: Partial<ITrafficFilter> | undefined,
-		currentIp?: string,
+		currentIpInfo?: IPInfoResponse,
 		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
 		const effective: Partial<ITrafficFilter> = {
@@ -1093,12 +1155,8 @@ export class CaptchaManager {
 			return { isBlocked: false, matches: [] };
 		}
 
-		const ipInfo = currentIp
-			? await env.ipInfoService.lookup(currentIp)
-			: recordIpInfo;
-
 		return checkTrafficFilter(
-			ipInfo,
+			currentIpInfo ?? recordIpInfo,
 			effective,
 			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
 			enrichedDnsEvent?.pathValid,

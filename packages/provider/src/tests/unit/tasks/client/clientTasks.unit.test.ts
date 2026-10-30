@@ -37,6 +37,30 @@ import {
 	ClientTaskManager,
 	matchesGlob,
 } from "../../../../tasks/client/clientTasks.js";
+import {
+	invalidateAllDecisionMachineArtifactCaches,
+	invalidateDecisionMachineScriptCache,
+} from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+
+vi.mock(
+	"../../../../tasks/decisionMachine/decisionMachineRunner.js",
+	async (
+		importOriginal: () => Promise<
+			typeof import("../../../../tasks/decisionMachine/decisionMachineRunner.js")
+		>,
+	) => {
+		const actual = await importOriginal();
+		return {
+			...actual,
+			invalidateAllDecisionMachineArtifactCaches: vi.fn(
+				actual.invalidateAllDecisionMachineArtifactCaches,
+			),
+			invalidateDecisionMachineScriptCache: vi.fn(
+				actual.invalidateDecisionMachineScriptCache,
+			),
+		};
+	},
+);
 
 const loggerOuter = getLogger("info", "test:client-tasks");
 
@@ -203,6 +227,8 @@ describe("ClientTaskManager", () => {
 				},
 			]),
 			upsertDecisionMachineArtifact: vi.fn(),
+			removeDecisionMachineArtifact: vi.fn().mockResolvedValue(true),
+			removeAllDecisionMachineArtifacts: vi.fn().mockResolvedValue(2),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -775,6 +801,26 @@ describe("ClientTaskManager", () => {
 					'module.exports = () => ({ decision: "allow" });',
 				),
 			).rejects.toThrow();
+		});
+
+		it("flushes the decision machine caches when one is removed", async () => {
+			vi.mocked(invalidateAllDecisionMachineArtifactCaches).mockClear();
+			vi.mocked(invalidateDecisionMachineScriptCache).mockClear();
+
+			await clientTaskManager.removeDecisionMachine("dm-id");
+
+			expect(invalidateAllDecisionMachineArtifactCaches).toHaveBeenCalledOnce();
+			expect(invalidateDecisionMachineScriptCache).toHaveBeenCalledOnce();
+		});
+
+		it("flushes the decision machine caches when all are removed", async () => {
+			vi.mocked(invalidateAllDecisionMachineArtifactCaches).mockClear();
+			vi.mocked(invalidateDecisionMachineScriptCache).mockClear();
+
+			await clientTaskManager.removeAllDecisionMachines();
+
+			expect(invalidateAllDecisionMachineArtifactCaches).toHaveBeenCalledOnce();
+			expect(invalidateDecisionMachineScriptCache).toHaveBeenCalledOnce();
 		});
 	});
 });

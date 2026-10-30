@@ -1,0 +1,45 @@
+{
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
+		"lib": ["es6", "dom"]
+	},
+	"include": [
+		"src",
+		"src/**/*.json",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts"
+	],
+	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../locale"
+		},
+		{
+			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../types"
+		},
+		{
+			"path": "../util"
+		},
+		{
+			"path": "../util-crypto"
+		},
+		{
+			"path": "../widget-skeleton"
+		}
+	]
+}

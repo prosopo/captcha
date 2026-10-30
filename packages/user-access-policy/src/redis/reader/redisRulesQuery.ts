@@ -137,6 +137,7 @@ const getUserScopeQuery = (
 // Fields that may contain special characters requiring escaping in Redis TAG queries
 const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
 	"coords",
+	"webBotAuthAgent",
 ]);
 
 // Fields indexed as NUMERIC in RediSearch — must use range syntax `@x:[N N]`,
@@ -238,7 +239,7 @@ export const getRulesRedisQuery = (
 	const queryParts = [];
 
 	if (filter.groupId) {
-		queryParts.push(`@groupId:{${filter.groupId}}`);
+		queryParts.push(`@groupId:{${escapeTagValue(filter.groupId)}}`);
 	}
 
 	if (filter.blockOnly) {

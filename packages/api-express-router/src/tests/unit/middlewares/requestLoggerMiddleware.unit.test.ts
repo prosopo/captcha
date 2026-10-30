@@ -175,6 +175,46 @@ describe("the log bindings", () => {
 		expect(recorded.bindings.siteKey).toBe("site-1");
 	});
 
+	test("carry the integration the widget names", () => {
+		const harness = build({
+			headers: { "x-prosopo-integration": "mc4wp" },
+		});
+		run(harness);
+		expect(recorded.bindings.integration).toBe("mc4wp");
+	});
+
+	test("carry the bundle version and origin the widget sends", () => {
+		const harness = build({
+			headers: {
+				"x-prosopo-bundle-version": "3.9.6",
+				"x-prosopo-bundle-origin": "https://js.prosopo.io",
+			},
+		});
+		run(harness);
+		expect(recorded.bindings.bundleVersion).toBe("3.9.6");
+		expect(recorded.bindings.bundleOrigin).toBe("https://js.prosopo.io");
+	});
+
+	test("drop a bundle version or origin that does not parse", () => {
+		const harness = build({
+			headers: {
+				"x-prosopo-bundle-version": "latest",
+				"x-prosopo-bundle-origin": "javascript:alert(1)",
+			},
+		});
+		run(harness);
+		expect(recorded.bindings.bundleVersion).toBeUndefined();
+		expect(recorded.bindings.bundleOrigin).toBeUndefined();
+	});
+
+	test("drop an integration that is not a short slug", () => {
+		const harness = build({
+			headers: { "x-prosopo-integration": "not a slug" },
+		});
+		run(harness);
+		expect(recorded.bindings.integration).toBeUndefined();
+	});
+
 	test("omit absent fields entirely rather than binding undefined", () => {
 		// A bound `user: undefined` would show up as a field in every log line
 		// for anonymous traffic.

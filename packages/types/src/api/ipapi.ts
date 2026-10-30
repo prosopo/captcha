@@ -94,13 +94,30 @@ export interface IPApiVPNInfo {
 	longitude: number;
 }
 
+export interface IPApiReputationInfo {
+	/**
+	 * Risk in [0,1] from bot-detector fires on this address in recent
+	 * sessions, on the same additive scale as a session's bot score. Null or
+	 * absent means no evidence, not zero risk.
+	 */
+	detector_risk?: number | null;
+}
+
 export interface IPApiResponse {
 	ip: string;
 	rir: "ARIN" | "RIPE" | "APNIC" | "LACNIC" | "AFRINIC";
 	is_bogon: boolean;
 	is_mobile: boolean;
 	is_satellite: boolean;
+	/**
+	 * A real boolean, unlike the ipapi.is worker this replaced: that returned
+	 * the crawler's NAME through this field — "GoogleBot", "BaiduSpider" —
+	 * while every consumer typed it `boolean`, so `=== true` matched nothing.
+	 * The name is in `crawler`.
+	 */
 	is_crawler: boolean;
+	/** The declared crawler's name, present exactly when `is_crawler`. */
+	crawler?: string;
 	is_datacenter: boolean;
 	is_tor: boolean;
 	is_proxy: boolean;
@@ -112,6 +129,7 @@ export interface IPApiResponse {
 	asn?: IPApiASNInfo;
 	location?: IPApiLocationInfo;
 	vpn?: IPApiVPNInfo;
+	reputation?: IPApiReputationInfo;
 	elapsed_ms: number;
 }
 
@@ -135,6 +153,9 @@ export interface IPInfoResult {
 	isMobile: boolean;
 	isSatellite: boolean;
 	isCrawler: boolean;
+	/** The declared crawler's name where one is known: "GoogleBot". Set from
+	 *  the sidecar's `crawler`, or from the vendor's misnamed `is_crawler`. */
+	crawlerName?: string;
 
 	// Provider information
 	providerName?: string;
@@ -171,6 +192,8 @@ export interface IPInfoResult {
 	// Risk scoring
 	abuserScore?: number;
 	companyAbuserScore?: number;
+	/** Undefined when the address has no detector evidence. */
+	detectorRisk?: number;
 
 	// Raw response for debugging
 	rawResponse?: IPApiResponse;

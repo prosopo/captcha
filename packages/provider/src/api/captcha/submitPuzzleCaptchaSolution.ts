@@ -11,145 +11,29 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
-import {
-	type PuzzleCaptchaSolutionResponse,
-	SubmitPuzzleCaptchaSolutionBody,
-	type SubmitPuzzleCaptchaSolutionBodyTypeOutput,
-} from "@prosopo/types";
+import { SubmitPuzzleCaptchaSolutionBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
-import type { NextFunction, Request, Response } from "express";
-import type { AugmentedRequest } from "../../express.js";
-import { Tasks } from "../../tasks/tasks.js";
-import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { summariseRequestBody } from "../requestBodySummary.js";
-import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
-import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { interactiveSolutionHandler } from "./interactiveCaptchaSolution.js";
 
 export default (env: ProviderEnvironment) =>
-	async (
-		req: Request & AugmentedRequest,
-		res: Response,
-		next: NextFunction,
-	) => {
-		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-		// because the Tasks constructor calls `env.getDb()`, which throws when
-		// `env.db` is undefined (the maintenance-mode case).
-		if (getMaintenanceMode()) {
-			req.logger.info(() => ({
-				msg: "Maintenance mode active - returning verified",
-			}));
-			const response: PuzzleCaptchaSolutionResponse = {
-				status: "ok",
-				verified: true,
-			};
-			return res.json(response);
-		}
-
-		let parsed: SubmitPuzzleCaptchaSolutionBodyTypeOutput;
-		const tasks = new Tasks(env, req.logger);
-
-		try {
-			parsed = SubmitPuzzleCaptchaSolutionBody.parse(req.body);
-		} catch (err) {
-			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: summariseRequestBody(req) },
-					i18n: req.i18n,
-					logger: req.logger,
-				}),
-			);
-		}
-
-		const {
-			challenge,
-			signature,
-			finalX,
-			finalY,
-			puzzleEvents,
-			dapp,
-			user,
-			behavioralData,
-			salt,
-			simdReadings,
-			clientMetaData,
-		} = parsed;
-
-		validateSiteKey(dapp);
-		validateAddr(user);
-
-		// Reserved CI test site keys force a deterministic verdict before any DB
-		// lookup, so they work in every environment without a registered record.
-		const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
-		if (testVerdict !== null) {
-			const response: PuzzleCaptchaSolutionResponse = {
-				status: "ok",
-				verified: testVerdict,
-			};
-			return res.json(response);
-		}
-
-		try {
-			const clientRecord = await tasks.db.getClientRecord(dapp);
-
-			if (!clientRecord) {
-				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
-
-			// `solutionTimeout` gates issuance → submit; falls back to
-			// `verifiedTimeout` for records that pre-date the field, since
-			// historically that value covered both windows. Mongoose `default`
-			// doesn't fire on reads, so the runtime value can be undefined
-			// even though the parsed schema type says `number`.
-			const persistedSolutionTimeout = clientRecord.settings.solutionTimeout as
-				| number
-				| undefined;
-			const submitWindowMs: number =
-				persistedSolutionTimeout ?? clientRecord.settings.verifiedTimeout;
-			const verified =
-				await tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-					challenge,
-					signature.provider.challenge,
-					finalX,
-					finalY,
-					puzzleEvents,
-					submitWindowMs,
-					signature.user.timestamp,
-					getIPAddress(req.ip || ""),
-					flatten(req.headers),
-					behavioralData,
-					salt,
-					simdReadings,
-					clientMetaData,
-				);
-			const response: PuzzleCaptchaSolutionResponse = {
-				status: "ok",
-				verified,
-			};
-			return res.json(response);
-		} catch (err) {
-			req.logger.error(() => ({
-				err,
-				body: summariseRequestBody(req),
-				msg: "Error in puzzle captcha solution submission",
-			}));
-			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						error: err,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
-				}),
-			);
-		}
-	};
+	interactiveSolutionHandler(env, {
+		label: "puzzle",
+		parse: (body) => SubmitPuzzleCaptchaSolutionBody.parse(body),
+		verify: (tasks, body, submitWindowMs, req) =>
+			tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				body.challenge,
+				body.signature.provider.challenge,
+				body.finalX,
+				body.finalY,
+				body.puzzleEvents,
+				submitWindowMs,
+				body.signature.user.timestamp,
+				getIPAddress(req.ip || ""),
+				flatten(req.headers),
+				body.behavioralData,
+				body.salt,
+				body.simdReadings,
+				body.clientMetaData,
+			),
+	});

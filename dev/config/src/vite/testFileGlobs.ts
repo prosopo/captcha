@@ -12,8 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** Test types a file can declare as `name.<type>.test.ts`. */
-export const KNOWN_TEST_TYPES: readonly string[] = ["unit", "integration"];
+/**
+ * Test types a file can declare as `name.<type>.test.ts`.
+ *
+ * `browser` needs a real layout and paint engine, so it runs under vitest's
+ * browser mode from a package's own `test:browser` script rather than in the
+ * jsdom default — a package carrying one must set `TEST_TYPE` on `test` to
+ * keep it out of that run.
+ */
+export const KNOWN_TEST_TYPES: readonly string[] = [
+	"unit",
+	"integration",
+	"browser",
+];
 
 const TEST_FILE_SUFFIX =
 	"@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)" as const;

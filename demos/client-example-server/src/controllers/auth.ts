@@ -16,7 +16,7 @@ import { blake2b } from "@noble/hashes/blake2.js";
 import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { getPair } from "@prosopo/keyring";
 import { getLogger } from "@prosopo/logger";
 import { ProsopoServer } from "@prosopo/server";
@@ -83,6 +83,9 @@ const getPairAndSecretForSiteKey = (
 		CaptchaType.image,
 		CaptchaType.frictionless,
 		CaptchaType.puzzle,
+		// Not a site type: the seed name of the audio demos' image site.
+		CaptchaType.audio,
+		CaptchaType.iconOrder,
 	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);
@@ -202,7 +205,11 @@ const signup = async (
 ) => {
 	try {
 		if (!config.account.secret) {
-			throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "CLEX-2",
+				message:
+					"Mnemonic Undefined. Please set the mnemonic in environment variables",
 				context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
 			});
 		}
@@ -296,7 +303,10 @@ const login = async (
 				const siteKey = payload[ApiParams.siteKey];
 
 				if (!config.account.secret) {
-					throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY", {
+					throw new ProsopoError({
+						code: "CONFIG_INVALID",
+						errorSite: "CLEX-3",
+						message: "Missing secret key",
 						context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
 					});
 				}

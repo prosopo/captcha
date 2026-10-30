@@ -33,7 +33,11 @@ import {
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType, IPuzzleSettings } from "../client/settings.js";
+import type {
+	ContextType,
+	IIconOrderSettings,
+	IPuzzleSettings,
+} from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
@@ -52,7 +56,13 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { PuzzleEvent, RequestHeaders } from "./api.js";
+import type {
+	AudioEvent,
+	IconClick,
+	IconOrderEvent,
+	PuzzleEvent,
+	RequestHeaders,
+} from "./api.js";
 import type { DetectorData, SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -174,6 +184,74 @@ export interface ClientMetaData {
 }
 
 /**
+ * The disclosed values that are fixed by the installation and the host, kept
+ * individually alongside `groupHash`, which is a hash of exactly these.
+ *
+ * `groupHash` alone is enough to group by, but it is one-way: a cohort could be
+ * counted and never described, so "which timezone is this concentrated in?"
+ * would be unanswerable after the fact. Keeping the values costs about 170
+ * bytes a record against a whole proof's ~7.8KB, and the hash stays
+ * precomputed so it can carry an index.
+ *
+ * `languages` is a nested array in the component set and is stored as canonical
+ * JSON, so it is one indexable scalar rather than an array path.
+ */
+export interface FingerprintDisclosedValuesStored {
+	timezone?: string;
+	languages?: string;
+	architecture?: number;
+	cookiesEnabled?: boolean;
+	sessionStorage?: boolean;
+	localStorage?: boolean;
+}
+
+/**
+ * What is worth keeping from a verified fingerprint proof.
+ *
+ * The proof itself is not persisted: each disclosure carries a full Merkle
+ * path, which is large and of no use once the proof has been checked.
+ *
+ *   root      the commitment to the whole component set. Both this and the
+ *             account address are functions of that one set, so one root
+ *             belongs to one address and vice versa.
+ *   groupHash a hash of the disclosed values in `disclosed`.
+ *   bucketId  the disclosed `deviceBucket` digest, an opaque hash of the device
+ *             traits that do not change between sessions. Carried through only
+ *             because its disclosure hashed to `root`, so it cannot be
+ *             presented independently of the identity the same commitment
+ *             produced. Absent for a client that did not disclose it.
+ *   colorDepth / hardwareConcurrency
+ *             disclosed values kept per record, so a cohort can be described
+ *             rather than only counted.
+ */
+export interface FingerprintSummaryStored {
+	root: string;
+	groupHash: string;
+	bucketId?: string;
+	colorDepth?: number;
+	hardwareConcurrency?: number;
+	disclosed?: FingerprintDisclosedValuesStored;
+}
+
+export const FingerprintDisclosedValuesSchema = object({
+	timezone: string().optional(),
+	languages: string().optional(),
+	architecture: number().optional(),
+	cookiesEnabled: boolean().optional(),
+	sessionStorage: boolean().optional(),
+	localStorage: boolean().optional(),
+});
+
+export const FingerprintSummarySchema = object({
+	root: string(),
+	groupHash: string(),
+	bucketId: string().optional(),
+	colorDepth: number().optional(),
+	hardwareConcurrency: number().optional(),
+	disclosed: FingerprintDisclosedValuesSchema.optional(),
+});
+
+/**
  * Internal classification labels applied by superadmins from the audit page to
  * build supervised ML training sets. Stored directly on the captcha record
  * (see {@link StoredCaptcha.label}); not part of the captcha verification flow.
@@ -183,6 +261,7 @@ export enum CaptchaLabel {
 	bot = "bot",
 	suspicious = "suspicious",
 	unknown = "unknown",
+	solver = "solver",
 }
 
 export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
@@ -248,6 +327,9 @@ export interface StoredCaptcha {
 	labelReason?: string;
 	labelledBy?: string;
 	labelledAt?: Date;
+	// From the fingerprint proof sent with the frictionless request, copied
+	// from the session, or from a proof submitted with a PoW solution.
+	fingerprintSummary?: FingerprintSummaryStored;
 }
 
 export interface UserCommitment extends StoredCaptcha {
@@ -347,6 +429,7 @@ export const UserCommitmentSchema = object({
 	labelReason: string().optional(),
 	labelledBy: string().optional(),
 	labelledAt: date().optional(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 }) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
 
 // Zod schema for ScoreComponents
@@ -360,6 +443,7 @@ export const ScoreComponentsSchema = object({
 	triggeredDetectors: array(number()).optional(),
 	shadowDomPenalty: boolean().optional(),
 	dnsAsymmetry: number().optional(),
+	ipDetectorRisk: number().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
@@ -428,6 +512,8 @@ export interface ScoreComponents {
 	triggeredDetectors?: number[];
 	shadowDomPenalty?: boolean;
 	dnsAsymmetry?: number;
+	/** Amount added to the score from the IP's detector risk. */
+	ipDetectorRisk?: number;
 }
 
 // Zod schema for Session
@@ -550,18 +636,41 @@ export const SessionSchema = object({
 	observedTtl: number().min(0).max(255).optional(),
 	tcpMss: number().min(0).max(65535).optional(),
 	tcpWscale: number().min(0).max(255).optional(),
+	tcpWindow: number().min(0).max(65535).optional(),
+	// Whole-SYN fields from the 104-byte probe record
+	// (prosopo/Protect#1167). `tcpOptsKinds` holds the IANA kind number of
+	// each TCP option in wire order, decoded from the probe's packed u64 —
+	// that value reaches 2^64 and a JS number is exact only to 2^53, so the
+	// packed form could not be stored without losing the low bytes, which
+	// are the kinds themselves.
+	tcpOptsKinds: array(number().min(0).max(255)).max(8).optional(),
+	tcpOptsPresent: number().min(0).max(65535).optional(),
+	tcpOptsCount: number().min(0).max(255).optional(),
+	tcpTsval: number().min(0).max(4_294_967_295).optional(),
+	tcpTsecr: number().min(0).max(4_294_967_295).optional(),
+	tcpFlags: number().min(0).max(255).optional(),
+	tcpDataOffsetResv: number().min(0).max(255).optional(),
+	tcpUrgPtr: number().min(0).max(65535).optional(),
+	ipIdent: number().min(0).max(65535).optional(),
+	ipTotalLen: number().min(0).max(65535).optional(),
+	ipFragFlags: number().min(0).max(65535).optional(),
+	ipTos: number().min(0).max(255).optional(),
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Still written on
+	// sessions served by a chaddy older than prosopo/chaddy#16, and kept
+	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
-	tcpWindow: number().min(0).max(65535).optional(),
 	tcpProbe: TcpProbeRecordSchema.optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
 		pathValid: boolean().optional(),
+		assetSeen: boolean().optional(),
 		receivedAt: date(),
 	}).optional(),
 	// See Session.clientMetaData.
 	clientMetaData: ClientMetaDataDbSchema.optional(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -584,6 +693,15 @@ export type Session = {
 	// trafficFilter challenge-policy fields of the same names.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
+	/**
+	 * Difficulty ladder index `puzzleTolerance` and `puzzle` were sampled from.
+	 * Carried only so the challenge record can report it; nothing reads it to
+	 * make a decision, and a router that set the overrides directly leaves it
+	 * unset.
+	 */
+	puzzleLevel?: number;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -698,9 +816,24 @@ export type Session = {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Still written on
+	// sessions served by a chaddy older than prosopo/chaddy#16, and kept
+	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	// Everything tcp-probe recorded for this connection, including packets
 	// after the ClientHello. Also present on a miss, so the blank rate is
 	// measurable from stored sessions.
@@ -721,6 +854,8 @@ export type Session = {
 		// True iff the HTTPS request path matched HMAC(sessionId, secret).
 		// False indicates a scanner / replayed sessionId / wrong secret.
 		pathValid?: boolean;
+		// True once the session's asset URL (`dns_asset_url`) was requested.
+		assetSeen?: boolean;
 		// Wall-clock time the first event for this session was received
 		// by the provider. Subsequent events update the individual fields
 		// above but don't bump this timestamp.
@@ -734,6 +869,7 @@ export type Session = {
 	// `clientSessionId` the dapp server sends against the one recorded here /
 	// on the captcha record, and reject the token when they disagree.
 	clientMetaData?: ClientMetaData;
+	fingerprintSummary?: FingerprintSummaryStored;
 };
 
 // Zod schema for PoWCaptchaStored
@@ -800,18 +936,91 @@ export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {}
 
-export interface PuzzleCaptchaStored extends StoredCaptcha {
+/**
+ * Everything needed to reproduce a served puzzle exactly, for the portal's
+ * replay view. `tolerance`, `targetX` and `targetY` live on the record itself
+ * and are not repeated here.
+ *
+ * Written after the imagery is rendered rather than at issue, because the
+ * sampled piece size and the two seeds only exist once the render has run.
+ * Absent on records written before this field existed, and on any challenge
+ * whose render failed.
+ *
+ * `backgroundSeed` and `renderSeed` are the secrets described in
+ * puzzle-assets/src/prng.ts: they regenerate the clean background, from which
+ * the target position can be read by diffing. They must never be served to a
+ * caller, and never while the challenge is still live.
+ */
+export interface PuzzleRenderRecord {
+	/**
+	 * Difficulty ladder index the settings were sampled from. Absent when the
+	 * ladder did not pick this render — a site-configured puzzle, or a
+	 * trafficFilter category override, has no level.
+	 */
+	level?: number;
+	/** Piece bounding box in px, drawn per-challenge from the scale range. */
+	pieceSize: number;
+	geometry: { width: number; height: number; notchSize: number };
+	settings: {
+		decoyCount: number;
+		decoyEdgeDarkness: number;
+		decoyBodyBrightness: number;
+		holeDarken: number;
+		decoyHoleDarken: number;
+	};
+	/** 128-bit hex. Regenerates the clean background. */
+	backgroundSeed: string;
+	/** 128-bit hex. Drives decoy placement and the notch cut. */
+	renderSeed: string;
+}
+
+/** Fields shared by the challenge records of the on-screen captcha types. */
+export interface InteractiveCaptchaStored extends StoredCaptcha {
 	challenge: PoWChallengeId;
-	targetX: number;
-	targetY: number;
-	originX: number;
-	originY: number;
-	tolerance: number;
 	providerSignature: string;
 	userSignature?: string;
 	userAccount: string;
 	dappAccount: string;
+}
+
+export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
+	tolerance: number;
+	targetX: number;
+	targetY: number;
+	originX: number;
+	originY: number;
 	puzzleEvents?: PuzzleEvent[];
+	render?: PuzzleRenderRecord;
+}
+
+/** `answer` is the spoken transcript: the secret, never sent to a client. */
+export interface AudioCaptchaStored extends InteractiveCaptchaStored {
+	answer: string;
+	/** What the user typed, kept for audit and difficulty tuning. */
+	submittedAnswer?: string;
+	/** How many times the clip was played before submitting. */
+	replays?: number;
+	audioEvents?: AudioEvent[];
+}
+
+/**
+ * `targets` is the answer. Nothing on this record is ever sent to a client,
+ * and decoys are not stored because grading never consults them.
+ */
+export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
+	targets: StoredIconTarget[];
+	/** Hit radius as a multiple of each icon's own size. */
+	tolerance: number;
+	clicks?: IconClick[];
+	iconOrderEvents?: IconOrderEvent[];
+}
+
+/** A target icon as persisted: what grading needs, without render-only fields. */
+export interface StoredIconTarget {
+	x: number;
+	y: number;
+	size: number;
+	kind: string;
 }
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -824,6 +1033,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 	checked: boolean(),
 	commitmentId: string(),
 	createdAt: date(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 });
 
 export type UserSolution = zInfer<typeof UserSolutionSchema>;
@@ -857,7 +1067,12 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	createdAt: Date;
 	updatedAt: Date;
 };

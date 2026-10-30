@@ -40,8 +40,13 @@ export interface Ti18n {
 	readonly language: string;
 	readonly isInitialized: boolean;
 	t: TranslateFn;
+	/** Whether the instance has text for `key` in any loaded catalogue. */
+	exists(key: string): boolean;
 	changeLanguage(language: string): Promise<unknown>;
 	hasLoadedNamespace(namespace: string): boolean;
 	on(event: I18nEvent, listener: () => void): void;
 	off(event: I18nEvent, listener: () => void): void;
 }
+
+/** What translating a runtime string needs: `exists` says whether `t` can. */
+export type I18nLookup = Pick<Ti18n, "t" | "exists">;

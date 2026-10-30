@@ -35,6 +35,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { z } from "zod";
 import { measureSync } from "../../api/metrics.js";
+import { isDnsSidecarHealthy } from "../dnsEvent/dnsSidecarHealth.js";
 
 const LOAD_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
@@ -137,17 +138,25 @@ interface NamedExport {
 }
 
 /**
- * Bumped by {@link invalidateAllDecisionMachineArtifactCaches}. A runner
- * caches the value it last saw and drops its artifact cache whenever the two
- * diverge, which flushes every runner — including ones built after the
- * invalidation — without holding a reference to any of them.
- *
- * This replaces a registry of live runners, which assumed runners were built
- * once per process. They are built per request, so the registry grew without
- * bound and construction eventually began to fail. `WeakRef` did not bound
- * it: the set held the wrapper, which outlives its referent.
+ * Bumped by {@link invalidateAllDecisionMachineArtifactCaches}. Each cache
+ * records the generation it was filled under and is discarded once the two
+ * diverge, which flushes every cache without holding a reference to any of
+ * them.
  */
 let artifactCacheGeneration = 0;
+
+type ArtifactCache = {
+	generation: number;
+	entries: Map<string, CachedArtifact>;
+};
+
+/**
+ * Runners are built per request, so a cache owned by the runner never served
+ * a second lookup and every decision paid two Mongo reads. The cache lives
+ * with the database the runner reads from instead: one per process in
+ * production, and still isolated between test doubles.
+ */
+const artifactCaches = new WeakMap<IProviderDatabase, ArtifactCache>();
 
 /**
  * Flush every runner's in-memory artifact cache. Companion to
@@ -159,22 +168,24 @@ export const invalidateAllDecisionMachineArtifactCaches = (): void => {
 };
 
 export class DecisionMachineRunner {
-	private readonly artifactCache = new Map<string, CachedArtifact>();
-	private seenArtifactCacheGeneration = artifactCacheGeneration;
-
 	constructor(private readonly db: IProviderDatabase) {}
 
-	/** Drop every entry in this runner's artifact cache. */
+	/** Drop every cached artifact read from this runner's database. */
 	public invalidateArtifactCache(): void {
 		this.artifactCache.clear();
 	}
 
-	/** Drop the cache if an invalidation happened since it was last consulted. */
-	private dropArtifactCacheIfStale(): void {
-		if (this.seenArtifactCacheGeneration !== artifactCacheGeneration) {
-			this.seenArtifactCacheGeneration = artifactCacheGeneration;
-			this.artifactCache.clear();
+	private get artifactCache(): Map<string, CachedArtifact> {
+		const cache = artifactCaches.get(this.db);
+		if (cache && cache.generation === artifactCacheGeneration) {
+			return cache.entries;
 		}
+		const fresh: ArtifactCache = {
+			generation: artifactCacheGeneration,
+			entries: new Map(),
+		};
+		artifactCaches.set(this.db, fresh);
+		return fresh.entries;
 	}
 
 	/** Build a cache key for a given scope + kind + dappAccount tuple. */
@@ -192,7 +203,6 @@ export class DecisionMachineRunner {
 		kind: DecisionMachineKind,
 		dappAccount?: string,
 	): DecisionMachineArtifact | undefined | null {
-		this.dropArtifactCacheIfStale();
 		const entry = this.artifactCache.get(
 			DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
 		);
@@ -255,7 +265,14 @@ export class DecisionMachineRunner {
 			const decision = await this.runArtifactExport(
 				artifact,
 				["decide", "default"],
-				{ input: { ...input, phase: input.phase ?? "verify" } },
+				{
+					input: {
+						...input,
+						phase: input.phase ?? "verify",
+						dnsSidecarHealthy:
+							input.dnsSidecarHealthy ?? isDnsSidecarHealthy(new Date()),
+					},
+				},
 				DecisionMachineOutputSchema,
 			);
 			return decision ?? DEFAULT_DECISION;

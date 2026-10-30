@@ -20,14 +20,24 @@ import type { Ti18n } from "../types.js";
 // fetches catalogues over the network, the other pulls in i18next and the
 // filesystem, and neither is what this module's own logic does.
 
-/** The slice of an i18n instance loadI18next actually touches. */
-interface FakeI18n {
+/** loadI18next only reads `language` and calls `changeLanguage`. */
+interface FakeI18n extends Ti18n {
 	language: string;
-	changeLanguage: (lng: string) => Promise<unknown>;
 }
 
-/** One cast, confined here, so the mocked module keeps the real signature. */
-const asI18n = (fake: FakeI18n): Ti18n => fake as unknown as Ti18n;
+const fakeI18n = (
+	changeLanguage: (lng: string) => Promise<unknown>,
+	language = "en",
+): FakeI18n => ({
+	language,
+	isInitialized: true,
+	t: (key: string): string => key,
+	exists: (): boolean => false,
+	changeLanguage,
+	hasLoadedNamespace: (): boolean => true,
+	on: (): void => {},
+	off: (): void => {},
+});
 
 type InitializeI18n = (
 	callback?: (instance: Ti18n) => void,
@@ -54,24 +64,23 @@ const install = (
 		changeLanguage?: (lng: string) => Promise<unknown>;
 	} = {},
 ): Harness => {
-	const instance: FakeI18n = {
-		language: options.language ?? "en",
-		changeLanguage:
-			options.changeLanguage ??
+	const instance: FakeI18n = fakeI18n(
+		options.changeLanguage ??
 			(async (lng: string): Promise<unknown> => {
 				instance.language = lng;
 				return undefined;
 			}),
-	};
+		options.language,
+	);
 
 	const initialize = vi.fn<InitializeI18n>((callback) => {
 		const fire = options.fire ?? "async";
 		if (fire === "sync") {
-			callback?.(asI18n(instance));
+			callback?.(instance);
 		} else if (fire === "async") {
-			queueMicrotask(() => callback?.(asI18n(instance)));
+			queueMicrotask(() => callback?.(instance));
 		}
-		return asI18n(instance);
+		return instance;
 	});
 
 	vi.doMock(module, () => ({ default: initialize }));
@@ -101,7 +110,7 @@ describe("loadI18next, backend", () => {
 		const resolved = await loadI18next(true);
 
 		expect(initialize).toHaveBeenCalledTimes(1);
-		expect(resolved).toBe(asI18n(instance));
+		expect(resolved).toBe(instance);
 	});
 
 	test("resolves from the callback, not from the return value", async () => {
@@ -132,7 +141,7 @@ describe("loadI18next, backend", () => {
 
 		expect(initialize).toHaveBeenCalledTimes(1);
 		expect(second).toBe(first);
-		expect(second).toBe(asI18n(instance));
+		expect(second).toBe(instance);
 	});
 
 	test("ignores lng on the backend path — the server detects per request", async () => {
@@ -173,7 +182,7 @@ describe("loadI18next, frontend", () => {
 		const resolved = await loadI18next(false);
 
 		expect(initialize).toHaveBeenCalledTimes(1);
-		expect(resolved).toBe(asI18n(instance));
+		expect(resolved).toBe(instance);
 	});
 
 	test("passes lng straight into init so browser detection is skipped", async () => {
@@ -232,7 +241,7 @@ describe("loadI18next, frontend", () => {
 
 		expect(initialize).toHaveBeenCalledTimes(1);
 		expect(instance.language).toBe("fr");
-		expect(second).toBe(asI18n(instance));
+		expect(second).toBe(instance);
 	});
 
 	test("resolves the cached singleton unchanged when lng is omitted", async () => {
@@ -312,7 +321,7 @@ describe("loadI18next, timeout", () => {
 		const pending = loadI18next(true);
 		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS);
 
-		await expect(pending).resolves.toBe(asI18n(instance));
+		await expect(pending).resolves.toBe(instance);
 	});
 
 	test("does not fire early — the instance is not handed back before the deadline", async () => {
@@ -353,13 +362,12 @@ describe("loadI18next, timeout", () => {
 		// and leave the timer armed.
 		vi.useFakeTimers();
 		let fire: ((instance: Ti18n) => void) | undefined;
-		const instance: FakeI18n = {
-			language: "en",
-			changeLanguage: async (): Promise<unknown> => undefined,
-		};
+		const instance: FakeI18n = fakeI18n(
+			async (): Promise<unknown> => undefined,
+		);
 		const initialize = vi.fn<InitializeI18n>((callback) => {
 			fire = callback;
-			return asI18n(instance);
+			return instance;
 		});
 		vi.doMock("../i18nBackend.js", () => ({ default: initialize }));
 		const loadI18next = await loadModule();
@@ -367,13 +375,13 @@ describe("loadI18next, timeout", () => {
 
 		const pending = loadI18next(true);
 		await vi.advanceTimersByTimeAsync(0);
-		fire?.(asI18n(instance));
-		await expect(pending).resolves.toBe(asI18n(instance));
+		fire?.(instance);
+		await expect(pending).resolves.toBe(instance);
 
 		// A second emission after the deadline must be inert.
-		fire?.(asI18n(instance));
+		fire?.(instance);
 		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS * 2);
-		await expect(pending).resolves.toBe(asI18n(instance));
+		await expect(pending).resolves.toBe(instance);
 	});
 
 	test("a failure arriving after the timeout cannot turn a resolved promise into a rejection", async () => {
@@ -383,15 +391,12 @@ describe("loadI18next, timeout", () => {
 		// rejection on an already-settled promise.
 		vi.useFakeTimers();
 		let fire: ((instance: Ti18n) => void) | undefined;
-		const instance: FakeI18n = {
-			language: "en",
-			changeLanguage: async (): Promise<unknown> => {
-				throw new Error("resource fetch failed");
-			},
-		};
+		const instance: FakeI18n = fakeI18n(async (): Promise<unknown> => {
+			throw new Error("resource fetch failed");
+		});
 		const initialize = vi.fn<InitializeI18n>((callback) => {
 			fire = callback;
-			return asI18n(instance);
+			return instance;
 		});
 		vi.doMock("../i18nFrontend.js", () => ({ default: initialize }));
 		const loadI18next = await loadModule();
@@ -399,11 +404,11 @@ describe("loadI18next, timeout", () => {
 
 		const pending = loadI18next(false, "fr");
 		await vi.advanceTimersByTimeAsync(I18N_LOAD_TIMEOUT_MS);
-		await expect(pending).resolves.toBe(asI18n(instance));
+		await expect(pending).resolves.toBe(instance);
 
-		fire?.(asI18n(instance));
+		fire?.(instance);
 		await vi.advanceTimersByTimeAsync(0);
-		await expect(pending).resolves.toBe(asI18n(instance));
+		await expect(pending).resolves.toBe(instance);
 	});
 
 	test("the deadline is long enough not to trip a healthy cold start", async () => {

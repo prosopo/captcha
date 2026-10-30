@@ -12,43 +12,75 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// RFC 9421 §2.3 signature base construction — the string that was signed.
-// Web Bot Auth pins the covered-components set to {@authority,
-// signature-agent}; the general HTTP Message Signatures spec allows many
-// more (@method, @path, @query, content-digest, etc.) but we only implement
-// the ones the profile actually uses. Extend the switch when adding
-// support for new components.
+// RFC 9421 §2.5 signature base construction — the string that was signed.
+// Only the components Web Bot Auth signers cover are implemented: OpenAI
+// signs @authority, @method and signature-agent; Google signs @target-uri,
+// @method and signature-agent;key="g". Anything else throws, which the
+// verifier reports as a bad signature.
+
+import {
+	type CoveredComponent,
+	getDictionaryMember,
+} from "./structuredFields.js";
 
 export type SignatureBaseInput = {
-	// Value for `@authority` — RFC 9421 §2.2.4: the request authority
-	// (host + optional port), lowercased.
+	// RFC 9421 §2.2.3: host and optional port, lowercased.
 	authority: string;
-	// Verbatim `Signature-Agent` header string, quotes intact
-	// (`"https://chatgpt.com"` or `g="https://agent.bot.goog"`).
-	// The signer signed the header value; we sign what they signed.
+	method: string;
+	// The full request URI the signer targeted, verbatim.
+	targetUri: string;
+	path: string;
+	// Verbatim `Signature-Agent` header, quotes intact.
 	signatureAgent: string;
 };
 
+const signatureAgentValue = (
+	component: CoveredComponent,
+	header: string,
+): string => {
+	const key = component.params.key;
+	if (key === undefined) return header;
+	if (typeof key !== "string") {
+		throw new Error(`invalid key parameter on "${component.name}"`);
+	}
+	const member = getDictionaryMember(header, key);
+	if (member === null) {
+		throw new Error(`"${component.name}" has no member "${key}"`);
+	}
+	return member;
+};
+
+const componentValue = (
+	component: CoveredComponent,
+	values: SignatureBaseInput,
+): string => {
+	switch (component.name) {
+		case "@authority":
+			return values.authority;
+		case "@method":
+			return values.method;
+		case "@target-uri":
+			return values.targetUri;
+		case "@path":
+			return values.path;
+		case "signature-agent":
+			return signatureAgentValue(component, values.signatureAgent);
+		default:
+			throw new Error(
+				`unsupported covered component "${component.name}" for Web Bot Auth`,
+			);
+	}
+};
+
 export const buildSignatureBase = (
-	coveredComponents: string[],
+	coveredComponents: CoveredComponent[],
 	values: SignatureBaseInput,
 	signatureParamsSerialised: string,
-): string => {
-	const lines: string[] = [];
-	for (const component of coveredComponents) {
-		switch (component) {
-			case "@authority":
-				lines.push(`"@authority": ${values.authority}`);
-				break;
-			case "signature-agent":
-				lines.push(`"signature-agent": ${values.signatureAgent}`);
-				break;
-			default:
-				throw new Error(
-					`unsupported covered component "${component}" for Web Bot Auth`,
-				);
-		}
-	}
-	lines.push(`"@signature-params": ${signatureParamsSerialised}`);
-	return lines.join("\n");
-};
+): string =>
+	[
+		...coveredComponents.map(
+			(component) =>
+				`${component.identifier}: ${componentValue(component, values)}`,
+		),
+		`"@signature-params": ${signatureParamsSerialised}`,
+	].join("\n");

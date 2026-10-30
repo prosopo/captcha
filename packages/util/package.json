@@ -1,66 +1,65 @@
 {
 	"name": "@prosopo/util",
-	"version": "3.3.13",
+	"version": "3.4.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"cli": "node ./dist/js/cli.js",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"build:types": "tsc --project tsconfig.types.json",
+		"cli": "node ./dist/esm/js/cli.js",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
 	},
-	"main": "dist/index.js",
+	"main": "dist/esm/index.js",
 	"type": "module",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./lodash": {
-			"types": "./dist/lodash.d.ts",
-			"import": "./dist/lodash.js",
+			"types": "./dist/types/lodash.d.ts",
+			"import": "./dist/esm/lodash.js",
 			"require": "./dist/cjs/lodash.cjs",
-			"default": "./dist/lodash.js"
+			"default": "./dist/esm/lodash.js"
 		},
 		"./node": {
-			"types": "./dist/node.d.ts",
-			"import": "./dist/node.js",
+			"types": "./dist/types/node.d.ts",
+			"import": "./dist/esm/node.js",
 			"require": "./dist/cjs/node.cjs",
-			"default": "./dist/node.js"
+			"default": "./dist/esm/node.js"
 		}
 	},
-	"types": "dist/index.d.ts",
+	"types": "dist/types/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "2.4.0",
-		"ip-address": "10.7.0",
+		"ip-address": "10.7.4",
 		"lodash": "4.18.1",
-		"seedrandom": "3.0.5"
+		"seedrandom": "3.0.5",
+		"url": "0.11.4"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
-		"@types/lodash": "4.17.25",
+		"@prosopo/config": "workspace:*",
+		"@types/lodash": "4.17.26",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
-		"@vitest/coverage-v8": "4.1.11",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"dotenv": "16.4.5",
+		"dotenv": "18.0.8",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.11"
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"repository": {
 		"type": "git",

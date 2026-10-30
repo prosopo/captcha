@@ -14,6 +14,14 @@
 
 import type { ProviderEnvironment } from "@prosopo/env";
 import { getLogger, parseLogLevel } from "@prosopo/logger";
+import {
+	BUNDLE_ORIGIN_HEADER,
+	BUNDLE_VERSION_HEADER,
+	INTEGRATION_HEADER,
+	normaliseBundleOrigin,
+	normaliseBundleVersion,
+	normaliseIntegration,
+} from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 
@@ -38,6 +46,15 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 			(req.headers["x-request-id"] as string) || `e-${uuidv4()}`;
 		const user = getHeaderValue(req, "prosopo-user");
 		const siteKey = getHeaderValue(req, "prosopo-site-key");
+		const integration = normaliseIntegration(
+			getHeaderValue(req, INTEGRATION_HEADER),
+		);
+		const bundleVersion = normaliseBundleVersion(
+			getHeaderValue(req, BUNDLE_VERSION_HEADER.toLowerCase()),
+		);
+		const bundleOrigin = normaliseBundleOrigin(
+			getHeaderValue(req, BUNDLE_ORIGIN_HEADER.toLowerCase()),
+		);
 		const sessionId = req.body?.sessionId ? req.body.sessionId : undefined;
 
 		const logger = getLogger(
@@ -47,6 +64,9 @@ export function requestLoggerMiddleware(env: ProviderEnvironment) {
 			requestId,
 			...(user ? { user } : {}),
 			...(siteKey ? { siteKey } : {}),
+			...(integration ? { integration } : {}),
+			...(bundleVersion ? { bundleVersion } : {}),
+			...(bundleOrigin ? { bundleOrigin } : {}),
 			...(sessionId ? { sessionId } : {}),
 		});
 

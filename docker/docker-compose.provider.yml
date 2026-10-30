@@ -1,9 +1,11 @@
+# Base provider stack. Always layer an env overlay on top, plus any optional ones:
+#   docker compose -f docker-compose.provider.yml -f docker-compose.provider.<production|staging|development>.yml up -d
+#   ... -f docker-compose.provider.tcp-probe.yml   # optional eBPF sidecar
+# Later files override earlier ones. Relative paths in every overlay resolve
+# against this directory, so keep the overlays beside this file.
 services:
   provider1:
     container_name: provider1
-    profiles:
-      - production
-      - staging
     image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
     labels:
       - "vector.provider=true" # enable logging as a provider
@@ -60,9 +62,6 @@ services:
       - 208.67.222.222
   provider2:
     container_name: provider2
-    profiles:
-      - production
-      - staging
     image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
     labels:
       - "vector.provider=true" # enable logging as a provider
@@ -103,9 +102,6 @@ services:
       - 208.67.222.222
   database:
     container_name: database
-    profiles:
-      - production
-      - staging
     image: mongo:6.0.28
     command: mongod --wiredTigerCacheSizeGB 2.0
     deploy:
@@ -145,17 +141,7 @@ services:
       - 208.67.222.222
   caddy:
     container_name: caddy
-    profiles:
-      - production
-      - staging
     image: prosopo/caddy:${CADDY_IMAGE}
-    depends_on:
-      # Must attach first: only listeners opened afterwards keep the saved SYN.
-      tcp-probe:
-        condition: service_started
-        required: false
-    group_add:
-      - "${TCP_PROBE_GID:-10500}"
     env_file:
       - ../.env.1.${NODE_ENV}
     labels:
@@ -169,9 +155,12 @@ services:
       - "[::]:443:443"
     volumes:
       - ./provider.Caddyfile:/etc/caddy/Caddyfile
+      # Crawler user-agent and address list read by `crawler_list` in
+      # provider.Caddyfile. Deployed by ansible; an empty directory blocks nothing.
+      - ./caddy.d:/etc/caddy/conf.d:ro
       - caddy_data:/data
       - caddy_config:/config
-      # Shared with the tcp-probe sidecar (`tcp-probe` profile). Chaddy's
+      # Shared with the tcp-probe sidecar (docker-compose.provider.tcp-probe.yml). Chaddy's
       # `tcp_probe_socket` directive dials the sidecar's Unix socket
       # here to look up raw TCP handshake signals for the current
       # request and forward them as `X-TLS-*` headers. If the socket
@@ -208,63 +197,6 @@ services:
       - 8.8.8.8
       - 1.1.1.1
       - 208.67.222.222
-  # eBPF sidecar that captures raw TCP handshake data (SYN / SYN-ACK / ACK)
-  # off the WAN interface and serves per-request lookups over a Unix socket.
-  # Chaddy (adjacent `caddy` service) reads that socket at accept() time and
-  # forwards the raw fields (`X-TLS-Syn-Ns`, `X-TLS-Observed-Ttl`, `X-TLS-Tcp-*`)
-  # onto the reverse-proxy request; the provider persists them onto the Session
-  # record. Nothing here is on by default: this service sits behind the
-  # `tcp-probe` profile so `docker compose --profile production` (which is
-  # what ansible sets today) does not pull or start it. Enable per host by
-  # appending `--profile tcp-probe` to the compose command AND publishing
-  # `prosopo/tcp-probe:${TCP_PROBE_IMAGE}` to Docker Hub — currently only
-  # built locally under `protect/tcp-probe`. See `deploy/DEPLOY.md` there
-  # for the bumblebee-side reference deployment; the same wire protocol
-  # (12-byte req, 80-byte reply) and image are reused here.
-  #
-  # `network_mode: host` is mandatory: XDP/TC hooks attach to real host
-  # interfaces, and the container-network veth wouldn't see the outside
-  # traffic. Caps are the minimum needed to load BPF programs and attach
-  # them; the probe never modifies traffic (XDP_PASS / TC_ACT_PIPE) so a
-  # crash cannot black-hole requests — worst case is the socket disappears
-  # and chaddy silently degrades to the pre-sidecar header set.
-  tcp-probe:
-    container_name: tcp-probe
-    profiles:
-      - tcp-probe
-    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:?set TCP_PROBE_IMAGE to a version}
-    network_mode: host
-    cap_add:
-      - BPF
-      - NET_ADMIN
-      - SYS_RESOURCE
-      - PERFMON
-    labels:
-      - "vector.tcp-probe=true"
-      - "vector.docker=true"
-    volumes:
-      # Host-side socket dir; caddy mounts the same path read-only so both
-      # containers see the same inode. Docker will create the dir if it
-      # doesn't exist yet.
-      - /var/run/tcp-probe:/var/run/tcp-probe
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    cgroup: host
-    command:
-      # The port the listener sees, after Docker's DNAT. Caddy must start after
-      # this container: the SYN is only saved for sockets that listen once the
-      # probe is attached.
-      - "--port"
-      - "443"
-      - "--socket-gid"
-      - "${TCP_PROBE_GID:-10500}"
-      - "--lookup-socket"
-      - "/var/run/tcp-probe/lookup.sock"
-    restart: unless-stopped
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '100m'
-        max-file: '1'
   redis-stack:
     container_name: redis-stack
     # unlike "redis/redis-stack-server" this image includes Insights
@@ -287,19 +219,111 @@ services:
       options:
         max-size: '100m'
         max-file: '1'
+  # Scraped by vector's redis_metrics source. The exporter only reads
+  # REDIS_PASSWORD, so the env file carries it as a copy of
+  # REDIS_CONNECTION_PASSWORD; without it the exporter connects but every
+  # scrape returns redis_up 0.
+  redis-exporter:
+    container_name: redis-exporter
+    image: oliver006/redis_exporter:v1.62.0
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    environment:
+      REDIS_ADDR: redis://redis-stack:6379
+    labels:
+      - "vector.docker=true" # log docker events
+    depends_on:
+      - redis-stack
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.25'
+    expose:
+      - "9121"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.11
+        ipv6_address: fd00:aaaa::b
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+  # Scraped every 60s by vector's cadvisor_metrics source: per-container cpu,
+  # memory, disk and network, plus the whole machine as id="/". The root
+  # container is the only source of host-wide network and tcp figures, since
+  # vector's host_metrics sees only its own network namespace. Per-process
+  # and per-cpu metrics are left off to keep the series count down.
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    privileged: true # reads cgroup and device stats for every container
+    devices:
+      - /dev/kmsg
+    command:
+      - '--enable_metrics=cpu,memory,network,diskIO,disk,oom_event,tcp'
+      - '--housekeeping_interval=30s'
+      - '--store_container_labels=false'
+      - '--whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project'
+      - '--docker_only=true'
+    labels:
+      - "vector.docker=true" # log docker events
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    expose:
+      - "8080"
+    networks:
+      internal:
+        ipv4_address: 172.18.0.12
+        ipv6_address: fd00:aaaa::c
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   vector:
     container_name: vector
-    profiles:
-      - production
-      - staging
     image: prosopo/vector:${VECTOR_IMAGE}
     env_file:
       - ../.env.1.${NODE_ENV}
+    environment:
+      # host_metrics reads these instead of the container's own /proc and /sys
+      PROCFS_ROOT: /host/proc
+      SYSFS_ROOT: /host/sys
+      # Measured at 0-17% of one core; two worker threads is plenty and keeps
+      # it from spawning one per core on the big hosts.
+      VECTOR_THREADS: 2
     labels:
       - "vector.docker=true" # log docker events
     restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    deploy:
+      resources:
+        limits:
+          # Measured RSS is 120-250MB. The cap stops a backlog or a leak from
+          # starving the provider; vector restarts and its disk buffers survive.
+          memory: 512M
+          cpus: '1.0'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+      # Read-only bind mounts need no extra privileges.
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      # Disk buffers for the high-value log sinks. Without a volume they live
+      # in the container layer and are lost whenever vector is recreated.
+      - vector_data:/var/lib/vector
     networks:
       external:
       internal:
@@ -320,42 +344,44 @@ services:
       - 8.8.8.8
       - 1.1.1.1
       - 208.67.222.222
+  # Our own IP reputation DB (captcha-private#5467), replacing the ipapi.is
+  # worker outright. It keeps the service name, the port and an `ipinfo`
+  # network alias, so every caller that resolves ipinfo:3899 keeps working
+  # untouched and the rollback is reverting this block. The response carries
+  # the ipapi.is field shape, so callers parsing asn/geo/booleans need no
+  # change.
+  #
+  # Memory: the artifact is ~1.8 GB held in RAM against the ipapi.is worker's
+  # 7.4-8.4 GB. The cap is well above the measured figure and well below the
+  # old 10G, so an overshoot kills this container rather than letting the
+  # kernel pick mongod or a provider as the victim.
   ipinfo:
-    # IP metadata sidecar
     container_name: ipinfo
-    image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
+    image: ghcr.io/prosopo/reputation:${REPUTATION_VERSION:-0.3.1}
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          # Loading the RAM database settles at 7.4-8.4 GB resident. Without a
-          # ceiling an overshoot is a *global* OOM, and the kernel is free to
-          # pick mongod or a provider as the victim instead, which is how a
-          # node too small for the sidecar lost the page cache the rest of its
-          # stack depended on. This confines the kill to the sidecar, whose
-          # absence the providers already handle by falling back to MaxMind.
-          memory: 10G
-    # Pass the config path explicitly. The image bakes a default config.json
-    # at /usr/src/app/config.json which getConfigPath() finds before the
-    # mounted /usr/src/app/config/config.json — silently ignoring our
-    # customLists and API key. Passing the path as argv[2] short-circuits
-    # that resolution order.
-    command: ["node", "src/ipapi_is_worker.js", "/usr/src/app/config/config.json"]
-    # NET_ADMIN is required to check/create firewall chains, even when
-    # enableFirewall is false in config.
-    cap_add:
-      - NET_ADMIN
-    # No host ports
+          memory: 3G
+    environment:
+      REPUTATION_ARTIFACT: /data/reputation.bin
+      REPUTATION_WEIGHTS: /data/weights.json
+      REPUTATION_BIND: 0.0.0.0:3899
     expose:
       - "3899"
     networks:
-      - internal
+      internal:
+        aliases:
+          - ipinfo
+          - reputation
     volumes:
-      # Database blob ships separately
-      - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
-      # Config override
-      - ./ipinfo/config:/usr/src/app/config:ro
-    # Cap the json log file so a chatty container can't fill the host disk.
+      - ./reputation:/data:ro
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/reputation", "--healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     logging:
       driver: 'json-file'
       options:
@@ -365,9 +391,6 @@ services:
     # DNS observation sidecar. Caddy fronts TLS for *.t.{CADDY_DOMAIN}
     # and reverse-proxies HTTP to this container — see provider.Caddyfile.
     container_name: dns
-    profiles:
-      - production
-      - staging
     image: prosopo/dns:${DNS_VERSION?DNS_VERSION must be set}
     cap_add:
       - NET_BIND_SERVICE
@@ -447,3 +470,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  vector_data:

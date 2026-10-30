@@ -1,5 +1,80 @@
 # @prosopo/config
 
+## 3.5.3
+### Patch Changes
+
+- f53d027: A self-hosted widget (one built with `PROSOPO_PROVIDER_LIST`) now sends Prosopo a usage beacon on about one render in a thousand: a single `GET https://beacon.prosopo.io/v1/b.gif` carrying the page hostname, site key, bundle version and sample rate, with no referrer, cookies or visitor data. It lets us count self-hosted installs and the versions they run, so we can tell self-hosters about new releases and critical fixes. Hosted widgets never send it.
+  
+  Build the bundle with `PROSOPO_USAGE_BEACON=false` to turn it off. The generated self-hosted `.env` now includes the setting, and `SELF_HOSTING.md` documents exactly what is sent.
+
+## 3.5.2
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- f13677e: Solve PoW captchas across a pool of web workers. The nonce space is divided and conquered across the pool (worker `i` tries nonces `i, i+N, i+2N, …`), keeping the UI responsive on higher-difficulty challenges, with a synchronous fallback when web workers are unavailable. The pool defaults to 4 workers (`PROSOPO_POW_WORKERS`) and never uses more than one fewer than the device's cores, so the page keeps a core free. Adds the `solvePoWOffset` helper to `@prosopo/util`; `@prosopo/procaptcha-pow` now solves PoW challenges on a worker pool internally.
+
+## 3.5.1
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 3.5.0
+### Minor Changes
+
+- 67268f8: Name the procaptcha bundle's honeypot and shared fingerprint chunks from a seed instead of at random, so bundling the same source twice gives byte-identical output.
+  
+  The names come from the new `buildToken` helper in `@prosopo/config`: an HMAC of the package version (or `PROSOPO_BUILD_SEED`) keyed by the secret `PROSOPO_BUILD_TOKEN_KEY`. They still change every release, and without the key they cannot be worked out from this public source.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 3.4.5
+### Patch Changes
+
+- a5c953d: Lay the widget out at its natural width in hosts that size it by measuring it.
+  
+  Size containment on the widget's container-query element left it with no
+  intrinsic width, so an inline-block, float, `fit-content` box, table cell,
+  flex item, auto grid track or absolutely positioned host found nothing to
+  shrink-wrap and fell back to the widget's 170px minimum — rendering it in its
+  smallest breakpoint on pages with room for all 302px. A zero-height measuring
+  row now states both intrinsic widths, so the widget fills its natural width
+  where there is room and still shrinks into parents narrower than it.
+  
+  `@prosopo/config` gains a `browser` test type, which keeps vitest browser-mode
+  suites out of jsdom runs.
+
+## 3.4.4
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+
+## 3.4.3
+### Patch Changes
+
+- a17e8eb: Move the repo from npm to pnpm 11.
+  
+  - `pnpm-workspace.yaml` replaces the `workspaces` field and `.npmrc`, and `pnpm-lock.yaml` replaces `package-lock.json` (converted with `pnpm import`, so versions are unchanged).
+  - Internal `@prosopo/*` dependencies use `workspace:*`. `pnpm publish` (which `changeset publish` now runs) swaps each for the exact version, so published manifests are the same as before. Member packages no longer declare an npm engine.
+  - `@prosopo/config`'s `getDependencies` walks the installed `node_modules` tree instead of parsing `npm ls`, so bundle externals are computed the same way under any package manager.
+  - `@prosopo/workspace` exports `getWorkspacePatterns`, which builds glob patterns from the workspace's `pnpm-workspace.yaml` (keeping its exclusions); the lint commands use it instead of `package.json`'s `workspaces`.
+  - `verifyDepsBeforeRun` is off, because inside captcha-private a script run here would otherwise install captcha standalone over the parent's `node_modules`.
+  - Packages that relied on npm hoisting for types or tools now declare them.
+  - `@prosopo/util` declares the `url` package. `isMain` imports `url`, which Node serves from its built-in module and browser bundlers resolve to this package; npm used to provide it by hoisting.
+
 ## 3.4.2
 ### Patch Changes
 

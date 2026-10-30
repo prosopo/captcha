@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/native-merkle",
-	"version": "0.0.6",
+	"version": "0.0.9",
 	"description": "Rust merkle tree + blake2b hashing helpers for the Prosopo captcha provider (napi-rs).",
 	"license": "Apache-2.0",
 	"author": "Prosopo Limited",
@@ -11,22 +11,22 @@
 	},
 	"main": "index.js",
 	"types": "index.d.ts",
-	"files": ["index.js", "index.d.ts", "*.node"],
+	"files": ["index.js", "index.d.ts", "dist/native/*.node"],
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"napi": {
 		"binaryName": "prosopo-native-merkle",
 		"targets": ["x86_64-unknown-linux-gnu"]
 	},
 	"scripts": {
-		"build": "napi build --platform --release",
-		"build:debug": "napi build --platform",
-		"test:cargo": "cargo test --release",
-		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
+		"build:native": "if [ \"$NODE_ENV\" = production ]; then pnpm run build:release; else pnpm run build:debug; fi",
+		"build:debug": "napi build --platform --output-dir dist/native",
+		"build:release": "napi build --platform --release --output-dir dist/native",
+		"test:cargo": "cargo test",
+		"clean": "cargo clean && rm -rf dist"
 	},
 	"devDependencies": {
-		"@napi-rs/cli": "3.9.1"
+		"@napi-rs/cli": "3.10.8"
 	}
 }

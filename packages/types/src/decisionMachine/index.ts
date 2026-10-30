@@ -19,13 +19,25 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import {
+	type IIconOrderSettings,
 	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
+	IconOrderSettingsSchema,
 	PuzzleSettingsSchema,
+	iconOrderToleranceFieldSchema,
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
-import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
-import type { ScoreComponents } from "../provider/database.js";
+import type { ModeEnum } from "../config/mode.js";
+import type {
+	AudioEvent,
+	IconOrderEvent,
+	PuzzleEvent,
+	RequestHeaders,
+} from "../provider/api.js";
+import type {
+	FingerprintSummaryStored,
+	ScoreComponents,
+} from "../provider/database.js";
 import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
 
@@ -126,7 +138,12 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
@@ -137,6 +154,13 @@ export type DecisionMachineInput = {
 	// challenge record). Undefined for invalid lookups.
 	ipInfo?: IPInfoResponse;
 	dnsEvent?: EnrichedDnsEvent;
+	// Whether this provider's DNS sidecar delivered an authenticated event
+	// batch recently (see provider tasks/dnsEvent/dnsSidecarHealth.ts). Set by
+	// DecisionMachineRunner.decide(). A rule that denies on a missing
+	// `dnsEvent` must require this to be `true`: when the sidecar is broken no
+	// session has a dnsEvent, so denying would block every real user.
+	// Undefined on providers that predate the field.
+	dnsSidecarHealthy?: boolean;
 	// Session-derived fields forwarded from the Session record loaded at
 	// the verify path. Undefined when no frictionless session preceded.
 	score?: number;
@@ -169,8 +193,14 @@ export type DecisionMachineInput = {
 	coords?: [number, number][][];
 	// Puzzle-only: per-event trail of the drag from origin to target,
 	// captured client-side and persisted on the puzzle captcha record.
-	// Always undefined on pow / image inputs.
+	// Always undefined on pow / image / audio inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Audio-only: playback and typing events, persisted on the audio record.
+	audioEvents?: AudioEvent[];
+	// Audio-only: how many times the clip was played before submitting.
+	audioReplays?: number;
+	// Icon-order-only equivalent of `puzzleEvents`.
+	iconOrderEvents?: IconOrderEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
 	// so verify-time decide rules can gate on the raw TCP fingerprint
@@ -183,9 +213,27 @@ export type DecisionMachineInput = {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// option-kind list in wire order ([2, 4, 8, 1, 3] on an ordinary Linux
+	// SYN), which replaces the lossy packed `tcpOptsOrder`.
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Rules already reading
+	// these keep working on historical sessions; on sessions served by a
+	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	// The site's per-category traffic-filter policies. Gates the
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
@@ -209,7 +257,9 @@ export type DecisionMachineOutput = {
 export type DecisionMachineCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.audio
+	| CaptchaType.iconOrder;
 
 // This is the API configuration type (used for uploads/API calls)
 // The database storage type is DecisionMachineArtifact in provider/database.ts
@@ -262,7 +312,23 @@ export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
 export const COUNTER_KINDS = ["served", "solved"] as const;
 export type CounterKind = (typeof COUNTER_KINDS)[number];
 
-export const COUNTER_DIMENSIONS = ["ip", "userAccount", "peerIp"] as const;
+/**
+ * `deviceBucket` is the `bucketId` disclosed by a verified proof of
+ * fingerprint. Counting on it answers "how much traffic has this kind of
+ * device produced", which no per-request field can: one bucketId on its own
+ * says nothing, and the account address is a different value on every visit
+ * from a client that redraws its fingerprint.
+ *
+ * It resolves only on a request that disclosed one. A spec naming it on a
+ * request that did not is skipped, so the counter reads as absent rather than
+ * as zero traffic.
+ */
+export const COUNTER_DIMENSIONS = [
+	"ip",
+	"userAccount",
+	"peerIp",
+	"deviceBucket",
+] as const;
 export type CounterDimension = (typeof COUNTER_DIMENSIONS)[number];
 
 export const COUNTER_CAPTCHA_ANY = "any" as const;
@@ -270,6 +336,8 @@ export type CounterCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
+	| CaptchaType.audio
+	| CaptchaType.iconOrder
 	| typeof COUNTER_CAPTCHA_ANY;
 
 export interface CounterSpec {
@@ -285,6 +353,8 @@ export const CounterSpecSchema = z.object({
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.audio),
+		z.literal(CaptchaType.iconOrder),
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
 	dimension: z.enum(COUNTER_DIMENSIONS),
@@ -299,7 +369,11 @@ export const encodeCounterKey = (
 	`cnt:${dappAccount}:${spec.kind}:${spec.captchaType}:${spec.dimension}:${value}:${spec.window}`;
 
 export interface RoutingMachineBaseline {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 }
@@ -316,6 +390,12 @@ export interface RoutingMachineRawSignals {
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	fingerprintProof?: string;
+	// The verified proof above, reduced to the fields a rule can use: the
+	// commitment root, the disclosed values, and the device bucket. Present
+	// only when the proof verified, so a rule reading it never has to re-check
+	// anything. Absent when no proof arrived or it failed verification, which
+	// `fingerprintProofValid` reports separately.
+	fingerprintSummary?: FingerprintSummaryStored;
 	// Decoded per-CPU WASM SIMD fingerprint readings, when the client submitted
 	// them with the PoW solution (decrypted and attached to the session, then
 	// surfaced here for the post-pow routing machine). Undefined when absent or
@@ -345,9 +425,27 @@ export interface RoutingMachineRawSignals {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// option-kind list in wire order ([2, 4, 8, 1, 3] on an ordinary Linux
+	// SYN), which replaces the lossy packed `tcpOptsOrder`.
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Rules already reading
+	// these keep working on historical sessions; on sessions served by a
+	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
 	// ipapi/isp mirror at request time. Undefined when the lookup failed
 	// or the middleware wasn't reached (dev requests bypassing the
@@ -379,6 +477,18 @@ export interface RoutingMachineRawSignals {
 	// egress-sensitive middlebox route rules and supplies the challenge
 	// policy they inherit — see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
+	// Widget mode persisted on the originating Session. `postPow` only;
+	// undefined when the session pre-dates the field.
+	mode?: ModeEnum;
+	// True when the PoW salt carried click coords and every pair was (0,0).
+	// The widget reports (0,0) for a keyboard activation as well as for the
+	// frictionless auto-start. `postPow` only.
+	coordsAllZero?: boolean;
+	// Canonical indices of the detectors that fired on the frictionless
+	// payload, as persisted in `scoreComponents.triggeredDetectors`. On
+	// `postPow` and the dedup replay they come from the originating Session.
+	// Undefined when none fired or the payload could not be read.
+	triggeredDetectors?: number[];
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
@@ -409,7 +519,11 @@ export interface RoutingMachineInput extends RoutingMachineInputBase {
 }
 
 export interface RoutingMachineOutput {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 	// Optional selection reason the machine can attach to explain an escalation
@@ -426,13 +540,18 @@ export interface RoutingMachineOutput {
 	// Ignored unless the resolved captchaType is `puzzle`.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
+	// Ignored unless the resolved captchaType is `iconOrder`.
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
 }
 
 export const RoutingMachineOutputSchema = z.object({
+	// No `audio`: it is only reachable as the accessibility alternative.
 	captchaType: z.union([
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.iconOrder),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
@@ -442,4 +561,6 @@ export const RoutingMachineOutputSchema = z.object({
 	// reject.
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
 	puzzle: PuzzleSettingsSchema.optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
+	iconOrder: IconOrderSettingsSchema.optional(),
 });

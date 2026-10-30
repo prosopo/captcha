@@ -68,6 +68,7 @@ vi.mock("../../../tasks/index.js", async () => {
 });
 
 const SITE_KEY = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+const OTHER_SITE_KEY = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
 const ClientModel = mongoose.model<ClientRecord>(
 	"DomainMiddlewareTestClient",
@@ -97,9 +98,10 @@ beforeAll(async () => {
 	db.getClientRecord = getClientRecord;
 
 	const app = express();
+	app.use(express.json());
 	app.use((req, _res, next) => {
 		req.t = t;
-		req.i18n = { t };
+		req.i18n = i18n;
 		req.logger = getLogger("error", "test:domain-middleware");
 		next();
 	});
@@ -139,10 +141,22 @@ interface GateResult {
  * POSTs to the gated route with exactly the given headers. node:http is used
  * rather than fetch because fetch decides the Origin header for itself.
  */
-const send = (headers: Record<string, string>): Promise<GateResult> =>
+const send = (
+	headers: Record<string, string>,
+	body?: object,
+): Promise<GateResult> =>
 	new Promise<GateResult>((resolve, reject) => {
 		const req = http.request(
-			{ host: "127.0.0.1", port, path: "/", method: "POST", headers },
+			{
+				host: "127.0.0.1",
+				port,
+				path: "/",
+				method: "POST",
+				headers:
+					body === undefined
+						? headers
+						: { ...headers, "content-type": "application/json" },
+			},
 			(res) => {
 				let body = "";
 				res.setEncoding("utf8");
@@ -158,7 +172,7 @@ const send = (headers: Record<string, string>): Promise<GateResult> =>
 			},
 		);
 		req.on("error", reject);
-		req.end();
+		req.end(body === undefined ? undefined : JSON.stringify(body));
 	});
 
 const withKey = (origin?: string): Record<string, string> => ({
@@ -237,6 +251,44 @@ describe("domainMiddleware", () => {
 		const result = await send(withKey(origin));
 		expect(result.reached).toBe(false);
 		expect(result.status).toBeGreaterThanOrEqual(400);
+	});
+
+	it("lets a request through when the body site key matches the header", async () => {
+		getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+		const result = await send(withKey("https://example.com"), {
+			dapp: SITE_KEY,
+		});
+		expect(result).toEqual({ status: 200, reached: true });
+	});
+
+	it.each([
+		["another site's key", OTHER_SITE_KEY],
+		["a non-string", [SITE_KEY]],
+	])(
+		"rejects a body site key that is %s",
+		async (_name: string, dapp: unknown) => {
+			getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+			const result = await send(withKey("https://example.com"), { dapp });
+			expect(result).toEqual({ status: 400, reached: false });
+			expect(getClientRecord).not.toHaveBeenCalled();
+		},
+	);
+
+	it("rejects another site's body key behind a reserved test site key", async () => {
+		const result = await send(
+			{
+				"prosopo-site-key": ALWAYS_PASS_SITE_KEY,
+				origin: "https://anything.invalid",
+			},
+			{ dapp: OTHER_SITE_KEY },
+		);
+		expect(result).toEqual({ status: 400, reached: false });
+	});
+
+	it("lets a request with no body site key through on the header alone", async () => {
+		getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+		const result = await send(withKey("https://example.com"), {});
+		expect(result).toEqual({ status: 200, reached: true });
 	});
 
 	it("fails closed when the client lookup throws", async () => {

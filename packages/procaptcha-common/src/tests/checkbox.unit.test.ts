@@ -14,7 +14,11 @@
 
 import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { type CheckboxProps, mountCheckbox } from "../components/checkbox.js";
+import {
+	type CheckboxProps,
+	mountCheckbox,
+	splitErrorCode,
+} from "../components/checkbox.js";
 import type { Component } from "../dom/component.js";
 import {
 	type Mounted,
@@ -259,24 +263,66 @@ describe("what a scripted solver can hold on to", () => {
 	});
 });
 
+describe("splitErrorCode", () => {
+	test("separates the errorId localiseError appends", () => {
+		expect(
+			splitErrorCode(
+				"Site key not registered (SITE_KEY_NOT_REGISTERED:PROV-30)",
+			),
+		).toEqual({
+			message: "Site key not registered",
+			code: "SITE_KEY_NOT_REGISTERED:PROV-30",
+		});
+	});
+
+	test("leaves a message with no code, or ordinary brackets, whole", () => {
+		expect(splitErrorCode("Cannot load CAPTCHA")).toEqual({
+			message: "Cannot load CAPTCHA",
+		});
+		expect(splitErrorCode("Try again (later)")).toEqual({
+			message: "Try again (later)",
+		});
+	});
+});
+
 describe("the error state", () => {
-	test("replaces the label with a link to the FAQ", () => {
+	const CODED_ERROR =
+		"Site key not registered (SITE_KEY_NOT_REGISTERED:PROV-30)";
+
+	test("replaces the label with the message, and links the code to the FAQ", () => {
+		render({ error: CODED_ERROR });
+		const [message, code] = Array.from(label().children) as HTMLElement[];
+		expect(message?.tagName).toBe("SPAN");
+		expect(message?.textContent).toBe("Site key not registered");
+		expect(code?.tagName).toBe("A");
+		expect(code?.textContent).toBe("SITE_KEY_NOT_REGISTERED:PROV-30");
+		expect(code?.getAttribute("href")).toContain("faq");
+	});
+
+	test("lets the code wrap anywhere so it stays inside the widget", () => {
+		render({ error: CODED_ERROR });
+		expect(label().querySelector("a")?.style.overflowWrap).toBe("anywhere");
+	});
+
+	test("links the message itself to the FAQ when there is no code", () => {
 		render({ error: "Cannot load CAPTCHA" });
-		const link = label().querySelector("a");
-		expect(link?.textContent).toBe("Cannot load CAPTCHA");
-		expect(link?.getAttribute("href")).toContain("faq");
+		const links = label().querySelectorAll("a");
+		expect(links).toHaveLength(1);
+		expect(links[0]?.textContent).toBe("Cannot load CAPTCHA");
+		expect(links[0]?.getAttribute("href")).toContain("faq");
 	});
 
 	test("paints the message in the theme's error colour", () => {
-		render({ error: "Cannot load CAPTCHA" });
-		expect(label().querySelector("a")?.style.color).toBe(
+		render({ error: CODED_ERROR });
+		expect(label().querySelector("span")?.style.color).toBe(
 			asRgb(lightTheme.palette.error.main),
 		);
 	});
 
-	test("makes the message selectable so a support code can be copied", () => {
-		render({ error: "Cannot load CAPTCHA" });
+	test("makes the message and code selectable so a support code can be copied", () => {
+		render({ error: CODED_ERROR });
 		expect(label().style.userSelect).toBe("text");
+		expect(label().querySelector("span")?.style.userSelect).toBe("text");
 		expect(label().querySelector("a")?.style.userSelect).toBe("text");
 	});
 
@@ -444,6 +490,47 @@ describe("theming", () => {
 });
 
 describe("activating it", () => {
+	const row = (): HTMLElement => {
+		const element = box().parentElement;
+		if (!element) throw new Error("expected the box to sit in a row");
+		return element;
+	};
+
+	test("a tap on the row around the box reports the change with its coordinates", () => {
+		render();
+		fire(row(), "click", { clientX: 12, clientY: 40 });
+		expect(onChange).toHaveBeenCalledTimes(1);
+		const event = onChange.mock.calls[0]?.[0] as MouseEvent;
+		expect(event.clientX).toBe(12);
+		expect(event.clientY).toBe(40);
+	});
+
+	test("the row is at least 44px tall, so the tap area is too", () => {
+		render();
+		expect(Number.parseFloat(row().style.minHeight)).toBeGreaterThanOrEqual(44);
+	});
+
+	test("a synthetic click on the row is ignored", () => {
+		render();
+		fire(row(), "click", { trusted: false });
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
+	test("a tap on the row does nothing while the box is disabled by an error", () => {
+		render({ error: "Something went wrong" });
+		fire(row(), "click");
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
+	test("a tap on the row does nothing while loading", () => {
+		render({ loading: true });
+		const spinner = mounted.container.querySelector(SPINNER_SELECTOR);
+		const loadingRow = spinner?.parentElement;
+		if (!loadingRow) throw new Error("expected the spinner to sit in a row");
+		fire(loadingRow, "click");
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
 	test("a real click reports the change", async () => {
 		render();
 		fire(box(), "click");

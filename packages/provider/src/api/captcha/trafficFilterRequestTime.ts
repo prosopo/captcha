@@ -16,6 +16,8 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type GetFrictionlessCaptchaResponse,
+	type IAudioSettings,
+	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPuzzleSettings,
 	type ITrafficFilter,
@@ -51,6 +53,9 @@ export type RequestTimeTrafficVerdict =
 			// as the top of the override chain (asset default → client
 			// setting → this).
 			puzzleSettings?: IPuzzleSettings;
+			audioSettings?: IAudioSettings;
+			iconOrderTolerance?: number;
+			iconOrderSettings?: IIconOrderSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -104,6 +109,9 @@ export const applyTrafficFilterAtRequestTime = (
 		puzzleTolerance: resolved.puzzleTolerance,
 		padBytes,
 		puzzleSettings: resolved.puzzleSettings,
+		audioSettings: resolved.audioSettings,
+		iconOrderTolerance: resolved.iconOrderTolerance,
+		iconOrderSettings: resolved.iconOrderSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };

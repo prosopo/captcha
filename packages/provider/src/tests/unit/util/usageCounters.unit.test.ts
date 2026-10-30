@@ -319,4 +319,64 @@ describe("buildAllWindowIncrements", () => {
 		const types = new Set(result.map((r) => r.spec.captchaType));
 		expect(types).toEqual(new Set(["any"]));
 	});
+
+	const BUCKET = "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f";
+
+	it("adds a deviceBucket increment per window and captcha type when a bucket is known", () => {
+		const result = buildAllWindowIncrements(
+			"solved",
+			CaptchaType.pow,
+			IP,
+			USER,
+			undefined,
+			BUCKET,
+		);
+
+		expect(result).toHaveLength(36);
+		const bucketWrites = result.filter(
+			(r) => r.spec.dimension === "deviceBucket",
+		);
+		expect(bucketWrites).toHaveLength(12);
+		expect(new Set(bucketWrites.map((r) => r.value))).toStrictEqual(
+			new Set([BUCKET]),
+		);
+		expect(new Set(bucketWrites.map((r) => r.spec.window))).toStrictEqual(
+			new Set(["1m", "10m", "1h", "3h", "6h", "24h"]),
+		);
+		expect(new Set(bucketWrites.map((r) => r.spec.captchaType))).toStrictEqual(
+			new Set([CaptchaType.pow, "any"]),
+		);
+	});
+
+	it("writes no deviceBucket counter when no proof disclosed a bucket", () => {
+		const result = buildAllWindowIncrements(
+			"solved",
+			CaptchaType.pow,
+			IP,
+			USER,
+			undefined,
+			undefined,
+		);
+
+		expect(result).toHaveLength(24);
+		expect(result.some((r) => r.spec.dimension === "deviceBucket")).toBe(false);
+	});
+
+	it("keeps the deviceBucket counter independent of the peer IP one", () => {
+		const result = buildAllWindowIncrements(
+			"solved",
+			CaptchaType.pow,
+			IP,
+			USER,
+			"5.6.7.8",
+			BUCKET,
+		);
+
+		expect(
+			result.filter((r) => r.spec.dimension === "deviceBucket"),
+		).toHaveLength(12);
+		expect(result.filter((r) => r.spec.dimension === "peerIp")).toHaveLength(
+			12,
+		);
+	});
 });

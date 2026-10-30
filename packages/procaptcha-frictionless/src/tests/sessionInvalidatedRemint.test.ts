@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type Account,
 	type BotDetectionFunction,
@@ -77,12 +77,12 @@ const config = (): ProcaptchaClientConfigOutput =>
 		mode: ModeEnum.visible,
 	}) as unknown as ProcaptchaClientConfigOutput;
 
-const i18nStub = {
+const i18nStub = createUntranslatedI18n({
 	isInitialized: true,
 	language: "en",
 	t: (key: string) => key,
 	changeLanguage: vi.fn(),
-} as unknown as Ti18n;
+});
 
 const provider: RandomProvider = {
 	providerAccount: "provider-account",
@@ -122,7 +122,7 @@ const lastMount = () => {
 	return mount;
 };
 
-/** The inner widget reporting `CAPTCHA.NO_SESSION_FOUND` on its challenge fetch. */
+/** The inner widget reporting `NO_SESSION_FOUND` on its challenge fetch. */
 const reportSessionInvalidated = async (): Promise<void> => {
 	const { onSessionInvalidated } = lastMount().props;
 	onSessionInvalidated?.(120, 340);
@@ -158,7 +158,7 @@ afterEach(() => {
 });
 
 // Production, 2026-09-07: the widget re-sent an already-consumed sessionId to
-// /captcha/image, the provider answered 400 CAPTCHA.NO_SESSION_FOUND, and the
+// /captcha/image, the provider answered 400 NO_SESSION_FOUND, and the
 // user was left staring at a checkbox reading "No session found" with nothing
 // behind it. The outer recovery guard was one-shot per widget lifetime and the
 // inner widget always returns through this handler, so the second failure was
@@ -304,5 +304,72 @@ describe("refreshing the challenge", () => {
 		await reportSessionInvalidated();
 
 		expect(refreshOfOnCall(2)).toBeUndefined();
+	});
+});
+
+describe("switching the puzzle to an image challenge", () => {
+	const refreshOfOnCall = (call: number): string | undefined =>
+		detectBot.mock.calls[call]?.[4];
+	const switchToImageOnCall = (call: number): boolean | undefined =>
+		detectBot.mock.calls[call]?.[5];
+
+	it("asks the next /frictionless run for an image challenge", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			switchToImage: true,
+		});
+		await settle();
+
+		expect(refreshOfOnCall(1)).toBe("provider-session-1");
+		expect(switchToImageOnCall(1)).toBe(true);
+	});
+
+	it("does not ask for an image challenge on a plain refresh", async () => {
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(switchToImageOnCall(1)).toBe(false);
+	});
+
+	it("does not carry the switch onto a later refresh", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			switchToImage: true,
+		});
+		await settle();
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(switchToImageOnCall(2)).toBe(false);
+	});
+});
+
+describe("counting replaced challenges", () => {
+	const replacementCount = (): number | undefined =>
+		lastMount().props.startReplacementCount;
+
+	it("starts at zero", () => {
+		expect(replacementCount()).toBe(0);
+	});
+
+	it("counts wrong answers and refreshes in a row", async () => {
+		lastMount().props.onReload?.(10, 20, { showRetry: true });
+		await settle();
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(replacementCount()).toBe(2);
+	});
+
+	it("starts again once the user switches to an image challenge", async () => {
+		lastMount().props.onReload?.(10, 20, { showRetry: true });
+		await settle();
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			switchToImage: true,
+		});
+		await settle();
+
+		expect(replacementCount()).toBe(0);
 	});
 });

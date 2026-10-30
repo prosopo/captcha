@@ -29,6 +29,7 @@ import {
 	type FetchFn,
 	IpapiBackend,
 	parseAbuserScore,
+	parseDetectorRisk,
 } from "../backends/ipapi.js";
 
 const BASE_URL = "https://api.ipapi.test/";
@@ -440,6 +441,91 @@ describe("IpapiBackend.lookup responses", () => {
 			isValid: false,
 			error: "Network or parsing error: socket hang up",
 		});
+	});
+});
+
+describe("the crawler name", () => {
+	// The worker this replaced returned the crawler's name through
+	// `is_crawler`, a field typed boolean, so `isCrawler === true` matched
+	// nothing and the name had nowhere to live. Ours answers both separately.
+	it("keeps the boolean and the name apart", async () => {
+		const result = expectValid(
+			await backend(
+				respondWith(baseResponse({ is_crawler: true, crawler: "GoogleBot" })),
+			).lookup(IP),
+		);
+
+		expect(result.isCrawler).toBe(true);
+		expect(result.crawlerName).toBe("GoogleBot");
+	});
+
+	// Some ranges are flagged without a name.
+	it("reports a crawler with no name as a crawler", async () => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ is_crawler: true }))).lookup(IP),
+		);
+
+		expect(result.isCrawler).toBe(true);
+		expect(result.crawlerName).toBeUndefined();
+	});
+
+	it("leaves a non-crawler false and unnamed", async () => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ is_crawler: false }))).lookup(
+				IP,
+			),
+		);
+
+		expect(result.isCrawler).toBe(false);
+		expect(result.crawlerName).toBeUndefined();
+	});
+});
+
+describe("the detector risk", () => {
+	const lookupRisk = async (
+		reputation: IPApiResponse["reputation"],
+	): Promise<number | undefined> =>
+		expectValid(
+			await backend(respondWith(baseResponse({ reputation }))).lookup(IP),
+		).detectorRisk;
+
+	it("passes a risk in range through", async () => {
+		expect(await lookupRisk({ detector_risk: 0.42 })).toBe(0.42);
+	});
+
+	it("keeps both ends of the range", () => {
+		expect(parseDetectorRisk({ detector_risk: 0 })).toBe(0);
+		expect(parseDetectorRisk({ detector_risk: 1 })).toBe(1);
+	});
+
+	it("reads a null risk as no evidence", async () => {
+		expect(await lookupRisk({ detector_risk: null })).toBeUndefined();
+	});
+
+	it("reads a missing risk or reputation section as no evidence", async () => {
+		expect(await lookupRisk({})).toBeUndefined();
+		expect(await lookupRisk(undefined)).toBeUndefined();
+	});
+
+	it("drops a risk outside 0..1 rather than clamping it", () => {
+		expect(parseDetectorRisk({ detector_risk: -0.1 })).toBeUndefined();
+		expect(parseDetectorRisk({ detector_risk: 1.5 })).toBeUndefined();
+		expect(
+			parseDetectorRisk({ detector_risk: Number.POSITIVE_INFINITY }),
+		).toBeUndefined();
+		expect(parseDetectorRisk({ detector_risk: Number.NaN })).toBeUndefined();
+	});
+
+	it("drops a risk sent as a string", async () => {
+		const result: IPInfoResult = expectValid(
+			await backend(
+				respondWith({
+					...baseResponse(),
+					reputation: { detector_risk: "0.5" },
+				}),
+			).lookup(IP),
+		);
+		expect(result.detectorRisk).toBeUndefined();
 	});
 });
 

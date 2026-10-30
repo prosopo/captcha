@@ -1,9 +1,8 @@
+# provider-mock stack. Layer an env overlay on top (keep overlays beside this file):
+#   docker compose -f docker-compose.provider-mock.yml -f docker-compose.provider-mock.<production|staging>.yml up -d
 services:
     provider1:
         container_name: provider1
-        profiles:
-            - production
-            - staging
         image: prosopo/provider-mock:dev
         labels:
             - "vector.provider=true" # enable logging as a provider
@@ -53,9 +52,6 @@ services:
                 max-file: '1'
     caddy:
         container_name: caddy
-        profiles:
-            - production
-            - staging
         image: prosopo/caddy:${CADDY_IMAGE}
         env_file:
             - ../.env.${NODE_ENV}
@@ -81,7 +77,7 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            test: [ "CMD", "curl", "--fail", "localhost:2020/metrics" ] # ping the caddy admin api (the Caddyfile moves admin to :2020)
             interval: 5m
             retries: 3
             start_period: 30s
