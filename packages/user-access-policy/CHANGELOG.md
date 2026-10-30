@@ -1,5 +1,16 @@
 # @prosopo/user-access-policy
 
+## 3.15.13
+### Patch Changes
+
+- e6b2206: Deleting access rules by group now works when the group id contains a hyphen, and a failed delete is reported as a failure.
+  
+  The group id went into the redis search unescaped, so a group such as `example-rule-group` made the search a syntax error. The error was swallowed and the provider answered that it had deleted nothing, which the rule push counted as success: the rule stayed live on the provider while its record was removed from the portal. The search now escapes the group id, and a search that errors makes the delete fail so the push retries it.
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+
 ## 3.15.12
 ### Patch Changes
 
