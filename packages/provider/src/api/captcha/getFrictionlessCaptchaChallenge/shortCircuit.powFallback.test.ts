@@ -15,6 +15,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { TcpProbeRecord } from "@prosopo/types";
 import { ModeEnum } from "@prosopo/types";
 import type { Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -122,5 +123,21 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 		}
 
 		expect(sendPowCaptcha).not.toHaveBeenCalled();
+	});
+
+	it("keeps the tcp-probe record on the bypass session", async () => {
+		initDetectorBundlePool(dir);
+		const sendPowCaptcha = vi.fn(async (_params: unknown) => ({
+			captchaType: "pow",
+		}));
+		const tcpProbe: TcpProbeRecord = { v: 2, hit: false, reason: "no_record" };
+		const { res } = makeRes();
+
+		await runEmptyDetectorPoolPowFallback(
+			{ ...makeInput(sendPowCaptcha), tcpProbe },
+			res,
+		);
+
+		expect(JSON.stringify(sendPowCaptcha.mock.calls[0])).toContain("no_record");
 	});
 });

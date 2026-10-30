@@ -14,7 +14,7 @@
 
 import type { I18nLookup, TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
-import type { IPInfoResponse } from "@prosopo/types";
+import type { IPInfoResponse, TcpProbeRecord } from "@prosopo/types";
 export interface AugmentedRequest {
 	t: TranslateFn;
 	i18n: I18nLookup;
@@ -59,6 +59,7 @@ export interface AugmentedRequest {
 	// older than prosopo/chaddy#16.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	tcpProbe?: TcpProbeRecord;
 }
 
 declare global {
@@ -95,6 +96,7 @@ declare global {
 			ipTos?: number;
 			tcpOptsFlags?: number;
 			tcpOptsOrder?: number;
+			tcpProbe?: TcpProbeRecord;
 		}
 		interface Locals {
 			padBytes?: number;
