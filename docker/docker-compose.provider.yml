@@ -149,6 +149,8 @@ services:
       - production
       - staging
     image: prosopo/caddy:${CADDY_IMAGE}
+    group_add:
+      - "${TCP_PROBE_GID:-10500}"
     env_file:
       - ../.env.1.${NODE_ENV}
     labels:
@@ -225,7 +227,7 @@ services:
     container_name: tcp-probe
     profiles:
       - tcp-probe
-    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-latest}
+    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:?set TCP_PROBE_IMAGE to a version}
     network_mode: host
     cap_add:
       - BPF
@@ -240,15 +242,16 @@ services:
       # containers see the same inode. Docker will create the dir if it
       # doesn't exist yet.
       - /var/run/tcp-probe:/var/run/tcp-probe
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    cgroup: host
     command:
-      - "--iface"
-      # Each pronode's WAN NIC name is different (contabo/hetzner/etc.);
-      # ansible sets TCP_PROBE_IFACE per-host in .env.1.$NODE_ENV.
-      - "${TCP_PROBE_IFACE}"
+      # The port the listener sees, after Docker's DNAT. Caddy must start after
+      # this container: the SYN is only saved for sockets that listen once the
+      # probe is attached.
       - "--port"
       - "443"
-      - "--format"
-      - "jsonl"
+      - "--socket-gid"
+      - "${TCP_PROBE_GID:-10500}"
       - "--lookup-socket"
       - "/var/run/tcp-probe/lookup.sock"
     restart: unless-stopped
