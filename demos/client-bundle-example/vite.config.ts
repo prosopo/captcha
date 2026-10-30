@@ -48,6 +48,21 @@ const assertDemoSiteKeysSet = (mode: string) => {
 	}
 };
 
+const DEPLOYED_MODES = ["production", "staging"];
+const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
+
+const assertDemoServerUrlPublic = (mode: string) => {
+	if (!DEPLOYED_MODES.includes(mode)) {
+		return;
+	}
+	const serverUrl = process.env.PROSOPO_SERVER_URL;
+	if (!serverUrl || LOOPBACK_HOSTS.includes(new URL(serverUrl).hostname)) {
+		throw new Error(
+			`Refusing to build the demos for mode "${mode}" with PROSOPO_SERVER_URL=${serverUrl}: visitors' form submissions would fail and their browser would ask for local network access.`,
+		);
+	}
+};
+
 const certPath = path.resolve(__dirname, "../../certs");
 const keyPath = path.join(certPath, "server.key");
 const crtPath = path.join(certPath, "server.crt");
@@ -117,6 +132,7 @@ function moveDirectoryContents(
 export default defineConfig(({ command, mode }) => {
 	if (command === "build") {
 		assertDemoSiteKeysSet(mode);
+		assertDemoServerUrlPublic(mode);
 	}
 
 	// Check if certificates exist
