@@ -79,7 +79,7 @@ const pushCapped = <T>(points: T[], point: T, limit: number): void => {
 /**
  * Records what the visitor does on the page from the moment the script
  * loads. The detector's trackers only start once a widget renders, and a
- * site may render it late: Twickets mounts it when Buy is pressed, after the
+ * site may render it late, for example only when Buy is pressed, after the
  * visitor has scrolled the listing, and a quick tap on the checkbox can land
  * before detection finishes. Without this, that whole journey is missing
  * from the solve.
