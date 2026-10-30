@@ -50,7 +50,7 @@ import {
 	getRequestUserScope,
 	normalizeHeadersForMatching,
 } from "../../blacklistRequestInspector.js";
-import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import { dnsBeaconUrls } from "../../dnsEventUrl.js";
 import { errorCodeForReason } from "../../errorCodeForReason.js";
 import {
 	recordBotScore,
@@ -606,7 +606,7 @@ export default (
 							| CaptchaType.iconOrder,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
-						dns_url: buildDnsEventUrl(dedup.sessionId),
+						...dnsBeaconUrls(dedup.sessionId),
 						...(offersAudioAlternative(
 							dedup.captchaType,
 							audioAlternativeEnabled,
@@ -752,7 +752,7 @@ export default (
 					[ApiParams.captchaType]: CaptchaType.authenticated,
 					[ApiParams.sessionId]: authenticatedSession.sessionId,
 					[ApiParams.status]: "ok",
-					dns_url: buildDnsEventUrl(authenticatedSession.sessionId),
+					...dnsBeaconUrls(authenticatedSession.sessionId),
 					...(verifiedSignerUrl && { agent: verifiedSignerUrl }),
 				});
 			};

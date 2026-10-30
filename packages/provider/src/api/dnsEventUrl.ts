@@ -16,13 +16,16 @@ import { createHmac } from "node:crypto";
 
 const EXTENSIONS = ["gif", "png", "webp"] as const;
 
-export const buildDnsEventUrl = (sessionId: string): string | undefined => {
+const beaconUrl = (
+	sessionId: string,
+	pathKey: (sessionId: string) => string,
+): string | undefined => {
 	const subzone = process.env.DNS_EVENT_SUBZONE;
 	const secret = process.env.DNS_EVENT_HMAC_SECRET;
 	if (!subzone || !secret) {
 		return undefined;
 	}
-	const path = derivePath(sessionId, secret);
+	const path = derivePath(pathKey(sessionId), secret);
 	// Optional port override — used on hosts where Caddy already owns
 	// 443 and the sidecar can't bind it directly. Omit for the
 	// hide-in-plain-sight case (URL looks like a normal tracker).
@@ -31,6 +34,29 @@ export const buildDnsEventUrl = (sessionId: string): string | undefined => {
 		? `${sessionId}.${subzone}:${port}`
 		: `${sessionId}.${subzone}`;
 	return `https://${host}${path}?sid=${sessionId}`;
+};
+
+// The asset URL shares the session host but not its path, so the sidecar
+// reports it with `path_valid: false` and the ingest endpoint recognises it
+// here rather than by a second sidecar algorithm.
+const assetPathKey = (sessionId: string): string => `${sessionId}:a`;
+
+export const buildDnsEventUrl = (sessionId: string): string | undefined =>
+	beaconUrl(sessionId, (id) => id);
+
+export const buildDnsAssetUrl = (sessionId: string): string | undefined =>
+	beaconUrl(sessionId, assetPathKey);
+
+export const dnsBeaconUrls = (
+	sessionId: string,
+): { dns_url?: string; dns_asset_url?: string } => ({
+	dns_url: buildDnsEventUrl(sessionId),
+	dns_asset_url: buildDnsAssetUrl(sessionId),
+});
+
+export const isDnsAssetPath = (sessionId: string, path: string): boolean => {
+	const secret = process.env.DNS_EVENT_HMAC_SECRET;
+	return !!secret && derivePath(assetPathKey(sessionId), secret) === path;
 };
 
 // Mirrors the HMAC path algorithm in the dns sidecar

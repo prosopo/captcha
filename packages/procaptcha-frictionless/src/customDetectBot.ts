@@ -28,6 +28,7 @@ import {
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
+	GetFrictionlessCaptchaResponse,
 	ProcaptchaClientConfigOutput,
 	ProviderSelectRetryContext,
 } from "@prosopo/types";
@@ -118,6 +119,30 @@ const getCurrentPageUrls = (): PageUrls => {
 	// the provider still sees a value, and echo it as `iframeUrl` so
 	// downstream can tell the top frame was not observed.
 	return { currentUrl: local, iframeUrl: local };
+};
+
+// Fire-and-forget DNS observation beacons. Failures swallowed — observation
+// must never break the captcha flow.
+export const sendDnsBeacons = ({
+	dns_url,
+	dns_asset_url,
+}: Pick<GetFrictionlessCaptchaResponse, "dns_url" | "dns_asset_url">): void => {
+	try {
+		if (dns_url) {
+			void fetch(dns_url, {
+				method: "GET",
+				mode: "no-cors",
+				credentials: "omit",
+				keepalive: true,
+				cache: "no-store",
+			}).catch(() => undefined);
+		}
+		if (dns_asset_url && typeof Image === "function") {
+			new Image().src = dns_asset_url;
+		}
+	} catch {
+		/* swallow */
+	}
 };
 
 export const withTimeout = async <T>(
@@ -330,19 +355,7 @@ const customDetectBot: BotDetectionFunction = async (
 			),
 			10000,
 		);
-		if (captcha.dns_url) {
-			try {
-				void fetch(captcha.dns_url, {
-					method: "GET",
-					mode: "no-cors",
-					credentials: "omit",
-					keepalive: true,
-					cache: "no-store",
-				}).catch(() => undefined);
-			} catch {
-				/* swallow */
-			}
-		}
+		sendDnsBeacons(captcha);
 		return {
 			captchaType: captcha.captchaType,
 			sessionId: captcha.sessionId,
@@ -398,21 +411,7 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 	const captcha = await withTimeout(captchaPromise, 10000);
 
-	// Fire-and-forget DNS observation beacon. Failures swallowed —
-	// observation must never break the captcha flow.
-	if (captcha.dns_url) {
-		try {
-			void fetch(captcha.dns_url, {
-				method: "GET",
-				mode: "no-cors",
-				credentials: "omit",
-				keepalive: true,
-				cache: "no-store",
-			}).catch(() => undefined);
-		} catch {
-			/* swallow */
-		}
-	}
+	sendDnsBeacons(captcha);
 
 	return {
 		captchaType: captcha.captchaType,

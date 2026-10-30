@@ -608,6 +608,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.hp]?: string;
 	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
+	// Second per-session observation URL, requested as an image.
+	dns_asset_url?: string;
 	// Web Bot Auth: canonical Signature-Agent URL of the verified signer.
 	// Only present when captchaType === "authenticated". Rendered by the
 	// widget's badge so the operator can see WHICH agent verified.
