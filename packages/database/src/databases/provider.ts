@@ -2442,6 +2442,7 @@ export class ProviderDatabase
 			resolverIp?: string;
 			peerIp?: string;
 			pathValid?: boolean;
+			assetSeen?: boolean;
 		},
 		receivedAtIfAbsent: Date,
 	): Promise<boolean> {
@@ -2462,6 +2463,9 @@ export class ProviderDatabase
 		}
 		if (fields.pathValid !== undefined) {
 			setStage["dnsEvent.pathValid"] = fields.pathValid;
+		}
+		if (fields.assetSeen !== undefined) {
+			setStage["dnsEvent.assetSeen"] = fields.assetSeen;
 		}
 		try {
 			const result = await this.tables.session.updateOne(

@@ -663,6 +663,7 @@ export const SessionSchema = object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
 		pathValid: boolean().optional(),
+		assetSeen: boolean().optional(),
 		receivedAt: date(),
 	}).optional(),
 	// See Session.clientMetaData.
@@ -847,6 +848,8 @@ export type Session = {
 		// True iff the HTTPS request path matched HMAC(sessionId, secret).
 		// False indicates a scanner / replayed sessionId / wrong secret.
 		pathValid?: boolean;
+		// True once the session's asset URL (`dns_asset_url`) was requested.
+		assetSeen?: boolean;
 		// Wall-clock time the first event for this session was received
 		// by the provider. Subsequent events update the individual fields
 		// above but don't bump this timestamp.

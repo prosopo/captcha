@@ -46,7 +46,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
-import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
+import { dnsBeaconUrls } from "../../api/dnsEventUrl.js";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
@@ -730,7 +730,7 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
-			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
+			...dnsBeaconUrls(sessionRecord.sessionId),
 			...(offersAudioAlternative(
 				finalCaptchaType,
 				this.audioAlternativeEnabled,

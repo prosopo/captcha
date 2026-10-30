@@ -1032,6 +1032,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 				resolverIp: { type: String, required: false },
 				peerIp: { type: String, required: false },
 				pathValid: { type: Boolean, required: false },
+				assetSeen: { type: Boolean, required: false },
 				receivedAt: { type: Date, required: true },
 			},
 			{ _id: false },
@@ -1761,6 +1762,7 @@ export interface IProviderDatabase extends IDatabase {
 			resolverIp?: string;
 			peerIp?: string;
 			pathValid?: boolean;
+			assetSeen?: boolean;
 		},
 		receivedAtIfAbsent: Date,
 	): Promise<boolean>;
