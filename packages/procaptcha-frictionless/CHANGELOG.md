@@ -1,5 +1,29 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.23.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/api@4.8.5
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.9
+  - @prosopo/procaptcha-audio@0.2.16
+  - @prosopo/procaptcha-common@2.22.3
+  - @prosopo/procaptcha-icon-order@0.2.16
+  - @prosopo/procaptcha-pow@2.14.5
+  - @prosopo/procaptcha-puzzle@2.17.15
+  - @prosopo/procaptcha-react@2.14.16
+
 ## 2.22.4
 ### Patch Changes
 

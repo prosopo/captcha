@@ -1,5 +1,20 @@
 # @prosopo/types
 
+## 5.23.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- 77fdb57: Make the `ipDetectorRiskWeight` site setting optional instead of filling in 0 when it is parsed.
+  
+  With a parse default the field became required on the parsed settings type, so every caller that builds a full settings object had to set it. The portal doesn't, which broke the captcha-private release build for v3.10.0. The provider already reads a missing weight as 0, so behaviour is unchanged.
+
 ## 5.22.0
 ### Minor Changes
 

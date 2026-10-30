@@ -1,5 +1,12 @@
 # @prosopo/api
 
+## 4.8.5
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+
 ## 4.8.4
 ### Patch Changes
 
