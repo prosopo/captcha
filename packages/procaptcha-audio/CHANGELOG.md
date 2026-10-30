@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-audio
 
+## 0.2.15
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha-common@2.22.2
+
 ## 0.2.14
 ### Patch Changes
 
