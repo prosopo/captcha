@@ -9,7 +9,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     # Matches pnpm's minimumReleaseAge, which refuses versions younger than this.
     cooldown:
       default-days: 7
@@ -36,7 +36,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     groups:
       github-actions:
         patterns:
