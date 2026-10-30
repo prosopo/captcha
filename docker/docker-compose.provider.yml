@@ -149,6 +149,11 @@ services:
       - production
       - staging
     image: prosopo/caddy:${CADDY_IMAGE}
+    depends_on:
+      # Must attach first: only listeners opened afterwards keep the saved SYN.
+      tcp-probe:
+        condition: service_started
+        required: false
     group_add:
       - "${TCP_PROBE_GID:-10500}"
     env_file:
