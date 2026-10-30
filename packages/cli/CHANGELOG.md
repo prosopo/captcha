@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.10.2
+### Patch Changes
+
+- 20c1b77: Release the widget changes that record visitor behaviour from the moment the script loads. The release version follows `@prosopo/cli`, so it needs its own bump to cut a new release.
+
 ## 3.10.1
 ### Patch Changes
 
