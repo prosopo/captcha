@@ -1,5 +1,11 @@
 # @prosopo/procaptcha
 
+## 2.11.43
+### Patch Changes
+
+- Updated dependencies [186debd]
+  - @prosopo/procaptcha-common@2.22.4
+
 ## 2.11.42
 ### Patch Changes
 
