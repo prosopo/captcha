@@ -32,6 +32,7 @@ vi.mock("@prosopo/procaptcha-frictionless", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	startPageBehaviourCapture: vi.fn(),
 	getWindowCallback: vi.fn(),
 	pickIpMode: vi.fn((flags: { ipv4?: boolean; ipv6?: boolean } | undefined) =>
 		flags?.ipv4 ? "ipv4" : undefined,
