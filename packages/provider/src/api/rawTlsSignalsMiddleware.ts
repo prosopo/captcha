@@ -15,6 +15,7 @@
 import type { IncomingHttpHeaders } from "node:http";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/logger";
+import { type TcpProbeRecord, TcpProbeRecordSchema } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
@@ -37,6 +38,9 @@ const HEADER_TCP_WSCALE = "x-tls-tcp-wscale";
 const HEADER_TCP_OPTS_FLAGS = "x-tls-tcp-opts-flags";
 const HEADER_TCP_OPTS_ORDER = "x-tls-tcp-opts-order";
 const HEADER_TCP_WINDOW = "x-tls-tcp-window";
+const HEADER_TCP_PROBE = "x-tcp-probe";
+// A full record is about 3KB of base64url; anything far larger is not chaddy's.
+const MAX_TCP_PROBE_HEADER_CHARS = 8192;
 
 export interface RawTlsSignals {
 	// Kernel monotonic ns timestamps of the TCP 3-way handshake — captured by
@@ -70,6 +74,9 @@ export interface RawTlsSignals {
 	// TCP window field from the client's SYN. Kernel-default territory:
 	// Linux → 64240, Windows → 65535 / 8192, macOS → 65535.
 	tcpWindow?: number;
+	// The whole tcp-probe v2 record, stored as sent. Unlike the fields above it
+	// covers IPv6 and the packets after the ClientHello.
+	tcpProbe?: TcpProbeRecord;
 }
 
 const parseIntHeader = (
@@ -110,6 +117,34 @@ const MAX_NS = 2 ** 63;
 const MAX_U8 = 255;
 const MAX_U16 = 65535;
 const MAX_U32 = 4_294_967_295;
+
+export const parseTcpProbeHeader = (
+	raw: string | string[] | undefined,
+	logger: Logger,
+): TcpProbeRecord | undefined => {
+	const value = Array.isArray(raw) ? raw[0] : raw;
+	if (value === undefined) {
+		return undefined;
+	}
+	const reject = (reason: string): undefined => {
+		logger.debug(() => ({
+			msg: "Ignoring malformed tcp-probe header",
+			data: { reason, length: value.length },
+		}));
+		return undefined;
+	};
+	if (value.length > MAX_TCP_PROBE_HEADER_CHARS) {
+		return reject("too_long");
+	}
+	let decoded: unknown;
+	try {
+		decoded = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+	} catch {
+		return reject("not_json");
+	}
+	const parsed = TcpProbeRecordSchema.safeParse(decoded);
+	return parsed.success ? parsed.data : reject("bad_shape");
+};
 
 export const getRawTlsSignals = (
 	headers: IncomingHttpHeaders,
@@ -161,6 +196,7 @@ export const getRawTlsSignals = (
 			HEADER_TCP_WINDOW,
 			MAX_U16,
 		),
+		tcpProbe: parseTcpProbeHeader(headers[HEADER_TCP_PROBE], log),
 	};
 };
 
@@ -183,6 +219,7 @@ export const rawTlsSignalsForSession = (
 	if (req.tcpOptsFlags !== undefined) out.tcpOptsFlags = req.tcpOptsFlags;
 	if (req.tcpOptsOrder !== undefined) out.tcpOptsOrder = req.tcpOptsOrder;
 	if (req.tcpWindow !== undefined) out.tcpWindow = req.tcpWindow;
+	if (req.tcpProbe !== undefined) out.tcpProbe = req.tcpProbe;
 	return out;
 };
 
@@ -206,10 +243,12 @@ export const rawTlsSignalsMiddleware = (env: ProviderEnvironment) => {
 			if (signals.tcpOptsOrder !== undefined)
 				req.tcpOptsOrder = signals.tcpOptsOrder;
 			if (signals.tcpWindow !== undefined) req.tcpWindow = signals.tcpWindow;
+			if (signals.tcpProbe !== undefined) req.tcpProbe = signals.tcpProbe;
 
-			const hasAny = Object.values(signals).some((v) => v !== undefined);
+			const { tcpProbe, ...scalarSignals } = signals;
+			const hasAny = Object.values(scalarSignals).some((v) => v !== undefined);
 			if (hasAny) {
-				req.logger = req.logger.with(signals, "rawTlsSignals");
+				req.logger = req.logger.with(scalarSignals, "rawTlsSignals");
 			}
 			next();
 		} catch (err) {

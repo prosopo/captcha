@@ -59,6 +59,7 @@ import {
 	MatchedAccessRuleSchema,
 } from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
+import { type TcpProbeRecord, TcpProbeRecordSchema } from "./tcpProbe.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -552,6 +553,7 @@ export const SessionSchema = object({
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
 	tcpWindow: number().min(0).max(65535).optional(),
+	tcpProbe: TcpProbeRecordSchema.optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -699,6 +701,10 @@ export type Session = {
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
 	tcpWindow?: number;
+	// Everything tcp-probe recorded for this connection, including packets
+	// after the ClientHello. Also present on a miss, so the blank rate is
+	// measurable from stored sessions.
+	tcpProbe?: TcpProbeRecord;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the

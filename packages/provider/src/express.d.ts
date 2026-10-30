@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import type { IPInfoResponse } from "@prosopo/types";
+import type { IPInfoResponse, TcpProbeRecord } from "@prosopo/types";
 import type { TFunction } from "i18next";
 export interface AugmentedRequest {
 	t: TFunction;
@@ -47,6 +47,7 @@ export interface AugmentedRequest {
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
 	tcpWindow?: number;
+	tcpProbe?: TcpProbeRecord;
 }
 
 declare global {
@@ -73,6 +74,7 @@ declare global {
 			tcpOptsFlags?: number;
 			tcpOptsOrder?: number;
 			tcpWindow?: number;
+			tcpProbe?: TcpProbeRecord;
 		}
 		interface Locals {
 			padBytes?: number;

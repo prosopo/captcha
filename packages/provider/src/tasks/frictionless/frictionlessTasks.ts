@@ -181,6 +181,7 @@ export class FrictionlessManager extends CaptchaManager {
 			tcpOptsFlags: params.tcpOptsFlags,
 			tcpOptsOrder: params.tcpOptsOrder,
 			tcpWindow: params.tcpWindow,
+			tcpProbe: params.tcpProbe,
 			refreshOf: params.refreshOf,
 			refreshCount: params.refreshCount,
 			refreshedAfterMs: params.refreshedAfterMs,
@@ -244,6 +245,7 @@ export class FrictionlessManager extends CaptchaManager {
 			tcpOptsFlags,
 			tcpOptsOrder,
 			tcpWindow,
+			tcpProbe,
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
@@ -311,6 +313,7 @@ export class FrictionlessManager extends CaptchaManager {
 			tcpOptsFlags,
 			tcpOptsOrder,
 			tcpWindow,
+			tcpProbe,
 			...(matchedRule && { matchedRule }),
 			// Stamped at issuance, not only mirrored up at solve time, so a
 			// session that is never solved still correlates back to the render.

@@ -858,6 +858,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	tcpOptsFlags: { type: Number, required: false },
 	tcpOptsOrder: { type: Number, required: false },
 	tcpWindow: { type: Number, required: false },
+	tcpProbe: { type: Schema.Types.Mixed, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
