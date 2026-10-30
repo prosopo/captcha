@@ -371,9 +371,9 @@ describe("ClientSettingsSchema", () => {
 		).toBe(false);
 	});
 
-	it("defaults the IP detector risk weight to 0", () => {
+	it("leaves the IP detector risk weight unset when absent, which the provider reads as 0", () => {
 		expect(ipDetectorRiskWeightDefault).toBe(0);
-		expect(parse(minimal).ipDetectorRiskWeight).toBe(0);
+		expect(parse(minimal).ipDetectorRiskWeight).toBeUndefined();
 	});
 
 	it("accepts an IP detector risk weight from 0 to 1", () => {

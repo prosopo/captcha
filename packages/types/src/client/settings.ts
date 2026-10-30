@@ -920,11 +920,10 @@ export const ClientSettingsSchema = object({
 	autoBanScoreThreshold: number().min(0).optional(),
 	// How much of the IP's detector risk is added to the session's bot score
 	// before the score ladder is applied. 0 leaves the score untouched.
-	ipDetectorRiskWeight: number()
-		.min(0)
-		.max(1)
-		.optional()
-		.default(ipDetectorRiskWeightDefault),
+	// Optional with no parse default, so code that builds a full settings
+	// object does not have to know the field; the provider reads an absent
+	// weight as `ipDetectorRiskWeightDefault`.
+	ipDetectorRiskWeight: number().min(0).max(1).optional(),
 	// Tolerance in pixels between the release point and the puzzle target
 	// centre (Euclidean distance). Default 15 matches what real solvers
 	// actually hit. The ceiling is deliberately larger than the puzzle
