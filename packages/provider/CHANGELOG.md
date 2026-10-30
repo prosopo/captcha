@@ -1,5 +1,32 @@
 # @prosopo/provider
 
+## 5.25.0
+### Minor Changes
+
+- 8bf0957: The IP lookup now reads a detector risk for the address (a number from 0 to 1, or nothing when there is no evidence) and keeps it on the lookup result, so it is saved with the session's IP info and written to the frictionless decision log next to the session's own bot score.
+  
+  Sites get a new setting, `ipDetectorRiskWeight` (0 to 1, default 0). When it is above 0, the frictionless flow adds weight × risk to the bot score, capped at 1, before comparing it with the site's thresholds. It can only change which challenge is served; it never blocks. The amount added is recorded in the session's score components, and the log shows the score before and after. At the default of 0 nothing changes.
+
+### Patch Changes
+
+- Updated dependencies [e6b2206]
+- Updated dependencies [8bf0957]
+- Updated dependencies [11a38cc]
+  - @prosopo/user-access-policy@3.15.13
+  - @prosopo/types@5.22.0
+  - @prosopo/types-database@5.15.0
+  - @prosopo/ipinfo@0.5.0
+  - @prosopo/database@4.4.4
+  - @prosopo/api@4.8.4
+  - @prosopo/api-express-router@3.3.9
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.17
+  - @prosopo/env@3.6.86
+  - @prosopo/fingerprint@2.8.8
+  - @prosopo/keyring@2.10.17
+  - @prosopo/load-balancer@2.11.21
+  - @prosopo/types-env@2.11.32
+
 ## 5.24.0
 ### Minor Changes
 

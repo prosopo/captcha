@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/fingerprint",
-	"version": "2.8.7",
+	"version": "2.8.8",
 	"description": "Provider fingerprint",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
