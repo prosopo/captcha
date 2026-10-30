@@ -1,5 +1,20 @@
 # @prosopo/types-database
 
+## 5.14.0
+### Minor Changes
+
+- fb7e3ec: A traffic-filter exception can now be conditioned on whether the IP is on a mobile network (`mobile: true` or `mobile: false`). This lets a site block high-scoring proxies everywhere except on carrier networks, where one shared address carries real phones alongside the rented SIMs that put it on proxy lists.
+- 25a151e: Every traffic-filter category (VPN, proxy, Tor, abuser, datacenter, mobile, satellite, crawler) now has the same two name lists. `nameAllowlist` takes a matching network out of that category, for example letting "VPN by Google" past a VPN block. `nameDenylist` keeps a matching network in that category even when it would otherwise be let out. Until now only the datacenter category had these lists. The old top-level `datacenterNameAllowlist` and `datacenterNameDenylist` still work and count as the datacenter category's lists. iCloud Private Relay is let through by every category except Tor unless a site denylists it.
+
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.12
+
 ## 5.13.2
 ### Patch Changes
 

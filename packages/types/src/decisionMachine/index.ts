@@ -484,6 +484,11 @@ export interface RoutingMachineRawSignals {
 	// The widget reports (0,0) for a keyboard activation as well as for the
 	// frictionless auto-start. `postPow` only.
 	coordsAllZero?: boolean;
+	// Canonical indices of the detectors that fired on the frictionless
+	// payload, as persisted in `scoreComponents.triggeredDetectors`. On
+	// `postPow` and the dedup replay they come from the originating Session.
+	// Undefined when none fired or the payload could not be read.
+	triggeredDetectors?: number[];
 }
 
 export type RoutingMachinePhase = "route" | "postPow";

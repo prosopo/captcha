@@ -74,6 +74,8 @@ export const puzzleToleranceDefault = 15;
 export const puzzleMaxDifficultyDefault = 3;
 export const puzzleMaxDifficultyMax = 4;
 
+export const ipDetectorRiskWeightDefault = 0;
+
 // Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
 // `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
 // authoritative bounds and defaults; the renderer just receives resolved
@@ -760,19 +762,24 @@ const countryCodesSchema = array(
 // filter's `marketCountries`: true matches inside the market, false outside
 // it, and neither matches while the market is unknown. `minAbuserScore`
 // compares against the higher of the IP's own and its company's abuser
-// score, inclusive.
+// score, inclusive. `mobile` tests the IP's `isMobile`: `mobile: false` keeps
+// a block off carrier networks, whose shared addresses carry real phones
+// alongside the rented SIMs that put them on proxy lists.
 export const TrafficCategoryExceptionSchema =
 	TrafficCategoryActionSchema.extend({
 		countries: countryCodesSchema.min(1).optional(),
 		inMarket: boolean().optional(),
 		minAbuserScore: number().min(0).max(1).optional(),
+		mobile: boolean().optional(),
 	}).refine(
 		(exception) =>
 			exception.countries !== undefined ||
 			exception.inMarket !== undefined ||
-			exception.minAbuserScore !== undefined,
+			exception.minAbuserScore !== undefined ||
+			exception.mobile !== undefined,
 		{
-			message: "An exception needs countries, inMarket or minAbuserScore",
+			message:
+				"An exception needs countries, inMarket, minAbuserScore or mobile",
 		},
 	);
 
@@ -911,6 +918,13 @@ export const ClientSettingsSchema = object({
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
+	// How much of the IP's detector risk is added to the session's bot score
+	// before the score ladder is applied. 0 leaves the score untouched.
+	ipDetectorRiskWeight: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(ipDetectorRiskWeightDefault),
 	// Tolerance in pixels between the release point and the puzzle target
 	// centre (Euclidean distance). Default 15 matches what real solvers
 	// actually hit. The ceiling is deliberately larger than the puzzle

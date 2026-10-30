@@ -223,6 +223,12 @@ const exceptionApplies = (
 			return false;
 		}
 	}
+	if (
+		exception.mobile !== undefined &&
+		Boolean(ipInfo.isMobile) !== exception.mobile
+	) {
+		return false;
+	}
 	return (
 		exception.minAbuserScore === undefined ||
 		maxAbuserScore(ipInfo) >= exception.minAbuserScore
@@ -241,7 +247,8 @@ const policyForIp = (
 		(candidate) => candidate.action === TrafficFilterAction.Block,
 	);
 	if (!exception) return policy;
-	const { countries, inMarket, minAbuserScore, ...exceptionPolicy } = exception;
+	const { countries, inMarket, minAbuserScore, mobile, ...exceptionPolicy } =
+		exception;
 	return exceptionPolicy;
 };
 

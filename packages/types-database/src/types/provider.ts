@@ -873,6 +873,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		triggeredDetectors: { type: [Number], required: false },
 		shadowDomPenalty: { type: Boolean, required: false },
 		dnsAsymmetry: { type: Number, required: false },
+		ipDetectorRisk: { type: Number, required: false },
 	},
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },

@@ -461,6 +461,12 @@ export default (
 									...(dedupTrafficPolicies && {
 										trafficPolicies: dedupTrafficPolicies,
 									}),
+									...(dedup.session.scoreComponents?.triggeredDetectors?.length
+										? {
+												triggeredDetectors:
+													dedup.session.scoreComponents.triggeredDetectors,
+											}
+										: {}),
 								},
 							},
 						)
@@ -1013,6 +1019,8 @@ export default (
 					// Which egress categories this site blocks, so egress-sensitive
 					// route rules can skip sites that accept VPN / proxy / DC users.
 					...(trafficPolicies && { trafficPolicies }),
+					...(triggeredDetectors &&
+						triggeredDetectors.length > 0 && { triggeredDetectors }),
 				},
 			});
 

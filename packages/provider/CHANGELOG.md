@@ -1,5 +1,35 @@
 # @prosopo/provider
 
+## 5.24.0
+### Minor Changes
+
+- b18a733: Routing machines now see which detectors fired, as `raw.triggeredDetectors`.
+  
+  The provider already stored the triggered detectors on the session but never passed them to the routing machine, so a routing rule could not act on a single detector. They are now passed on the first request, on the post-PoW route and on the dedup replay. On the last two they come from the stored session.
+- fb7e3ec: A traffic-filter exception can now be conditioned on whether the IP is on a mobile network (`mobile: true` or `mobile: false`). This lets a site block high-scoring proxies everywhere except on carrier networks, where one shared address carries real phones alongside the rented SIMs that put it on proxy lists.
+- 25a151e: Every traffic-filter category (VPN, proxy, Tor, abuser, datacenter, mobile, satellite, crawler) now has the same two name lists. `nameAllowlist` takes a matching network out of that category, for example letting "VPN by Google" past a VPN block. `nameDenylist` keeps a matching network in that category even when it would otherwise be let out. Until now only the datacenter category had these lists. The old top-level `datacenterNameAllowlist` and `datacenterNameDenylist` still work and count as the datacenter category's lists. iCloud Private Relay is let through by every category except Tor unless a site denylists it.
+
+### Patch Changes
+
+- 3815778: iCloud Private Relay users are no longer blocked by a site's VPN or proxy rule. Our IP data provider has started marking some Private Relay addresses as VPNs, so sites that block VPNs were turning away ordinary iPhone users. Private Relay addresses are now exempt from every traffic-filter category except Tor, unless the site owner names Private Relay in `datacenterNameDenylist`.
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/types-database@5.14.0
+  - @prosopo/api@4.8.3
+  - @prosopo/api-express-router@3.3.8
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.3
+  - @prosopo/datasets@3.2.16
+  - @prosopo/env@3.6.85
+  - @prosopo/fingerprint@2.8.7
+  - @prosopo/ipinfo@0.4.29
+  - @prosopo/keyring@2.10.16
+  - @prosopo/load-balancer@2.11.20
+  - @prosopo/types-env@2.11.31
+  - @prosopo/user-access-policy@3.15.12
+
 ## 5.23.2
 ### Patch Changes
 
