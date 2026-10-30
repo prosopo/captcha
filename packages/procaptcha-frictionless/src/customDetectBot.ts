@@ -21,9 +21,13 @@ import {
 } from "@prosopo/fingerprint";
 import {
 	ExtensionLoader,
+	PAGE_BEHAVIOUR_LIMITS,
+	getPageBehaviour,
 	getProcaptchaRandomActiveProvider,
+	mergeBehaviourPoints,
 	pickIpMode,
 	resolveClientSessionId,
+	stopPageBehaviourCapture,
 	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import type {
@@ -193,6 +197,25 @@ const fingerprintProofIfReady = async (): Promise<string | undefined> => {
 		return undefined;
 	}
 };
+
+type BehaviourCollector<T> = {
+	start: () => void;
+	stop: () => void;
+	getData: () => T[];
+	clear: () => void;
+};
+
+const withPageBehaviour = <
+	T extends { x: number; y: number; timestamp: number; eventType?: string },
+>(
+	collector: BehaviourCollector<T> | undefined,
+	early: readonly T[],
+	limit: number,
+): BehaviourCollector<T> | undefined =>
+	collector && {
+		...collector,
+		getData: () => mergeBehaviourPoints(early, collector.getData(), limit),
+	};
 
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
@@ -379,6 +402,10 @@ const customDetectBot: BotDetectionFunction = async (
 	);
 
 	const userAccount = detectionResult.userAccount;
+	// The detector's trackers are running now, so the page-level capture has
+	// done its job; what it recorded is merged into every solve below.
+	stopPageBehaviourCapture();
+	const pageBehaviour = getPageBehaviour();
 
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
@@ -424,10 +451,26 @@ const customDetectBot: BotDetectionFunction = async (
 		agent: captcha.agent,
 		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		// Map specific trackers to generic behavioral collectors
-		behaviorCollector1: detectionResult.mouseTracker,
-		behaviorCollector2: detectionResult.touchTracker,
-		behaviorCollector3: detectionResult.clickTracker,
-		behaviorCollector4: detectionResult.scrollTracker,
+		behaviorCollector1: withPageBehaviour(
+			detectionResult.mouseTracker,
+			pageBehaviour?.mouse ?? [],
+			PAGE_BEHAVIOUR_LIMITS.mouse,
+		),
+		behaviorCollector2: withPageBehaviour(
+			detectionResult.touchTracker,
+			pageBehaviour?.touch ?? [],
+			PAGE_BEHAVIOUR_LIMITS.touch,
+		),
+		behaviorCollector3: withPageBehaviour(
+			detectionResult.clickTracker,
+			pageBehaviour?.press ?? [],
+			PAGE_BEHAVIOUR_LIMITS.press,
+		),
+		behaviorCollector4: withPageBehaviour(
+			detectionResult.scrollTracker,
+			pageBehaviour?.scroll ?? [],
+			PAGE_BEHAVIOUR_LIMITS.scroll,
+		),
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,

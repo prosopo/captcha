@@ -26,6 +26,7 @@ export * from "./callbacks/defaultEvents.js";
 export * from "./extensionLoader.js";
 export * from "./simdReadings.js";
 export * from "./behavioralData.js";
+export * from "./pageBehaviour.js";
 export * from "./elements/window.js";
 export * from "./dom/component.js";
 export * from "./dom/element.js";
