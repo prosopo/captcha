@@ -14,8 +14,8 @@
 
 import { CaptchaStatus } from "@prosopo/types";
 import {
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
 } from "@prosopo/types-database";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { type Model } from "mongoose";
@@ -24,7 +24,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // Regression guard for a bug the mongoose 9 upgrade surfaced in the image
 // captcha write path.
 //
-// `storeUserImageCaptchaSolution` upserts the commitment and then hands the
+// `storeImageCaptchaSolution` upserts the commitment and then hands the
 // *same* record object to `CentralDbStreamer.streamImageRecord`, which
 // spreads it into `{ $set: safeDoc }`. Mongoose's `moveImmutableProperties`
 // runs on every upsert and mutates the update object it was given in place:
@@ -45,16 +45,16 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 describe("commitment upsert does not mutate the caller's record", () => {
 	let mongod: MongoMemoryServer;
 	let conn: mongoose.Connection;
-	let CommitmentModel: Model<UserCommitmentRecord>;
+	let CommitmentModel: Model<ImageCaptchaRecord>;
 
 	beforeAll(async () => {
 		mongod = await MongoMemoryServer.create();
 		conn = await mongoose
 			.createConnection(mongod.getUri(), { dbName: "mutation_test" })
 			.asPromise();
-		CommitmentModel = conn.model<UserCommitmentRecord>(
+		CommitmentModel = conn.model<ImageCaptchaRecord>(
 			"commitment",
-			UserCommitmentRecordSchema,
+			ImageCaptchaRecordSchema,
 		);
 	});
 

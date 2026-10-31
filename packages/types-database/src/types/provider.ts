@@ -29,18 +29,19 @@ import {
 	DecisionMachineScope,
 	type FingerprintSummaryStored,
 	type IconOrderCaptchaStored,
+	type ImageCaptcha,
 	IpAddressType,
 	ModeEnum,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
+	RequestType,
 	type ResultReason,
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
 	type StoredIconTarget,
 	Tier,
-	type UserCommitment,
 	type UserSolutionSchema,
 } from "@prosopo/types";
 import {
@@ -177,7 +178,10 @@ export type AudioCaptchaRecord = mongoose.Document & AudioCaptchaStored;
 
 export type IconOrderCaptchaRecord = mongoose.Document & IconOrderCaptchaStored;
 
-export type UserCommitmentRecord = mongoose.Document & UserCommitment;
+export type ImageCaptchaRecord = mongoose.Document & ImageCaptcha;
+
+/** @deprecated Use {@link ImageCaptchaRecord}. */
+export type UserCommitmentRecord = ImageCaptchaRecord;
 
 export type Tables<E extends string | number | symbol> = {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -256,7 +260,15 @@ const fingerprintSummaryField = {
 	required: false,
 };
 
+const requestTypeField = (requestType: RequestType) => ({
+	type: String,
+	enum: Object.values(RequestType),
+	required: false,
+	default: requestType,
+});
+
 export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
+	requestType: requestTypeField(RequestType.powcaptcha),
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
@@ -490,6 +502,7 @@ const pointerEventSchema = () =>
 
 export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	...interactiveCaptchaRecordFields,
+	requestType: requestTypeField(RequestType.puzzlecaptcha),
 	targetX: { type: Number, required: true },
 	targetY: { type: Number, required: true },
 	originX: { type: Number, required: true },
@@ -532,6 +545,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 
 export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
 	...interactiveCaptchaRecordFields,
+	requestType: requestTypeField(RequestType.iconordercaptcha),
 	tolerance: { type: Number, required: true },
 	targets: {
 		type: [
@@ -608,6 +622,7 @@ const indexInteractiveCaptchaRecord = <T>(schema: Schema<T>): void => {
 
 export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
 	...interactiveCaptchaRecordFields,
+	requestType: requestTypeField(RequestType.audiocaptcha),
 	answer: { type: String, required: true },
 	submittedAnswer: { type: String, required: false },
 	replays: { type: Number, required: false },
@@ -629,7 +644,8 @@ indexInteractiveCaptchaRecord(PuzzleCaptchaRecordSchema);
 indexInteractiveCaptchaRecord(IconOrderCaptchaRecordSchema);
 indexInteractiveCaptchaRecord(AudioCaptchaRecordSchema);
 
-export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
+export const ImageCaptchaRecordSchema = new Schema<ImageCaptchaRecord>({
+	requestType: requestTypeField(RequestType.imagecaptcha),
 	fingerprintSummary: fingerprintSummaryField,
 	userAccount: { type: String, required: true },
 	dappAccount: { type: String, required: true },
@@ -719,13 +735,13 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	labelledAt: { type: Date, required: false },
 });
 // Set an index on the commitment id field, descending
-UserCommitmentRecordSchema.index({ id: -1 });
+ImageCaptchaRecordSchema.index({ id: -1 });
 // Supports the labelled-dataset export query (`{ label: { $exists: true } }`).
-UserCommitmentRecordSchema.index({ label: 1, dappAccount: 1 });
-UserCommitmentRecordSchema.index({
+ImageCaptchaRecordSchema.index({ label: 1, dappAccount: 1 });
+ImageCaptchaRecordSchema.index({
 	lastUpdatedTimestamp: 1,
 });
-UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
+ImageCaptchaRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 // Compound for the anomaly-detector top-level match
 // (`{dappAccount: {$in: [...]}, requestedAtTimestamp: {$gte, $lt}}` followed
 // by `{$sort: {requestedAtTimestamp: -1}}`). Mirrors the equivalent index on
@@ -734,21 +750,21 @@ UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
 // FETCH-filters every doc by `dappAccount` — measured 2.7× wasted docs on a
 // 1h window for a single high-share tenant, degrades linearly with window
 // length and inversely with tenant share.
-UserCommitmentRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
-UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
-UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
-UserCommitmentRecordSchema.index({ "result.reason": 1 });
-UserCommitmentRecordSchema.index({ "ipInfo.countryCode": 1 });
-UserCommitmentRecordSchema.index({ "ipInfo.isVPN": 1 });
-UserCommitmentRecordSchema.index({ requestHash: -1 });
-UserCommitmentRecordSchema.index({ pending: 1 });
-UserCommitmentRecordSchema.index({ ipInfo: 1 });
-UserCommitmentRecordSchema.index({ parsedUserAgentInfo: 1 });
+ImageCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+ImageCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
+ImageCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
+ImageCaptchaRecordSchema.index({ "result.reason": 1 });
+ImageCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
+ImageCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
+ImageCaptchaRecordSchema.index({ requestHash: -1 });
+ImageCaptchaRecordSchema.index({ pending: 1 });
+ImageCaptchaRecordSchema.index({ ipInfo: 1 });
+ImageCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
 // Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
 // pendingStage_partial for rationale. Fixes the runaway
-// `getUnstoredDappUserCommitments` sweep that was choosing the plain `_id: 1`
+// `getUnstoredImageCaptchas` sweep that was choosing the plain `_id: 1`
 // index and scanning ~1M docs per page under a large pending backlog.
-UserCommitmentRecordSchema.index(
+ImageCaptchaRecordSchema.index(
 	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
@@ -757,7 +773,7 @@ UserCommitmentRecordSchema.index(
 );
 // See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
 // for image captchas.
-UserCommitmentRecordSchema.index(
+ImageCaptchaRecordSchema.index(
 	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
 	{
 		name: "spamEmailCount_partial",
@@ -768,13 +784,16 @@ UserCommitmentRecordSchema.index(
 	},
 );
 // See `PoWCaptchaRecordSchema.blocked_partial`.
-UserCommitmentRecordSchema.index(
+ImageCaptchaRecordSchema.index(
 	{ blocked: 1 },
 	{
 		name: "blocked_partial",
 		partialFilterExpression: { blocked: true },
 	},
 );
+
+/** @deprecated Use {@link ImageCaptchaRecordSchema}. */
+export const UserCommitmentRecordSchema = ImageCaptchaRecordSchema;
 
 export const DatasetRecordSchema = new Schema<DatasetWithIds>({
 	contentTree: { type: [[String]], required: true },
@@ -857,6 +876,7 @@ ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
 export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
+	requestType: requestTypeField(RequestType.session),
 	fingerprintSummary: fingerprintSummaryField,
 	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
@@ -947,7 +967,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	matchedRule: { type: Schema.Types.Mixed, required: false },
 	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
 	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
-	// UserCommitment).
+	// ImageCaptcha).
 	ipInfo: { type: Object, required: false },
 	headers: { type: Object, required: false },
 	result: {
@@ -1389,9 +1409,9 @@ export interface IProviderDatabase extends IDatabase {
 		datasetId: Hash | string | Uint8Array,
 	): Promise<DatasetBase>;
 
-	storeUserImageCaptchaSolution(
+	storeImageCaptchaSolution(
 		captchas: CaptchaSolution[],
-		commit: UserCommitment,
+		commit: ImageCaptcha,
 	): Promise<void>;
 
 	storePendingImageCommitment(
@@ -1439,27 +1459,25 @@ export interface IProviderDatabase extends IDatabase {
 		commitmentId: string,
 	): Promise<UserSolutionRecord | undefined>;
 
-	getDappUserCommitmentById(
-		commitmentId: string,
-	): Promise<UserCommitment | undefined>;
+	getImageCaptchaById(commitmentId: string): Promise<ImageCaptcha | undefined>;
 
-	getDappUserCommitmentByAccount(
+	getImageCaptchaByAccount(
 		userAccount: string,
 		dappAccount: string,
-	): Promise<UserCommitmentRecord[]>;
+	): Promise<ImageCaptchaRecord[]>;
 
-	approveDappUserCommitment(
+	approveImageCaptcha(
 		commitmentId: string,
 		coords?: [number, number][][],
 	): Promise<void>;
 
-	disapproveDappUserCommitment(
+	disapproveImageCaptcha(
 		commitmentId: string,
 		reason?: ResultReason,
 		coords?: [number, number][][],
 	): Promise<void>;
 
-	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
+	getCheckedImageCaptchas(): Promise<ImageCaptchaRecord[]>;
 
 	/**
 	 * Keyset-paginated sweep of pending user commitments. Callers pass the
@@ -1468,12 +1486,12 @@ export interface IProviderDatabase extends IDatabase {
 	 * by the compound `pendingStage_partial` index — cost scales with page
 	 * size, not with total collection size.
 	 */
-	getUnstoredDappUserCommitments(
+	getUnstoredImageCaptchas(
 		limit?: number,
 		afterId?: unknown,
-	): Promise<UserCommitmentRecord[]>;
+	): Promise<ImageCaptchaRecord[]>;
 
-	markDappUserCommitmentsStored(
+	markImageCaptchasStored(
 		commitmentIds: Hash[],
 		asOfTimestamp?: Date,
 	): Promise<void>;
@@ -1484,11 +1502,11 @@ export interface IProviderDatabase extends IDatabase {
 	 * proceed when it claimed its commitment, otherwise a concurrent verify
 	 * of the same token already did.
 	 */
-	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number>;
+	markImageCaptchasChecked(commitmentIds: Hash[]): Promise<number>;
 
-	updateDappUserCommitment(
-		commitmentId: UserCommitment["id"],
-		updates: Partial<UserCommitment>,
+	updateImageCaptcha(
+		commitmentId: ImageCaptcha["id"],
+		updates: Partial<ImageCaptcha>,
 	): Promise<void>;
 
 	/**
@@ -1504,25 +1522,25 @@ export interface IProviderDatabase extends IDatabase {
 
 	/**
 	 * Keyset-paginated sweep of pending PoW captchas. See
-	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 * {@link getUnstoredImageCaptchas} for the resumption contract.
 	 */
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,
 		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]>;
 
-	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	/** Same claim contract as {@link markImageCaptchasChecked}. */
 	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<number>;
 
-	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	/** Same claim contract as {@link markImageCaptchasChecked}. */
 	markPuzzleCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
 
-	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	/** Same claim contract as {@link markImageCaptchasChecked}. */
 	markIconOrderCaptchaRecordChecked(
 		challenge: PoWChallengeId,
 	): Promise<boolean>;
 
-	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	/** Same claim contract as {@link markImageCaptchasChecked}. */
 	markAudioCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
 
 	markDappUserPoWCommitmentsStored(
@@ -1532,7 +1550,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
 
-	flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
+	flagProcessedImageCaptchas(commitmentIds: Hash[]): Promise<void>;
 
 	getLastScheduledTaskStatus(
 		task: ScheduledTaskNames,
@@ -1773,7 +1791,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	/**
 	 * Keyset-paginated sweep of pending session records. See
-	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 * {@link getUnstoredImageCaptchas} for the resumption contract.
 	 */
 	getUnstoredSessionRecords(
 		limit: number,

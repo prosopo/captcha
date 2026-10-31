@@ -41,6 +41,8 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IconOrderCaptchaStored,
+	type ImageCaptcha,
+	ImageCaptchaSchema,
 	type InteractiveCaptchaStored,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
@@ -48,6 +50,7 @@ import {
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
+	RequestType,
 	type ResultReason,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -58,8 +61,6 @@ import {
 	type StoredCaptcha,
 	type StoredIconTarget,
 	StoredStatusNames,
-	type UserCommitment,
-	UserCommitmentSchema,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
@@ -75,6 +76,8 @@ import {
 	type IUserDataSlim,
 	type IconOrderCaptchaRecord,
 	IconOrderCaptchaRecordSchema,
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type ProjectedSession,
@@ -90,8 +93,6 @@ import {
 	type SpamEmailDomainRecord,
 	SpamEmailDomainRecordSchema,
 	type Tables,
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
 	type UserSolutionRecord,
 	UserSolutionRecordSchema,
 } from "@prosopo/types-database";
@@ -205,7 +206,7 @@ const PROVIDER_TABLES = [
 	{
 		collectionName: TableNames.commitment,
 		modelName: "UserCommitment",
-		schema: UserCommitmentRecordSchema,
+		schema: ImageCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.usersolution,
@@ -818,16 +819,16 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's captcha solution commitment
 	 */
-	async storeUserImageCaptchaSolution(
+	async storeImageCaptchaSolution(
 		captchas: CaptchaSolution[],
-		commit: UserCommitment,
+		commit: ImageCaptcha,
 	): Promise<void> {
-		const commitmentRecord = UserCommitmentSchema.parse({
+		const commitmentRecord = ImageCaptchaSchema.parse({
 			...commit,
 			lastUpdatedTimestamp: new Date(),
 		});
 		if (captchas.length) {
-			const filter: Pick<UserCommitmentRecord, "id"> = {
+			const filter: Pick<ImageCaptchaRecord, "id"> = {
 				id: commit.id,
 			};
 			// Wrap in an explicit `$set` over a shallow copy. Passing the
@@ -863,7 +864,7 @@ export class ProviderDatabase
 			}));
 			await this.tables?.usersolution.bulkWrite(ops);
 			this.centralStreamer?.streamImageRecord(
-				commitmentRecord as UserCommitmentRecord,
+				commitmentRecord as ImageCaptchaRecord,
 				(ts) =>
 					this.tables.commitment
 						.updateOne({ id: commit.id }, { $set: { storedAtTimestamp: ts } })
@@ -1890,13 +1891,13 @@ export class ProviderDatabase
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
 	 */
-	async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
+	async getCheckedImageCaptchas(): Promise<ImageCaptchaRecord[]> {
 		const filter: {
-			[key in keyof Pick<UserCommitmentRecord, "serverChecked">]: boolean;
+			[key in keyof Pick<ImageCaptchaRecord, "serverChecked">]: boolean;
 		} = { [StoredStatusNames.serverChecked]: true };
 		const docs = await this.tables?.commitment
 			.find(filter)
-			.lean<UserCommitmentRecord[]>();
+			.lean<ImageCaptchaRecord[]>();
 		return docs || [];
 	}
 
@@ -1906,9 +1907,9 @@ export class ProviderDatabase
 	 * Served by the compound `pendingStage_partial` index
 	 * (`{pendingStage:1, _id:1}` partial where pendingStage:true). Records
 	 * have `pendingStage: true` set on insert and on every mutation (see
-	 * `updateDappUserCommitment`, `markDappUserCommitmentsChecked`,
-	 * `approveDappUserCommitment`, `disapproveDappUserCommitment`,
-	 * `storePendingImageCommitment`). `markDappUserCommitmentsStored` clears
+	 * `updateImageCaptcha`, `markImageCaptchasChecked`,
+	 * `approveImageCaptcha`, `disapproveImageCaptcha`,
+	 * `storePendingImageCommitment`). `markImageCaptchasStored` clears
 	 * the flag after a successful stage, guarded by `lastUpdatedTimestamp`
 	 * so an in-flight update isn't lost.
 	 *
@@ -1927,10 +1928,10 @@ export class ProviderDatabase
 	 * once but doesn't prevent the regression re-appearing after future
 	 * catalog changes — the hint makes the choice explicit.
 	 */
-	async getUnstoredDappUserCommitments(
+	async getUnstoredImageCaptchas(
 		limit = 1000,
 		afterId?: unknown,
-	): Promise<UserCommitmentRecord[]> {
+	): Promise<ImageCaptchaRecord[]> {
 		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
 			pendingStage: true,
 		};
@@ -1942,7 +1943,7 @@ export class ProviderDatabase
 			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
 			.limit(limit)
-			.lean<UserCommitmentRecord[]>();
+			.lean<ImageCaptchaRecord[]>();
 		return docs || [];
 	}
 
@@ -1954,7 +1955,7 @@ export class ProviderDatabase
 	 * fetch and mark-stored — those records will leave pendingStage set so
 	 * the next sweep picks them up.
 	 */
-	async markDappUserCommitmentsStored(
+	async markImageCaptchasStored(
 		commitmentIds: Hash[],
 		asOfTimestamp: Date = new Date(),
 	): Promise<void> {
@@ -1973,7 +1974,7 @@ export class ProviderDatabase
 
 	/** @description Mark a list of captcha commits as checked
 	 */
-	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number> {
+	async markImageCaptchasChecked(commitmentIds: Hash[]): Promise<number> {
 		const timestamp = new Date();
 		const result = await this.getTables().commitment.updateMany(
 			{ id: { $in: commitmentIds }, serverChecked: { $ne: true } },
@@ -1996,11 +1997,11 @@ export class ProviderDatabase
 
 	/** @description Update an image captcha commitment
 	 */
-	async updateDappUserCommitment(
-		commitmentId: UserCommitment["id"],
-		updates: Partial<UserCommitment>,
+	async updateImageCaptcha(
+		commitmentId: ImageCaptcha["id"],
+		updates: Partial<ImageCaptcha>,
 	) {
-		const filter: Pick<UserCommitment, "id"> = { id: commitmentId };
+		const filter: Pick<ImageCaptcha, "id"> = { id: commitmentId };
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
@@ -2080,7 +2081,7 @@ export class ProviderDatabase
 		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]> {
 		// Served by the compound `pendingStage_partial` index — see
-		// `getUnstoredDappUserCommitments` for the lifecycle of the flag
+		// `getUnstoredImageCaptchas` for the lifecycle of the flag
 		// and the keyset-pagination contract.
 		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
 			pendingStage: true,
@@ -2100,7 +2101,7 @@ export class ProviderDatabase
 	/** @description Mark a list of PoW captcha commits as stored.
 	 *
 	 * `asOfTimestamp` defaults to "now" but the sweep should pass the time
-	 * at which it fetched the batch. See markDappUserCommitmentsStored for
+	 * at which it fetched the batch. See markImageCaptchasStored for
 	 * the guard rationale.
 	 */
 	async markDappUserPoWCommitmentsStored(
@@ -2524,7 +2525,7 @@ export class ProviderDatabase
 	 * @description Get session records that have not been stored yet.
 	 *
 	 * Served by the compound `pendingStage_partial` index — see
-	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag and
+	 * `getUnstoredImageCaptchas` for the lifecycle of the flag and
 	 * the keyset-pagination contract. `checkAndRemoveSession` also flips
 	 * the flag so consumed sessions propagate to the central DB via the
 	 * next sweep.
@@ -2554,7 +2555,7 @@ export class ProviderDatabase
 	/** Mark a list of session records as stored.
 	 *
 	 * `asOfTimestamp` defaults to "now" but the sweep should pass the time
-	 * at which it fetched the batch. See markDappUserCommitmentsStored for
+	 * at which it fetched the batch. See markImageCaptchasStored for
 	 * the guard rationale.
 	 */
 	async markSessionRecordsStored(
@@ -2600,6 +2601,7 @@ export class ProviderDatabase
 			});
 		}
 		const pendingRecord = {
+			requestType: RequestType.imagecaptcha,
 			userAccount,
 			pending: true,
 			salt,
@@ -2613,7 +2615,7 @@ export class ProviderDatabase
 			// Deliberately NOT setting pendingStage here. Placeholder
 			// records have id: "" until the user submits a solution; if we
 			// flag them, the sweep picks them up via the partial index but
-			// then `markDappUserCommitmentsStored` runs
+			// then `markImageCaptchasStored` runs
 			// `{ id: { $in: ["", ...] } }` which collapses to a single ""
 			// bound and scans every empty-id row via the `id_-1` index —
 			// turning a cheap sweep into a fresh cache evictor. The real
@@ -2662,7 +2664,7 @@ export class ProviderDatabase
 				requestHash: requestHash,
 				pending: true,
 			})
-			.lean<UserCommitmentRecord>();
+			.lean<ImageCaptchaRecord>();
 
 		if (doc) {
 			return {
@@ -2913,19 +2915,19 @@ export class ProviderDatabase
 		// that supplied a session id — a token replay reported on solves that
 		// were earned in exactly the session they claimed.
 		clientMetaData: 1,
-	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
+	} as { [key in keyof Partial<ImageCaptchaRecord>]: 1 };
 
 	/**
 	 * @description Get dapp user commitment by user account
 	 * @param commitmentId
 	 */
-	async getDappUserCommitmentById(
+	async getImageCaptchaById(
 		commitmentId: string,
-	): Promise<UserCommitmentRecord | undefined> {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+	): Promise<ImageCaptchaRecord | undefined> {
+		const filter: Pick<ImageCaptchaRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
 			?.findOne(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION)
-			.lean<UserCommitmentRecord>();
+			.lean<ImageCaptchaRecord>();
 
 		const doc = await commitmentCursor;
 
@@ -2937,22 +2939,22 @@ export class ProviderDatabase
 	 * @param {string} userAccount
 	 * @param {string} dappAccount
 	 */
-	async getDappUserCommitmentByAccount(
+	async getImageCaptchaByAccount(
 		userAccount: string,
 		dappAccount: string,
-	): Promise<UserCommitmentRecord[]> {
-		const filter: Pick<UserCommitmentRecord, "userAccount" | "dappAccount"> = {
+	): Promise<ImageCaptchaRecord[]> {
+		const filter: Pick<ImageCaptchaRecord, "userAccount" | "dappAccount"> = {
 			userAccount,
 			dappAccount,
 		};
 		const sort = { sort: { _id: -1 } };
-		const docs: UserCommitmentRecord[] | null | undefined =
+		const docs: ImageCaptchaRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
 				?.find(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION, sort)
-				.lean<UserCommitmentRecord[]>();
+				.lean<ImageCaptchaRecord[]>();
 
-		return docs ? (docs as UserCommitmentRecord[]) : [];
+		return docs ? (docs as ImageCaptchaRecord[]) : [];
 	}
 
 	/**
@@ -2960,7 +2962,7 @@ export class ProviderDatabase
 	 * @param {string[]} commitmentId
 	 * @param coords
 	 */
-	async approveDappUserCommitment(
+	async approveImageCaptcha(
 		commitmentId: string,
 		coords?: [number, number][][],
 	): Promise<void> {
@@ -2982,7 +2984,7 @@ export class ProviderDatabase
 				blocked: isBlockingCaptchaResult(CaptchaType.image, result),
 				...(coords ? { coords } : {}),
 			};
-			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+			const filter: Pick<ImageCaptchaRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
@@ -2990,7 +2992,7 @@ export class ProviderDatabase
 				() =>
 					this.tables.commitment
 						.findOne({ id: commitmentId })
-						.lean<UserCommitmentRecord>(),
+						.lean<ImageCaptchaRecord>(),
 				(ts) =>
 					this.tables.commitment
 						.updateOne(
@@ -3019,7 +3021,7 @@ export class ProviderDatabase
 	 * @param coords
 	 * @param reason
 	 */
-	async disapproveDappUserCommitment(
+	async disapproveImageCaptcha(
 		commitmentId: string,
 		reason?: ResultReason,
 		coords?: [number, number][][],
@@ -3048,7 +3050,7 @@ export class ProviderDatabase
 				...(coords ? { coords } : {}),
 			};
 
-			const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+			const filter: Pick<ImageCaptchaRecord, "id"> = { id: commitmentId };
 			await this.tables?.commitment
 				?.findOneAndUpdate(filter, { $set: updateDoc }, { upsert: false })
 				.lean();
@@ -3056,7 +3058,7 @@ export class ProviderDatabase
 				() =>
 					this.tables.commitment
 						.findOne({ id: commitmentId })
-						.lean<UserCommitmentRecord>(),
+						.lean<ImageCaptchaRecord>(),
 				(ts) =>
 					this.tables.commitment
 						.updateOne(
@@ -3107,7 +3109,7 @@ export class ProviderDatabase
 	 * @description Flag dapp users' commitments as used by calculated solution
 	 * @param {string[]} commitmentIds
 	 */
-	async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
+	async flagProcessedImageCaptchas(commitmentIds: Hash[]): Promise<void> {
 		try {
 			const distinctCommitmentIds = [...new Set(commitmentIds)];
 			await this.tables?.commitment

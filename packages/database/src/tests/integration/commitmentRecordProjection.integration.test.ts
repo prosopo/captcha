@@ -26,7 +26,7 @@ import { ProviderDatabase } from "../../databases/provider.js";
 // (`getSessionRecordBySessionId` missing tcp-probe fields), this time on
 // the two commitment fetchers used by `verifyImageCaptchaSolution`.
 //
-// Both `getDappUserCommitmentById` and `getDappUserCommitmentByAccount`
+// Both `getImageCaptchaById` and `getImageCaptchaByAccount`
 // project a subset of the record; the verify path then reads fields off
 // the returned `solution`. If a field the verify path reads is absent
 // from the projection it lands as `undefined`, silently degrading
@@ -134,7 +134,7 @@ const buildCommitment = (id: string) => ({
 	},
 });
 
-describe("getDappUserCommitment{ById,ByAccount} projection", () => {
+describe("getImageCaptcha{ById,ByAccount} projection", () => {
 	let mongod: MongoMemoryServer;
 	let db: TestProviderDatabase;
 
@@ -157,7 +157,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		const id = commitmentIdOf("bdp-by-id");
 		await db.tables.commitment.create(buildCommitment(id));
 
-		const got = await db.getDappUserCommitmentById(id);
+		const got = await db.getImageCaptchaById(id);
 		if (!got) throw new Error("commitment not returned");
 
 		expect(got.behavioralDataPacked).toBeDefined();
@@ -175,7 +175,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		const id = commitmentIdOf("verify-reads-by-id");
 		await db.tables.commitment.create(buildCommitment(id));
 
-		const got = await db.getDappUserCommitmentById(id);
+		const got = await db.getImageCaptchaById(id);
 		if (!got) throw new Error("commitment not returned");
 
 		expect(got.userAccount).toBe("user-projection");
@@ -211,7 +211,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		const id = commitmentIdOf("bdp-by-account");
 		await db.tables.commitment.create(buildCommitment(id));
 
-		const docs = await db.getDappUserCommitmentByAccount(
+		const docs = await db.getImageCaptchaByAccount(
 			"user-projection",
 			"dapp-projection",
 		);
@@ -236,8 +236,8 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		const id = commitmentIdOf("parity");
 		await db.tables.commitment.create(buildCommitment(id));
 
-		const byId = await db.getDappUserCommitmentById(id);
-		const byAccountDocs = await db.getDappUserCommitmentByAccount(
+		const byId = await db.getImageCaptchaById(id);
+		const byAccountDocs = await db.getImageCaptchaByAccount(
 			"user-projection",
 			"dapp-projection",
 		);
