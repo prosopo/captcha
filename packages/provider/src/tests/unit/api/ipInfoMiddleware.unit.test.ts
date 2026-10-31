@@ -73,6 +73,7 @@ describe("getServerVerifyPaths", () => {
 				ClientApiPaths.VerifyAudioCaptchaSolution,
 				ClientApiPaths.VerifyIconOrderCaptchaSolution,
 				ClientApiPaths.VerifyAuthenticatedSession,
+				ClientApiPaths.SiteVerify,
 			]),
 		);
 	});

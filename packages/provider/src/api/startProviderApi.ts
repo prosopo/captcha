@@ -320,6 +320,11 @@ export async function startProviderApi(
 	// batches) but bounds oversized-payload abuse before parsing; the
 	// per-field caps in @prosopo/types (`INPUT_LIMITS`) are the finer control.
 	apiApp.use(express.json({ limit: "1mb" }));
+	// Site backends call siteverify from any language, and many post forms.
+	apiApp.use(
+		ClientApiPaths.SiteVerify,
+		express.urlencoded({ extended: false, limit: "1mb" }),
+	);
 
 	// Put this first so that no middleware runs on it
 	apiApp.use(publicRouter(env));
@@ -363,9 +368,12 @@ export async function startProviderApi(
 				);
 			} else if (
 				path === ClientApiPaths.VerifyImageCaptchaSolutionDapp ||
-				path === ClientApiPaths.VerifyPowCaptchaSolution
+				path === ClientApiPaths.VerifyPowCaptchaSolution ||
+				path === ClientApiPaths.SiteVerify
 			) {
-				// For verify, key on site key to prevent rate limiting API calls from lambdas
+				// For verify, key on site key: calls arrive through shared egress IPs
+				// (the siteverify Lambda, the Bunny siteverify router), and keying on
+				// IP would limit every site behind one of them as a single caller.
 				apiApp.use(
 					enumPath,
 					rateLimit({

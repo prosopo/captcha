@@ -114,6 +114,9 @@ export enum ClientApiPaths {
 	// the client IP so the session's `ipAddress` binding can be enforced;
 	// a leaked authenticated token cannot be replayed from a different IP.
 	VerifyAuthenticatedSession = "/v1/prosopo/provider/client/authenticated/verify",
+	// Verifies any captcha type using the site's secret key in place of a
+	// dapp signature, for site backends that don't run @prosopo/server.
+	SiteVerify = "/v1/prosopo/provider/client/site/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -238,6 +241,7 @@ export const ProviderDefaultRateLimits = {
 		windowMs: 60000,
 		limit: 15000,
 	},
+	[ClientApiPaths.SiteVerify]: { windowMs: 60000, limit: 15000 },
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.AssignDetectorBundle]: { windowMs: 60000, limit: 60 },
@@ -648,6 +652,25 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
+
+/**
+ * Request body for verifying a token with the site's secret key. Mirrors the
+ * hosted siteverify endpoint, so the token is any string (an undecodable one
+ * is answered as not verified rather than rejected) and the secret is
+ * optional (reserved test site keys have none).
+ */
+export const SiteVerifyRequestBody = object({
+	[ApiParams.token]: boundedString(INPUT_LIMITS.TOKEN),
+	[ApiParams.secret]: boundedString(INPUT_LIMITS.TEXT).optional(),
+	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).nullable().optional(),
+	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).optional(),
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.timeouts]: object({
+		image: object({ cachedTimeout: number().positive().optional() }).optional(),
+	}).optional(),
+});
+
+export type SiteVerifyRequestBodyOutput = output<typeof SiteVerifyRequestBody>;
 
 // ── DNS observation event ingestion (wire-compat with the dns sidecar) ─
 export const DnsEventKindSchema = union([

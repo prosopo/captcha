@@ -147,6 +147,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_VERIFY_AUTHENTICATED_SESSION_WINDOW,
 			limit: process.env.PROSOPO_VERIFY_AUTHENTICATED_SESSION_LIMIT,
 		},
+		[ClientApiPaths.SiteVerify]: {
+			windowMs: process.env.PROSOPO_SITE_VERIFY_WINDOW,
+			limit: process.env.PROSOPO_SITE_VERIFY_LIMIT,
+		},
 		[AdminApiPaths.DnsEvent]: {
 			windowMs: process.env.PROSOPO_DNS_EVENT_WINDOW,
 			limit: process.env.PROSOPO_DNS_EVENT_LIMIT,
