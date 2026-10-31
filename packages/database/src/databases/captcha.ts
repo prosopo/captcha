@@ -44,7 +44,11 @@ const isBsonLong = (value: unknown): boolean =>
 	"_bsontype" in value &&
 	(value as { _bsontype: string })._bsontype === "Long";
 import type { QueryFilter } from "mongoose";
-import { type MongoConnectionTimeouts, MongoDatabase } from "../base/index.js";
+import {
+	type MongoConnectionTimeouts,
+	MongoDatabase,
+	reconcileIndexes,
+} from "../base/index.js";
 
 const logger = getLogger("info", "database:captcha");
 
@@ -129,37 +133,37 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async ensureIndexes(): Promise<void> {
-		const indexPromises: Promise<void>[] = [];
-		if (!this.indexesEnsured) {
-			CAPTCHA_TABLES.map(({ collectionName }) => {
-				indexPromises.push(
-					new Promise((resolve) => {
-						if (this.connected) {
-							this.tables[collectionName].collection.dropIndexes().then(() => {
-								this.tables[collectionName]
-									.ensureIndexes()
-									.then(() => {
-										resolve();
-									})
-									.catch((err) => {
-										this.logger.warn(() => ({
-											err,
-											msg: `Error creating indexes for collection ${collectionName}`,
-										}));
-										resolve();
-									});
-							});
+		if (!this.indexesEnsured && this.connected) {
+			await Promise.all(
+				CAPTCHA_TABLES.map(async ({ collectionName }) => {
+					try {
+						const result = await reconcileIndexes(this.tables[collectionName], {
+							dropUndeclared: false,
+						});
+						if (result.failed.length > 0) {
+							this.logger.warn(() => ({
+								msg: `Error creating indexes for collection ${collectionName}`,
+								data: result,
+							}));
 						} else {
 							this.logger.info(() => ({
-								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+								msg: `Indexes ensured for collection ${collectionName}`,
+								data: result,
 							}));
-							resolve();
 						}
-					}),
-				);
-			});
+					} catch (err) {
+						this.logger.warn(() => ({
+							err,
+							msg: `Error creating indexes for collection ${collectionName}`,
+						}));
+					}
+				}),
+			);
+		} else if (!this.connected) {
+			this.logger.info(() => ({
+				msg: "Skipping index creation as not connected",
+			}));
 		}
-		await Promise.all(indexPromises);
 		this.indexesEnsured = true;
 	}
 
