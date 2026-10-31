@@ -912,6 +912,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// gap only for fields that are inherently origin-populated; escalation-
 	// owned fields (captchaType, sessionId, score, etc.) are never overridden.
 	originSessionId: { type: String, required: false },
+	solveDevice: {
+		type: new Schema(
+			{ deviceCapability: String, touchEventCount: Number },
+			{ _id: false },
+		),
+		required: false,
+	},
 	refreshOf: { type: String, required: false },
 	refreshCount: { type: Number, required: false },
 	refreshedAfterMs: { type: Number, required: false },
@@ -1270,6 +1277,8 @@ export const SESSION_PROJECTION = {
 	bundleId: 1,
 	dnsEvent: 1,
 	originSessionId: 1,
+	// Read when a challenge is issued for an escalation; see deriveDevice.
+	solveDevice: 1,
 	// Read by the next refresh to extend the chain and time it.
 	refreshCount: 1,
 	createdAt: 1,

@@ -39,7 +39,7 @@ import {
 import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
-	derivePlatform,
+	deriveDevice,
 	deriveTrafficPolicies,
 } from "../../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
@@ -333,10 +333,6 @@ export default (
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.asnNumber
 						: undefined;
-				const dedupIsMobile =
-					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-						? req.ipInfo.isMobile
-						: undefined;
 				const dedupFlatHeaders = flatten(req.headers);
 				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
 				const dedupTrafficPolicies = deriveTrafficPolicies(
@@ -408,17 +404,13 @@ export default (
 								ip: normalizedIp,
 								...(dedupCountryCode && { countryCode: dedupCountryCode }),
 								score: dedup.session.score,
-								platform: derivePlatform(
-									dedupUserAgent,
-									dedup.session.webView,
-									{
-										headers: dedupFlatHeaders,
-										...(typeof dedupIsMobile === "boolean" && {
-											carrierNetwork: dedupIsMobile,
-										}),
-										...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
-									},
-								),
+								platform: deriveDevice({
+									userAgent: dedupUserAgent,
+									headers: dedupFlatHeaders,
+									ipInfo: req.ipInfo,
+									tcpMss: req.tcpMss,
+									webView: dedup.session.webView,
+								}).platform,
 								// Session-derived, like `score` and `webView` above:
 								// the replay never re-decrypts a payload.
 								...(dedup.session.d !== undefined && {
@@ -965,10 +957,6 @@ export default (
 				...rawTlsSignalsForSession(req),
 			});
 
-			const ipInfoMobile =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.isMobile
-					: undefined;
 			// `userAgent` is hashed and only meaningful to
 			// `runUserAgentMismatchCheck`; passing it here left `isApple` and any
 			// UA classification permanently false. The dedup replay above already
@@ -987,13 +975,13 @@ export default (
 				imageMinRounds: clientRecord.settings.imageMinRounds,
 				baseImageRounds: env.config.captchas.solved.count,
 				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
-				platform: derivePlatform(requestUserAgent, webView, {
+				platform: deriveDevice({
+					userAgent: requestUserAgent,
 					headers: flatHeaders,
-					...(typeof ipInfoMobile === "boolean" && {
-						carrierNetwork: ipInfoMobile,
-					}),
-					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
-				}),
+					ipInfo: req.ipInfo,
+					tcpMss: req.tcpMss,
+					webView,
+				}).platform,
 				// Straight from the payload this request arrived with — the
 				// session record is written from the same value.
 				...(d !== undefined && { d }),

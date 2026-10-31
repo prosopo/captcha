@@ -34,7 +34,7 @@ import {
 	resolvePuzzleRenderSettings,
 	samplePuzzlePieceSize,
 } from "../../tasks/puzzle/puzzleRenderer.js";
-import { deriveMobileVerdict } from "../../utils/mobileSignals.js";
+import { deriveDevice } from "../../utils/devicePlatform.js";
 import { isPuzzleImageSwitchAvailable } from "./getFrictionlessCaptchaChallenge/constants.js";
 import {
 	type ChallengeIssueContext,
@@ -61,21 +61,16 @@ export const issuePuzzleChallenge = async ({
 
 	// Is the user dragging with a finger? Re-derived from the live request
 	// rather than read off the session, so the UA and the client hints come
-	// from the connection actually being served. The behavioural signals only
-	// exist after a solve, so they are not available here.
-	const mobileVerdict = deriveMobileVerdict({
-		userAgent: provenance.headers["user-agent"],
+	// from the connection actually being served. An escalated session carries
+	// what the solve before it said about the device.
+	const mobileVerdict = deriveDevice({
+		userAgent: provenance.headers["user-agent"] ?? "",
 		headers: provenance.headers,
-		...(provenance.ipInfo?.isValid && {
-			carrierNetwork: provenance.ipInfo.isMobile,
-		}),
-		...(sessionRecord?.tcpMss !== undefined && {
-			tcpMss: sessionRecord.tcpMss,
-		}),
-		...(sessionRecord?.webView !== undefined && {
-			webView: sessionRecord.webView,
-		}),
-	});
+		ipInfo: provenance.ipInfo,
+		tcpMss: sessionRecord?.tcpMss,
+		webView: sessionRecord?.webView,
+		solve: sessionRecord?.solveDevice,
+	}).mobile;
 	// The ladder ceiling runs off `isMobile`; the floors below want a device
 	// signal behind it. See `corroborated`.
 	const easeForTouch = mobileVerdict.isMobile && mobileVerdict.corroborated;
