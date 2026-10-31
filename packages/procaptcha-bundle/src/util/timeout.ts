@@ -15,6 +15,7 @@ import type {
 	ProcaptchaClientConfigOutput,
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
+import { parseInteger } from "@prosopo/util";
 
 /**
  * Set the timeout for a solved captcha
@@ -32,12 +33,20 @@ export const setValidChallengeLength = (
 		renderOptions?.["challenge-valid-length"] ||
 		element.getAttribute("data-challenge-valid-length");
 
-	if (challengeValidLengthAttribute) {
-		config.captchas.image.solutionTimeout = Number.parseInt(
-			challengeValidLengthAttribute,
-		);
-		config.captchas.pow.solutionTimeout = Number.parseInt(
-			challengeValidLengthAttribute,
-		);
+	if (!challengeValidLengthAttribute) {
+		return;
 	}
+	// A site-supplied value that isn't a positive integer keeps the default
+	// rather than setting a NaN timeout; parseInt would also read "60s" as 60.
+	const solutionTimeout = parseInteger(challengeValidLengthAttribute, {
+		min: 1,
+	});
+	if (!solutionTimeout.ok) {
+		console.warn(
+			`Ignoring invalid challenge-valid-length "${challengeValidLengthAttribute}"`,
+		);
+		return;
+	}
+	config.captchas.image.solutionTimeout = solutionTimeout.value;
+	config.captchas.pow.solutionTimeout = solutionTimeout.value;
 };

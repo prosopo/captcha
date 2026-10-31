@@ -47,6 +47,7 @@ import {
 	assertCoordsSafe,
 	at,
 	extractData,
+	parseInteger,
 	verifyRecency,
 } from "@prosopo/util";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
@@ -206,7 +207,22 @@ export abstract class InteractiveCaptchaManager<
 		);
 
 		const challengeSplit = challenge.split(this.POW_SEPARATOR);
-		const timestamp = Number.parseInt(at(challengeSplit, 0));
+		// The challenge is provider-signed, so this only fails if the format
+		// changes; parseInt would turn that into NaN and a confusing signature
+		// error instead.
+		const timestampResult = parseInteger(at(challengeSplit, 0), { min: 0 });
+		if (!timestampResult.ok) {
+			throw new ProsopoError({
+				code: "INVALID_TIMESTAMP",
+				errorSite: "PROV-97",
+				cause: timestampResult.error,
+				context: {
+					failedFuncName: this.submitInteractiveCaptchaSolution.name,
+					challenge,
+				},
+			});
+		}
+		const timestamp = timestampResult.value;
 		const userAccount = at(challengeSplit, 1);
 
 		checkPowSignature(

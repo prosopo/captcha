@@ -44,4 +44,11 @@ describe("get", () => {
 	test("get correct field number", () => {
 		expect(get({ 1: 1 }, 1)).to.equal(1);
 	});
+
+	test("names the missing field even when the object cannot be stringified", () => {
+		const cyclic: Record<string, unknown> = { big: 1n };
+		cyclic.self = cyclic;
+		expect(() => get(cyclic, "missing")).to.throw(/no property 'missing'/);
+		expect(() => get({ big: 1n }, "missing")).to.throw(/"big": "1"/);
+	});
 });

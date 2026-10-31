@@ -15,6 +15,7 @@
 import { availableParallelism } from "node:os";
 import { Worker } from "node:worker_threads";
 import { getLogger } from "@prosopo/logger";
+import { parseInteger } from "@prosopo/util";
 import { recordDecoderOutcome } from "../../api/metrics.js";
 import {
 	type DecoderName,
@@ -38,8 +39,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 const numberFromEnv = (name: string, fallback: number): number => {
 	const raw = process.env[name];
 	if (raw === undefined || raw === "") return fallback;
-	const parsed = Number.parseInt(raw, 10);
-	return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+	return parseInteger(raw, { min: 0 }).unwrapOr(fallback);
 };
 
 /**

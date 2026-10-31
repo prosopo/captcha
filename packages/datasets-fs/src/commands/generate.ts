@@ -23,6 +23,7 @@ import { lodash, setSeedGlobal } from "@prosopo/util/lodash";
 // limitations under the License.
 import * as z from "zod";
 import { OutputArgsSchema, OutputCliCommand } from "../utils/output.js";
+import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = OutputArgsSchema.extend({
 	labels: z.string().optional(),
@@ -125,14 +126,10 @@ export abstract class Generate<
 
 		// load the map to get the labelled and unlabelled data
 		this.labelled = this.labelledMapFile
-			? LabelledDataSchema.parse(
-					JSON.parse(fs.readFileSync(this.labelledMapFile, "utf8")),
-				).items
+			? LabelledDataSchema.parse(readJsonFile(this.labelledMapFile)).items
 			: [];
 		this.unlabelled = this.unlabelledMapFile
-			? DataSchema.parse(
-					JSON.parse(fs.readFileSync(this.unlabelledMapFile, "utf8")),
-				).items
+			? DataSchema.parse(readJsonFile(this.unlabelledMapFile)).items
 			: [];
 
 		// check for duplicates
@@ -158,11 +155,7 @@ export abstract class Generate<
 		this.labels = [];
 		if (args.labels && fs.existsSync(args.labels)) {
 			this.labels.push(
-				...[
-					...LabelsContainerSchema.parse(
-						JSON.parse(fs.readFileSync(args.labels, "utf8")),
-					).labels,
-				],
+				...[...LabelsContainerSchema.parse(readJsonFile(args.labels)).labels],
 			);
 		} else {
 			// else default to the labels in the labelled data

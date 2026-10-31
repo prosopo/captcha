@@ -24,6 +24,7 @@ import {
 	InputOutputArgsSchema,
 	InputOutputCliCommand,
 } from "../utils/inputOutput.js";
+import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
 	size: z.number(),
@@ -89,9 +90,7 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
 		fs.mkdirSync(imgDir, { recursive: true });
 
 		// read the map file
-		const inputItems: Item[] = DataSchema.parse(
-			JSON.parse(fs.readFileSync(mapFile, "utf8")),
-		).items;
+		const inputItems: Item[] = DataSchema.parse(readJsonFile(mapFile)).items;
 
 		// for each item
 		const bar = new cliProgress.SingleBar(

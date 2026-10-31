@@ -14,6 +14,7 @@
 
 import { Session } from "node:inspector/promises";
 import type { Logger } from "@prosopo/logger";
+import { parseInteger } from "@prosopo/util";
 
 // A named span tells you what the code you already suspected costs. This tells
 // you what you failed to suspect: V8's sampler attributes self time to every
@@ -25,10 +26,8 @@ import type { Logger } from "@prosopo/logger";
 const enabled = (): boolean =>
 	process.env.PROSOPO_CPU_PROFILE_ENABLED === "true";
 
-const numberFromEnv = (name: string, fallback: number): number => {
-	const parsed = Number.parseInt(process.env[name] ?? "", 10);
-	return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-};
+const numberFromEnv = (name: string, fallback: number): number =>
+	parseInteger(process.env[name], { min: 1 }).unwrapOr(fallback);
 
 interface ProfileFrame {
 	fn: string;

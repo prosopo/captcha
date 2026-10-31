@@ -17,6 +17,7 @@ import cliProgress from "cli-progress";
 // limitations under the License.
 import * as z from "zod";
 import { InputArgsSchema, InputCliCommand } from "../utils/input.js";
+import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = InputArgsSchema.extend({});
 export type ArgsSchemaType = typeof ArgsSchema;
@@ -64,7 +65,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 		const file = args.input;
 
 		// read the map file
-		const data: unknown = JSON.parse(fs.readFileSync(file, "utf8"));
+		const data: unknown = readJsonFile(file);
 		await traverse(data);
 
 		bar.start(list.length, 0);

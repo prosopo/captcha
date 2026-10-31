@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { parseInteger } from "@prosopo/util";
+
 //   token = base64url(sha256(securityKey + path + expires [+ clientIp]))
 //   url   = <origin><path>?token=<token>&expires=<expires>
 
@@ -76,16 +78,12 @@ export const assetTokenOptionsFromEnv = (): SignAssetUrlOptions | undefined => {
 	if (!securityKey) {
 		return undefined;
 	}
-	const ttlSeconds = Number.parseInt(
-		process.env.PROSOPO_ASSET_TOKEN_TTL_SECONDS ?? "",
-		10,
-	);
-	return {
-		securityKey,
-		ttlSeconds: Number.isNaN(ttlSeconds)
-			? DEFAULT_ASSET_TOKEN_TTL_SECONDS
-			: ttlSeconds,
-	};
+	// parseInt would read "30s" as 30 and let "0" or "-5" mint URLs that are
+	// already expired; anything but a positive integer means the default.
+	const ttlSeconds = parseInteger(process.env.PROSOPO_ASSET_TOKEN_TTL_SECONDS, {
+		min: 1,
+	}).unwrapOr(DEFAULT_ASSET_TOKEN_TTL_SECONDS);
+	return { securityKey, ttlSeconds };
 };
 
 const parseHttpUrl = (url: string): URL | undefined => {

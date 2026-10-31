@@ -15,6 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ReadableStream as streamWeb } from "node:stream/web";
 import { fetchWithETag } from "./fetchWithEtag.js";
+import { parseInteger } from "./parse.js";
 
 export const ensureDirExists = (cacheDir: string): void => {
 	if (!fs.existsSync(cacheDir)) {
@@ -287,12 +288,9 @@ export const fetchWithLastModified = async (
 
 		const responseLastModified = response.headers.get("last-modified") || null;
 		const contentLengthHeader = response.headers.get("content-length");
-		const contentLength = contentLengthHeader
-			? (() => {
-					const parsed = Number.parseInt(contentLengthHeader, 10);
-					return Number.isFinite(parsed) ? parsed : undefined;
-				})()
-			: undefined;
+		// parseInt would take "12abc" as 12 and "-1" as -1.
+		const parsedLength = parseInteger(contentLengthHeader, { min: 0 });
+		const contentLength = parsedLength.ok ? parsedLength.value : undefined;
 
 		return {
 			stream: response.body,

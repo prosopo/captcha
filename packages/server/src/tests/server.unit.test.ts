@@ -562,6 +562,27 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 		});
 	});
 
+	it.each(["", "abc", "12abc", "-1", "1.5"])(
+		"answers not verified for a token whose timestamp is %j, without calling the provider",
+		async (timestamp) => {
+			const spies = installProviderApiSpies();
+			installProviderLookup();
+			const server = new ProsopoServer(
+				buildConfig(60_000, 60_000, 60_000),
+				// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+				stubPair() as any,
+			);
+			const token = buildToken(Date.now(), {
+				[ApiParams.timestamp]: timestamp,
+				[ApiParams.captchaType]: CaptchaType.pow,
+			});
+			await expect(server.isVerified(token)).resolves.toMatchObject({
+				verified: false,
+			});
+			expect(spies.pow).not.toHaveBeenCalled();
+		},
+	);
+
 	it("answers not verified when the provider list cannot be fetched", async () => {
 		installProviderApiSpies();
 		vi.spyOn(loadBalancerModule, "findProvider").mockRejectedValue(

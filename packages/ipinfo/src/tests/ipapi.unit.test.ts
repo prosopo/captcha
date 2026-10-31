@@ -124,6 +124,11 @@ describe("parseAbuserScore", () => {
 		expect(parseAbuserScore("(Low)")).toBeUndefined();
 	});
 
+	it("rejects a partly-numeric or infinite score rather than its prefix", () => {
+		expect(parseAbuserScore("0.5abc (Low)")).toBeUndefined();
+		expect(parseAbuserScore("Infinity")).toBeUndefined();
+	});
+
 	it("distinguishes a genuine zero from an unknown score", () => {
 		// 0 means "measured, and clean" on the 0..1 scale; undefined means "we
 		// have no measurement". Collapsing the two would assert cleanliness that

@@ -163,6 +163,16 @@ describe("extractData", () => {
 		expect(() => extractData("0xzz")).to.throw(/invalid value/);
 	});
 
+	test("throws on a partly-hex count rather than reading its prefix", () => {
+		// parseInt("0g", 16) is 0, which used to return [] silently.
+		expect(() => extractData("0x0g")).to.throw(/invalid value/);
+	});
+
+	test("throws on a truncated string rather than reading a lone digit", () => {
+		// "a" + undefined is "aundefined", which parseInt reads as 0xa.
+		expect(() => extractData("0xa")).to.throw(/invalid value/);
+	});
+
 	test("throws when a value parses above Number.MAX_SAFE_INTEGER", () => {
 		const malformed = `0x010610${"f".repeat(16)}`;
 		expect(() => extractData(malformed)).to.throw(/invalid value/);

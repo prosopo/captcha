@@ -19,6 +19,7 @@ import {
 	InputOutputArgsSchema,
 	InputOutputCliCommand,
 } from "../utils/inputOutput.js";
+import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
 	from: z.string(),
@@ -93,7 +94,7 @@ export class Relocate extends InputOutputCliCommand<ArgsSchemaType> {
 		const file: string = args.input;
 		this.logger.info(() => ({ data: args, msg: "relocate" }));
 		// read the file
-		let data = JSON.parse(fs.readFileSync(file, "utf8"));
+		let data = readJsonFile(file);
 		// replace the urls by recursively traversing the data
 		data = replace(data, args.from, args.to);
 		// write the file

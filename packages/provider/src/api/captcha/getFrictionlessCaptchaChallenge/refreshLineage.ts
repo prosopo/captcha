@@ -14,6 +14,7 @@
 
 import { CaptchaType, type Session } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import { parseDate } from "@prosopo/util";
 
 export type RefreshLineage = Required<
 	Pick<Session, "refreshOf" | "refreshCount" | "refreshedAfterMs">
@@ -27,9 +28,10 @@ export interface ResolvedRefresh {
 /**
  * Work out where a refresh sits in its chain from the session it replaced.
  *
- * An unknown session, or one from another site, is ignored rather than
- * rejected: the request then mints an ordinary session, which is all a client
- * that never sent `refreshOf` would have got.
+ * An unknown session, one from another site, or one whose createdAt cannot
+ * be read is ignored rather than rejected: the request then mints an
+ * ordinary session, which is all a client that never sent `refreshOf` would
+ * have got.
  */
 export const resolveRefreshLineage = async (
 	db: Pick<IProviderDatabase, "getSessionRecordBySessionId">,
@@ -40,14 +42,16 @@ export const resolveRefreshLineage = async (
 	if (!refreshOf) return undefined;
 	const replaced = await db.getSessionRecordBySessionId(refreshOf);
 	if (!replaced || replaced.siteKey !== siteKey) return undefined;
+	// A missing or unparseable createdAt would make refreshedAfterMs NaN,
+	// which Math.max passes straight through. Such a record is ignored like
+	// an unknown one rather than given a made-up age.
+	const createdAt = parseDate(replaced.createdAt);
+	if (!createdAt.ok) return undefined;
 	return {
 		lineage: {
 			refreshOf,
 			refreshCount: (replaced.refreshCount ?? 0) + 1,
-			refreshedAfterMs: Math.max(
-				0,
-				now.getTime() - new Date(replaced.createdAt).getTime(),
-			),
+			refreshedAfterMs: Math.max(0, now.getTime() - createdAt.value.getTime()),
 		},
 		replacedCaptchaType: replaced.captchaType,
 	};

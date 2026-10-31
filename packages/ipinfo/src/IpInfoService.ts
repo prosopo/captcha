@@ -39,7 +39,9 @@ export function isNonRoutable(ip: string): boolean {
 
 	// 172.16.0.0 – 172.31.255.255
 	if (normalized.startsWith("172.")) {
-		const second = Number.parseInt(normalized.split(".")[1] ?? "", 10);
+		// Whole octet only: parseInt would read "16abc" as 16.
+		const octet = normalized.split(".")[1] ?? "";
+		const second = /^\d{1,3}$/.test(octet) ? Number(octet) : Number.NaN;
 		if (second >= 16 && second <= 31) return true;
 	}
 

@@ -16,6 +16,7 @@ import {
 	type AuthMiddlewareOptions,
 	createMemoryJwtReplayGuard,
 } from "@prosopo/api-express-router";
+import { parseInteger } from "@prosopo/util";
 
 /** Longest admin token lifetime (exp - iat) accepted by default, in seconds. */
 export const DEFAULT_ADMIN_JWT_MAX_LIFETIME_SECONDS = 3600;
@@ -49,19 +50,16 @@ export const adminAuthOptions = (
 	const audience =
 		candidates.length > 0 || requireAudience ? candidates : undefined;
 
-	const maxLifetime = Number.parseInt(
-		vars.PROSOPO_ADMIN_JWT_MAX_LIFETIME_SECONDS ?? "",
-		10,
-	);
+	const maxLifetimeSeconds = parseInteger(
+		vars.PROSOPO_ADMIN_JWT_MAX_LIFETIME_SECONDS,
+		{ min: 1 },
+	).unwrapOr(DEFAULT_ADMIN_JWT_MAX_LIFETIME_SECONDS);
 
 	return {
 		verify: {
 			audience,
 			requireAudience,
-			maxLifetimeSeconds:
-				Number.isFinite(maxLifetime) && maxLifetime > 0
-					? maxLifetime
-					: DEFAULT_ADMIN_JWT_MAX_LIFETIME_SECONDS,
+			maxLifetimeSeconds,
 		},
 		replayGuard: createMemoryJwtReplayGuard(),
 	};

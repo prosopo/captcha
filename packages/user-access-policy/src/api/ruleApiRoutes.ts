@@ -19,6 +19,7 @@ import type {
 } from "@prosopo/api-route";
 import type { AllEnumValues } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
+import { parseInteger } from "@prosopo/util";
 import { FetchRulesEndpoint } from "#policy/api/read/fetchRules.js";
 import { FindRuleIdsEndpoint } from "#policy/api/read/findRuleIds.js";
 import { GetMissingIdsEndpoint } from "#policy/api/read/getMissingIds.js";
@@ -136,11 +137,8 @@ export const getExpressApiRuleRateLimits =
 const getIntEnvironmentVariable = (
 	variableName: string,
 ): number | undefined => {
-	const variableValue = process.env[variableName];
-
-	const numericValue = variableValue
-		? Number.parseInt(variableValue)
-		: Number.NaN;
-
-	return Number.isInteger(numericValue) ? numericValue : undefined;
+	// parseInt would take "12abc" as 12; anything but a positive integer is
+	// treated as unset, so the caller's default applies.
+	const parsed = parseInteger(process.env[variableName], { min: 1 });
+	return parsed.ok ? parsed.value : undefined;
 };
