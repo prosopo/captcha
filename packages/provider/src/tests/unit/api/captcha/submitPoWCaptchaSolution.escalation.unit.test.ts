@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { resolveMaxEscalationLevel } from "@prosopo/captcha-severity";
 import {
 	CaptchaType,
 	type DetectorData,
@@ -22,6 +23,19 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEscalation } from "../../../../api/captcha/submitPoWCaptchaSolution.js";
 import type { CreateSessionInput } from "../../../../tasks/frictionless/frictionlessTasks.js";
+import {
+	type DeviceVerdict,
+	deriveDevice,
+} from "../../../../utils/devicePlatform.js";
+
+vi.mock("@prosopo/captcha-severity", async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import("@prosopo/captcha-severity")>();
+	return {
+		...actual,
+		resolveMaxEscalationLevel: vi.fn(actual.resolveMaxEscalationLevel),
+	};
+});
 
 // Minimal Tasks-shape required by `buildEscalation`. The function only
 // reaches for: tasks.db.getPowCaptchaRecordByChallenge,
@@ -538,5 +552,59 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 				.behavioralDataPacked,
 		);
 		expect(input).not.toHaveProperty("behavioralDataPacked");
+	});
+
+	describe("device", () => {
+		const IPHONE_UA =
+			"Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1";
+
+		const escalateToPuzzle = async (device?: DeviceVerdict) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+				behavioralDataPacked: {
+					c1: [],
+					c2: [{}, {}],
+					c3: [],
+					d: "mobile",
+				},
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue({
+				...makeOriginSession(),
+				headers: { "user-agent": IPHONE_UA },
+			});
+			await buildEscalation(
+				env.tasks,
+				{
+					verified: true,
+					routingOutput: { captchaType: CaptchaType.puzzle },
+					...(device && { device }),
+				},
+				"challenge",
+			);
+			const input: CreateSessionInput =
+				env.spies.createSession.mock.calls[0]?.[0];
+			return input;
+		};
+
+		it("records what the solve said about the input device", async () => {
+			expect((await escalateToPuzzle()).solveDevice).toStrictEqual({
+				deviceCapability: "mobile",
+				touchEventCount: 2,
+			});
+		});
+
+		it("sizes the escalation on the verdict routing ran on", async () => {
+			vi.mocked(resolveMaxEscalationLevel).mockClear();
+			const desktop = deriveDevice({ userAgent: "" });
+			await escalateToPuzzle(desktop);
+			expect(resolveMaxEscalationLevel).toHaveBeenCalledWith(undefined, false);
+		});
+
+		it("judges the device itself only when routing never ran", async () => {
+			vi.mocked(resolveMaxEscalationLevel).mockClear();
+			await escalateToPuzzle();
+			expect(resolveMaxEscalationLevel).toHaveBeenCalledWith(undefined, true);
+		});
 	});
 });

@@ -15,12 +15,15 @@
 import {
 	CaptchaType,
 	type ITrafficFilter,
+	type RoutingMachinePlatform,
 	TrafficFilterAction,
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
-	derivePlatform,
+	type DeviceInputs,
+	deriveDevice,
 	deriveTrafficPolicies,
+	solveDeviceSignals,
 } from "../../../utils/devicePlatform.js";
 
 const IPHONE_UA =
@@ -34,61 +37,136 @@ const PIXEL_UA =
 const WINDOWS_CHROME_UA =
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36";
 
-describe("derivePlatform", () => {
+const ANDROID_DESKTOP_SITE_UA =
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36";
+
+const platformOf = (inputs: DeviceInputs): RoutingMachinePlatform =>
+	deriveDevice(inputs).platform;
+
+describe("deriveDevice", () => {
 	describe("isApple", () => {
 		it("matches iPhone UA", () => {
-			expect(derivePlatform(IPHONE_UA, false).isApple).toBe(true);
+			expect(platformOf({ userAgent: IPHONE_UA }).isApple).toBe(true);
 		});
 		it("matches iPad UA", () => {
-			expect(derivePlatform(IPAD_UA, false).isApple).toBe(true);
+			expect(platformOf({ userAgent: IPAD_UA }).isApple).toBe(true);
 		});
 		it("matches Macintosh UA", () => {
-			expect(derivePlatform(MAC_UA, false).isApple).toBe(true);
+			expect(platformOf({ userAgent: MAC_UA }).isApple).toBe(true);
 		});
 		it("does not match Android UA", () => {
-			expect(derivePlatform(PIXEL_UA, false).isApple).toBe(false);
+			expect(platformOf({ userAgent: PIXEL_UA }).isApple).toBe(false);
 		});
 		it("does not match Windows UA", () => {
-			expect(derivePlatform(WINDOWS_CHROME_UA, false).isApple).toBe(false);
+			expect(platformOf({ userAgent: WINDOWS_CHROME_UA }).isApple).toBe(false);
 		});
 		it("does not match empty UA", () => {
-			expect(derivePlatform("", false).isApple).toBe(false);
+			expect(platformOf({ userAgent: "" }).isApple).toBe(false);
 		});
 	});
 
 	describe("isWebView", () => {
 		it("passes through caller-supplied true", () => {
-			expect(derivePlatform(WINDOWS_CHROME_UA, true).isWebView).toBe(true);
+			expect(
+				platformOf({ userAgent: WINDOWS_CHROME_UA, webView: true }).isWebView,
+			).toBe(true);
 		});
-		it("passes through caller-supplied false", () => {
-			expect(derivePlatform(IPHONE_UA, false).isWebView).toBe(false);
+		it("defaults to false", () => {
+			expect(platformOf({ userAgent: IPHONE_UA }).isWebView).toBe(false);
 		});
 	});
 
 	describe("isMobile", () => {
 		it("reads a phone on a non-carrier network as mobile", () => {
 			expect(
-				derivePlatform(IPHONE_UA, false, { carrierNetwork: false }).isMobile,
+				platformOf({
+					userAgent: IPHONE_UA,
+					ipInfo: { isValid: true, isMobile: false },
+				}).isMobile,
 			).toBe(true);
 		});
 		it("does not read a tethered desktop as mobile", () => {
 			expect(
-				derivePlatform(WINDOWS_CHROME_UA, false, { carrierNetwork: true })
-					.isMobile,
+				platformOf({
+					userAgent: WINDOWS_CHROME_UA,
+					ipInfo: { isValid: true, isMobile: true },
+				}).isMobile,
 			).toBe(false);
 		});
+		it("ignores the carrier flag of an invalid IP lookup", () => {
+			expect(
+				deriveDevice({
+					userAgent: WINDOWS_CHROME_UA,
+					ipInfo: { isValid: false, isMobile: true },
+				}).mobile.evidence,
+			).not.toContain("carrierNetwork");
+		});
 		it("reads an iPhone UA as mobile with no other signal", () => {
-			expect(derivePlatform(IPHONE_UA, false).isMobile).toBe(true);
+			expect(platformOf({ userAgent: IPHONE_UA }).isMobile).toBe(true);
 		});
 		it("reads a Pixel UA as mobile with no other signal", () => {
-			expect(derivePlatform(PIXEL_UA, false).isMobile).toBe(true);
+			expect(platformOf({ userAgent: PIXEL_UA }).isMobile).toBe(true);
 		});
 		it("does not read Windows Chrome as mobile", () => {
-			expect(derivePlatform(WINDOWS_CHROME_UA, false).isMobile).toBe(false);
+			expect(platformOf({ userAgent: WINDOWS_CHROME_UA }).isMobile).toBe(false);
 		});
 		it("does not read Mac Safari as mobile", () => {
-			expect(derivePlatform(MAC_UA, false).isMobile).toBe(false);
+			expect(platformOf({ userAgent: MAC_UA }).isMobile).toBe(false);
 		});
+		it("weighs the solve's touch readings", () => {
+			expect(
+				deriveDevice({
+					userAgent: MAC_UA,
+					solve: { deviceCapability: "mobile", touchEventCount: 2 },
+				}).mobile.evidence,
+			).toEqual(expect.arrayContaining(["touchCapability", "touchEvents"]));
+		});
+		it("reads an in-app iPad sending a Mac UA as mobile once its tap corroborates it", () => {
+			const ipad: DeviceInputs = {
+				userAgent: MAC_UA,
+				tcpMss: 1380,
+				webView: true,
+			};
+			expect(platformOf(ipad).isMobile).toBe(false);
+			expect(
+				platformOf({
+					...ipad,
+					solve: { deviceCapability: "mobile", touchEventCount: 2 },
+				}).isMobile,
+			).toBe(true);
+		});
+		it("keeps Android Chrome's Desktop site mode a desktop, as its headers all say", () => {
+			expect(
+				platformOf({
+					userAgent: ANDROID_DESKTOP_SITE_UA,
+					headers: {
+						"sec-ch-ua-mobile": "?0",
+						"sec-ch-ua-platform": '"Linux"',
+					},
+					solve: { deviceCapability: "mobile", touchEventCount: 2 },
+				}).isMobile,
+			).toBe(false);
+		});
+		it("does not read a touchscreen laptop used with a mouse as mobile", () => {
+			expect(
+				platformOf({
+					userAgent: WINDOWS_CHROME_UA,
+					solve: { deviceCapability: "mobile", touchEventCount: 0 },
+				}).isMobile,
+			).toBe(false);
+		});
+	});
+});
+
+describe("solveDeviceSignals", () => {
+	it("reads the touch-support reading and counts the touch events", () => {
+		expect(solveDeviceSignals({ d: "mobile", c2: [{}, {}] })).toEqual({
+			deviceCapability: "mobile",
+			touchEventCount: 2,
+		});
+	});
+	it("is undefined when there was no solve", () => {
+		expect(solveDeviceSignals(undefined)).toBeUndefined();
 	});
 });
 
