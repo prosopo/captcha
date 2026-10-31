@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/ipinfo",
-	"version": "0.5.1",
+	"version": "0.5.2",
 	"description": "IP information service with MaxMind and ipapi.is backends",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
