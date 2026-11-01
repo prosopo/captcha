@@ -14,9 +14,11 @@
 
 import type { IncomingHttpHeaders } from "node:http";
 import type { Logger } from "@prosopo/logger";
+import type { TcpProbeHit } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
 	getRawTlsSignals,
+	parseTcpProbeHeader,
 	rawTlsSignalsForSession,
 	rawTlsSignalsFromRecord,
 } from "../../../api/rawTlsSignalsMiddleware.js";
@@ -114,7 +116,106 @@ describe("getRawTlsSignals", () => {
 	});
 });
 
+const encodeProbe = (body: unknown): string =>
+	Buffer.from(JSON.stringify(body), "utf8").toString("base64url");
+
+const probeHit: TcpProbeHit = {
+	v: 2,
+	hit: true,
+	flags: 15,
+	remote_ip: "2001:db8::1",
+	remote_port: 51000,
+	local_ip: "2001:db8::2",
+	local_port: 443,
+	is_v6: true,
+	syn_ns: 2 ** 60,
+	est_ns: 2 ** 60,
+	est_srtt_us: 900,
+	est_mss: 1440,
+	ack_window: 502,
+	ack_tsval: 1,
+	ack_tsecr: 2,
+	retrans: 0,
+	last_state: 1,
+	rtt_us: [900, 950],
+	pkts: [{ ns: 5, tsval: 3, len: 517, window: 502, flags: 24 }],
+	syn: {
+		ttl: 52,
+		tos: 0,
+		total_len: 60,
+		ip_id: 0,
+		frag_flags: 0,
+		flow_label: 12345,
+		ip_options: "",
+		seq: 7,
+		data_offset_resv: 160,
+		tcp_flags: 2,
+		window: 64240,
+		urg_ptr: 0,
+		opts: [{ kind: 2, data: "05a0" }],
+		opts_malformed: false,
+		raw: "ab",
+	},
+	tcp_info: { state: 1, snd_cwnd: 10 },
+};
+
+describe("parseTcpProbeHeader", () => {
+	it("decodes a full IPv6 hit, keeping post-handshake packets", () => {
+		expect(parseTcpProbeHeader(encodeProbe(probeHit), mockLogger())).toEqual(
+			probeHit,
+		);
+	});
+
+	it("keeps a miss so the blank rate can be measured", () => {
+		const miss = { v: 2, hit: false, reason: "unavailable" };
+		expect(parseTcpProbeHeader(encodeProbe(miss), mockLogger())).toEqual(miss);
+	});
+
+	it("returns undefined when the header is absent", () => {
+		expect(parseTcpProbeHeader(undefined, mockLogger())).toBeUndefined();
+	});
+
+	it("takes the first value of a repeated header", () => {
+		const raw = [encodeProbe(probeHit), "junk"];
+		expect(parseTcpProbeHeader(raw, mockLogger())).toEqual(probeHit);
+	});
+
+	it.each<[string, string]>([
+		["non-base64 junk", "%%%"],
+		["base64 that is not JSON", Buffer.from("nope").toString("base64url")],
+		["an oversized value", "a".repeat(8193)],
+		["an unknown version", encodeProbe({ ...probeHit, v: 3 })],
+		["a missing field", encodeProbe({ v: 2, hit: true })],
+		["an out-of-range port", encodeProbe({ ...probeHit, remote_port: 70000 })],
+		[
+			"too many packets",
+			encodeProbe({ ...probeHit, pkts: Array(17).fill(probeHit.pkts[0]) }),
+		],
+		[
+			"non-hex SYN bytes",
+			encodeProbe({ ...probeHit, syn: { ...probeHit.syn, raw: "<script>" } }),
+		],
+	])("rejects %s", (_name, raw) => {
+		expect(parseTcpProbeHeader(raw, mockLogger())).toBeUndefined();
+	});
+
+	it("drops fields a forger added", () => {
+		const parsed = parseTcpProbeHeader(
+			encodeProbe({ ...probeHit, $where: "1" }),
+			mockLogger(),
+		);
+		expect(parsed).toEqual(probeHit);
+	});
+});
+
 describe("rawTlsSignalsForSession", () => {
+	it("carries the tcp-probe record", () => {
+		const out = rawTlsSignalsForSession({
+			tcpProbe: probeHit,
+		} as Parameters<typeof rawTlsSignalsForSession>[0]);
+		expect(out).toEqual({ tcpProbe: probeHit });
+	});
+
 	it("omits undefined fields so Mongo docs stay slim", () => {
 		const out = rawTlsSignalsForSession({
 			tcpMss: 1460,

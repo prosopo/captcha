@@ -19,6 +19,7 @@ import {
 	type ModeEnum,
 	type RequestHeaders,
 	type ScoreComponents,
+	type TcpProbeRecord,
 	clampImageRounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -53,6 +54,7 @@ export type ShortCircuitInput = {
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	tcpProbe?: TcpProbeRecord;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -101,6 +103,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		...(input.chelloToHandshakeUs !== undefined && {
 			chelloToHandshakeUs: input.chelloToHandshakeUs,
 		}),
+		...(input.tcpProbe !== undefined && { tcpProbe: input.tcpProbe }),
 	};
 };
 

@@ -15,6 +15,7 @@
 import type { IncomingHttpHeaders } from "node:http";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/logger";
+import { type TcpProbeRecord, TcpProbeRecordSchema } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
@@ -58,6 +59,10 @@ const HEADER_IP_TOS = "x-tls-ip-tos";
 // fields stay, because years of rows hold them and routing rules read them.
 const HEADER_TCP_OPTS_FLAGS = "x-tls-tcp-opts-flags";
 const HEADER_TCP_OPTS_ORDER = "x-tls-tcp-opts-order";
+
+const HEADER_TCP_PROBE = "x-tcp-probe";
+// A full record is about 3KB of base64url; anything far larger is not chaddy's.
+const MAX_TCP_PROBE_HEADER_CHARS = 8192;
 
 export interface RawTlsSignals {
 	// Kernel monotonic ns timestamps of the TCP 3-way handshake — captured by
@@ -145,6 +150,9 @@ export interface RawTlsSignals {
 	// all. Superseded by `tcpOptsKinds`. Only present on sessions served
 	// by a chaddy older than prosopo/chaddy#16.
 	tcpOptsOrder?: number;
+	// The whole tcp-probe v2 record, stored as sent. Unlike the fields above it
+	// covers IPv6 and the packets after the ClientHello.
+	tcpProbe?: TcpProbeRecord;
 }
 
 // Every field of RawTlsSignals, in one place. The session-write path and the
@@ -175,6 +183,7 @@ const RAW_TLS_SIGNAL_KEYS = [
 	"ipTos",
 	"tcpOptsFlags",
 	"tcpOptsOrder",
+	"tcpProbe",
 ] as const satisfies readonly (keyof RawTlsSignals)[];
 
 // Fails to compile if a field is added to RawTlsSignals and not to the list
@@ -281,12 +290,41 @@ const parseOptsKindsHeader = (
 	return kinds.length > 0 ? kinds : undefined;
 };
 
+export const parseTcpProbeHeader = (
+	raw: string | string[] | undefined,
+	logger: Logger,
+): TcpProbeRecord | undefined => {
+	const value = Array.isArray(raw) ? raw[0] : raw;
+	if (value === undefined) {
+		return undefined;
+	}
+	const reject = (reason: string): undefined => {
+		logger.debug(() => ({
+			msg: "Ignoring malformed tcp-probe header",
+			data: { reason, length: value.length },
+		}));
+		return undefined;
+	};
+	if (value.length > MAX_TCP_PROBE_HEADER_CHARS) {
+		return reject("too_long");
+	}
+	let decoded: unknown;
+	try {
+		decoded = JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
+	} catch {
+		return reject("not_json");
+	}
+	const parsed = TcpProbeRecordSchema.safeParse(decoded);
+	return parsed.success ? parsed.data : reject("bad_shape");
+};
+
 export const getRawTlsSignals = (
 	headers: IncomingHttpHeaders,
 	logger?: Logger,
 ): RawTlsSignals => {
 	const log = logger ?? getLogger("info", "provider:raw-tls-signals");
 	return {
+		tcpProbe: parseTcpProbeHeader(headers[HEADER_TCP_PROBE], log),
 		synNs: parseIntHeader(headers[HEADER_SYN_NS], log, HEADER_SYN_NS, MAX_NS),
 		synackNs: parseIntHeader(
 			headers[HEADER_SYNACK_NS],
@@ -446,9 +484,10 @@ export const rawTlsSignalsMiddleware = (env: ProviderEnvironment) => {
 				}
 			}
 
-			const hasAny = Object.values(signals).some((v) => v !== undefined);
+			const { tcpProbe, ...scalarSignals } = signals;
+			const hasAny = Object.values(scalarSignals).some((v) => v !== undefined);
 			if (hasAny) {
-				req.logger = req.logger.with(signals, "rawTlsSignals");
+				req.logger = req.logger.with(scalarSignals, "rawTlsSignals");
 			}
 			next();
 		} catch (err) {
