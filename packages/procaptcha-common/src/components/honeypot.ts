@@ -40,9 +40,15 @@ let honeypotInstanceCount = 0;
 // base64 layer here so the rendered label is the raw morse/semaphore an agent
 // can recognise and engage with.
 const decodeBase64Utf8 = (b64: string): string => {
-	const binary = atob(b64);
-	const bytes = Uint8Array.from(binary, (c: string) => c.charCodeAt(0));
-	return new TextDecoder().decode(bytes);
+	try {
+		const binary = atob(b64);
+		const bytes = Uint8Array.from(binary, (c: string) => c.charCodeAt(0));
+		return new TextDecoder().decode(bytes);
+	} catch {
+		// The label is off-screen bait, so a bad question must not stop the
+		// widget rendering.
+		return "";
+	}
 };
 
 // Locate the dapp's enclosing <form> by stepping out of the widget's shadow
