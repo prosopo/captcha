@@ -26,21 +26,24 @@ import {
 	switchTypeOnUserRequest,
 } from "../../../tasks/captchaTypeSelection.js";
 
-const BOTH: IFrictionlessTypes = { image: true, puzzle: true, iconOrder: true };
+const BOTH: IFrictionlessTypes = { image: true, puzzle: true, iconOrder: true, connect: true };
 const NO_IMAGE: IFrictionlessTypes = {
 	image: false,
 	puzzle: true,
 	iconOrder: true,
+	connect: true,
 };
 const NO_PUZZLE: IFrictionlessTypes = {
 	image: true,
 	puzzle: false,
 	iconOrder: false,
+	connect: false,
 };
 const NEITHER: IFrictionlessTypes = {
 	image: false,
 	puzzle: false,
 	iconOrder: false,
+	connect: false,
 };
 
 const ALL_TYPES: ConcreteCaptchaType[] = [
@@ -52,7 +55,7 @@ const ALL_TYPES: ConcreteCaptchaType[] = [
 describe("coerceToEnabledCaptchaType", () => {
 	it("never serves icon-order to a site without the icon-order feature flag", () => {
 		const everyPreferenceOn = {
-			frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+			frictionlessTypes: { image: true, puzzle: true, iconOrder: true, connect: true },
 		};
 		expect(
 			coerceToEnabledCaptchaType(

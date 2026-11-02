@@ -343,6 +343,7 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 			image: true,
 			puzzle: true,
 			iconOrder: true,
+			connect: true,
 		});
 		routerReturns({
 			captchaType: CaptchaType.iconOrder,

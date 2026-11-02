@@ -69,7 +69,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 				frictionlessPuzzleThreshold: 0.5,
 				frictionlessImageThreshold: 1,
 			},
-			frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+			frictionlessTypes: { image: true, puzzle: true, iconOrder: true, connect: true },
 			powDifficulty: 100000,
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,

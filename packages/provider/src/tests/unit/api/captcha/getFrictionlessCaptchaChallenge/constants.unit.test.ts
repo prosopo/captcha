@@ -125,6 +125,7 @@ describe("resolveSiteAllowedCaptchaTypes", () => {
 			image: true,
 			puzzle: true,
 			iconOrder: false,
+			connect: false,
 		});
 	});
 
@@ -132,31 +133,31 @@ describe("resolveSiteAllowedCaptchaTypes", () => {
 		expect(
 			resolveSiteAllowedCaptchaTypes({
 				captchaType: CaptchaType.frictionless,
-				frictionlessTypes: { image: false, puzzle: true, iconOrder: true },
+				frictionlessTypes: { image: false, puzzle: true, iconOrder: true, connect: true },
 			}),
-		).toEqual({ image: false, puzzle: true, iconOrder: false });
+		).toEqual({ image: false, puzzle: true, iconOrder: false, connect: false });
 	});
 
 	it("ignores frictionlessTypes on a site pinned to a concrete type", () => {
 		expect(
 			resolveSiteAllowedCaptchaTypes({
 				captchaType: CaptchaType.image,
-				frictionlessTypes: { image: false, puzzle: false, iconOrder: true },
+				frictionlessTypes: { image: false, puzzle: false, iconOrder: true, connect: true },
 			}),
-		).toEqual({ image: true, puzzle: true, iconOrder: false });
+		).toEqual({ image: true, puzzle: true, iconOrder: false, connect: false });
 	});
 
 	it("holds a site pinned to icon-order to the icon-order feature flag alone", () => {
 		expect(
 			resolveSiteAllowedCaptchaTypes({
 				captchaType: CaptchaType.iconOrder,
-				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true, connect: true },
 			}).iconOrder,
 		).toBe(false);
 		expect(
 			resolveSiteAllowedCaptchaTypes({
 				captchaType: CaptchaType.iconOrder,
-				frictionlessTypes: { image: true, puzzle: true, iconOrder: false },
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: false, connect: false },
 				captchaTypeFeatureFlags: { iconOrder: true },
 			}).iconOrder,
 		).toBe(true);
@@ -168,24 +169,24 @@ describe("resolveSiteAllowedCaptchaTypes", () => {
 				captchaType: CaptchaType.puzzle,
 				captchaTypeFeatureFlags: { puzzle: false },
 			}),
-		).toEqual({ image: true, puzzle: false, iconOrder: false });
+		).toEqual({ image: true, puzzle: false, iconOrder: false, connect: false });
 	});
 
 	it("applies the puzzle feature flag on a frictionless site", () => {
 		expect(
 			resolveSiteAllowedCaptchaTypes({
 				captchaType: CaptchaType.frictionless,
-				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true, connect: true },
 				captchaTypeFeatureFlags: { puzzle: false },
 			}),
-		).toEqual({ image: true, puzzle: false, iconOrder: false });
+		).toEqual({ image: true, puzzle: false, iconOrder: false, connect: false });
 	});
 
 	it("applies the owner's icon-order preference on a frictionless site with the flag on", () => {
 		expect(
 			resolveSiteAllowedCaptchaTypes({
 				captchaType: CaptchaType.frictionless,
-				frictionlessTypes: { image: true, puzzle: true, iconOrder: false },
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: false, connect: false },
 				captchaTypeFeatureFlags: { iconOrder: true },
 			}).iconOrder,
 		).toBe(false);

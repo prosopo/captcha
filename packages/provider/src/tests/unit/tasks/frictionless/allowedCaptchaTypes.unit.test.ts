@@ -157,7 +157,7 @@ describe("FrictionlessManager allowed captcha types", () => {
 			manager.setRoutingContext(routingContext);
 			manager.setAllowedCaptchaTypes(
 				resolveAllowedCaptchaTypes({
-					frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+					frictionlessTypes: { image: true, puzzle: true, iconOrder: true, connect: true },
 				}),
 			);
 

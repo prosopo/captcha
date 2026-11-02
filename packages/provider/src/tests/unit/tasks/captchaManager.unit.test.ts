@@ -53,7 +53,7 @@ const defaultUserSettings: IUserSettings = {
 		frictionlessPuzzleThreshold: 0.8,
 		frictionlessImageThreshold: 1,
 	},
-	frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+	frictionlessTypes: { image: true, puzzle: true, iconOrder: true, connect: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	audioAccessibilityEnabled: false,
