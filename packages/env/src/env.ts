@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
-import { IpInfoService } from "@prosopo/ipinfo";
+import { DEFAULT_LOOKUP_CACHE, IpInfoService } from "@prosopo/ipinfo";
 import { Keyring, getPair } from "@prosopo/keyring";
 import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
@@ -65,6 +65,7 @@ export class Environment implements ProsopoEnvironment {
 			ipapiUrl: this.config.ipApi?.baseUrl,
 			ipapiKey: this.config.ipApi?.apiKey,
 			logger: this.logger,
+			lookupCache: DEFAULT_LOOKUP_CACHE,
 		});
 
 		this.logger.info(() => ({
@@ -80,7 +81,10 @@ export class Environment implements ProsopoEnvironment {
 
 	async getSigner(): Promise<KeyringPair> {
 		if (!this.pair) {
-			throw new ProsopoEnvError("CONTRACT.SIGNER_UNDEFINED", {
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "ENV-1",
+				message: "Signer undefined",
 				context: { failedFuncName: this.getSigner.name },
 			});
 		}
@@ -88,8 +92,12 @@ export class Environment implements ProsopoEnvironment {
 		try {
 			this.pair = this.keyring.addPair(this.pair);
 		} catch (error) {
-			throw new ProsopoEnvError("CONTRACT.SIGNER_UNDEFINED", {
-				context: { failedFuncName: this.getSigner.name, error },
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "ENV-2",
+				message: "Signer undefined",
+				cause: error,
+				context: { failedFuncName: this.getSigner.name },
 			});
 		}
 
@@ -98,27 +106,33 @@ export class Environment implements ProsopoEnvironment {
 
 	getDb(): ProviderDatabase {
 		if (this.db === undefined) {
-			throw new ProsopoEnvError(
-				new Error("db not setup! Please call isReady() first"),
-			);
+			throw new ProsopoError({
+				code: "UNEXPECTED",
+				errorSite: "ENV-3",
+				message: "db not setup! Please call isReady() first",
+			});
 		}
 		return this.db;
 	}
 
 	getAssetsResolver(): AssetsResolver {
 		if (this.assetsResolver === undefined) {
-			throw new ProsopoEnvError(
-				new Error("assetsResolver not setup! Please call isReady() first"),
-			);
+			throw new ProsopoError({
+				code: "UNEXPECTED",
+				errorSite: "ENV-4",
+				message: "assetsResolver not setup! Please call isReady() first",
+			});
 		}
 		return this.assetsResolver;
 	}
 
 	getPair(): KeyringPair {
 		if (this.pair === undefined) {
-			throw new ProsopoEnvError(
-				new Error("pair not setup! Please call isReady() first"),
-			);
+			throw new ProsopoError({
+				code: "UNEXPECTED",
+				errorSite: "ENV-5",
+				message: "pair not setup! Please call isReady() first",
+			});
 		}
 		return this.pair;
 	}
@@ -188,9 +202,11 @@ export class Environment implements ProsopoEnvironment {
 			await this.ipInfoService.initialize();
 			this.ready = true;
 		} catch (err) {
-			throw new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
-				context: { error: err },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "SERVICE_NOT_READY",
+				errorSite: "ENV-6",
+				message: "Environment not ready",
+				cause: err,
 			});
 		}
 	}
@@ -227,9 +243,12 @@ export class Environment implements ProsopoEnvironment {
 				await this.db.connect();
 			}
 		} catch (error) {
-			throw new ProsopoEnvError("DATABASE.DATABASE_IMPORT_FAILED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "ENV-7",
+				message: "Failed to import database engine",
+				cause: error,
 				context: {
-					error,
 					environment: this.config.database
 						? this.config.database[this.defaultEnvironment]
 							? this.config.database[this.defaultEnvironment]?.type

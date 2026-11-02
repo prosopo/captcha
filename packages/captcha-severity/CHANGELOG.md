@@ -1,0 +1,140 @@
+# @prosopo/captcha-severity
+
+## 1.4.0
+### Minor Changes
+
+- 915f30b: Traffic filter categories can now have exceptions. An exception matches visitors by country, by whether their country is inside or outside the account's market, by a minimum abuser score, or any mix of these. It then replaces the category's block or challenge action. When several exceptions match, the harshest wins: a block beats any challenge, and a stricter captcha beats a milder one. So the order of the list does not matter. For example, block proxies, but challenge those from the account's market unless their abuser score is at least 0.5.
+  
+  The account's market countries now travel to providers inside each site's traffic filter, including when a provider pulls updated sites from the portal database. An exception that depends on the market never matches while the account has no market set.
+  
+  `@prosopo/captcha-severity` gains `policyHarshness` and `harshestPolicy`. They rank a policy that may block, and the access rules now use them too, with the same ordering as before.
+
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 1.3.3
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 1.3.2
+### Patch Changes
+
+- a00fb86: Make the puzzle easier to solve on a phone.
+  
+  Two changes. First, how we work out whether the user is on a phone at all: it
+  used to be read off the IP's mobile-carrier flag, which says what network the
+  address is on and not what device is holding it, so every phone on home Wi-Fi
+  or behind a VPN counted as a desktop. It is now weighed across everything the
+  request carries — the User-Agent, the `Sec-CH-UA-Mobile` and
+  `Sec-CH-UA-Platform` client hints, the carrier flag, the connection's MSS, the
+  in-app-browser flag, and the touch readings that arrive with a solved
+  challenge. Signals that disagree cancel out, so a desktop browser claiming a
+  phone's User-Agent still counts as a desktop, and a touchscreen laptop is no
+  longer mistaken for a phone.
+  
+  Second, a phone is never asked for a placement more accurate than a fingertip
+  can give, nor handed a piece smaller than a fingertip covers. Both are applied
+  when the challenge is cut, so they hold whichever route set the difficulty —
+  the site's own setting, a traffic-filter policy, a routing machine, or
+  automatic escalation.
+
+## 1.3.1
+### Patch Changes
+
+- ebcd4ed: Bound automatic puzzle difficulty escalation, and record the level a session was
+  given so it can be read back from the session record.
+
+## 1.3.0
+### Minor Changes
+
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+
+## 1.2.0
+### Minor Changes
+
+- 1ce9482: Cap automatic puzzle escalation one rung lower on touch devices than on pointer devices.
+  
+  The puzzle's `tolerance` is an absolute CSS-pixel target and the widget renders into a fixed 300x200 container on every device, so a difficulty level asks the same placement accuracy of a fingertip as it does of a mouse.
+  
+  `MAX_AUTO_ESCALATION_LEVEL_TOUCH` and `resolveMaxEscalationLevel(siteMaxLevel, isTouch)` are new in `@prosopo/captcha-severity`. The resolver takes the stricter of the site's own `puzzleMaxDifficulty` and the device ceiling, so a site set to 3 or 4 cannot out-vote the touch ceiling and a site pinned to 0 is not raised by it.
+  
+  The provider now calls it from both places a puzzle difficulty is chosen: `sendCaptcha`, which reads `routingContext.platform.isMobile`, and the post-PoW escalation in `submitPoWCaptchaSolution`, which derives the platform from the originating session. That second path previously ignored the site's `puzzleMaxDifficulty` entirely and always clamped to the global ceiling; it now respects both caps.
+  
+  Desktop behaviour is unchanged, and L4 stays unreachable by automatic escalation on either device.
+
+### Patch Changes
+
+- 2118584: Trim the comments on the puzzle difficulty device ceiling. No behaviour change.
+
+## 1.1.2
+### Patch Changes
+
+- d528f41: Rank a captcha type named after a built-in object property, such as `constructor` or `__proto__`, at 0 like any other unknown type.
+  
+  The tier table was a plain object, so those names read a function or object off Object.prototype instead of missing. `rankCaptchaType("constructor")` returned a function and `captchaPolicySeverity` returned a string, which broke every strictness comparison it took part in. The table is now a Map.
+
+## 1.1.1
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+
+## 1.1.0
+### Minor Changes
+
+- 424e467: Add `@prosopo/captcha-severity` and use it for the access rules and the traffic filter.
+  
+  "Which captcha challenge is stricter" is one idea with several callers, and each answered it with its own table: the traffic filter combining multiple `challenge` matches on one request (`resolveChallengePolicy`), the access rules breaking ties between equally-specific rules (`ruleHarshness`), and downstream routing consumers. They agreed on the order — image > puzzle > pow > frictionless — but nothing held them to it, and they disagreed on the encoding.
+  
+  The new package has **zero dependencies**, deliberately. Captcha types are string enums, so a plain `string` parameter accepts them without importing `CaptchaType` — and that import would not be free, because it lives in a module that pulls zod in for its schemas. Some consumers bundle this standalone under a hard source-size ceiling that a runtime dependency on the `@prosopo/types` barrel has breached before.
+  
+  Two APIs, because "stricter" means two different things:
+  
+  - `rankCaptchaType` / `isStricterCaptchaType` compare the **type alone**, for callers that choose the type independently of its settings — as the traffic filter does, picking the strictest type and then separately merging the hardest parameters from every matched category.
+  - `captchaPolicySeverity` / `isStricterCaptchaPolicy` compare a **whole policy**, type first and its own difficulty setting second, for callers where one complete policy must beat another and a tie on type alone would otherwise be decided by argument order.
+  
+  **Fixes an ordering bug in the access rules.** `ruleHarshness` scored `base + solvedImagesCount` with tiers 10 apart, and `solvedImagesCount` is validated by `imageMaxRoundsFieldSchema` — `number().int().min(2)`, with no upper bound and an `imageMaxRounds` default of 32. A `Restrict[pow]` rule carrying 32 rounds therefore scored 42 and outranked a `Restrict[image]` rule at 30, exactly inverting the intended order; 11 rounds on a puzzle rule was enough to do it. The intra-type component is now clamped below the tier gap, so no setting can lift a rule over a stricter captcha type.
+  
+  One further behaviour change: pow rules now break ties on `powDifficulty` rather than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow, so every pow rule previously scored at the bottom of its tier regardless of difficulty. Image and puzzle both keep `solvedImagesCount` — it is the severity currency they share, which the provider maps onto a puzzle difficulty level via `severityToPuzzleDifficulty` rather than treating as a literal round count.
+- 3d2176d: Move the puzzle difficulty ladder into `@prosopo/captcha-severity`, so every consumer derives a difficulty from one table.
+  
+  `PUZZLE_DIFFICULTY_LEVELS`, `MAX_AUTO_ESCALATION_LEVEL`, `MIN_DECOY_HOLE_DARKEN_MARGIN`, `clampDifficultyLevel` and `severityToPuzzleDifficulty` lived in `provider/src/tasks/puzzle/puzzleDifficulty.ts`, reachable only from inside the provider — the severity package's own docs described the ladder at length but did not hold it. Anything else that has to answer "what difficulty is this puzzle" had to restate the mapping, and the consumers that author and edit puzzle rules sit outside the provider.
+  
+  They can import it now. The severity package already answers "which of these policies is stricter" off `solvedImagesCount`; the ladder answers what a puzzle policy carrying that number is actually served at, which is the same question one step further in.
+  
+  Sampling a concrete render from a level's bands stays in the provider as `samplePuzzleDifficulty`: it needs `IPuzzleSettings` from `@prosopo/types` and a `node:crypto`-backed sampler, and the severity package's zero-dependency, browser-safe property is load-bearing for consumers that bundle it standalone.
+  
+  Adds `puzzleDifficultyToSeverity`, the inverse of `severityToPuzzleDifficulty`. Writers need that direction — a rule editor turning a chosen difficulty into the field the rule carries, or rule authoring normalising a count inherited from the image path. Each level spans two rounds, so without a canonical value per level a writer picks between numbers that produce the identical puzzle, and the difference survives only to break severity ties arbitrarily. The round-trip is pinned by tests.
+  
+  No behaviour change in the provider: same table, same thresholds, same clamping.

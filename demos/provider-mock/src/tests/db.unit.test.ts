@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { MongoDatabase } from "@prosopo/database";
 import type mongoose from "mongoose";
 import {
@@ -146,7 +146,7 @@ describe("connect", () => {
 		// The models used to be read off an undefined connection, so this showed
 		// up much later as "cannot read properties of undefined".
 		stubSuperConnect(undefined);
-		await expect(db.connect()).rejects.toBeInstanceOf(ProsopoDBError);
+		await expect(db.connect()).rejects.toBeInstanceOf(ProsopoError);
 		expect(db.tables.ja4).toBeUndefined();
 	});
 
@@ -168,7 +168,7 @@ describe("connect", () => {
 
 describe("getTables", () => {
 	test("throws when nothing has been registered yet", () => {
-		expect(() => db.getTables()).toThrow(ProsopoDBError);
+		expect(() => db.getTables()).toThrow(ProsopoError);
 	});
 
 	test("returns the models once connected", async () => {
@@ -178,12 +178,12 @@ describe("getTables", () => {
 	});
 
 	test("querying before connecting is a database error, not a TypeError", async () => {
-		await expect(db.getJA4Records()).rejects.toBeInstanceOf(ProsopoDBError);
+		await expect(db.getJA4Records()).rejects.toBeInstanceOf(ProsopoError);
 		await expect(
 			db.getJA4RecordByFingerprintAndUserAgent("a", "b"),
-		).rejects.toBeInstanceOf(ProsopoDBError);
+		).rejects.toBeInstanceOf(ProsopoError);
 		await expect(db.addOrUpdateJA4Record(RECORD)).rejects.toBeInstanceOf(
-			ProsopoDBError,
+			ProsopoError,
 		);
 	});
 });

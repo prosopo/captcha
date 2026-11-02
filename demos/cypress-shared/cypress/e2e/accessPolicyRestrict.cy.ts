@@ -34,10 +34,10 @@ import "@cypress/xpath";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("User access policy Restrict rules", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 
@@ -107,7 +107,7 @@ describe("User access policy Restrict rules", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
 			"anyCaptcha",
 		);
-		cy.visit(Cypress.env("default_page"), {
+		cy.visit(Cypress.expose("default_page"), {
 			timeout: 30000,
 			failOnStatusCode: false,
 		});
@@ -150,7 +150,7 @@ describe("User access policy Restrict rules", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"imageChallenge",
 		);
-		cy.visit(Cypress.env("default_page"), {
+		cy.visit(Cypress.expose("default_page"), {
 			timeout: 30000,
 			failOnStatusCode: false,
 		});
@@ -194,7 +194,7 @@ describe("User access policy Restrict rules", () => {
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"imageChallenge",
 		);
-		cy.visit(Cypress.env("default_page"), {
+		cy.visit(Cypress.expose("default_page"), {
 			timeout: 30000,
 			failOnStatusCode: false,
 		});

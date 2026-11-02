@@ -17,6 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RedisWriteQueue } from "@prosopo/database";
 import {
+	type DetectorData,
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
@@ -119,6 +120,61 @@ describe("decryptPayload", () => {
 			decryptionFailed: false,
 			bundleId: "bundle-0",
 		});
+	});
+
+	it("relays the collected client signals through to the caller", async () => {
+		// Whatever the detector decoded has to survive the per-key retry relay
+		// in decryptPayload. Signals used to be named one by one here and
+		// several were decoded and then silently dropped, so no session ever
+		// carried them. Relaying the bag whole is what makes that class of bug
+		// impossible, so this asserts an untouched round trip — including a key
+		// no type in this repo declares.
+		const d: DetectorData = {
+			k1: "text",
+			k2: true,
+			k3: 120,
+			nested: { list: ["a", "b"] },
+			aKeyThisRepoDoesNotKnow: 7,
+		};
+		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
+			getBotScore: vi.fn().mockImplementation(() => {
+				return {
+					baseBotScore: 0.5,
+					timestamp: Date.now(),
+					triggeredDetectors: [50, 51],
+					d,
+				};
+			}),
+		}));
+		const { initDetectorBundlePool } = await import(
+			"../../../../tasks/detection/bundlePool.js"
+		);
+		initDetectorBundlePool(dir);
+
+		const FrictionlessManager = (
+			await import("../../../../tasks/frictionless/frictionlessTasks.js")
+		).FrictionlessManager;
+
+		const writeQueue = {
+			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
+		} as unknown as RedisWriteQueue;
+
+		const frictionlessTaskManager = new FrictionlessManager(
+			db,
+			pair,
+			config,
+			undefined,
+			writeQueue,
+		);
+
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+			"det-1",
+		);
+
+		expect(result.d).toEqual(d);
+		expect(result.triggeredDetectors).toEqual([50, 51]);
 	});
 
 	it("fails closed (treated as bot) when no detector bundle can be resolved", async () => {

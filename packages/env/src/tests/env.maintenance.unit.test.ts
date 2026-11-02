@@ -27,6 +27,7 @@ vi.mock("@prosopo/database", () => ({
 // constructible implementation — an arrow has no [[Construct]] slot and the mock
 // throws ("did not use 'function' or 'class' in its implementation").
 vi.mock("@prosopo/ipinfo", () => ({
+	DEFAULT_LOOKUP_CACHE: { ttlMs: 0, maxEntries: 0 },
 	IpInfoService: vi.fn().mockImplementation(function () {
 		return {
 			initialize: mockIpInfoInit,
@@ -107,7 +108,7 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 
 		const env = buildEnv();
 		await expect(env.isReady()).rejects.toMatchObject({
-			translationKey: "GENERAL.ENVIRONMENT_NOT_READY",
+			errorId: "SERVICE_NOT_READY:ENV-6",
 		});
 	});
 

@@ -61,12 +61,22 @@ export interface ClickEventPoint {
 }
 
 /**
+ * Document scroll offset captured during user interaction
+ */
+export interface ScrollEventPoint {
+	x: number;
+	y: number;
+	timestamp: number;
+}
+
+/**
  * Behavioral data collected from user interactions
  */
 export interface BehavioralData {
 	collector1: MouseMovementPoint[];
 	collector2: TouchEventPoint[];
 	collector3: ClickEventPoint[];
+	collector4?: ScrollEventPoint[];
 	deviceCapability: string;
 }
 
@@ -77,5 +87,6 @@ export interface PackedBehavioralData {
 	c1: unknown[];
 	c2: unknown[];
 	c3: unknown[];
+	c4?: unknown[];
 	d: string;
 }

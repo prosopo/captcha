@@ -215,8 +215,13 @@ export class UsageCounters {
 }
 
 /**
- * Helper: produce the standard 24-counter served/solved write set for a given
- * captcha challenge. Used by both served (post-session) and solved hooks.
+ * Helper: produce the standard served/solved write set for a given captcha
+ * challenge. Used by both served (post-session) and solved hooks.
+ *
+ * `deviceBucket` is only written when the caller knows one, which for now is
+ * the PoW solve path with a verified proof of fingerprint. Omitting it leaves
+ * the key absent rather than at zero, so a bucket's count is over the requests
+ * that actually proved it.
  */
 export const buildAllWindowIncrements = (
 	kind: "served" | "solved",
@@ -224,6 +229,7 @@ export const buildAllWindowIncrements = (
 	ip: string,
 	userAccount: string,
 	peerIp?: string,
+	deviceBucket?: string,
 ): CounterIncrement[] => {
 	const out: CounterIncrement[] = [];
 	for (const window of [
@@ -245,6 +251,12 @@ export const buildAllWindowIncrements = (
 			out.push({
 				spec: { kind, captchaType, dimension: "peerIp", window },
 				value: peerIp,
+			});
+		}
+		if (deviceBucket) {
+			out.push({
+				spec: { kind, captchaType, dimension: "deviceBucket", window },
+				value: deviceBucket,
 			});
 		}
 		if (captchaType !== "any") {
@@ -272,6 +284,17 @@ export const buildAllWindowIncrements = (
 						window,
 					},
 					value: peerIp,
+				});
+			}
+			if (deviceBucket) {
+				out.push({
+					spec: {
+						kind,
+						captchaType: "any",
+						dimension: "deviceBucket",
+						window,
+					},
+					value: deviceBucket,
 				});
 			}
 		}

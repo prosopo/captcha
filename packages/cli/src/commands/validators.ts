@@ -14,9 +14,9 @@
 
 import type { Compact } from "@polkadot/types-codec/base";
 import type { u128 } from "@polkadot/types-codec/primitive";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { encodeStringAddress } from "@prosopo/provider";
-import parser from "cron-parser";
+import { CronExpressionParser } from "cron-parser";
 
 import type { ArgumentsCamelCase } from "yargs";
 
@@ -38,7 +38,9 @@ export const validateSiteKey = (
 
 export const validateValue = (argv: ArgumentsCamelCase) => {
 	if (typeof argv.value !== "number") {
-		throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
+		throw new ProsopoError({
+			code: "CLI_INVALID_ARGUMENT",
+			errorSite: "CLI-1",
 			context: { value: [argv.value] },
 		});
 	}
@@ -48,10 +50,12 @@ export const validateValue = (argv: ArgumentsCamelCase) => {
 
 export const validateScheduleExpression = (argv: ArgumentsCamelCase) => {
 	if (typeof argv.schedule === "string") {
-		const result = parser.parseString(argv.schedule as string);
-
-		if (argv.schedule in result.errors) {
-			throw new ProsopoEnvError("CLI.PARAMETER_ERROR", {
+		try {
+			CronExpressionParser.parse(argv.schedule);
+		} catch {
+			throw new ProsopoError({
+				code: "CLI_INVALID_ARGUMENT",
+				errorSite: "CLI-2",
 				context: {
 					payee: [argv.shedule],
 					failedFuncName: validateScheduleExpression.name,

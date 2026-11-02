@@ -29,7 +29,7 @@ import { secp256k1Compress } from "@prosopo/util-crypto";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { sr25519FromSeed, sr25519Sign } from "@prosopo/util-crypto";
 import { sr25519VrfSign, sr25519VrfVerify } from "@prosopo/util-crypto";
-import type { JWTVerifyResult } from "@prosopo/util-crypto";
+import type { JWTVerifyOptions, JWTVerifyResult } from "@prosopo/util-crypto";
 import { decodePair } from "./decode.js";
 import { encodePair } from "./encode.js";
 import { pairToJson } from "./toJson.js";
@@ -227,8 +227,8 @@ export function createPair(
 			}
 			return TYPE_JWT_ISSUE[type]({ publicKey, secretKey }, options, message);
 		},
-		jwtVerify: (jwt: JWT): JWTVerifyResult => {
-			return jwtVerify(jwt, publicKey);
+		jwtVerify: (jwt: JWT, options?: JWTVerifyOptions): JWTVerifyResult => {
+			return jwtVerify(jwt, publicKey, options);
 		},
 		lock: (): void => {
 			secretKey = new Uint8Array([]);

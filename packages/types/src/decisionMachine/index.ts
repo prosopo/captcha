@@ -18,13 +18,28 @@ import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
+import {
+	type IIconOrderSettings,
+	type IPuzzleSettings,
+	type ITrafficCategoryPolicy,
+	IconOrderSettingsSchema,
+	PuzzleSettingsSchema,
+	iconOrderToleranceFieldSchema,
+	puzzleToleranceFieldSchema,
+} from "../client/settings.js";
+import type { ModeEnum } from "../config/mode.js";
 import type {
+	AudioEvent,
 	ConnectEvent,
+	IconOrderEvent,
 	PuzzleEvent,
 	RequestHeaders,
 } from "../provider/api.js";
-import type { ScoreComponents } from "../provider/database.js";
-import type { SimdReadings } from "../provider/detection.js";
+import type {
+	FingerprintSummaryStored,
+	ScoreComponents,
+} from "../provider/database.js";
+import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
 
 export type EnrichedDnsEvent = {
@@ -75,7 +90,47 @@ export type DecisionMachineBehavioralDataPacked = {
 	c1: unknown[];
 	c2: unknown[];
 	c3: unknown[];
+	c4?: unknown[];
 	d: string;
+};
+
+/**
+ * The site's per-category `settings.trafficFilter` policies, projected down to
+ * just the egress categories (the filter's thresholds and name lists are left
+ * behind). Derived server-side by `deriveTrafficPolicies` and surfaced to
+ * routing / decision machines.
+ *
+ * Two distinct jobs:
+ *
+ * 1. **Consent gate.** A rule that reasons about middleboxes must know whether
+ *    the operator actually rejects that egress class. A VPN concentrator
+ *    legitimately terminates the client's TCP handshake, so on a site that
+ *    welcomes VPN users the observed stack says nothing and the check must not
+ *    run. `action === "block"` is the only value that counts as "not opted in".
+ *
+ * 2. **Policy inheritance.** A machine that classifies a connection as, say,
+ *    a VPN the IP-intel feed missed should act exactly as the operator
+ *    configured for VPNs — deny when they block, serve their nominated captcha
+ *    when they challenge — rather than invent its own escalation.
+ *
+ * An absent key means the operator left that category unconfigured. A missing
+ * bag entirely (no trafficFilter, or a provider that pre-dates the field) means
+ * nothing is configured, so machines must fall through to no extra friction.
+ *
+ * NB `puzzleTolerance` / `puzzle` render overrides on a challenge policy are
+ * not expressible in `RoutingMachineOutput`, so a machine inheriting a
+ * challenge policy can honour `captchaType`, `powDifficulty` and
+ * `solvedImagesCount` only.
+ */
+export type TrafficCategoryPolicies = {
+	vpn?: ITrafficCategoryPolicy;
+	proxy?: ITrafficCategoryPolicy;
+	tor?: ITrafficCategoryPolicy;
+	datacenter?: ITrafficCategoryPolicy;
+	abuser?: ITrafficCategoryPolicy;
+	mobile?: ITrafficCategoryPolicy;
+	satellite?: ITrafficCategoryPolicy;
+	crawler?: ITrafficCategoryPolicy;
 };
 
 export type DecisionMachineInput = {
@@ -88,6 +143,8 @@ export type DecisionMachineInput = {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
+		| CaptchaType.audio
+		| CaptchaType.iconOrder
 		| CaptchaType.connect;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
@@ -99,6 +156,13 @@ export type DecisionMachineInput = {
 	// challenge record). Undefined for invalid lookups.
 	ipInfo?: IPInfoResponse;
 	dnsEvent?: EnrichedDnsEvent;
+	// Whether this provider's DNS sidecar delivered an authenticated event
+	// batch recently (see provider tasks/dnsEvent/dnsSidecarHealth.ts). Set by
+	// DecisionMachineRunner.decide(). A rule that denies on a missing
+	// `dnsEvent` must require this to be `true`: when the sidecar is broken no
+	// session has a dnsEvent, so denying would block every real user.
+	// Undefined on providers that predate the field.
+	dnsSidecarHealthy?: boolean;
 	// Session-derived fields forwarded from the Session record loaded at
 	// the verify path. Undefined when no frictionless session preceded.
 	score?: number;
@@ -111,6 +175,17 @@ export type DecisionMachineInput = {
 	ruleType?: string[];
 	webView?: boolean;
 	iFrame?: boolean;
+	// Page URLs the widget was rendered on, read back from the Session
+	// record (origin + path only; query string, fragment and any embedded
+	// credentials stripped — see sanitisePageUrl). `currentUrl` is the
+	// top-frame URL; `iframeUrl` is the widget's own frame URL and is
+	// undefined when the widget IS the top frame. Undefined when the client
+	// omitted the field or the session pre-dates it.
+	//
+	// Both are client-reported and are NOT cross-checked against the request
+	// Origin / Referer, so a rule must not grant an exemption on them alone.
+	currentUrl?: string;
+	iframeUrl?: string;
 	// Checkbox click + shape clicks embedded in the solution salt. For pow
 	// and puzzle this is `[[[checkboxX, checkboxY]]]` (single click); for
 	// image the outer array has one entry per tile with the first tile's
@@ -120,11 +195,16 @@ export type DecisionMachineInput = {
 	coords?: [number, number][][];
 	// Puzzle-only: per-event trail of the drag from origin to target,
 	// captured client-side and persisted on the puzzle captcha record.
-	// Always undefined on pow / image / connect inputs.
+	// Always undefined on pow / image / audio / connect inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Audio-only: playback and typing events, persisted on the audio record.
+	audioEvents?: AudioEvent[];
+	// Audio-only: how many times the clip was played before submitting.
+	audioReplays?: number;
+	// Icon-order-only equivalent of `puzzleEvents`.
+	iconOrderEvents?: IconOrderEvent[];
 	// Connect-only: per-event trail of the drag of a tile onto the cell that
-	// completes the line, in normalised board coordinates. Always undefined on
-	// pow / image / puzzle inputs.
+	// completes the line, in normalised board coordinates.
 	connectEvents?: ConnectEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
@@ -138,9 +218,38 @@ export type DecisionMachineInput = {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// option-kind list in wire order ([2, 4, 8, 1, 3] on an ordinary Linux
+	// SYN), which replaces the lossy packed `tcpOptsOrder`.
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Rules already reading
+	// these keep working on historical sessions; on sessions served by a
+	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
+	// The site's per-category traffic-filter policies. Gates the
+	// egress-sensitive TCP-stack rules and supplies the action they inherit —
+	// see TrafficCategoryPolicies.
+	trafficPolicies?: TrafficCategoryPolicies;
+	// Everything the detector reported for the session this verify belongs
+	// to, as persisted on the Session record. Keys are whatever the detector
+	// chose to emit: nothing in this repo declares them, and a rule may read
+	// a key that no release of `types` or `provider` has ever heard of.
+	// Undefined when no frictionless session preceded, or when the detector
+	// reported nothing.
+	d?: DetectorData;
 };
 
 export type DecisionMachineOutput = {
@@ -154,6 +263,8 @@ export type DecisionMachineCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
+	| CaptchaType.audio
+	| CaptchaType.iconOrder
 	| CaptchaType.connect;
 
 // This is the API configuration type (used for uploads/API calls)
@@ -207,7 +318,23 @@ export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
 export const COUNTER_KINDS = ["served", "solved"] as const;
 export type CounterKind = (typeof COUNTER_KINDS)[number];
 
-export const COUNTER_DIMENSIONS = ["ip", "userAccount", "peerIp"] as const;
+/**
+ * `deviceBucket` is the `bucketId` disclosed by a verified proof of
+ * fingerprint. Counting on it answers "how much traffic has this kind of
+ * device produced", which no per-request field can: one bucketId on its own
+ * says nothing, and the account address is a different value on every visit
+ * from a client that redraws its fingerprint.
+ *
+ * It resolves only on a request that disclosed one. A spec naming it on a
+ * request that did not is skipped, so the counter reads as absent rather than
+ * as zero traffic.
+ */
+export const COUNTER_DIMENSIONS = [
+	"ip",
+	"userAccount",
+	"peerIp",
+	"deviceBucket",
+] as const;
 export type CounterDimension = (typeof COUNTER_DIMENSIONS)[number];
 
 export const COUNTER_CAPTCHA_ANY = "any" as const;
@@ -215,6 +342,8 @@ export type CounterCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
+	| CaptchaType.audio
+	| CaptchaType.iconOrder
 	| CaptchaType.connect
 	| typeof COUNTER_CAPTCHA_ANY;
 
@@ -231,6 +360,8 @@ export const CounterSpecSchema = z.object({
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.audio),
+		z.literal(CaptchaType.iconOrder),
 		z.literal(CaptchaType.connect),
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
@@ -250,6 +381,7 @@ export interface RoutingMachineBaseline {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
+		| CaptchaType.iconOrder
 		| CaptchaType.connect;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
@@ -267,6 +399,12 @@ export interface RoutingMachineRawSignals {
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	fingerprintProof?: string;
+	// The verified proof above, reduced to the fields a rule can use: the
+	// commitment root, the disclosed values, and the device bucket. Present
+	// only when the proof verified, so a rule reading it never has to re-check
+	// anything. Absent when no proof arrived or it failed verification, which
+	// `fingerprintProofValid` reports separately.
+	fingerprintSummary?: FingerprintSummaryStored;
 	// Decoded per-CPU WASM SIMD fingerprint readings, when the client submitted
 	// them with the PoW solution (decrypted and attached to the session, then
 	// surfaced here for the post-pow routing machine). Undefined when absent or
@@ -296,9 +434,27 @@ export interface RoutingMachineRawSignals {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// option-kind list in wire order ([2, 4, 8, 1, 3] on an ordinary Linux
+	// SYN), which replaces the lossy packed `tcpOptsOrder`.
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Rules already reading
+	// these keep working on historical sessions; on sessions served by a
+	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
 	// ipapi/isp mirror at request time. Undefined when the lookup failed
 	// or the middleware wasn't reached (dev requests bypassing the
@@ -326,6 +482,22 @@ export interface RoutingMachineRawSignals {
 	// client / persisted session pre-dates the field.
 	currentUrl?: string;
 	iframeUrl?: string;
+	// The site's per-category traffic-filter policies. Gates the
+	// egress-sensitive middlebox route rules and supplies the challenge
+	// policy they inherit — see TrafficCategoryPolicies.
+	trafficPolicies?: TrafficCategoryPolicies;
+	// Widget mode persisted on the originating Session. `postPow` only;
+	// undefined when the session pre-dates the field.
+	mode?: ModeEnum;
+	// True when the PoW salt carried click coords and every pair was (0,0).
+	// The widget reports (0,0) for a keyboard activation as well as for the
+	// frictionless auto-start. `postPow` only.
+	coordsAllZero?: boolean;
+	// Canonical indices of the detectors that fired on the frictionless
+	// payload, as persisted in `scoreComponents.triggeredDetectors`. On
+	// `postPow` and the dedup replay they come from the originating Session.
+	// Undefined when none fired or the payload could not be read.
+	triggeredDetectors?: number[];
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
@@ -340,6 +512,24 @@ export interface RoutingMachineInputBase {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
+	// Everything the detector reported. Same bag, same key names and the same
+	// "nothing here declares them" contract as `DecisionMachineInput.d`, so a
+	// rule reads `input.d.<key>` identically in either machine kind.
+	//
+	// On the `route` phase this is the bag freshly decoded from the payload
+	// that arrived with this request; on `postPow` it is the bag persisted on
+	// the originating Session. Undefined when the detector reported nothing,
+	// or when the payload could not be read.
+	d?: DetectorData;
+	// Set when this request replaces a challenge the user refreshed: how many
+	// refreshes in a row led here, and how long the replaced session had been
+	// alive. `route` phase only; undefined on every other request.
+	refresh?: RoutingMachineRefresh;
+}
+
+export interface RoutingMachineRefresh {
+	count: number;
+	afterMs: number;
 }
 
 export interface RoutingMachineInput extends RoutingMachineInputBase {
@@ -351,6 +541,7 @@ export interface RoutingMachineOutput {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
+		| CaptchaType.iconOrder
 		| CaptchaType.connect;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
@@ -358,16 +549,38 @@ export interface RoutingMachineOutput {
 	// (e.g. why it chose image over pow). Persisted to `session.reason` by the
 	// provider. Free-form string because machines are operator-authored.
 	reason?: string;
+	// Puzzle-only tunables, with the same override semantics as a
+	// trafficFilter `challenge` policy: lower tolerance = stricter accuracy,
+	// and `puzzle` carries per-render overrides (decoy count, scale range, …).
+	// Both are persisted on the Session and layered in by
+	// getPuzzleCaptchaChallenge, because that endpoint re-derives its
+	// overrides from the live trafficFilter verdict and a machine-chosen
+	// puzzle has no matching verdict to re-derive from.
+	// Ignored unless the resolved captchaType is `puzzle`.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
+	// Ignored unless the resolved captchaType is `iconOrder`.
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
 }
 
 export const RoutingMachineOutputSchema = z.object({
+	// No `audio`: it is only reachable as the accessibility alternative.
 	captchaType: z.union([
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.iconOrder),
 		z.literal(CaptchaType.connect),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
 	reason: z.string().optional(),
+	// Bounded by the same validators the site-wide settings use, so a machine
+	// cannot hand the renderer a tolerance or decoy count the portal would
+	// reject.
+	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
+	puzzle: PuzzleSettingsSchema.optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
+	iconOrder: IconOrderSettingsSchema.optional(),
 });

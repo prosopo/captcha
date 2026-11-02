@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// We need the unused params to make express recognise this function as an error handler
+import type { Logger } from "@prosopo/logger";
+import type { NextFunction, Request } from "express";
+import { type ErrorResponse, sendErrorResponse } from "./errorResponse.js";
 
-import { type ProsopoApiError, unwrapError } from "@prosopo/common";
-import type { NextFunction, Request, Response } from "express";
-import type { ZodError } from "zod";
-
+// Express only treats a middleware as an error handler when it takes four
+// parameters, so `next` stays although it is unused. `Request` is listed
+// because its `logger` is declared only in this package's express.d.ts, so
+// to consumers it shares no property with `{ logger?: Logger }`.
 export const handleErrors = (
-	err: ProsopoApiError | SyntaxError | ZodError,
-	request: Request,
-	response: Response,
+	err: unknown,
+	request: Request | { logger?: Logger },
+	response: ErrorResponse,
 	next: NextFunction,
-) => {
-	const { code, statusMessage, jsonError } = unwrapError(err, request.i18n);
-	response.statusMessage = statusMessage;
-	response.set("content-type", "application/json");
-	response.status(code);
-	response.send({ error: jsonError });
-	response.end();
+): void => {
+	sendErrorResponse(err, "APIX-7", response, request.logger);
 };

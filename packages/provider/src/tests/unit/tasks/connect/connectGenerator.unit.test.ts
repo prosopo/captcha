@@ -13,12 +13,9 @@
 // limitations under the License.
 
 import { EMPTY, parseBoard } from "@prosopo/connect-assets";
-import { CaptchaType } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
-	downgradeConnectIfUnavailable,
 	generateConnectBoard,
-	isConnectRenderAvailable,
 	renderConnectTiles,
 	resolveConnectSettings,
 } from "../../../../tasks/connect/connectGenerator.js";
@@ -130,28 +127,5 @@ describe("renderConnectTiles", () => {
 		expect(
 			rendered.tiles.some((tile) => tile.index === layout.solutionTargetIndex),
 		).toBe(false);
-	});
-});
-
-describe("downgradeConnectIfUnavailable", () => {
-	it("reports rendering as available", () => {
-		// Boards are synthesised in-process; there is no asset to be missing.
-		expect(isConnectRenderAvailable()).toBe(true);
-	});
-
-	it("leaves connect alone while rendering is available", () => {
-		expect(downgradeConnectIfUnavailable(CaptchaType.connect)).toBe(
-			CaptchaType.connect,
-		);
-	});
-
-	it("passes other captcha types through untouched", () => {
-		expect(downgradeConnectIfUnavailable(CaptchaType.pow)).toBe(CaptchaType.pow);
-		expect(downgradeConnectIfUnavailable(CaptchaType.image)).toBe(
-			CaptchaType.image,
-		);
-		expect(downgradeConnectIfUnavailable(CaptchaType.puzzle)).toBe(
-			CaptchaType.puzzle,
-		);
 	});
 });

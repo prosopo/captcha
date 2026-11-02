@@ -13,6 +13,34 @@
 // limitations under the License.
 import type { ScoreComponents } from "@prosopo/types";
 
+/**
+ * Sum the weighted components of a frictionless bot score, capped at 1.
+ *
+ * Only numeric components contribute. `ScoreComponents` also carries two
+ * non-numeric diagnostic fields — `triggeredDetectors` (number[]) and
+ * `shadowDomPenalty` (boolean) — and neither has an arithmetic weight
+ * anywhere in the scoring path.
+ *
+ * Filtering them out is load-bearing, not tidiness. `+` on an array coerces
+ * the accumulator to a string, so a single `triggeredDetectors: []` turned
+ * every subsequent component into string concatenation and the whole sum into
+ * NaN:
+ *
+ *   0.42 + []  -> "0.42"                  (string)
+ *   "0.42" + 0.3 -> "0.420.3"
+ *   Math.min(1, "0.420.3") -> NaN
+ *
+ * That was reachable in production rather than theoretical: the Mongoose
+ * schema declares `triggeredDetectors` as an array path, and Mongoose
+ * defaults array paths to `[]`, so the field is present on every session read
+ * back from the database even when the frictionless handler omitted it. The
+ * captcha tasks then spread `dnsAsymmetry` on afterwards, landing it after the
+ * array in key order and triggering the concatenation.
+ *
+ * NaN is still propagated when a genuinely numeric component is NaN —
+ * `typeof NaN === "number"`, so it survives the filter deliberately. A score
+ * that cannot be computed must not silently read as a low one.
+ */
 export const computeFrictionlessScore = (
 	scoreComponents:
 		| {
@@ -20,11 +48,12 @@ export const computeFrictionlessScore = (
 		  }
 		| ScoreComponents,
 ): number => {
+	const values: unknown[] = Object.values(scoreComponents);
 	return Number(
 		Math.min(
 			1,
-			Object.values(scoreComponents)
-				.filter((x) => x !== undefined)
+			values
+				.filter((x): x is number => typeof x === "number")
 				.reduce((acc, val) => acc + val, 0),
 		).toFixed(2),
 	);

@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import { AccessPolicyType } from "#policy/rule.js";
 import {
 	accessPolicyInput,
+	policyScopeExclusionsInput,
 	sanitizeAccessPolicy,
 } from "#policy/ruleInput/policyInput.js";
 
@@ -214,5 +215,39 @@ describe("accessPolicyInput refinement", () => {
 			solvedImagesCount: 5,
 		});
 		expect(result.success).toBe(true);
+	});
+});
+
+describe("policyScopeExclusionsInput", () => {
+	it("splits the comma-joined form Redis stores", () => {
+		const result = policyScopeExclusionsInput.parse({
+			excludedClientIds: "client-a,client-b",
+		});
+
+		expect(result.excludedClientIds).toEqual(["client-a", "client-b"]);
+	});
+
+	it("accepts the array form the API sends", () => {
+		const result = policyScopeExclusionsInput.parse({
+			excludedClientIds: ["client-a"],
+		});
+
+		expect(result.excludedClientIds).toEqual(["client-a"]);
+	});
+
+	it.each<[string, unknown]>([
+		["an empty array", []],
+		["an empty string", ""],
+		["a missing field", undefined],
+	])("reads %s as no exclusions", (_label, excludedClientIds) => {
+		const result = policyScopeExclusionsInput.parse({ excludedClientIds });
+
+		expect(result.excludedClientIds).toBeUndefined();
+	});
+
+	it("rejects a client id containing the Redis separator", () => {
+		expect(() =>
+			policyScopeExclusionsInput.parse({ excludedClientIds: ["a,b"] }),
+		).toThrow(/comma/);
 	});
 });

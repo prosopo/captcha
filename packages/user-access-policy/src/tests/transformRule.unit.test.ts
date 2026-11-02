@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType } from "@prosopo/types";
+import { CaptchaType, ResultReason } from "@prosopo/types";
 import { Address4, Address6 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
@@ -94,6 +94,21 @@ describe("makeAccessRuleHash", () => {
 
 		expect(hash1).toEqual(hash2);
 	});
+
+	it("should leave excludedClientIds out of the hash so the key survives a list change", () => {
+		const unexcluded: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIp: 100n,
+		};
+		const excluded: AccessRule = {
+			...unexcluded,
+			excludedClientIds: ["client-a", "client-b"],
+		};
+
+		expect(makeAccessRuleHash(excluded)).toEqual(
+			makeAccessRuleHash(unexcluded),
+		);
+	});
 });
 
 describe("transformRule", () => {
@@ -107,6 +122,7 @@ describe("transformRule", () => {
 		unsolvedImagesCount: 1,
 		frictionlessScore: 1,
 		deferToVerify: false,
+		messageKey: ResultReason.TOO_MANY_LOCALHOST,
 		headersHash: "headersHash",
 		ja4Hash: "js4Hash",
 		clientId: "client",
@@ -116,6 +132,13 @@ describe("transformRule", () => {
 		countryCode: "US",
 		asn: 205016,
 		os: "macos",
+		browser: "firefox",
+		headerMatch: "1",
+		headerName: "x-test",
+		headerValue: "test",
+		headerOperator: "equals",
+		webBotAuthAgent: "https://signatures.openai.com",
+		excludedClientIds: ["other-client"],
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

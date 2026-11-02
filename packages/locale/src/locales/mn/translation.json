@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Хүчингүй хаягийг кодлож чадсангүй",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha шийдлийн амлалт байхгүй",
+		"SIGNER_UNDEFINED": "Гарын үсэг зурагч тодорхойлогдоогүй",
+		"CANNOT_FIND_KEYPAIR": "Түлхүүрийн хос олдсонгүй",
+		"INVALID_DATA_FORMAT": "Хүчингүй өгөгдлийн формат"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Үл мэдэгдэх орчин хүссэн",
+		"INVALID_CAPTCHA_NUMBER": "Captcha-ийн тохиргоог зөв хийнэ үү",
+		"INVALID_LOG_LEVEL": "Хүчингүй бүртгэлийн түвшин",
+		"INVALID_PACKAGE_DIR": "Хүчингүй багцын хавтас"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Өгөгдлийн багцыг задлахад алдаа гарлаа",
+		"SOLUTION_PARSE_ERROR": "Өгөгдлийн багцыг задлахад алдаа гарлаа",
+		"HASH_ERROR": "Өгөгдлийн багцын хэш тооцоолоход алдаа гарлаа",
+		"DATASET_ID_UNDEFINED": "Өгөгдлийн багцын ID тодорхойлогдоогүй",
+		"NOT_ENOUGH_LABELS": "Шошго хангалтгүй",
+		"NOT_ENOUGH_IMAGES": "Зураг хангалтгүй",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Өгөгдлийн багц дахь captcha-ийн тоо тохируулсан тооноос бага байна",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Өгөгдлийн багц дахь шийдлийн тоо тохируулсан тооноос бага байна",
+		"DUPLICATE_IMAGE": "давхардсан зураг илэрлээ",
+		"MERKLE_ERROR": "Меркл мод үүсгэхэд алдаа гарлаа"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Өгөгдлийн сангийн хөдөлгүүрийг импортлож чадсангүй",
+		"DATABASE_UNDEFINED": "Өгөгдлийн сангийн клиент холбогдоогүй",
+		"DATABASE_HOST_UNDEFINED": "Өгөгдлийн сангийн хостын хаяг тодорхойлогдоогүй",
+		"DATASET_LOAD_FAILED": "Өгөгдлийн багц ачаалж чадсангүй",
+		"DATASET_GET_FAILED": "Өгөгдлийн багц авч чадсангүй",
+		"CAPTCHA_GET_FAILED": "Captcha авч чадсангүй",
+		"CAPTCHA_UPDATE_FAILED": "Captcha шинэчилж чадсангүй",
+		"IMAGE_GET_FAILED": "Зураг авч чадсангүй",
+		"PENDING_RECORD_NOT_FOUND": "Хүлээгдэж буй бичлэг олдсонгүй",
+		"INVALID_HASH": "Хүчингүй хэш",
+		"SOLUTION_GET_FAILED": "Шийдэл авч чадсангүй",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Шаардлагатай тооны шийдэлтэй өгөгдлийн багц олдсонгүй",
+		"SOLUTION_APPROVE_FAILED": "Шийдлийг зөвшөөрч чадсангүй",
+		"SOLUTION_FLAG_FAILED": "Шийдлийг боловсруулсан гэж тэмдэглэж чадсангүй",
+		"TABLES_UNDEFINED": "Хүснэгтүүд тодорхойлогдоогүй",
+		"CONNECTION_UNDEFINED": "Холболт тодорхойлогдоогүй",
+		"COMMITMENT_FLAG_FAILED": "Амлалтыг боловсруулсан гэж тэмдэглэж чадсангүй",
+		"UNKNOWN": "Үл мэдэгдэх өгөгдлийн сангийн алдаа",
+		"QUERY_ERROR": "Өгөгдлийн сангийн асуулга амжилтгүй боллоо",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis хандалтын дүрмийн холболт тодорхойлогдоогүй",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Хэрэглэгчийн хандалтын дүрмийн сан тодорхойлогдоогүй",
+		"SESSION_STORE_FAILED": "Сешнийг хадгалж чадсангүй",
+		"SESSION_CHECK_REMOVE_FAILED": "Сешнийг шалгаж, устгаж чадсангүй",
+		"SESSION_GET_FAILED": "Сешнийг авч чадсангүй"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Эзэмшигч хэрэглэгчийг өөрчлөх боломжгүй",
+		"CANNOT_DELETE_OWN_USER": "Өөрийн бүртгэлийг устгах боломжгүй",
+		"CANNOT_DELETE_LAST_USER": "Сүүлийн хэрэглэгчийг устгах боломжгүй",
+		"USER_ALREADY_EXISTS": "Хэрэглэгч аль хэдийн байна",
+		"NO_SUGGESTIONS_FOUND": "Санал олдсонгүй",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Сүүлийн идэвхтэй сайтыг идэвхгүй болгох боломжгүй",
+		"DUPLICATE_SITE_NAME": "Ийм нэртэй сайт аль хэдийн байна",
+		"INVALID_SITE_NAME": "Сайтын нэр зөвхөн үсэг, тоо, зураас болон доогуур зураас агуулж болно"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Хүчингүй параметр"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Файл олдсонгүй",
+		"FILE_ALREADY_EXISTS": "Файл аль хэдийн байна",
+		"INVALID_DIR_FORMAT": "Хүчингүй хавтасны формат"
+	}
+}

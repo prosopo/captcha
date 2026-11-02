@@ -14,7 +14,7 @@
 /// <reference types="cypress" />
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
@@ -43,7 +43,7 @@ const FORCE_PUZZLE_ROUTING_MACHINE = `
 
 describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 	// The frictionless siteKey from .env. Same one as other suites.
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${CaptchaType.frictionless.toUpperCase()}`,
 	);
 
@@ -84,12 +84,12 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 		}));
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-7",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 		cy.intercept("/dummy").as("dummy");
 		// Intercepts must be installed BEFORE `cy.visit` — the widget
@@ -209,7 +209,7 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 
 		// And the puzzle modal should be visible to the user — same DOM
 		// surface the puzzle-flow tests reach.
-		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+		getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 15000 }).should(
 			"be.visible",
 		);
 	});

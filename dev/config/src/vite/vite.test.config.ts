@@ -16,20 +16,15 @@ import fs from "node:fs";
 import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
+import { testFileGlobs } from "./testFileGlobs.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginSourcemapExclude from "./vite-plugin-sourcemap-exclude.js";
 
 export default function (tsConfigPath?: string) {
-	const testTypeEnv = process.env.TEST_TYPE || undefined;
-	console.log(`TEST_TYPE environment variable: ${testTypeEnv}`);
-	const testTypes = testTypeEnv ? testTypeEnv.trim().split(",") : [];
-	// @(|) globs any tests which don't have their type specified, e.g. myTest.test.ts. These are included even when filtering by test type because we don't know what type of test they are. Really, they should have their type specified.
-	// If we drop ^, there's a chance the tests with no type specified get ignored by accident, which we want to avoid. Ergo, include them by default.
-	const testTypeGlob =
-		testTypes.length > 0
-			? `@(${testTypes.map((t) => `.${t}`).join("|")})`
-			: "@(|)";
-	console.log(`Filtering tests by type: ${testTypeGlob}`);
+	const testFiles = testFileGlobs(process.env.TEST_TYPE);
+	console.log(
+		`TEST_TYPE=${process.env.TEST_TYPE ?? ""} include=${testFiles.include.join(",")} exclude=${testFiles.exclude.join(",")}`,
+	);
 
 	// Determine coverage include paths based on current working directory.
 	//
@@ -72,7 +67,6 @@ export default function (tsConfigPath?: string) {
 				"**/node_modules/**",
 				"**/dist/**",
 			];
-	const include = `src/**/*${testTypeGlob}.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)`;
 	const plugins = [
 		VitePluginSourcemapExclude({ excludeNodeModules: true }),
 		VitePluginCloseAndCopy(),
@@ -97,9 +91,9 @@ export default function (tsConfigPath?: string) {
 			// vitest 4 removed the "basic" reporter; the default reporter with
 			// summary disabled reproduces its terse output.
 			reporters: [["default", { summary: false }]],
-			include: [include],
+			include: testFiles.include,
 			watch: false,
-			exclude: ["**/node_modules/**", "**/dist/**"],
+			exclude: ["**/node_modules/**", "**/dist/**", ...testFiles.exclude],
 			logHeapUsage: true,
 			coverage: {
 				enabled: true,

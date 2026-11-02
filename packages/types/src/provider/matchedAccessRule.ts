@@ -52,7 +52,7 @@ export type MatchedRuleCondition = {
  */
 export const MatchedAccessRuleSchema = object({
 	ruleHash: string(),
-	policyType: union([literal("block"), literal("restrict")]),
+	policyType: union([literal("block"), literal("restrict"), literal("allow")]),
 	conditions: array(MatchedRuleConditionSchema),
 	description: string().optional(),
 	captchaType: CaptchaTypeSchema.optional(),
@@ -64,7 +64,9 @@ export const MatchedAccessRuleSchema = object({
 
 export type MatchedAccessRule = {
 	ruleHash: string;
-	policyType: "block" | "restrict";
+	// "allow" fires the authenticated-session fast-path in the frictionless
+	// flow — see AccessPolicyType in @prosopo/user-access-policy.
+	policyType: "block" | "restrict" | "allow";
 	conditions: MatchedRuleCondition[];
 	description?: string;
 	captchaType?: CaptchaType;

@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
+import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import {
 	ApiParams,
 	CaptchaType,
@@ -26,18 +27,31 @@ import {
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
+import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
+import {
+	isAudioAlternativeEnabled,
+	offersAudioAlternative,
+} from "../../../tasks/audioAlternative.js";
+import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
-import { derivePlatform } from "../../../utils/devicePlatform.js";
+import {
+	deriveDevice,
+	deriveTrafficPolicies,
+} from "../../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../../blacklistRequestInspector.js";
-import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../../blacklistRequestInspector.js";
+import { dnsBeaconUrls } from "../../dnsEventUrl.js";
+import { errorCodeForReason } from "../../errorCodeForReason.js";
 import {
 	recordBotScore,
 	recordDetectorTriggered,
@@ -51,10 +65,19 @@ import {
 	handleFrictionlessTrafficFilter,
 } from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
-import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import {
+	isPuzzleImageSwitchAvailable,
+	isRefreshLimitSwitchEnabled,
+	resolveScoreLadder,
+	resolveSiteAllowedCaptchaTypes,
+} from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
+import {
+	isUserImageChoiceActive,
+	resolveRefreshLineage,
+} from "./refreshLineage.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import {
 	runConfiguredCaptchaTypeShortCircuit,
@@ -92,7 +115,19 @@ export default (
 				detectorSessionId,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
+				clientSessionId,
+				refreshOf,
+				switchToImage,
+				switchToPuzzle,
+				fingerprintProof,
+				widgetSlot,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+
+			// Recorded on the session and copied onto whichever captcha record it
+			// leads to, so the device bucket exists for image and puzzle solves
+			// too. Not handed to the routing machine here: counter rules naming
+			// `deviceBucket` are written for the PoW-submit stage.
+			const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
 			// + path and drop the query string, fragment and any embedded
@@ -182,7 +217,12 @@ export default (
 			}
 
 			const tasks = new Tasks(env, req.logger);
-			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
+			const userSitekeyIpHash = hashUserIp(
+				user,
+				normalizedIp,
+				dapp,
+				widgetSlot,
+			);
 
 			// Fan out the three independent async dependencies in
 			// parallel: SIMD reading decrypt, session dedup lookup, and
@@ -208,23 +248,70 @@ export default (
 					msg: "Token has already been used",
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-5",
+						message: "BadRequest",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-6",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
+
+			const audioAlternativeEnabled = isAudioAlternativeEnabled(
+				clientRecord.settings,
+			);
+			tasks.frictionlessManager.setAudioAlternativeEnabled(
+				audioAlternativeEnabled,
+			);
+			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
+				clientRecord.settings,
+			);
+			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
+
+			// Web Bot Auth (RFC 9421): if the request carries a valid Ed25519
+			// signature and the signer's JWKS at /.well-known/http-message-
+			// signatures-directory verifies it, promote the canonical signer
+			// URL onto the userScope so `webBotAuthAgent` access rules can
+			// match on the verified identity. Unsigned traffic falls through
+			// with webBotAuthAgent=undefined and hits the normal detector
+			// stack.
+			const webBotAuth = await verifyWebBotAuth(
+				{
+					method: req.method,
+					url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
+					headers: flatten(req.headers),
+				},
+				{
+					allowLocalSigners:
+						process.env.NODE_ENV === "test" ||
+						process.env.NODE_ENV === "development",
+				},
+			);
+			if (
+				!webBotAuth.verified &&
+				webBotAuth.reason !== "no-signature-headers"
+			) {
+				req.logger.info(() => ({
+					msg: "Web Bot Auth signature rejected",
+					data: {
+						reason: webBotAuth.reason,
+						signatureAgent: req.headers["signature-agent"],
+					},
+				}));
+			}
+			const verifiedSignerUrl = webBotAuth.verified
+				? webBotAuth.signerUrl
+				: undefined;
 
 			if (dedup) {
 				// A reused session must still honour an active user access policy
@@ -248,12 +335,11 @@ export default (
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.asnNumber
 						: undefined;
-				const dedupIsMobile =
-					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-						? req.ipInfo.isMobile
-						: undefined;
 				const dedupFlatHeaders = flatten(req.headers);
 				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
+				const dedupTrafficPolicies = deriveTrafficPolicies(
+					clientRecord.settings?.trafficFilter,
+				);
 				const dedupUserScope = getRequestUserScope(
 					dedupFlatHeaders,
 					req.ja4,
@@ -263,6 +349,7 @@ export default (
 					undefined,
 					dedupCountryCode,
 					dedupAsn,
+					verifiedSignerUrl,
 				);
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
@@ -273,11 +360,15 @@ export default (
 						userAccessRulesStorage,
 						dapp,
 						dedupUserScope,
+						normalizeHeadersForMatching(req.headers),
 					)
 				).find((p) => !p.deferToVerify);
+				// A request that now matches an Allow rule gets a fresh authenticated
+				// session instead of its old challenge.
 				const dedupConflictsWithPolicy =
 					dedupAccessPolicy !== undefined &&
 					(dedupAccessPolicy.type === AccessPolicyType.Block ||
+						dedupAccessPolicy.type === AccessPolicyType.Allow ||
 						(dedupAccessPolicy.captchaType !== undefined &&
 							dedupAccessPolicy.captchaType !== dedup.captchaType));
 
@@ -297,6 +388,7 @@ export default (
 					| CaptchaType.image
 					| CaptchaType.pow
 					| CaptchaType.puzzle
+					| CaptchaType.iconOrder
 					| CaptchaType.connect;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
@@ -315,15 +407,18 @@ export default (
 								ip: normalizedIp,
 								...(dedupCountryCode && { countryCode: dedupCountryCode }),
 								score: dedup.session.score,
-								platform: derivePlatform(
-									dedupUserAgent,
-									dedup.session.webView,
-									{
-										...(typeof dedupIsMobile === "boolean" && {
-											isMobile: dedupIsMobile,
-										}),
-									},
-								),
+								platform: deriveDevice({
+									userAgent: dedupUserAgent,
+									headers: dedupFlatHeaders,
+									ipInfo: req.ipInfo,
+									tcpMss: req.tcpMss,
+									webView: dedup.session.webView,
+								}).platform,
+								// Session-derived, like `score` and `webView` above:
+								// the replay never re-decrypts a payload.
+								...(dedup.session.d !== undefined && {
+									d: dedup.session.d,
+								}),
 								raw: {
 									headers: dedupFlatHeaders,
 									userAgent: dedupUserAgent,
@@ -358,21 +453,38 @@ export default (
 									...(dedup.session.iframeUrl && {
 										iframeUrl: dedup.session.iframeUrl,
 									}),
+									...(dedupTrafficPolicies && {
+										trafficPolicies: dedupTrafficPolicies,
+									}),
+									...(dedup.session.scoreComponents?.triggeredDetectors?.length
+										? {
+												triggeredDetectors:
+													dedup.session.scoreComponents.triggeredDetectors,
+											}
+										: {}),
 								},
 							},
 						)
 					: { captchaType: cachedCaptchaType };
+				// Compared after coercion, as `sendCaptcha` would mint it, so a router
+				// that keeps asking for a disallowed type doesn't evict every reuse.
 				const dedupConflictsWithRouting =
-					dedupRouted.captchaType !== cachedCaptchaType;
+					coerceToEnabledCaptchaType(
+						dedupRouted.captchaType,
+						allowedCaptchaTypes,
+					) !== cachedCaptchaType;
+				// Catches sessions minted before the site's allowed types changed.
+				const dedupConflictsWithAllowedTypes =
+					coerceToEnabledCaptchaType(cachedCaptchaType, allowedCaptchaTypes) !==
+					cachedCaptchaType;
 
 				// The reused session's `bundleId` is what the provider will
 				// use to decrypt every later behavioural / SIMD payload for
 				// this session (via resolveBundleBySessionId). But the client
 				// on this request just did a fresh /detector/assign that
-				// bound `detectorSessionId` to whichever bundle
-				// DetectorBundlePool.pickRandom returned — almost never the
-				// same one the cached session stored, because the pick is
-				// uniform-random across the pool. If we hand the client the
+				// bound `detectorSessionId` to the bundle this caller now
+				// resolves to, which need not be the one the cached session
+				// stored. If we hand the client the
 				// cached sessionId, every later hop encrypts with the fresh
 				// detector's public key and the provider tries to decrypt
 				// with the cached bundle's private key, yielding
@@ -400,9 +512,13 @@ export default (
 					}
 				}
 
-				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
+				if (
+					dedupConflictsWithPolicy ||
+					dedupConflictsWithRouting ||
+					dedupConflictsWithAllowedTypes
+				) {
 					req.logger.info(() => ({
-						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
+						msg: "Evicting reused session: cached captchaType conflicts with access policy, routing machine or allowed types",
 						data: {
 							userSitekeyIpHash,
 							sessionId: dedup.sessionId,
@@ -413,6 +529,9 @@ export default (
 							}),
 							...(dedupConflictsWithRouting && {
 								routedCaptchaType: dedupRouted.captchaType,
+							}),
+							...(dedupConflictsWithAllowedTypes && {
+								allowedCaptchaTypes,
 							}),
 						},
 					}));
@@ -479,10 +598,15 @@ export default (
 							| CaptchaType.image
 							| CaptchaType.pow
 							| CaptchaType.puzzle
+							| CaptchaType.iconOrder
 							| CaptchaType.connect,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
-						dns_url: buildDnsEventUrl(dedup.sessionId),
+						...dnsBeaconUrls(dedup.sessionId),
+						...(offersAudioAlternative(
+							dedup.captchaType,
+							audioAlternativeEnabled,
+						) && { audioAlternativeAvailable: true }),
 					});
 				}
 			}
@@ -497,6 +621,26 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.asnNumber
 					: undefined;
+
+			// Ahead of the short-circuits, so a site pinned to puzzle can still be
+			// switched to image and still has its refreshes recorded.
+			const refresh = await resolveRefreshLineage(
+				tasks.db,
+				refreshOf,
+				dapp,
+				userSitekeyIpHash,
+				new Date(),
+			);
+			tasks.frictionlessManager.setImageSwitchRequested(
+				isUserImageChoiceActive(
+					{ switchToImage, switchToPuzzle },
+					refresh,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				),
+			);
+			tasks.frictionlessManager.setRefreshLimitSwitchEnabled(
+				isRefreshLimitSwitchEnabled(clientRecord.settings),
+			);
 
 			const shortCircuitInput = {
 				tasks,
@@ -523,7 +667,145 @@ export default (
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
 				...rawTlsSignalsForSession(req),
+				...(refresh && { refresh: refresh.lineage }),
 			};
+
+			const userScope = getRequestUserScope(
+				flatten(req.headers),
+				req.ja4,
+				normalizedIp,
+				user,
+				undefined,
+				undefined,
+				countryCode,
+				asn,
+				verifiedSignerUrl,
+			);
+			const lookupAccessPolicies = () =>
+				tasks.frictionlessManager.getPrioritisedAccessPolicies(
+					userAccessRulesStorage,
+					dapp,
+					userScope,
+					normalizeHeadersForMatching(req.headers),
+				);
+
+			// Authenticated fast-path. Fires when any non-deferToVerify Allow
+			// rule matches the userScope — the qualifier can be a verified
+			// Web Bot Auth agent, an IP CIDR, a JA4 fingerprint, a UA
+			// substring, an ASN, a country, or any combination. Web Bot Auth
+			// is one of the ways to qualify, not the only one.
+			//
+			// Skips decrypt/detect/decision-machine entirely, mints an
+			// authenticated session with `serverChecked: false`, and the
+			// operator's `/client/authenticated/verify` call is what marks
+			// it consumed. deferToVerify policies are ignored here for the
+			// same reason the ordinary flow ignores them at frictionless
+			// entry — they enforce at verify time only.
+			//
+			// A Block or Restrict policy on the same match set always wins
+			// (severity outranks Allow) so an operator who wrote both
+			// "allow /24" and "block 10.0.0.5" gets what they asked for.
+			const respondIfAllowed = async (
+				accessPolicies: Awaited<ReturnType<typeof lookupAccessPolicies>>,
+			) => {
+				const blockingPolicy = accessPolicies.find(
+					(p) =>
+						!p.deferToVerify &&
+						(p.type === AccessPolicyType.Block ||
+							p.type === AccessPolicyType.Restrict),
+				);
+				const allowingPolicy = blockingPolicy
+					? undefined
+					: accessPolicies.find(
+							(p) => !p.deferToVerify && p.type === AccessPolicyType.Allow,
+						);
+				if (!allowingPolicy) return null;
+				const authenticatedSession =
+					await tasks.frictionlessManager.createAuthenticatedSession(
+						sessionToken,
+						ipAddress,
+						// Undefined when the Allow was matched by IP / JA4 / UA
+						// instead of webBotAuthAgent. The session field stays
+						// unset in that case so verify-side observability
+						// distinguishes "verified signer" from "trusted IP".
+						verifiedSignerUrl,
+						dapp,
+						userSitekeyIpHash,
+						flatHeaders,
+						req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+							? req.ipInfo
+							: undefined,
+						clientSessionId,
+					);
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						decision: "authenticated_allow_rule",
+						captchaType: CaptchaType.authenticated,
+						sessionId: authenticatedSession.sessionId,
+						webBotAuthAgent: verifiedSignerUrl,
+						ruleType: allowingPolicy.description,
+					},
+				}));
+				recordFrictionlessDecision("authenticated_allow_rule");
+				attachHoneypot(res, clientRecord);
+				return res.json({
+					[ApiParams.captchaType]: CaptchaType.authenticated,
+					[ApiParams.sessionId]: authenticatedSession.sessionId,
+					[ApiParams.status]: "ok",
+					...dnsBeaconUrls(authenticatedSession.sessionId),
+					...(verifiedSignerUrl && { agent: verifiedSignerUrl }),
+				});
+			};
+
+			// A verified agent's identity is all its rules need, so they are
+			// settled before a configured captcha type or an empty detector pool
+			// can hand it a challenge. Unsigned traffic skips this lookup.
+			const signerAccessPolicies = verifiedSignerUrl
+				? await lookupAccessPolicies()
+				: undefined;
+			if (signerAccessPolicies) {
+				const signerBlockPolicy = signerAccessPolicies.find(
+					(p) => !p.deferToVerify && p.type === AccessPolicyType.Block,
+				);
+				if (signerBlockPolicy) {
+					tasks.frictionlessManager.setSessionParams({
+						token: sessionToken,
+						score: 0,
+						threshold: 0,
+						scoreComponents: { baseScore: 0 },
+						ipAddress,
+						webView: false,
+						iFrame: false,
+						decryptedHeadHash: "",
+						siteKey: dapp,
+						ipInfo: req.ipInfo,
+						headers: flatHeaders,
+						mode: sessionMode,
+					});
+					const blockOutcome = await handleAccessPolicy(
+						{
+							tasks,
+							clientRecord,
+							userAccessPolicy: signerBlockPolicy,
+							baseBotScore: 0,
+							botScore: 0,
+							scoreComponents: { baseScore: 0 },
+							userSitekeyIpHash,
+							dapp,
+							ipInfo: req.ipInfo,
+							flatHeaders,
+							logger: req.logger,
+							userScope,
+						},
+						res,
+					);
+					if (blockOutcome.handled) return blockOutcome.response;
+				}
+				const allowedSignerResponse =
+					await respondIfAllowed(signerAccessPolicies);
+				if (allowedSignerResponse) return allowedSignerResponse;
+			}
 
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
 				shortCircuitInput,
@@ -543,17 +825,6 @@ export default (
 				req.headers["accept-language"] || "",
 			);
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
-				user,
-				undefined,
-				undefined,
-				countryCode,
-				asn,
-			);
-
 			// Fan out the three independent post-shortcircuit awaits:
 			// payload decrypt (CPU-bound crypto), validation (cheap
 			// async), and the Redis-backed access-policy lookup. None of
@@ -570,12 +841,11 @@ export default (
 					CaptchaType.frictionless,
 					env,
 				),
-				tasks.frictionlessManager.getPrioritisedAccessPolicies(
-					userAccessRulesStorage,
-					dapp,
-					userScope,
-				),
+				signerAccessPolicies ?? lookupAccessPolicies(),
 			]);
+
+			const allowedResponse = await respondIfAllowed(accessPolicies);
+			if (allowedResponse) return allowedResponse;
 
 			const {
 				baseBotScore: rawBaseBotScore,
@@ -588,15 +858,7 @@ export default (
 				decryptionFailed: rawDecryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
-				entropyMathRandomFingerprint,
-				entropyCryptoFingerprint,
-				entropyWallClockOffsetMs,
-				entropyMathRandomFirst,
-				g,
-				sw,
-				md,
-				bn,
-				fs,
+				d,
 				bundleId,
 			} = decryptedPayload;
 
@@ -642,10 +904,10 @@ export default (
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
-						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: errorCodeForReason(reason),
+						errorSite: "PROV-80",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
@@ -655,9 +917,12 @@ export default (
 				recordDetectorTriggered(triggeredDetectors);
 			}
 
-			const botThreshold =
-				clientRecord.settings?.frictionlessThreshold ||
-				DEFAULT_FRICTIONLESS_THRESHOLD;
+			// Both rungs of the score ladder. `resolveScoreLadder` tolerates the
+			// pre-ladder shape (a bare number) so a client record that predates
+			// the migration still routes rather than throwing.
+			const { botThreshold, botImageThreshold } = resolveScoreLadder(
+				clientRecord.settings?.frictionlessThreshold,
+			);
 
 			let scoreComponents: ScoreComponents = {
 				baseScore: baseBotScore,
@@ -688,23 +953,10 @@ export default (
 				// same keypair + inner cipher to decrypt their payloads.
 				...(bundleId && { bundleId }),
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
-				...(entropyMathRandomFingerprint !== undefined && {
-					entropyMathRandomFingerprint,
-				}),
-				...(entropyCryptoFingerprint !== undefined && {
-					entropyCryptoFingerprint,
-				}),
-				...(entropyWallClockOffsetMs !== undefined && {
-					entropyWallClockOffsetMs,
-				}),
-				...(entropyMathRandomFirst !== undefined && {
-					entropyMathRandomFirst,
-				}),
-				...(g !== undefined && { g }),
-				...(sw !== undefined && { sw }),
-				...(md !== undefined && { md }),
-				...(bn !== undefined && { bn }),
-				...(fs !== undefined && { fs }),
+				...(d !== undefined && { d }),
+				...(clientSessionId && { clientMetaData: { clientSessionId } }),
+				...(fingerprintSummary && { fingerprintSummary }),
+				...refresh?.lineage,
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
@@ -714,23 +966,43 @@ export default (
 				...rawTlsSignalsForSession(req),
 			});
 
-			const ipInfoMobile =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.isMobile
-					: undefined;
-			const safeUserAgent = userAgent ?? "";
+			// `userAgent` is hashed and only meaningful to
+			// `runUserAgentMismatchCheck`; passing it here left `isApple` and any
+			// UA classification permanently false. The dedup replay above already
+			// reads the header directly.
+			const requestUserAgent = String(req.headers["user-agent"] ?? "");
+			const trafficPolicies = deriveTrafficPolicies(
+				clientRecord.settings?.trafficFilter,
+			);
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,
-				platform: derivePlatform(safeUserAgent, webView, {
-					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
+				imageMaxRounds: clientRecord.settings.imageMaxRounds,
+				imageMinRounds: clientRecord.settings.imageMinRounds,
+				baseImageRounds: env.config.captchas.solved.count,
+				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
+				platform: deriveDevice({
+					userAgent: requestUserAgent,
+					headers: flatHeaders,
+					ipInfo: req.ipInfo,
+					tcpMss: req.tcpMss,
+					webView,
+				}).platform,
+				// Straight from the payload this request arrived with — the
+				// session record is written from the same value.
+				...(d !== undefined && { d }),
+				...(refresh && {
+					refresh: {
+						count: refresh.lineage.refreshCount,
+						afterMs: refresh.lineage.refreshedAfterMs,
+					},
 				}),
 				raw: {
 					headers: flatHeaders,
-					userAgent: safeUserAgent,
+					userAgent: requestUserAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(req.tcpToChelloUs !== undefined && {
 						tcpToChelloUs: req.tcpToChelloUs,
@@ -747,16 +1019,27 @@ export default (
 						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
+					// Which egress categories this site blocks, so egress-sensitive
+					// route rules can skip sites that accept VPN / proxy / DC users.
+					...(trafficPolicies && { trafficPolicies }),
+					...(triggeredDetectors &&
+						triggeredDetectors.length > 0 && { triggeredDetectors }),
 				},
 			});
 
-			// Skip deferToVerify policies at the frictionless entry — they
-			// enforce at verify time only. handleAccessPolicy treats a
-			// Block policy as a 401 short-circuit; a deferToVerify Block
-			// hitting here would 401 the frictionless response, defeating
-			// the "solve normally, block at verify" contract deferToVerify
-			// is meant to enable.
-			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// Skip deferred *Block* policies only. handleAccessPolicy
+			// treats a Block as a 401 short-circuit, so a deferred Block
+			// reaching here would reject at request time and defeat the
+			// "solve normally, block at verify" contract.
+			//
+			// A deferred Restrict is deliberately let through: it never
+			// takes the 401 branch, and it is how a deferred rule sets
+			// the captcha type it wants served. The rule then blocks at
+			// verify via checkForHardBlock. Filtering it out here would
+			// mean the challenge type it names is silently ignored.
+			const userAccessPolicy = accessPolicies.find(
+				(p) => !(p.deferToVerify === true && p.type === AccessPolicyType.Block),
+			);
 
 			const accessPolicyOutcome = await handleAccessPolicy(
 				{
@@ -824,6 +1107,8 @@ export default (
 					token,
 					headHash,
 					botThreshold,
+					botImageThreshold,
+					triggeredDetectors,
 					currentUrl,
 					iframeUrl,
 				},
@@ -835,10 +1120,11 @@ export default (
 				msg: "Error in frictionless captcha challenge",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-7",
+					message: "BadRequest",
+					cause: err,
 				}),
 			);
 		}

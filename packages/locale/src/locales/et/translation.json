@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Kehtetu aadressi kodeerimine ebaõnnestus",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha lahenduse kohustust pole olemas",
+		"SIGNER_UNDEFINED": "Allkirjastaja on määramata",
+		"CANNOT_FIND_KEYPAIR": "Võtmepaari ei leitud",
+		"INVALID_DATA_FORMAT": "Kehtetu andmevorming"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Taotleti tundmatut keskkonda",
+		"INVALID_CAPTCHA_NUMBER": "Seadistage captcha konfiguratsioonid õigesti",
+		"INVALID_LOG_LEVEL": "Kehtetu logitase",
+		"INVALID_PACKAGE_DIR": "Kehtetu paketikataloog"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Viga andmekogumi parsimisel",
+		"SOLUTION_PARSE_ERROR": "Viga andmekogumi parsimisel",
+		"HASH_ERROR": "Viga andmekogumi räsimisel",
+		"DATASET_ID_UNDEFINED": "Andmekogumi ID on määramata",
+		"NOT_ENOUGH_LABELS": "Pole piisavalt silte",
+		"NOT_ENOUGH_IMAGES": "Pole piisavalt pilte",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Andmekogumis on vähem captchasid kui seadistatud arv",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Andmekogumis on vähem lahendusi kui seadistatud arv",
+		"DUPLICATE_IMAGE": "tuvastati korduv pilt",
+		"MERKLE_ERROR": "Viga Merkle'i puu loomisel"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Andmebaasimootori importimine ebaõnnestus",
+		"DATABASE_UNDEFINED": "Andmebaasi klient pole ühendatud",
+		"DATABASE_HOST_UNDEFINED": "Andmebaasi hosti aadress pole määratud",
+		"DATASET_LOAD_FAILED": "Andmekogumi laadimine ebaõnnestus",
+		"DATASET_GET_FAILED": "Andmekogumi hankimine ebaõnnestus",
+		"CAPTCHA_GET_FAILED": "Captcha hankimine ebaõnnestus",
+		"CAPTCHA_UPDATE_FAILED": "Captcha uuendamine ebaõnnestus",
+		"IMAGE_GET_FAILED": "Pildi hankimine ebaõnnestus",
+		"PENDING_RECORD_NOT_FOUND": "Ootel kirjet ei leitud",
+		"INVALID_HASH": "Kehtetu räsi",
+		"SOLUTION_GET_FAILED": "Lahenduse hankimine ebaõnnestus",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nõutud arvu lahendustega andmekogumeid ei leitud",
+		"SOLUTION_APPROVE_FAILED": "Lahenduse kinnitamine ebaõnnestus",
+		"SOLUTION_FLAG_FAILED": "Lahenduse töödelduks märkimine ebaõnnestus",
+		"TABLES_UNDEFINED": "Tabelid on määramata",
+		"CONNECTION_UNDEFINED": "Ühendus on määramata",
+		"COMMITMENT_FLAG_FAILED": "Kohustuse töödelduks märkimine ebaõnnestus",
+		"UNKNOWN": "Tundmatu andmebaasiviga",
+		"QUERY_ERROR": "Andmebaasipäring ebaõnnestus",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redise juurdepääsureeglite ühendus on määramata",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Kasutajate juurdepääsureeglite salvestusruum on määramata",
+		"SESSION_STORE_FAILED": "Seansi salvestamine ebaõnnestus",
+		"SESSION_CHECK_REMOVE_FAILED": "Seansi kontrollimine ja eemaldamine ebaõnnestus",
+		"SESSION_GET_FAILED": "Seansi hankimine ebaõnnestus"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Omanikkasutajat ei saa muuta",
+		"CANNOT_DELETE_OWN_USER": "Oma kontot ei saa kustutada",
+		"CANNOT_DELETE_LAST_USER": "Viimast kasutajat ei saa kustutada",
+		"USER_ALREADY_EXISTS": "Kasutaja on juba olemas",
+		"NO_SUGGESTIONS_FOUND": "Soovitusi ei leitud",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Viimast aktiivset saiti ei saa deaktiveerida",
+		"DUPLICATE_SITE_NAME": "Selle nimega sait on juba olemas",
+		"INVALID_SITE_NAME": "Saidi nimi võib sisaldada ainult tähti, numbreid, sidekriipse ja alakriipse"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Kehtetu parameeter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Faili ei leitud",
+		"FILE_ALREADY_EXISTS": "Fail on juba olemas",
+		"INVALID_DIR_FORMAT": "Kehtetu kataloogivorming"
+	}
+}

@@ -21,7 +21,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	DetectorBundlePool,
 	getDetectorBundlePool,
@@ -35,7 +35,14 @@ const writeBundle = (
 	id: string,
 	js: string,
 	secrets:
-		| { privateKey?: string; innerConfig?: string; release?: string }
+		| {
+				privateKey?: string;
+				innerConfig?: string;
+				format?: string;
+				release?: string;
+				payloadLayout?: string;
+				keyMap?: string;
+		  }
 		| string,
 ): void => {
 	writeFileSync(join(dir, `${id}.js`), js);
@@ -116,10 +123,10 @@ describe("DetectorBundlePool", () => {
 		const pool = new DetectorBundlePool();
 		pool.loadFromDir(join(dir, "does-not-exist"));
 		expect(pool.size()).toBe(0);
-		expect(() => pool.pickRandom()).toThrow(/empty/);
+		expect(() => pool.at(0)).toThrow(/empty/);
 	});
 
-	it("pickRandom returns valid pool members and covers the pool over many draws", () => {
+	it("at returns valid pool members and is stable for a given index", () => {
 		for (let i = 0; i < 5; i++) {
 			writeBundle(dir, `bundle-${i}`, `JS${i}`, {
 				privateKey: `PK${i}`,
@@ -131,11 +138,12 @@ describe("DetectorBundlePool", () => {
 
 		const seen = new Set<string>();
 		for (let i = 0; i < 500; i++) {
-			const { bundleId, bundle } = pool.pickRandom();
+			const { bundleId, bundle } = pool.at(i);
 			expect(pool.get(bundleId)).toBe(bundle);
+			expect(pool.at(i).bundleId).toBe(bundleId);
 			seen.add(bundleId);
 		}
-		// With 5 bundles over 500 uniform draws every id should appear.
+		// Successive indices walk the whole pool.
 		expect(seen.size).toBe(5);
 	});
 
@@ -223,6 +231,85 @@ describe("DetectorBundlePool", () => {
 		expect(reloaded.get("pushed")?.release).toBe("3.6.64");
 	});
 
+	it("carries a bundle's payload layout through load and persist", () => {
+		// The decoder cannot read a bundle's payload without it, so losing it
+		// anywhere on this path silently fails every session on that bundle.
+		writeBundle(dir, "laid-out", "JS", {
+			privateKey: "PK",
+			innerConfig: "C",
+			payloadLayout: "TFY=",
+		});
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir);
+		expect(pool.get("laid-out")?.payloadLayout).toBe("TFY=");
+
+		const persistDir = mkdtempSync(join(tmpdir(), "pool-persist-"));
+		try {
+			persistDetectorBundlePool(
+				new Map([
+					[
+						"laid-out",
+						{
+							js: "JS",
+							privateKey: "PK",
+							innerConfig: "C",
+							payloadLayout: "TFY=",
+						},
+					],
+				]),
+				persistDir,
+			);
+			const reloaded = new DetectorBundlePool();
+			reloaded.loadFromDir(persistDir);
+			expect(reloaded.get("laid-out")?.payloadLayout).toBe("TFY=");
+		} finally {
+			rmSync(persistDir, { recursive: true, force: true });
+		}
+	});
+
+	it("carries a bundle's second decode parameter through load and persist", () => {
+		// Same contract as payloadLayout: the bundle still loads and serves
+		// without it, so losing it anywhere on this path fails silently.
+		writeBundle(dir, "mapped", "JS", {
+			privateKey: "PK",
+			innerConfig: "C",
+			keyMap: "S00=",
+		});
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir);
+		expect(pool.get("mapped")?.keyMap).toBe("S00=");
+
+		const persistDir = mkdtempSync(join(tmpdir(), "pool-persist-"));
+		try {
+			persistDetectorBundlePool(
+				new Map([
+					[
+						"mapped",
+						{
+							js: "JS",
+							privateKey: "PK",
+							innerConfig: "C",
+							keyMap: "S00=",
+						},
+					],
+				]),
+				persistDir,
+			);
+			const reloaded = new DetectorBundlePool();
+			reloaded.loadFromDir(persistDir);
+			expect(reloaded.get("mapped")?.keyMap).toBe("S00=");
+		} finally {
+			rmSync(persistDir, { recursive: true, force: true });
+		}
+	});
+
+	it("loads a bundle with no payload layout, which decodes canonically", () => {
+		writeBundle(dir, "legacy", "JS", { privateKey: "PK", innerConfig: "C" });
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir);
+		expect(pool.get("legacy")?.payloadLayout).toBeUndefined();
+	});
+
 	it("persists without replacing the pool directory itself", () => {
 		// In the container the pool dir is a bind-mount point: removing or
 		// renaming over it fails with EBUSY. Pin the property that makes this
@@ -256,5 +343,84 @@ describe("DetectorBundlePool", () => {
 		reloaded.loadFromDir(dir);
 		expect(reloaded.get("old")).toBeUndefined();
 		expect(reloaded.size()).toBe(1);
+	});
+
+	describe("open-format bundles", () => {
+		afterEach(() => {
+			vi.unstubAllEnvs();
+		});
+
+		it("are skipped unless the node opts in", () => {
+			writeBundle(dir, "open", "JS", { privateKey: "PK", format: "open-v1" });
+			writeBundle(dir, "sealed", "JS", { privateKey: "PK", innerConfig: "C" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.get("open")).toBeUndefined();
+			expect(pool.get("sealed")).toBeDefined();
+		});
+
+		it("load without an innerConfig once the node opts in", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			writeBundle(dir, "open", "JS", { privateKey: "PK", format: "open-v1" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.get("open")).toEqual({
+				js: "JS",
+				privateKey: "PK",
+				format: "open-v1",
+			});
+		});
+
+		it("do not exempt a sealed bundle from needing an innerConfig", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			writeBundle(dir, "sealed", "JS", { privateKey: "PK" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.size()).toBe(0);
+		});
+
+		it("reject an unknown format", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			writeBundle(dir, "future", "JS", { privateKey: "PK", format: "open-v2" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.size()).toBe(0);
+		});
+
+		it("are dropped from a push to a node that has not opted in", () => {
+			initDetectorBundlePool(dir);
+
+			const { count } = replaceDetectorBundlePool(
+				new Map([
+					["open", { js: "JS", privateKey: "PK", format: "open-v1" }],
+					["sealed", { js: "JS", privateKey: "PK", innerConfig: "C" }],
+				]),
+			);
+
+			expect(count).toBe(1);
+			expect(getDetectorBundlePool()?.get("open")).toBeUndefined();
+			expect(readdirSync(dir).sort()).toEqual(["sealed.js", "sealed.json"]);
+		});
+
+		it("persist their format so they reload after a restart", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			persistDetectorBundlePool(
+				new Map([["open", { js: "JS", privateKey: "PK", format: "open-v1" }]]),
+				dir,
+			);
+
+			const reloaded = new DetectorBundlePool();
+			reloaded.loadFromDir(dir);
+
+			expect(reloaded.get("open")?.format).toBe("open-v1");
+		});
 	});
 });

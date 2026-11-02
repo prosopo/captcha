@@ -470,6 +470,81 @@ describe("evaluateIpValidationRules", () => {
 		expect(result.action).toBe(IPValidationAction.Allow);
 	});
 
+	it("reports the higher of the two abuse scores", () => {
+		const comparison: IPComparisonResult = {
+			ipsMatch: false,
+			ip1: "ip1",
+			ip2: "ip2",
+			comparison: {
+				ip1Details: {
+					country: "A",
+					countryCode: "A",
+					provider: "X",
+					connectionType: "residential",
+					isVpnOrProxy: false,
+					abuserScore: 0.03,
+				},
+				ip2Details: {
+					country: "A",
+					countryCode: "A",
+					provider: "X",
+					connectionType: "residential",
+					isVpnOrProxy: false,
+					abuserScore: 0.01,
+				},
+				differentProviders: false,
+				differentConnectionTypes: false,
+				anyVpnOrProxy: false,
+			},
+		};
+		const result = evaluateIpValidationRules(comparison, baseRules, mockLogger);
+		expect(result.action).toBe(IPValidationAction.Reject);
+		expect(result.errorMessage).toContain(
+			"Abuse score 0.0300 exceeds threshold 0.005",
+		);
+	});
+
+	// Two Reject actions are configured, so one rule being met must not fill the quota.
+	it("counts a both-IPs-exceed abuse score as a single condition under requireAllConditions", () => {
+		const comparison: IPComparisonResult = {
+			ipsMatch: false,
+			ip1: "ip1",
+			ip2: "ip2",
+			comparison: {
+				ip1Details: {
+					country: "A",
+					countryCode: "A",
+					provider: "X",
+					connectionType: "residential",
+					isVpnOrProxy: false,
+					abuserScore: 0.02,
+				},
+				ip2Details: {
+					country: "A",
+					countryCode: "A",
+					provider: "X",
+					connectionType: "residential",
+					isVpnOrProxy: false,
+					abuserScore: 0.03,
+				},
+				differentProviders: false,
+				differentConnectionTypes: false,
+				anyVpnOrProxy: false,
+			},
+		};
+		const rules: IIPValidationRules = {
+			...baseRules,
+			actions: {
+				...baseRules.actions,
+				ispChangeAction: IPValidationAction.Reject,
+				abuseScoreExceedAction: IPValidationAction.Reject,
+			},
+			requireAllConditions: true,
+		};
+		const result = evaluateIpValidationRules(comparison, rules, mockLogger);
+		expect(result.action).toBe(IPValidationAction.Allow);
+	});
+
 	it("applies country override for abuse score threshold", () => {
 		const comparison: IPComparisonResult = {
 			ipsMatch: false,

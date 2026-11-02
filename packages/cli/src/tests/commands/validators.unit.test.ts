@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { describe, expect, it } from "vitest";
 import type { ArgumentsCamelCase } from "yargs";
 import {
@@ -54,12 +54,12 @@ describe("validateAddress", () => {
 		expect(address).toBe(VALID_SS58_ADDRESS);
 	});
 
-	it("throws ProsopoContractError with INVALID_ADDRESS code on garbage input", () => {
+	it("throws an INVALID_DATA ProsopoError on garbage input", () => {
 		expect(() => validateAddress(argv({ address: INVALID_ADDRESS }))).toThrow(
-			ProsopoContractError,
+			ProsopoError,
 		);
 		expect(() => validateAddress(argv({ address: INVALID_ADDRESS }))).toThrow(
-			"CONTRACT.INVALID_ADDRESS",
+			expect.objectContaining({ code: "INVALID_DATA" }),
 		);
 	});
 });
@@ -75,12 +75,12 @@ describe("validateSiteKey", () => {
 		expect(sitekey).toBe(VALID_SS58_ADDRESS);
 	});
 
-	it("throws ProsopoContractError with INVALID_ADDRESS code on garbage input", () => {
+	it("throws an INVALID_DATA ProsopoError on garbage input", () => {
 		expect(() => validateSiteKey(argv({ sitekey: INVALID_ADDRESS }))).toThrow(
-			ProsopoContractError,
+			ProsopoError,
 		);
 		expect(() => validateSiteKey(argv({ sitekey: INVALID_ADDRESS }))).toThrow(
-			"CONTRACT.INVALID_ADDRESS",
+			expect.objectContaining({ code: "INVALID_DATA" }),
 		);
 	});
 });
@@ -98,21 +98,21 @@ describe("validateValue", () => {
 		expect(result.value).toBe(0);
 	});
 
-	it("throws ProsopoEnvError with PARAMETER_ERROR on string input", () => {
-		expect(() => validateValue(argv({ value: "42" }))).toThrow(ProsopoEnvError);
+	it("throws a CLI_INVALID_ARGUMENT ProsopoError on string input", () => {
+		expect(() => validateValue(argv({ value: "42" }))).toThrow(ProsopoError);
 		expect(() => validateValue(argv({ value: "42" }))).toThrow(
-			"CLI.PARAMETER_ERROR",
+			expect.objectContaining({ code: "CLI_INVALID_ARGUMENT" }),
 		);
 	});
 
-	it("throws ProsopoEnvError on undefined value", () => {
-		expect(() => validateValue(argv({}))).toThrow(ProsopoEnvError);
+	it("throws ProsopoError on undefined value", () => {
+		expect(() => validateValue(argv({}))).toThrow(ProsopoError);
 	});
 
-	it("throws ProsopoEnvError on boolean / object / null inputs", () => {
-		expect(() => validateValue(argv({ value: true }))).toThrow(ProsopoEnvError);
-		expect(() => validateValue(argv({ value: null }))).toThrow(ProsopoEnvError);
-		expect(() => validateValue(argv({ value: {} }))).toThrow(ProsopoEnvError);
+	it("throws ProsopoError on boolean / object / null inputs", () => {
+		expect(() => validateValue(argv({ value: true }))).toThrow(ProsopoError);
+		expect(() => validateValue(argv({ value: null }))).toThrow(ProsopoError);
+		expect(() => validateValue(argv({ value: {} }))).toThrow(ProsopoError);
 	});
 });
 

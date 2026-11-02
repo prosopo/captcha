@@ -64,22 +64,34 @@ export default (mode: string) => {
 		entry: resolveEntryFile(),
 		output: {
 			filename: `${libraryName}.[name].bundle.js`,
-			path: path.resolve("./dist"),
+			path: path.resolve("./dist/bundle-webpack"),
 			publicPath: "/",
 		},
 		module: {
 			rules: [
-				// instead of using .babelrc, we can use babel-loader options
+				// instead of using .babelrc, we can use babel-loader options. Loaders,
+				// plugins and presets resolve from this package: webpack and babel
+				// would otherwise look for them beside the package being bundled.
 				{
 					test: /\.(m?js|jsx|tsx|ts)$/,
 					exclude: /node_modules/,
 					use: {
-						loader: "babel-loader",
+						loader: require.resolve("babel-loader"),
 						options: {
 							plugins: [
-								"@babel/plugin-transform-runtime",
-								"@babel/transform-class-properties",
-								"@babel/transform-object-rest-spread",
+								[
+									require.resolve("@babel/plugin-transform-runtime"),
+									// The helpers it injects are imported from wherever each
+									// compiled file lives, which under pnpm is outside this
+									// package; resolve them from this package's copy instead.
+									{
+										absoluteRuntime: path.dirname(
+											require.resolve("@babel/runtime/package.json"),
+										),
+									},
+								],
+								require.resolve("@babel/plugin-transform-class-properties"),
+								require.resolve("@babel/plugin-transform-object-rest-spread"),
 								// runtime must be "automatic": rolldown keeps the
 								// `@jsxImportSource @emotion/react` pragma in the emitted
 								// dist files (rollup dropped it), and babel rejects that
@@ -87,13 +99,15 @@ export default (mode: string) => {
 								// "importSource cannot be set when runtime is classic".
 								// The JSX in those files is already transformed, so this
 								// only affects how the leftover pragma is interpreted.
-								["@babel/plugin-transform-react-jsx", { runtime: "automatic" }],
 								[
-									"@babel/plugin-syntax-import-attributes",
-									{ deprecatedAssertSyntax: true },
+									require.resolve("@babel/plugin-transform-react-jsx"),
+									{ runtime: "automatic" },
 								],
 							],
-							presets: ["@babel/preset-env", "@babel/preset-typescript"],
+							presets: [
+								require.resolve("@babel/preset-env"),
+								require.resolve("@babel/preset-typescript"),
+							],
 						},
 					},
 				},
@@ -121,7 +135,7 @@ export default (mode: string) => {
 				// Fix for import.meta.url
 				{
 					test: /packageInfo.js$/,
-					loader: "string-replace-loader",
+					loader: require.resolve("string-replace-loader"),
 					options: {
 						search: /import\.meta && import\.meta\.url/g,
 						replace: "false",

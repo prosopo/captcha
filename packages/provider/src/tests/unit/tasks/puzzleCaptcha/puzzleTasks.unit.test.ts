@@ -13,10 +13,11 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaStatus,
 	CaptchaType,
+	type ClientMetaData,
 	FrictionlessReason,
 	type KeyringPair,
 	POW_SEPARATOR,
@@ -116,6 +117,7 @@ describe("PuzzleCaptchaManager", () => {
 			storePuzzleCaptchaRecord: vi.fn(),
 			getPuzzleCaptchaRecordByChallenge: vi.fn(),
 			updatePuzzleCaptchaRecord: vi.fn(),
+			markPuzzleCaptchaRecordChecked: vi.fn().mockResolvedValue(true),
 			updatePuzzleCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
@@ -453,6 +455,7 @@ describe("PuzzleCaptchaManager", () => {
 					collector1: [{ x: 10, y: 20, timestamp: 100 }],
 					collector2: [],
 					collector3: [{ x: 15, y: 25, timestamp: 200 }],
+					collector4: [{ x: 0, y: 900, timestamp: 300 }],
 					deviceCapability: "desktop",
 				} as unknown as Awaited<
 					ReturnType<typeof puzzleCaptchaManager.decryptBehavioralData>
@@ -503,6 +506,7 @@ describe("PuzzleCaptchaManager", () => {
 						patch.behavioralDataPacked.c1.length === 1 &&
 						patch.behavioralDataPacked.c2.length === 0 &&
 						patch.behavioralDataPacked.c3.length === 1 &&
+						patch.behavioralDataPacked.c4?.length === 1 &&
 						patch.behavioralDataPacked.d === "desktop" &&
 						patch.deviceCapability === "desktop",
 				),
@@ -780,7 +784,7 @@ describe("PuzzleCaptchaManager", () => {
 					1000,
 					mockEnv,
 				),
-			).rejects.toBeInstanceOf(ProsopoApiError);
+			).rejects.toBeInstanceOf(ProsopoError);
 		});
 
 		it("returns verified:false when the solution has already been server-checked", async () => {
@@ -889,10 +893,40 @@ describe("PuzzleCaptchaManager", () => {
 
 			expect(result.verified).toBe(true);
 			// Records that the solution has been server-checked, gating reuse.
-			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
-				challenge,
-				expect.objectContaining({ serverChecked: true }),
+			expect(db.markPuzzleCaptchaRecordChecked).toHaveBeenCalledWith(challenge);
+		});
+
+		it("returns verified:false when a concurrent verify already claimed the record", async () => {
+			// Both verifies read the record before either marked it checked.
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
 			);
+			vi.mocked(db.markPuzzleCaptchaRecordChecked).mockResolvedValue(false);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
+					decision: "allow",
+					reason: undefined,
+					score: 1,
+				}),
+			);
+
+			const result =
+				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+				);
+
+			expect(result.verified).toBe(false);
 		});
 
 		it("returns verified:false when the decision machine denies", async () => {
@@ -1095,6 +1129,8 @@ describe("PuzzleCaptchaManager", () => {
 				captchaType: CaptchaType.puzzle,
 				webView: false,
 				iFrame: true,
+				currentUrl: "https://example.com/checkout",
+				iframeUrl: "https://embed.example.org/captcha/abc",
 				decryptedHeadHash: "h".repeat(16),
 				userSitekeyIpHash: "ush",
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
@@ -1136,6 +1172,8 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.ruleType).toEqual(sessionRecord.ruleType);
 			expect(input.webView).toBe(sessionRecord.webView);
 			expect(input.iFrame).toBe(sessionRecord.iFrame);
+			expect(input.currentUrl).toBe(sessionRecord.currentUrl);
+			expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
 			expect(typeof input.score).toBe("number");
 		});
 	});
@@ -1303,6 +1341,114 @@ describe("PuzzleCaptchaManager", () => {
 
 			expect(result.verified).toBe(true);
 			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("serverVerifyPuzzleCaptchaSolution client session correlation", () => {
+		// clientSessionId is the last positional argument, after storeMetadata.
+		const invoke = async (
+			challenge: string,
+			dappAccount: string,
+			clientSessionId: string | undefined,
+		) =>
+			puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				60_000,
+				mockEnv,
+				undefined, // ip
+				undefined, // userAccessRulesStorage
+				undefined, // email
+				false, // spamEmailDomainCheckingEnabled
+				undefined, // spamFilter
+				undefined, // trafficFilter
+				false, // storeMetadata
+				clientSessionId,
+			);
+
+		const seedApprovedPuzzle = (
+			challenge: string,
+			dappAccount: string,
+			clientMetaData?: ClientMetaData,
+		) => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.getPuzzleCaptchaRecordByChallenge as any).mockResolvedValue(
+				asPuzzleRecord({
+					challenge: challenge as PoWChallengeId,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					...(clientMetaData && { clientMetaData }),
+				}),
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.updatePuzzleCaptchaRecord as any).mockResolvedValue(undefined);
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(verifyRecency as any).mockImplementation(() => true);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
+					decision: "allow",
+					reason: undefined,
+					score: 1,
+				}),
+			);
+		};
+
+		it("verifies when the recorded session id matches", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "10___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount, {
+				clientSessionId: "jti-1",
+			});
+
+			const result = await invoke(challenge, dappAccount, "jti-1");
+
+			expect(result.verified).toBe(true);
+		});
+
+		it("rejects with CLIENT_SESSION_MISMATCH when the ids differ", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "11___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount, {
+				clientSessionId: "jti-1",
+			});
+
+			const result = await invoke(challenge, dappAccount, "jti-2");
+
+			expect(result.verified).toBe(false);
+			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.CLIENT_SESSION_MISMATCH,
+					},
+				}),
+			);
+		});
+
+		it("rejects when the solve carries no session id at all", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "12___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount);
+
+			const result = await invoke(challenge, dappAccount, "jti-1");
+
+			expect(result.verified).toBe(false);
+		});
+
+		it("does not correlate when the dapp server sends no session id", async () => {
+			const dappAccount = "dappAccount";
+			const challenge = "13___u___dappAccount";
+			seedApprovedPuzzle(challenge, dappAccount, {
+				clientSessionId: "jti-1",
+			});
+
+			const result = await invoke(challenge, dappAccount, undefined);
+
+			expect(result.verified).toBe(true);
 		});
 	});
 });

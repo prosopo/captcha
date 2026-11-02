@@ -14,13 +14,22 @@
 
 import type { AllKeys } from "@prosopo/common";
 import { type ZodType, z } from "zod";
-import type { AccessPolicy, AccessRule, PolicyScope } from "#policy/rule.js";
+import type {
+	AccessPolicy,
+	AccessRule,
+	PolicyScope,
+	PolicyScopeExclusions,
+} from "#policy/rule.js";
 import {
 	type AccessRuleEntry,
 	type AccessRulesFilter,
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
-import { accessPolicyInputShape, policyScopeInput } from "./policyInput.js";
+import {
+	accessPolicyInputShape,
+	policyScopeExclusionsInput,
+	policyScopeInput,
+} from "./policyInput.js";
 import { type UserScopeInput, userScopeInput } from "./userScopeInput.js";
 
 type RuleGroupInput = {
@@ -30,6 +39,7 @@ type RuleGroupInput = {
 
 export type AccessRuleInput = AccessPolicy &
 	PolicyScope &
+	PolicyScopeExclusions &
 	UserScopeInput &
 	RuleGroupInput;
 
@@ -64,6 +74,7 @@ export const accessRuleInput: ZodType<AccessRule, z.ZodTypeDef, unknown> = z
 	.object({
 		...accessPolicyInputShape.shape,
 		...policyScopeInput.shape,
+		...policyScopeExclusionsInput.shape,
 	})
 	.and(userScopeInput)
 	.and(ruleGroupInput)
@@ -98,6 +109,7 @@ export const accessRulesFilterInput = z.object({
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
 	blockOnly: z.boolean().optional(),
+	includeDeferred: z.boolean().optional(),
 } satisfies AllKeys<AccessRulesFilterInput>);
 
 export const getAccessRuleFiltersFromInput = (

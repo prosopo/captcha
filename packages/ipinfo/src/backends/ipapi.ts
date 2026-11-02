@@ -14,6 +14,7 @@
 
 import type { Logger } from "@prosopo/logger";
 import type {
+	IPApiReputationInfo,
 	IPApiResponse,
 	IPInfoResponse,
 	IPInfoResult,
@@ -71,6 +72,13 @@ export const parseAbuserScore = (
 	}
 	const parsed = Number.parseFloat(head);
 	return Number.isNaN(parsed) ? undefined : parsed;
+};
+
+export const parseDetectorRisk = (
+	reputation: IPApiReputationInfo | undefined,
+): number | undefined => {
+	const risk = reputation?.detector_risk;
+	return typeof risk === "number" && risk >= 0 && risk <= 1 ? risk : undefined;
 };
 
 export class IpapiBackend {
@@ -150,6 +158,7 @@ export class IpapiBackend {
 					isMobile: data.is_mobile,
 					isSatellite: data.is_satellite,
 					isCrawler: data.is_crawler,
+					crawlerName: data.crawler,
 					providerName: data.company?.name || data.datacenter?.datacenter,
 					providerType: data.company?.type || data.asn?.type,
 					asnNumber: data.asn?.asn,
@@ -169,6 +178,7 @@ export class IpapiBackend {
 
 					abuserScore: parseAbuserScore(data.asn?.abuser_score),
 					companyAbuserScore: parseAbuserScore(data.company?.abuser_score),
+					detectorRisk: parseDetectorRisk(data.reputation),
 				};
 
 				return result;

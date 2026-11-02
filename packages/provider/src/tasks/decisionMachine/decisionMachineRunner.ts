@@ -34,6 +34,8 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { z } from "zod";
+import { measureSync } from "../../api/metrics.js";
+import { isDnsSidecarHealthy } from "../dnsEvent/dnsSidecarHealth.js";
 
 const LOAD_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
@@ -136,15 +138,25 @@ interface NamedExport {
 }
 
 /**
- * WeakSet-style registry of every live runner. Populated in the constructor
- * and consulted by {@link invalidateAllDecisionMachineArtifactCaches} so an
- * artifact upload can flush every runner's in-memory artifact cache in one
- * call. Held as `WeakRef` so a runner that goes out of scope is garbage
- * collected — this map only ever grows in prod (runners are constructed
- * per task class at process start and live for the process's lifetime) so
- * a plain array would also work, but `WeakRef` is defensive.
+ * Bumped by {@link invalidateAllDecisionMachineArtifactCaches}. Each cache
+ * records the generation it was filled under and is discarded once the two
+ * diverge, which flushes every cache without holding a reference to any of
+ * them.
  */
-const liveRunners = new Set<WeakRef<DecisionMachineRunner>>();
+let artifactCacheGeneration = 0;
+
+type ArtifactCache = {
+	generation: number;
+	entries: Map<string, CachedArtifact>;
+};
+
+/**
+ * Runners are built per request, so a cache owned by the runner never served
+ * a second lookup and every decision paid two Mongo reads. The cache lives
+ * with the database the runner reads from instead: one per process in
+ * production, and still isolated between test doubles.
+ */
+const artifactCaches = new WeakMap<IProviderDatabase, ArtifactCache>();
 
 /**
  * Flush every runner's in-memory artifact cache. Companion to
@@ -152,26 +164,28 @@ const liveRunners = new Set<WeakRef<DecisionMachineRunner>>();
  * `upsertDecisionMachineArtifact` upload.
  */
 export const invalidateAllDecisionMachineArtifactCaches = (): void => {
-	for (const ref of liveRunners) {
-		const runner = ref.deref();
-		if (runner === undefined) {
-			liveRunners.delete(ref);
-			continue;
-		}
-		runner.invalidateArtifactCache();
-	}
+	artifactCacheGeneration++;
 };
 
 export class DecisionMachineRunner {
-	private readonly artifactCache = new Map<string, CachedArtifact>();
+	constructor(private readonly db: IProviderDatabase) {}
 
-	constructor(private readonly db: IProviderDatabase) {
-		liveRunners.add(new WeakRef(this));
-	}
-
-	/** Drop every entry in this runner's artifact cache. */
+	/** Drop every cached artifact read from this runner's database. */
 	public invalidateArtifactCache(): void {
 		this.artifactCache.clear();
+	}
+
+	private get artifactCache(): Map<string, CachedArtifact> {
+		const cache = artifactCaches.get(this.db);
+		if (cache && cache.generation === artifactCacheGeneration) {
+			return cache.entries;
+		}
+		const fresh: ArtifactCache = {
+			generation: artifactCacheGeneration,
+			entries: new Map(),
+		};
+		artifactCaches.set(this.db, fresh);
+		return fresh.entries;
 	}
 
 	/** Build a cache key for a given scope + kind + dappAccount tuple. */
@@ -251,7 +265,14 @@ export class DecisionMachineRunner {
 			const decision = await this.runArtifactExport(
 				artifact,
 				["decide", "default"],
-				{ input: { ...input, phase: input.phase ?? "verify" } },
+				{
+					input: {
+						...input,
+						phase: input.phase ?? "verify",
+						dnsSidecarHealthy:
+							input.dnsSidecarHealthy ?? isDnsSidecarHealthy(new Date()),
+					},
+				},
 				DecisionMachineOutputSchema,
 			);
 			return decision ?? DEFAULT_DECISION;
@@ -467,7 +488,13 @@ export class DecisionMachineRunner {
 		artifact: DecisionMachineArtifact,
 		exportNames: string[],
 		options: { input: unknown; optional?: boolean },
-		schema: z.ZodSchema<T>,
+		// `z.ZodType<T, _, unknown>` rather than `z.ZodSchema<T>`: the latter
+		// pins Input === Output === T, so a schema with `.default()`s
+		// anywhere in its tree (RoutingMachineOutputSchema's puzzle settings)
+		// makes T unify with the *input* shape and the parsed result stops
+		// matching the declared output type. This says only "a schema that
+		// produces T from unknown input", which is what the caller wants.
+		schema: z.ZodType<T, z.ZodTypeDef, unknown>,
 	): Promise<T | undefined> {
 		const { exports } = loadMachine(artifact.source);
 		const named = this.findExport(exports, exportNames);
@@ -479,7 +506,9 @@ export class DecisionMachineRunner {
 		}
 
 		const result = await this.withTimeout(
-			Promise.resolve(named.fn(options.input)),
+			Promise.resolve(
+				measureSync("decision_machine_decide", () => named.fn(options.input)),
+			),
 			EXEC_TIMEOUT_MS,
 		);
 		const parsed = schema.safeParse(result);

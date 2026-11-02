@@ -1,0 +1,82 @@
+# The napi crates carry Rust unit tests that `pnpm run test:all` never runs:
+# turbo only drives the JS suites. Its own workflow, not a tests.yml job, so a
+# Rust failure is reported on its own and does not wait for the full JS build,
+# and so it runs only when a crate can have changed.
+
+name: cargo-test
+
+on:
+  pull_request:
+    branches: [main, dev, staging, release/*]
+    # Safe against the "required check never reports" trap: required-check.yml
+    # publishes `check` with no path filter and waits on every check run, so a
+    # PR touching neither path still gets a `check`.
+    paths:
+      - 'packages/native-*/**'
+      - '.github/workflows/cargo-test.yml'
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  cargo-test:
+    name: cargo test (${{ matrix.crate }})
+    # Hosted for the same reason as tests.yml: this repository is public.
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    strategy:
+      fail-fast: false
+      matrix:
+        # Independent crates, each with its own lockfile. A new
+        # packages/native-* crate is not tested until it is listed here.
+        crate:
+          [packages/native-ja4, packages/native-merkle, packages/native-puzzle]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+
+      - name: Record the rustc version for the cache key
+        id: rustc-version
+        run: |
+          release=$(rustc -vV | sed -n 's/^release: //p')
+          commit=$(rustc -vV | sed -n 's/^commit-hash: //p')
+          if [ -z "$release" ]; then
+            echo "::error::could not read release from rustc -vV"; exit 1
+          fi
+          echo "version=${release}${commit:+-${commit:0:9}}" >> "$GITHUB_OUTPUT"
+
+      # The compiler goes in prefix-key, not just key: rust-cache derives its
+      # restore-keys from the prefix, so a version left outside it can restore a
+      # target/ built by another rustc, which cargo rejects with E0514.
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: ${{ matrix.crate }}
+          prefix-key: v0-rust-${{ steps.rustc-version.outputs.version }}
+
+      # Debug, not --release: the release profile's fat LTO and single codegen
+      # unit are for the shipped addon, and only slow a test build down. The
+      # dependencies are still optimised via profile.dev.package."*".
+      - name: cargo test
+        working-directory: ${{ matrix.crate }}
+        run: cargo test --locked

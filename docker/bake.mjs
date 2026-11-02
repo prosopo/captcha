@@ -32,27 +32,32 @@
 //   prosopo/job-runner -> JOB_RUNNER_VERSION
 //   prosopo/provider   -> PROVIDER_VERSION
 //
-// Any argument is forwarded to bake, so `npm run build:docker -- job-runner`
-// and `npm run build:docker -- --print` behave as you would expect.
+// Any argument is forwarded to bake, so `pnpm run build:docker job-runner`
+// and `pnpm run build:docker --print` behave as you would expect.
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { glob } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { dockerRepository } from "./docker-tag.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-const rootManifest = JSON.parse(
-	readFileSync(resolve(repoRoot, "package.json"), "utf8"),
-);
-
-// The workspace globs cover the packages that own an image. The wrapper
+// The workspace members cover the packages that own an image. The wrapper
 // packages under docker/images are deliberately not workspace members - they
 // publish nothing to npm - so they have to be added explicitly or their
 // images would silently build as :dev.
+const listed = spawnSync("pnpm", ["ls", "-r", "--depth", "-1", "--json"], {
+	cwd: repoRoot,
+	encoding: "utf8",
+});
+if (listed.status !== 0) {
+	throw new Error(`pnpm ls failed: ${listed.stderr}`);
+}
 const patterns = [
-	...rootManifest.workspaces.filter((pattern) => !pattern.startsWith("!")),
+	...JSON.parse(listed.stdout)
+		.map((member) => relative(repoRoot, member.path))
+		.filter((member) => member !== ""),
 	"docker/images/*",
 ].map((pattern) => `${pattern}/package.json`);
 

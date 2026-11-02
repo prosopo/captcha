@@ -27,10 +27,8 @@ import {
 	serialiseBoard,
 	toDataUri,
 } from "@prosopo/connect-assets";
-import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
-	CaptchaType,
 	type ConnectTile,
 	type IConnectSettings,
 	connectBoardSizeDefault,
@@ -152,40 +150,4 @@ export const renderConnectTiles = async (
 		})),
 		tileSize: rendered.tileSize,
 	};
-};
-
-/**
- * Whether this provider can render connect imagery right now.
- *
- * Mirrors `isPuzzleRenderAvailable` — checked where a captchaType is *chosen*,
- * never where the challenge is served, because `/captcha/connect` cannot
- * answer with an image captcha and minting a connect session this provider
- * cannot fulfil would strand the user on INCORRECT_CAPTCHA_TYPE.
- */
-export const isConnectRenderAvailable = (): boolean => {
-	// Boards and tiles are synthesised in-process from nothing but a seed, so
-	// unlike the detector pool there is no asset that can be missing.
-	// Generation only fails if the image toolchain itself is broken, which
-	// surfaces as a render error rather than as unavailability.
-	return true;
-};
-
-/**
- * Substitute `image` for `connect` when this provider cannot render imagery.
- *
- * Call this at every point a session's captchaType is decided, never at the
- * point one is served. Returns other types untouched.
- */
-export const downgradeConnectIfUnavailable = <T extends CaptchaType>(
-	captchaType: T,
-	logger?: Logger,
-): T | CaptchaType.image => {
-	if (captchaType !== CaptchaType.connect || isConnectRenderAvailable()) {
-		return captchaType;
-	}
-	logger?.warn(() => ({
-		msg: "Connect rendering unavailable - downgrading session to image",
-		data: { requested: captchaType, served: CaptchaType.image },
-	}));
-	return CaptchaType.image;
 };

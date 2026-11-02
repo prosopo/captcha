@@ -13,12 +13,15 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
+import type { TranslateFn } from "@prosopo/locale";
 import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaType,
+	type GetAudioCaptchaResponse,
 	type GetConnectCaptchaResponse,
 	type GetFrictionlessCaptchaResponse,
+	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaResponse,
 	POW_SEPARATOR,
@@ -26,10 +29,15 @@ import {
 	type VerificationResponse,
 } from "@prosopo/types";
 import {
+	renderAudioClip,
+	resolveAudioRenderSettings,
+} from "../../tasks/audio/audioRenderer.js";
+import {
 	generateConnectBoard,
 	renderConnectTiles,
 	resolveConnectSettings,
 } from "../../tasks/connect/connectGenerator.js";
+import { renderIconOrderImages } from "../../tasks/iconOrder/iconOrderRenderer.js";
 import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
@@ -51,8 +59,8 @@ const buildChallenge = (user: string, dapp: string): PoWChallengeId =>
 // verify handler already synthesises when the provider call times out.
 export const MAINTENANCE_VERIFY_SCORE = 0;
 
-// Verify-side maintenance dummy, shared by the image / PoW / puzzle / connect
-// verify routes. Mirrors what `getVerificationResponse` returns in normal operation
+// Verify-side maintenance dummy, shared by the image / PoW / puzzle verify
+// routes. Mirrors what `getVerificationResponse` returns in normal operation
 // as closely as is possible without a DB:
 //
 //   - `status` is the localised "User verified" string, not a bare "ok". A real
@@ -67,7 +75,7 @@ export const MAINTENANCE_VERIFY_SCORE = 0;
 // `reason` is failure-only and maintenance always passes, so it never applies.
 // `commitmentId` (image) is deliberately absent — no commitment exists to name.
 export const buildMaintenanceVerificationResponse = (
-	translate: (key: string) => string,
+	translate: TranslateFn,
 ): VerificationResponse => ({
 	[ApiParams.status]: translate("API.USER_VERIFIED"),
 	[ApiParams.verified]: true,
@@ -79,6 +87,7 @@ export const buildFrictionlessMaintenanceResponse = (
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
+		| CaptchaType.iconOrder
 		| CaptchaType.connect,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
@@ -136,6 +145,47 @@ export const buildPuzzleMaintenanceResponse = async (
 		[ApiParams.pieceSize]: images.pieceSize,
 		[ApiParams.originX]: 60,
 		[ApiParams.originY]: 100,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// A real clip so the widget plays normally; the answer is discarded because
+// maintenance mode accepts every submission.
+export const buildAudioMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetAudioCaptchaResponse> => {
+	const timestamp = Date.now();
+	const rendered = renderAudioClip(resolveAudioRenderSettings());
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.clip]: rendered.clip,
+		[ApiParams.characterCount]: rendered.characterCount,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// Rendered for real, like the puzzle response above. The targets are
+// discarded: nothing is graded in maintenance mode.
+export const buildIconOrderMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetIconOrderCaptchaResponse> => {
+	const timestamp = Date.now();
+	const images = await renderIconOrderImages();
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.background]: images.background,
+		[ApiParams.legend]: images.legend,
+		[ApiParams.legendIconSize]: images.legendIconSize,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

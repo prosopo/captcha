@@ -38,8 +38,10 @@ export enum ApiParams {
 	secret = "secret",
 	timestamp = "timestamp",
 	signature = "signature",
+	language = "language",
 	error = "error",
 	siteKey = "siteKey",
+	siteKeys = "siteKeys",
 	captchaType = "captchaType",
 	sessionId = "sessionId",
 	settings = "settings",
@@ -53,6 +55,8 @@ export enum ApiParams {
 	bundleId = "bundleId",
 	detectorScript = "detectorScript",
 	useProviderBundle = "useProviderBundle",
+	clientUrl = "clientUrl",
+	assetOrigin = "assetOrigin",
 	ip = "ip",
 	expirationInSeconds = "expirationInSeconds",
 	enabled = "enabled",
@@ -82,6 +86,10 @@ export enum ApiParams {
 	background = "background",
 	piece = "piece",
 	pieceSize = "pieceSize",
+	legend = "legend",
+	legendIconSize = "legendIconSize",
+	clicks = "clicks",
+	iconOrderEvents = "iconOrderEvents",
 	// Connect captcha.
 	boardSize = "boardSize",
 	lineLength = "lineLength",
@@ -97,6 +105,23 @@ export enum ApiParams {
 	escalation = "escalation",
 	hp = "hp",
 	clientMetaData = "clientMetaData",
+	// Site-owner-supplied session identifier (Protect's JTI, or any per-user
+	// session id the site already holds). Handed to the widget at render time
+	// and handed back on verify so the provider can confirm the session that
+	// solved the captcha is the session being verified. Deliberately distinct
+	// from `sessionId`, which is the provider's own frictionless session.
+	clientSessionId = "clientSessionId",
+	refreshOf = "refreshOf",
+	switchToImage = "switchToImage",
+	switchToPuzzle = "switchToPuzzle",
+	widgetSlot = "widgetSlot",
+	imageSwitchAvailable = "imageSwitchAvailable",
+	puzzleSwitchAvailable = "puzzleSwitchAvailable",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
+	clip = "clip",
+	answer = "answer",
+	audioEvents = "audioEvents",
+	replays = "replays",
+	characterCount = "characterCount",
 }

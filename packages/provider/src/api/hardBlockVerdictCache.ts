@@ -63,6 +63,9 @@ export class HardBlockVerdictCache {
 	// callers on the same key. See getOrCompute for the ordering
 	// guarantees.
 	private readonly inflight = new Map<string, Promise<AccessRule[]>>();
+	// Bumped by clear(), so a compute that read storage before the clear
+	// cannot write its now-stale verdict back afterwards.
+	private generation = 0;
 
 	constructor(
 		private readonly ttlMs: number = DEFAULT_VERDICT_CACHE_TTL_MS,
@@ -140,9 +143,12 @@ export class HardBlockVerdictCache {
 		if (existing !== undefined) {
 			return existing;
 		}
+		const generation = this.generation;
 		const promise = (async () => {
 			const value = await compute();
-			this.set(key, value);
+			if (generation === this.generation) {
+				this.set(key, value);
+			}
 			return value;
 		})();
 		this.inflight.set(key, promise);
@@ -166,6 +172,7 @@ export class HardBlockVerdictCache {
 	// the stored entries and any in-flight Promises so a rule mutation
 	// can't leave a stale computation in flight.
 	clear(): void {
+		this.generation++;
 		this.store.clear();
 		this.inflight.clear();
 	}
@@ -180,17 +187,22 @@ export class HardBlockVerdictCache {
 	}
 }
 
-// A stable string key from (clientId, userScope, blockOnly). Any two
-// requests whose access-rule inputs are equal must hash to the same key,
-// so BigInts are serialised as strings and fields are enumerated in a
-// fixed order — do NOT change without also flushing all in-flight
-// caches on the deploy.
+// A stable string key from (clientId, userScope, blockOnly,
+// includeDeferred). Any two requests whose access-rule inputs are equal
+// must hash to the same key, so BigInts are serialised as strings and
+// fields are enumerated in a fixed order — do NOT change without also
+// flushing all in-flight caches on the deploy.
+//
+// `includeDeferred` is part of the key because it widens the candidate
+// pool: the middleware's blockOnly lookup and the verify-time lookup
+// share a scope but must not share a cached result.
 export const hardBlockCacheKey = (
 	clientId: string | undefined,
 	userScope: UserScope,
 	blockOnly: boolean,
+	includeDeferred = false,
 ): string => {
-	const bo = blockOnly ? "1" : "0";
+	const bo = `${blockOnly ? "1" : "0"}${includeDeferred ? "d" : ""}`;
 	const parts = [
 		clientId ?? "",
 		userScope.numericIp === undefined ? "" : userScope.numericIp.toString(),

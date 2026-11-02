@@ -16,7 +16,10 @@ import type { Logger } from "@prosopo/logger";
 import { describe, expect, it, vi } from "vitest";
 import { InsertRulesEndpoint } from "#policy/api/write/insertRules.js";
 import { AccessPolicyType } from "#policy/rule.js";
-import type { AccessRulesWriter } from "#policy/rulesStorage.js";
+import type {
+	AccessRuleEntry,
+	AccessRulesWriter,
+} from "#policy/rulesStorage.js";
 
 const makeMockLogger = (): Logger =>
 	({
@@ -85,5 +88,47 @@ describe("InsertRulesEndpoint logger selection", () => {
 			([fn]) => (fn as () => { msg: string })().msg,
 		);
 		expect(msgs).toContain("Endpoint inserted access rules");
+	});
+});
+
+describe("InsertRulesEndpoint exclusions", () => {
+	const insertAndCapture = async (
+		group: Record<string, unknown>,
+	): Promise<AccessRuleEntry[]> => {
+		const writer = makeWriter();
+		const endpoint = new InsertRulesEndpoint(writer, makeMockLogger());
+		const args = endpoint.getRequestArgsSchema().parse([group]);
+
+		await endpoint.processRequest(args);
+		await new Promise((r) => setImmediate(r));
+
+		const [[entries]] = (writer.insertRules as ReturnType<typeof vi.fn>).mock
+			.calls as [[AccessRuleEntry[]]];
+		return entries;
+	};
+
+	it("stamps the exclusions on a global rule", async () => {
+		const entries = await insertAndCapture({
+			accessPolicy: { type: AccessPolicyType.Block },
+			userScopes: [{ ip: "88.98.183.93" }],
+			excludedClientIds: ["site-a", "site-b"],
+		});
+
+		expect(entries.map((entry) => entry.rule.excludedClientIds)).toEqual([
+			["site-a", "site-b"],
+		]);
+	});
+
+	it("leaves the exclusions off rules scoped to a client", async () => {
+		const entries = await insertAndCapture({
+			accessPolicy: { type: AccessPolicyType.Block },
+			userScopes: [{ ip: "88.98.183.93" }],
+			policyScopes: [{ clientId: "site-c" }],
+			excludedClientIds: ["site-a"],
+		});
+
+		expect(entries.map((entry) => entry.rule)).toEqual([
+			expect.not.objectContaining({ excludedClientIds: expect.anything() }),
+		]);
 	});
 });

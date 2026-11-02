@@ -33,6 +33,10 @@ describe("captcha labelling schema fields", () => {
 		}
 	});
 
+	it("CaptchaLabelSchema accepts the solver label", () => {
+		expect(CaptchaLabelSchema.parse("solver")).toBe(CaptchaLabel.solver);
+	});
+
 	it("CaptchaLabelSchema rejects unknown labels", () => {
 		expect(() => CaptchaLabelSchema.parse("definitely-not-a-label")).toThrow();
 	});
@@ -62,6 +66,7 @@ describe("captcha labelling schema fields", () => {
 			expect(enumValues).toEqual(
 				expect.arrayContaining(Object.values(CaptchaLabel)),
 			);
+			expect(enumValues).toContain(CaptchaLabel.solver);
 		}
 	});
 });

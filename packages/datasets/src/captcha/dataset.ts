@@ -1,4 +1,4 @@
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { getLogger } from "@prosopo/logger";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
@@ -113,7 +113,11 @@ export async function buildCaptchaTree(
 		tree.build(captchaHashes);
 		return tree;
 	} catch (err) {
-		throw new ProsopoEnvError("DATASET.HASH_ERROR");
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DSET-9",
+			message: "Error hashing dataset",
+		});
 	}
 }
 

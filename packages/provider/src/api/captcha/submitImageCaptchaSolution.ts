@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaSolutionBody,
@@ -25,6 +25,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -56,10 +57,12 @@ export default (env: ProviderEnvironment) =>
 			parsed = CaptchaSolutionBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-24",
+					message: "Error parsing captcha",
+					cause: err,
+					context: { body: summariseRequestBody(req) },
 				}),
 			);
 		}
@@ -86,10 +89,10 @@ export default (env: ProviderEnvironment) =>
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-25",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -123,20 +126,19 @@ export default (env: ProviderEnvironment) =>
 			};
 			return res.json(returnValue);
 		} catch (err) {
+			if (isProsopoError(err) && !isSevereError(err)) return next(err);
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in image captcha solution submission",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						error: err,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-26",
+					message: "BadRequest",
+					cause: err,
+					context: { siteKey: req.body.dapp },
 				}),
 			);
 		}

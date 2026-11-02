@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { LogLevel, type Logger } from "@prosopo/logger";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -239,10 +239,11 @@ describe("a body the schema rejects", () => {
 		);
 
 		const [forwarded] = harness.next.calls[0] ?? [];
-		expect(forwarded).toBeInstanceOf(ProsopoApiError);
-		const error = forwarded as ProsopoApiError;
-		expect(error.context?.code).toBe(400);
-		expect(error.context?.error).toBeDefined();
+		expect(forwarded).toBeInstanceOf(ProsopoError);
+		const error = forwarded as ProsopoError;
+		expect(error.code).toBe("INVALID_REQUEST");
+		expect(error.status).toBe(400);
+		expect(error.cause).toBeDefined();
 	});
 
 	test("a schema that throws something other than a ZodError is treated the same", async () => {
@@ -262,7 +263,7 @@ describe("a body the schema rejects", () => {
 		);
 
 		expect(harness.next.calls).toHaveLength(1);
-		expect(harness.next.calls[0]?.[0]).toBeInstanceOf(ProsopoApiError);
+		expect(harness.next.calls[0]?.[0]).toBeInstanceOf(ProsopoError);
 	});
 
 	test("an endpoint that fails while building its schema is caught too", async () => {
@@ -284,7 +285,7 @@ describe("a body the schema rejects", () => {
 			harness.next.fn,
 		);
 
-		expect(harness.next.calls[0]?.[0]).toBeInstanceOf(ProsopoApiError);
+		expect(harness.next.calls[0]?.[0]).toBeInstanceOf(ProsopoError);
 		expect(target.processRequest).not.toHaveBeenCalled();
 	});
 });
@@ -335,7 +336,10 @@ describe("an endpoint that fails", () => {
 
 		expect(harness.logged).toHaveBeenCalledTimes(1);
 		const entry = harness.logged.mock.calls[0]?.[0];
-		expect(entry?.()).toEqual({ err: failure });
+		expect(entry?.()).toMatchObject({
+			msg: "UNEXPECTED:APIX-2",
+			data: { error: { cause: { message: "database down" } } },
+		});
 	});
 
 	test("does not also call next(), so the error handler is not double-run", async () => {
@@ -367,12 +371,14 @@ describe("an endpoint that fails", () => {
 	});
 
 	test("an error carrying its own status code keeps that code", async () => {
-		// A ProsopoApiError already knows what it is; overwriting its code with
+		// A ProsopoError already knows what it is; overwriting its code with
 		// the adapter's default turned a 400 into a 500.
 		await harness.adapter.handleRequest(
 			endpoint(undefined, async () => {
-				throw new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400 },
+				throw new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "APIX-1",
+					message: "BadRequest",
 				});
 			}),
 			harness.request,

@@ -1,14 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
 
-    <script src="index.js"></script>
-    <title>Procaptcha demo: Invisible Frictionless - Implicit Rendering</title>
-<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha demo: Frictionless, invisible, implicit rendering</title>
     <script type="module">
-        // Function to update CAPTCHA status display is now provided by status-log-injector
 
         // Define callbacks directly on window object so they're globally accessible
         window.onCaptchaFailed = function () {
@@ -81,7 +76,6 @@
         };
 
         window.addEventListener('load', () => {
-
 
             window.setIsError = (isError) => {
                 const messageContainer = document.getElementById('messageContainer');
@@ -159,33 +153,26 @@
 </head>
 <body>
 
-<div class="mui-container">
-    <h1>Invisible Frictionless CAPTCHA - Implicit Rendering</h1>
-    <p>This example demonstrates how to use Procaptcha in invisible frictionless mode with implicit rendering directly on a button.</p>
+<div class="demo-card">
 
-    <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
-
-    <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="mui-form">
-        <h2>Example Login Form</h2>
-        <div class="mui-textfield mui-textfield--float-label">
+    <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="demo-form">
+        <h2>Create an account</h2>
+        <div class="demo-field">
             <label for="name">Name</label>
             <input id="name" type="text" name="name" required/>
         </div>
-        <div class="mui-textfield mui-textfield--float-label">
+        <div class="demo-field">
             <label for="email">Email Address</label>
             <input id="email" type="email" name="email" required/>
         </div>
-        <div class="mui-textfield mui-textfield--float-label">
+        <div class="demo-field">
             <label for="password">Password</label>
             <input id="password" type="password" name="password" required/>
-        </div>
-        <div class="mui-textfield mui-textfield--float-label">
-            <!-- The div here was empty, we don't need it for invisible mode -->
         </div>
         <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
         <button
             type="button"
-            class="mui-btn mui-btn--raised procaptcha"
+            class="demo-button procaptcha"
             data-sitekey="%PROSOPO_SITE_KEY_FRICTIONLESS%"
             data-callback="onActionHandler"
             data-failed-callback="onCaptchaFailed"
@@ -195,10 +182,6 @@
         </button>
     </form>
 
-    <!-- Console output display area -->
-    <div id="console-output" class="console-output" style="display: none;"></div>
-
-    <!-- Explanation will be injected by the explanation-injector plugin -->
 </div>
 </body>
 </html>

@@ -13,7 +13,6 @@
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
-	ContextType,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -27,12 +26,41 @@ import {
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
+	type PoWCaptchaRecord,
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
+	type UserCommitmentRecord,
 } from "@prosopo/types-database";
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
+import {
+	ClientTaskManager,
+	matchesGlob,
+} from "../../../../tasks/client/clientTasks.js";
+import {
+	invalidateAllDecisionMachineArtifactCaches,
+	invalidateDecisionMachineScriptCache,
+} from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+
+vi.mock(
+	"../../../../tasks/decisionMachine/decisionMachineRunner.js",
+	async (
+		importOriginal: () => Promise<
+			typeof import("../../../../tasks/decisionMachine/decisionMachineRunner.js")
+		>,
+	) => {
+		const actual = await importOriginal();
+		return {
+			...actual,
+			invalidateAllDecisionMachineArtifactCaches: vi.fn(
+				actual.invalidateAllDecisionMachineArtifactCaches,
+			),
+			invalidateDecisionMachineScriptCache: vi.fn(
+				actual.invalidateDecisionMachineScriptCache,
+			),
+		};
+	},
+);
 
 const loggerOuter = getLogger("info", "test:client-tasks");
 
@@ -190,35 +218,17 @@ describe("ClientTaskManager", () => {
 				{
 					account: "mockClientRecord1",
 					tier: Tier.Professional,
-					settings: {
-						contextAware: {
-							enabled: true,
-							contexts: {
-								[ContextType.Default]: {
-									type: ContextType.Default,
-									threshold: 0.7,
-								},
-							},
-						},
-					},
+					settings: {},
 				},
 				{
 					account: "mockClientRecord2",
 					tier: Tier.Professional,
-					settings: {
-						contextAware: {
-							enabled: true,
-							contexts: {
-								[ContextType.Webview]: {
-									type: ContextType.Webview,
-									threshold: 0.7,
-								},
-							},
-						},
-					},
+					settings: {},
 				},
 			]),
 			upsertDecisionMachineArtifact: vi.fn(),
+			removeDecisionMachineArtifact: vi.fn().mockResolvedValue(true),
+			removeAllDecisionMachineArtifacts: vi.fn().mockResolvedValue(2),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -286,21 +296,21 @@ describe("ClientTaskManager", () => {
 			},
 		];
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
-			mockCommitments,
+		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
+			mockCommitments as UserCommitmentRecord[],
 		);
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.createScheduledTaskStatus as any).mockResolvedValueOnce({});
-
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.updateScheduledTaskStatus as any).mockResolvedValueOnce({});
-
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
-			mockPoWCommitments,
+		vi.mocked(providerDB.createScheduledTaskStatus).mockResolvedValueOnce(
+			new Types.ObjectId(),
 		);
+
+		vi.mocked(providerDB.updateScheduledTaskStatus).mockResolvedValueOnce(
+			undefined,
+		);
+
+		vi.mocked(
+			providerDB.getUnstoredDappUserPoWCommitments,
+		).mockResolvedValueOnce(mockPoWCommitments as PoWCaptchaRecord[]);
 
 		await clientTaskManager.storeCommitmentsExternal();
 
@@ -368,14 +378,12 @@ describe("ClientTaskManager", () => {
 			msg: "Test: Collections state updated",
 		}));
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
-			mockCommitments,
+		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
+			mockCommitments as UserCommitmentRecord[],
 		);
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
-			mockPoWCommitments,
-		);
+		vi.mocked(
+			providerDB.getUnstoredDappUserPoWCommitments,
+		).mockResolvedValueOnce(mockPoWCommitments as PoWCaptchaRecord[]);
 		logger.info(() => ({ msg: "Test: Mock DB responses configured" }));
 
 		await clientTaskManager.storeCommitmentsExternal();
@@ -413,8 +421,7 @@ describe("ClientTaskManager", () => {
 		}));
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fi
-			Number.parseInt(mockLastScheduledTask._id as any) + 1,
+			Number.parseInt(String(mockLastScheduledTask._id)) + 1,
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
@@ -446,15 +453,13 @@ describe("ClientTaskManager", () => {
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
+		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
 			[],
 		);
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
-			[],
-		);
+		vi.mocked(
+			providerDB.getUnstoredDappUserPoWCommitments,
+		).mockResolvedValueOnce([]);
 
 		await clientTaskManager.storeCommitmentsExternal();
 
@@ -577,6 +582,35 @@ describe("ClientTaskManager", () => {
 					"localhost",
 				),
 			).toBe(false);
+		});
+
+		it("should match glob patterns", () => {
+			expect(
+				clientTaskManager.domainPatternMatcher("shop.example.com", "shop*.com"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("a.b.example.com", "*example*"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("example.org", "*example*.com"),
+			).toBe(false);
+			// "." in a pattern is literal, not any character.
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"shopxexample.com",
+					"shop.*.com",
+				),
+			).toBe(false);
+		});
+
+		it("should match a many-star glob pattern in linear time", () => {
+			// A customer-controlled pattern like this backtracks exponentially
+			// when compiled to `.*a.*a...` and blocks the event loop.
+			const pattern = `${"*a".repeat(10)}*b`;
+			const host = "a".repeat(32);
+			const started = performance.now();
+			expect(clientTaskManager.domainPatternMatcher(host, pattern)).toBe(false);
+			expect(performance.now() - started).toBeLessThan(500);
 		});
 
 		it("should handle edge cases", () => {
@@ -768,5 +802,45 @@ describe("ClientTaskManager", () => {
 				),
 			).rejects.toThrow();
 		});
+
+		it("flushes the decision machine caches when one is removed", async () => {
+			vi.mocked(invalidateAllDecisionMachineArtifactCaches).mockClear();
+			vi.mocked(invalidateDecisionMachineScriptCache).mockClear();
+
+			await clientTaskManager.removeDecisionMachine("dm-id");
+
+			expect(invalidateAllDecisionMachineArtifactCaches).toHaveBeenCalledOnce();
+			expect(invalidateDecisionMachineScriptCache).toHaveBeenCalledOnce();
+		});
+
+		it("flushes the decision machine caches when all are removed", async () => {
+			vi.mocked(invalidateAllDecisionMachineArtifactCaches).mockClear();
+			vi.mocked(invalidateDecisionMachineScriptCache).mockClear();
+
+			await clientTaskManager.removeAllDecisionMachines();
+
+			expect(invalidateAllDecisionMachineArtifactCaches).toHaveBeenCalledOnce();
+			expect(invalidateDecisionMachineScriptCache).toHaveBeenCalledOnce();
+		});
+	});
+});
+
+describe("matchesGlob", () => {
+	it.each<[string, string, boolean]>([
+		["*", "", true],
+		["*", "anything", true],
+		["", "", true],
+		["", "a", false],
+		["a*", "abc", true],
+		["*c", "abc", true],
+		["a*c", "abc", true],
+		["a*c", "abd", false],
+		["a**c", "ac", true],
+		["*a*b*", "xxaxxbxx", true],
+		["*a*b*", "xxbxxaxx", false],
+		["abc", "abc", true],
+		["abc", "abcd", false],
+	])("matchesGlob(%s, %s) is %s", (pattern, text, expected) => {
+		expect(matchesGlob(pattern, text)).toBe(expected);
 	});
 });

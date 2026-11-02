@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { Rollup } from "vite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { tsNoCheckPlugin } from "./TsNoCheckPlugin.js";
 import VitePluginCopy from "./vite-plugin-copy.js";
@@ -132,14 +133,25 @@ describe("VitePluginFixAbsoluteImports", () => {
 });
 
 describe("tsNoCheckPlugin", () => {
+	const outputOptions = {} as Rollup.NormalizedOutputOptions;
+
 	it("prefixes every emitted chunk with a ts-nocheck pragma", () => {
 		// Consumers typecheck the bundled output; without this the generated
 		// code fails their build.
 		const bundle = {
-			"index.js": { type: "chunk", code: "export const a = 1;" },
-			"other.js": { type: "chunk", code: "export const b = 2;" },
+			"index.js": {
+				type: "chunk",
+				code: "export const a = 1;",
+			} as Rollup.OutputChunk,
+			"other.js": {
+				type: "chunk",
+				code: "export const b = 2;",
+			} as Rollup.OutputChunk,
 		};
-		tsNoCheckPlugin().generateBundle({}, bundle);
+		tsNoCheckPlugin().generateBundle(
+			outputOptions,
+			bundle as Rollup.OutputBundle,
+		);
 
 		expect(bundle["index.js"].code).toBe("// @ts-nocheck\nexport const a = 1;");
 		expect(bundle["other.js"].code).toBe("// @ts-nocheck\nexport const b = 2;");
@@ -147,17 +159,22 @@ describe("tsNoCheckPlugin", () => {
 
 	it("leaves assets and empty chunks alone", () => {
 		const bundle = {
-			"style.css": { type: "asset", source: "body{}" },
-			"empty.js": { type: "chunk", code: "" },
+			"style.css": { type: "asset", source: "body{}" } as Rollup.OutputAsset,
+			"empty.js": { type: "chunk", code: "" } as Rollup.OutputChunk,
 		};
-		tsNoCheckPlugin().generateBundle({}, bundle);
+		tsNoCheckPlugin().generateBundle(
+			outputOptions,
+			bundle as Rollup.OutputBundle,
+		);
 
 		expect(bundle["style.css"]).toEqual({ type: "asset", source: "body{}" });
 		expect(bundle["empty.js"].code).toBe("");
 	});
 
 	it("handles an empty bundle", () => {
-		expect(() => tsNoCheckPlugin().generateBundle({}, {})).not.toThrow();
+		expect(() =>
+			tsNoCheckPlugin().generateBundle(outputOptions, {}),
+		).not.toThrow();
 	});
 
 	it("is named", () => {

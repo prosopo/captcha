@@ -19,8 +19,8 @@
  * to assigning a detector inline on the widget's critical path.
  */
 
-import type { Root } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -32,6 +32,7 @@ vi.mock("@prosopo/procaptcha-frictionless", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	startPageBehaviourCapture: vi.fn(),
 	getWindowCallback: vi.fn(),
 	pickIpMode: vi.fn((flags: { ipv4?: boolean; ipv6?: boolean } | undefined) =>
 		flags?.ipv4 ? "ipv4" : undefined,
@@ -59,7 +60,7 @@ const renderAndFlush = async (
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	mocks.createWidgets.mockResolvedValue([] as Root[]);
+	mocks.createWidgets.mockResolvedValue([] as CreatedWidget[]);
 });
 
 describe("render", () => {
@@ -70,6 +71,39 @@ describe("render", () => {
 			expect.anything(),
 			undefined,
 			SITE_KEY,
+			undefined,
+			undefined,
+		);
+	});
+
+	it("passes the site's language through to the prefetch", async () => {
+		const element: HTMLDivElement = document.createElement("div");
+		element.setAttribute("data-language", "xx, tr");
+		await render(element, { siteKey: SITE_KEY });
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(mocks.prefetchDetector).toHaveBeenCalledWith(
+			expect.anything(),
+			undefined,
+			SITE_KEY,
+			"tr",
+			undefined,
+		);
+	});
+
+	it("passes the integration through to the prefetch", async () => {
+		const host: HTMLElement = document.createElement("mc4wp-procaptcha");
+		const element: HTMLDivElement = document.createElement("div");
+		host.appendChild(element);
+		await render(element, { siteKey: SITE_KEY });
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(mocks.prefetchDetector).toHaveBeenCalledWith(
+			expect.anything(),
+			undefined,
+			SITE_KEY,
+			undefined,
+			"mc4wp",
 		);
 	});
 
@@ -80,6 +114,8 @@ describe("render", () => {
 			expect.anything(),
 			"ipv4",
 			SITE_KEY,
+			undefined,
+			undefined,
 		);
 	});
 

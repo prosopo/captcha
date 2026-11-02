@@ -1,0 +1,63 @@
+# Overlay: the tcp-probe eBPF sidecar. Layer it last, after the env overlay:
+#   docker compose -f docker-compose.provider.yml -f docker-compose.provider.<env>.yml \
+#     -f docker-compose.provider.tcp-probe.yml up -d
+# The caddy service in the base already mounts /var/run/tcp-probe read-only.
+services:
+  # eBPF sidecar that captures raw TCP handshake data (SYN / SYN-ACK / ACK)
+  # off the WAN interface and serves per-request lookups over a Unix socket.
+  # Chaddy (adjacent `caddy` service) reads that socket at accept() time and
+  # forwards the raw fields (`X-TLS-Syn-Ns`, `X-TLS-Observed-Ttl`, `X-TLS-Tcp-*`)
+  # onto the reverse-proxy request; the provider persists them onto the Session
+  # record. Nothing here is on by default: the service lives only in this
+  # overlay, so the base stack neither pulls nor starts it. Ansible layers it
+  # on for hosts with `tcp_probe_enabled`. The image is published from
+  # `protect/tcp-probe`; see `deploy/DEPLOY.md` there
+  # for the bumblebee-side reference deployment; the same wire protocol
+  # (12-byte req, 80- or 104-byte reply) and image are reused here.
+  #
+  # `network_mode: host` is mandatory: XDP/TC hooks attach to real host
+  # interfaces, and the container-network veth wouldn't see the outside
+  # traffic. Caps are the minimum needed to load BPF programs and attach
+  # them; the probe never modifies traffic (XDP_PASS / TC_ACT_PIPE) so a
+  # crash cannot black-hole requests — worst case is the socket disappears
+  # and chaddy silently degrades to the pre-sidecar header set.
+  tcp-probe:
+    container_name: tcp-probe
+    # Pinned, not `:latest`. The probe's reply is a bare fixed-size struct
+    # with no version in it, so the tag is the only thing that says which
+    # layout a host is serving — and publishing `:latest` would change that
+    # on every pronode at the next pull, with nobody running a deploy. Set
+    # TCP_PROBE_IMAGE explicitly to move a host. 0.1.1 serves the 80-byte
+    # record; chaddy reads that and the 104-byte one (prosopo/chaddy#17).
+    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-0.1.1}
+    network_mode: host
+    cap_add:
+      - BPF
+      - NET_ADMIN
+      - SYS_RESOURCE
+      - PERFMON
+    labels:
+      - "vector.tcp-probe=true"
+      - "vector.docker=true"
+    volumes:
+      # Host-side socket dir; caddy mounts the same path read-only so both
+      # containers see the same inode. Docker will create the dir if it
+      # doesn't exist yet.
+      - /var/run/tcp-probe:/var/run/tcp-probe
+    command:
+      - "--iface"
+      # Each pronode's WAN NIC name is different (contabo/hetzner/etc.);
+      # ansible sets TCP_PROBE_IFACE per-host in .env.1.$NODE_ENV.
+      - "${TCP_PROBE_IFACE}"
+      - "--port"
+      - "443"
+      - "--format"
+      - "jsonl"
+      - "--lookup-socket"
+      - "/var/run/tcp-probe/lookup.sock"
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'

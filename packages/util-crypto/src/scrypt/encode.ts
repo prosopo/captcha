@@ -3,7 +3,7 @@
 
 import type { ScryptParams } from "./types.js";
 
-import { scrypt as scryptJs } from "@noble/hashes/scrypt";
+import { scrypt as scryptJs } from "@noble/hashes/scrypt.js";
 
 import { objectSpread, u8aToU8a } from "@polkadot/util";
 

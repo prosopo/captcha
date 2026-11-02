@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "ልክ ያልሆነ አድራሻን ኮድ ማድረግ አልተቻለም",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "የcaptcha መፍትሔ ቁርጠኝነት የለም",
+		"SIGNER_UNDEFINED": "ፈራሚው አልተገለጸም",
+		"CANNOT_FIND_KEYPAIR": "የቁልፍ ጥንድ ማግኘት አልተቻለም",
+		"INVALID_DATA_FORMAT": "ልክ ያልሆነ የውሂብ ቅርጸት"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "ያልታወቀ አካባቢ ተጠይቋል",
+		"INVALID_CAPTCHA_NUMBER": "እባክዎ የcaptcha ውቅሮችን በትክክል ያዋቅሩ",
+		"INVALID_LOG_LEVEL": "ልክ ያልሆነ የምዝግብ ማስታወሻ ደረጃ",
+		"INVALID_PACKAGE_DIR": "ልክ ያልሆነ የጥቅል ማውጫ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ዳታሴቱን በመተንተን ላይ ስህተት",
+		"SOLUTION_PARSE_ERROR": "ዳታሴቱን በመተንተን ላይ ስህተት",
+		"HASH_ERROR": "ዳታሴቱን ሃሽ በማድረግ ላይ ስህተት",
+		"DATASET_ID_UNDEFINED": "የዳታሴት መለያ አልተገለጸም",
+		"NOT_ENOUGH_LABELS": "በቂ መለያ ስሞች የሉም",
+		"NOT_ENOUGH_IMAGES": "በቂ ምስሎች የሉም",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "በዳታሴቱ ውስጥ ያሉት captchaዎች ብዛት ከተዋቀረው የcaptchaዎች ብዛት ያነሰ ነው",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "በዳታሴቱ ውስጥ ያሉት መፍትሔዎች ብዛት ከተዋቀረው የመፍትሔዎች ብዛት ያነሰ ነው",
+		"DUPLICATE_IMAGE": "የተባዛ ምስል ተገኝቷል",
+		"MERKLE_ERROR": "የmerkle ዛፍ በመፍጠር ላይ ስህተት"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "የዳታቤዝ ሞተሩን ማስመጣት አልተቻለም",
+		"DATABASE_UNDEFINED": "የዳታቤዝ ደንበኛው አልተገናኘም",
+		"DATABASE_HOST_UNDEFINED": "የዳታቤዝ አስተናጋጅ አድራሻ አልተገለጸም",
+		"DATASET_LOAD_FAILED": "ዳታሴቱን መጫን አልተሳካም",
+		"DATASET_GET_FAILED": "ዳታሴቱን ማግኘት አልተቻለም",
+		"CAPTCHA_GET_FAILED": "captchaውን ማግኘት አልተቻለም",
+		"CAPTCHA_UPDATE_FAILED": "captchaውን ማዘመን አልተቻለም",
+		"IMAGE_GET_FAILED": "ምስሉን ማግኘት አልተቻለም",
+		"PENDING_RECORD_NOT_FOUND": "ምንም በመጠባበቅ ላይ ያለ መዝገብ አልተገኘም",
+		"INVALID_HASH": "ልክ ያልሆነ ሃሽ",
+		"SOLUTION_GET_FAILED": "መፍትሔውን ማግኘት አልተቻለም",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "የሚፈለገው የመፍትሔዎች ብዛት ያለው ምንም ዳታሴት አልተገኘም",
+		"SOLUTION_APPROVE_FAILED": "መፍትሔውን ማጽደቅ አልተቻለም",
+		"SOLUTION_FLAG_FAILED": "መፍትሔውን እንደተሰራ ምልክት ማድረግ አልተቻለም",
+		"TABLES_UNDEFINED": "ሰንጠረዦች አልተገለጹም",
+		"CONNECTION_UNDEFINED": "ግንኙነት አልተገለጸም",
+		"COMMITMENT_FLAG_FAILED": "ቁርጠኝነቱን እንደተሰራ ምልክት ማድረግ አልተቻለም",
+		"UNKNOWN": "ያልታወቀ የዳታቤዝ ስህተት",
+		"QUERY_ERROR": "የዳታቤዝ መጠይቅ አልተሳካም",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "የRedis የመዳረሻ ደንቦች ግንኙነት አልተገለጸም",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "የተጠቃሚ መዳረሻ ደንቦች ማከማቻ አልተገለጸም",
+		"SESSION_STORE_FAILED": "ክፍለ ጊዜውን ማስቀመጥ አልተቻለም",
+		"SESSION_CHECK_REMOVE_FAILED": "ክፍለ ጊዜውን መፈተሽ እና ማስወገድ አልተቻለም",
+		"SESSION_GET_FAILED": "ክፍለ ጊዜውን ማግኘት አልተቻለም"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "የባለቤት ተጠቃሚን መቀየር አይቻልም",
+		"CANNOT_DELETE_OWN_USER": "የራስዎን መለያ መሰረዝ አይቻልም",
+		"CANNOT_DELETE_LAST_USER": "የመጨረሻውን ተጠቃሚ መሰረዝ አይቻልም",
+		"USER_ALREADY_EXISTS": "ተጠቃሚው አስቀድሞ አለ",
+		"NO_SUGGESTIONS_FOUND": "ምንም ጥቆማዎች አልተገኙም",
+		"CANNOT_DEACTIVATE_LAST_SITE": "የመጨረሻውን ንቁ ጣቢያ ማቦዘን አይቻልም",
+		"DUPLICATE_SITE_NAME": "ይህ ስም ያለው ጣቢያ አስቀድሞ አለ",
+		"INVALID_SITE_NAME": "የጣቢያ ስም ፊደሎችን፣ ቁጥሮችን፣ ሰረዞችን እና የታች ሰረዞችን ብቻ መያዝ አለበት"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "ልክ ያልሆነ መለኪያ"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ፋይሉ አልተገኘም",
+		"FILE_ALREADY_EXISTS": "ፋይሉ አስቀድሞ አለ",
+		"INVALID_DIR_FORMAT": "ልክ ያልሆነ የማውጫ ቅርጸት"
+	}
+}

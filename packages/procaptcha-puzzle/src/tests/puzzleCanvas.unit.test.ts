@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { type Translator, createUntranslatedI18n } from "@prosopo/locale";
+import type { Component } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
-import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
-import { type ReactElement, act, createElement } from "react";
-import { type Root, createRoot } from "react-dom/client";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import {
 	type Mock,
 	afterEach,
@@ -25,7 +25,10 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { PuzzleCanvas } from "../components/PuzzleCanvas.js";
+import {
+	type PuzzleCanvasProps,
+	mountPuzzleCanvas,
+} from "../components/puzzleCanvas.js";
 
 /**
  * The canvas is the only piece of the puzzle flow the user actually touches:
@@ -38,47 +41,69 @@ const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 const PIECE_SIZE = 44;
 
-interface CanvasProps {
-	originX: number;
-	originY: number;
-	background: string;
-	piece: string;
-	pieceSize: number;
-	onComplete: Mock<
-		(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
-	>;
-	showRetry: boolean;
-	submitting: boolean;
-	theme: Theme;
-}
+/**
+ * The real translator reaches for an http backend the moment it is asked for a
+ * string, which jsdom refuses. The English defaults the canvas ships stand in
+ * instead, interpolated the way i18next would, so the assertions below read as
+ * the copy a user is actually given.
+ */
+const translator = (): Translator => ({
+	t: (key: string, options?: Record<string, unknown>): string => {
+		const template = (options?.defaultValue as string | undefined) ?? key;
+		return template.replace(
+			/{{(\w+)}}/g,
+			(placeholder: string, name: string) =>
+				options && name in options ? String(options[name]) : placeholder,
+		);
+	},
+	isReady: () => true,
+	subscribe: () => () => undefined,
+	i18n: createUntranslatedI18n(),
+});
 
-let container: HTMLDivElement;
-let root: Root;
+let canvas: Component<PuzzleCanvasProps> | undefined;
 let onComplete: Mock<
 	(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 >;
 
-const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
+const props = (
+	overrides: Partial<PuzzleCanvasProps> = {},
+): PuzzleCanvasProps => ({
 	originX: 20,
 	originY: 100,
 	background: "data:image/webp;base64,UklGRg==",
 	piece: "data:image/webp;base64,UklGRg==",
-	pieceSize: 44,
+	pieceSize: PIECE_SIZE,
 	onComplete,
 	showRetry: false,
 	submitting: false,
 	theme: lightTheme,
+	translator: translator(),
 	...overrides,
 });
 
-const render = (canvasProps: CanvasProps): void => {
-	act(() => {
-		root.render(createElement(PuzzleCanvas, canvasProps) as ReactElement);
-	});
+const render = (canvasProps: PuzzleCanvasProps): void => {
+	if (canvas) {
+		canvas.update(canvasProps);
+	} else {
+		canvas = mountPuzzleCanvas(canvasProps);
+	}
 };
 
+const destroy = (): void => {
+	canvas?.destroy();
+	canvas = undefined;
+};
+
+/**
+ * The canvas puts itself on the body — it has to escape the query container
+ * the widget skeleton wraps it in — so everything that reads the rendered
+ * output reads the body.
+ */
+const overlay = (): HTMLElement => document.body;
+
 const piece = (): HTMLElement => {
-	const element = container.querySelector<HTMLElement>(
+	const element = overlay().querySelector<HTMLElement>(
 		'[data-cy="prosopo-puzzle-piece"]',
 	);
 	if (!element) throw new Error("expected the puzzle piece to be rendered");
@@ -92,25 +117,19 @@ const piecePosition = (): { x: number; y: number } => ({
 });
 
 const mouseDown = (clientX: number, clientY: number): void => {
-	act(() => {
-		piece().dispatchEvent(
-			new MouseEvent("mousedown", { bubbles: true, clientX, clientY }),
-		);
-	});
+	piece().dispatchEvent(
+		new MouseEvent("mousedown", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const mouseMove = (clientX: number, clientY: number): void => {
-	act(() => {
-		document.dispatchEvent(
-			new MouseEvent("mousemove", { bubbles: true, clientX, clientY }),
-		);
-	});
+	document.dispatchEvent(
+		new MouseEvent("mousemove", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const mouseUp = (): void => {
-	act(() => {
-		document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-	});
+	document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
 };
 
 /**
@@ -127,41 +146,73 @@ const touchEvent = (
 };
 
 const touchStart = (touches: { clientX: number; clientY: number }[]): void => {
-	act(() => {
-		piece().dispatchEvent(touchEvent("touchstart", touches));
-	});
+	piece().dispatchEvent(touchEvent("touchstart", touches));
 };
 
 const touchMove = (touches: { clientX: number; clientY: number }[]): void => {
-	act(() => {
-		document.dispatchEvent(touchEvent("touchmove", touches));
-	});
+	document.dispatchEvent(touchEvent("touchmove", touches));
 };
 
 const touchEnd = (): void => {
-	act(() => {
-		document.dispatchEvent(touchEvent("touchend", []));
-	});
+	document.dispatchEvent(touchEvent("touchend", []));
 };
 
+const keyDown = (key: string, options: { shiftKey?: boolean } = {}): void => {
+	piece().dispatchEvent(
+		new KeyboardEvent("keydown", {
+			key,
+			bubbles: true,
+			cancelable: true,
+			shiftKey: options.shiftKey ?? false,
+		}),
+	);
+};
+
+/**
+ * `isTrusted` is unforgeable, so jsdom can only ever produce the synthetic
+ * events the canvas refuses. Opening the allowance is how the firefox cypress
+ * leg drives the widget too; the gate itself is covered by the one test that
+ * shuts it again.
+ */
+const allowSyntheticEvents = (allowed: boolean): void => {
+	vi.stubGlobal("__PROSOPO_ALLOW_UNTRUSTED_EVENTS__", allowed);
+};
+
+const required = (element: HTMLElement | null, what: string): HTMLElement => {
+	if (!element) throw new Error(`expected ${what} to be rendered`);
+	return element;
+};
+
+const dialog = (): HTMLElement =>
+	required(
+		overlay().querySelector<HTMLElement>('[role="dialog"]'),
+		"the dialog",
+	);
+
+/** An `output` element carries the implicit `status` role a live region needs. */
+const liveRegion = (): HTMLElement =>
+	required(overlay().querySelector<HTMLElement>("output"), "the live region");
+
+/** The text a screen reader reads out when the piece takes focus. */
+const pieceDescription = (): string =>
+	(piece().getAttribute("aria-describedby") ?? "")
+		.split(" ")
+		.map((id) => document.getElementById(id)?.textContent ?? "")
+		.join(" ");
+
 beforeEach(() => {
+	allowSyntheticEvents(true);
 	onComplete =
 		vi.fn<
 			(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 		>();
-	container = document.createElement("div");
-	document.body.appendChild(container);
-	act(() => {
-		root = createRoot(container);
-	});
+	canvas = undefined;
 });
 
 afterEach(() => {
-	act(() => {
-		root.unmount();
-	});
-	container.remove();
+	destroy();
 	vi.useRealTimers();
+	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
 
@@ -189,12 +240,12 @@ describe("what it puts on screen", () => {
 
 	test("the first go asks the user to drag the piece", () => {
 		render(props());
-		expect(container.textContent).toContain("Drag the piece to the target");
+		expect(overlay().textContent).toContain("Drag the piece to the target");
 	});
 
 	test("a retry says so instead", () => {
 		render(props({ showRetry: true }));
-		expect(container.textContent).toContain("Not quite");
+		expect(overlay().textContent).toContain("Not quite");
 	});
 
 	test("the piece cannot be grabbed while a solution is in flight", () => {
@@ -217,9 +268,7 @@ describe("what it puts on screen", () => {
 	test("the shake on a retry stops on its own", () => {
 		vi.useFakeTimers();
 		render(props({ showRetry: true }));
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
+		vi.advanceTimersByTime(600);
 		// Nothing to assert beyond survival: the timer fires into a live
 		// component rather than leaking past the shake.
 		expect(piecePosition()).toEqual({ x: 20, y: 100 });
@@ -228,18 +277,139 @@ describe("what it puts on screen", () => {
 	test("unmounting mid-shake cancels the timer", () => {
 		vi.useFakeTimers();
 		render(props({ showRetry: true }));
-		act(() => {
-			root.unmount();
-		});
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
-		act(() => {
-			root = createRoot(container);
-		});
+		destroy();
+		vi.advanceTimersByTime(600);
 		expect(
-			container.querySelector('[data-cy="prosopo-puzzle-piece"]'),
+			overlay().querySelector('[data-cy="prosopo-puzzle-piece"]'),
 		).toBeNull();
+	});
+});
+
+describe("the refresh control", () => {
+	const refreshControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[aria-label="Show a different puzzle"]',
+		);
+
+	test("is not drawn when nothing can refresh the puzzle", () => {
+		render(props());
+		expect(refreshControl()).toBeNull();
+	});
+
+	test("asks for a different puzzle when pressed", () => {
+		const onRefresh = vi.fn<() => void>();
+		render(props({ onRefresh }));
+		required(refreshControl(), "the refresh control").click();
+		expect(onRefresh).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("is hidden and inert while a solution is in flight", () => {
+		const onRefresh = vi.fn<() => void>();
+		render(props({ onRefresh, submitting: true }));
+		const control = required(refreshControl(), "the refresh control");
+		expect(control.parentElement?.style.visibility).toBe("hidden");
+		control.click();
+		expect(onRefresh).not.toHaveBeenCalled();
+	});
+
+	test("is ignored mid-drag", () => {
+		const onRefresh = vi.fn<() => void>();
+		render(props({ onRefresh }));
+		mouseDown(20, 100);
+		required(refreshControl(), "the refresh control").click();
+		expect(onRefresh).not.toHaveBeenCalled();
+	});
+
+	test("stays out of what a screen reader reads for the piece", () => {
+		render(props({ onRefresh: vi.fn<() => void>() }));
+		expect(pieceDescription()).not.toContain("different puzzle");
+	});
+});
+
+describe("the switch to an image challenge", () => {
+	const switchControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[aria-label="Switch to an image challenge"]',
+		);
+
+	test("is not drawn when the puzzle cannot be switched", () => {
+		render(props());
+		expect(switchControl()).toBeNull();
+	});
+
+	test("asks for an image challenge when pressed", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	const switchTooltip = (): HTMLElement =>
+		required(
+			overlay().querySelector<HTMLElement>('[role="tooltip"]'),
+			"the switch tooltip",
+		);
+
+	// Refresh always comes with the switch, and the dialog opens with focus on
+	// it; without it the switch would take focus and show its tooltip.
+	const withRefresh = { onRefresh: vi.fn<() => void>() };
+
+	test("keeps its tooltip for hover until the user looks to be struggling", () => {
+		render(props({ ...withRefresh, onSwitchToImage: vi.fn<() => void>() }));
+		expect(switchTooltip().style.display).toBe("none");
+	});
+
+	test("shows its tooltip unprompted once the user looks to be struggling", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		expect(switchTooltip().style.display).toBe("block");
+		expect(switchTooltip().textContent).toBe("Switch to an image challenge");
+	});
+
+	test("puts the tooltip away once the user starts dragging", () => {
+		render(
+			props({
+				...withRefresh,
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		mouseDown(20, 100);
+		expect(switchTooltip().style.display).toBe("none");
+	});
+
+	test("is hidden and inert while a solution is in flight", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage, submitting: true }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is ignored mid-drag", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		mouseDown(20, 100);
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is offered to a screen reader after a miss once highlighted", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+				showRetry: true,
+			}),
+		);
+		expect(document.body.querySelector("output")?.textContent).toContain(
+			"You can also switch to an image challenge.",
+		);
 	});
 });
 
@@ -292,17 +462,20 @@ describe("dragging with a mouse", () => {
 		const [finalX, finalY, events] = onComplete.mock.calls[0] ?? [];
 		expect(finalX).toBe(200);
 		expect(finalY).toBe(80);
-		expect(events?.map((event) => [event.x, event.y])).toEqual([
+		expect(events?.map((event: PuzzleEvent) => [event.x, event.y])).toEqual([
 			[100, 95],
 			[200, 80],
 		]);
 	});
 
-	test("a grab released without moving reports the origin and no trail", () => {
+	// Reporting the origin here spent the challenge on a position that cannot be
+	// correct, and the provider rejects the replacement fetch — so a single
+	// click that never moved ended the attempt outright.
+	test("a grab released without moving reports nothing", () => {
 		render(props());
 		mouseDown(20, 100);
 		mouseUp();
-		expect(onComplete).toHaveBeenCalledWith(20, 100, []);
+		expect(onComplete).not.toHaveBeenCalled();
 	});
 
 	test("letting go without having grabbed anything reports nothing", () => {
@@ -338,7 +511,9 @@ describe("dragging with a mouse", () => {
 		mouseMove(200, 80);
 		mouseUp();
 		const events = onComplete.mock.calls[1]?.[2];
-		expect(events?.map((event) => [event.x, event.y])).toEqual([[200, 80]]);
+		expect(events?.map((event: PuzzleEvent) => [event.x, event.y])).toEqual([
+			[200, 80],
+		]);
 	});
 
 	test("the trail is timestamped in order", () => {
@@ -391,6 +566,19 @@ describe("dragging with a finger", () => {
 		expect(onComplete).not.toHaveBeenCalled();
 	});
 
+	// The panel opens centred, under the finger that just pressed the checkbox,
+	// so tapping the piece instead of dragging it is the easy mistake to make on
+	// a phone. It used to submit the untouched origin, which fails, and the
+	// widget then reset — indistinguishable to the user from the challenge
+	// never having worked.
+	test("tapping the piece without dragging reports nothing", () => {
+		render(props());
+		touchStart([{ clientX: 20, clientY: 100 }]);
+		touchEnd();
+		expect(onComplete).not.toHaveBeenCalled();
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+	});
+
 	test("a touchmove carrying no touches is ignored mid-drag", () => {
 		render(props());
 		touchStart([{ clientX: 20, clientY: 100 }]);
@@ -406,18 +594,246 @@ describe("dragging with a finger", () => {
 	});
 });
 
+describe("driving it from the keyboard", () => {
+	test("the piece takes focus as soon as the puzzle opens", () => {
+		render(props());
+		expect(document.activeElement).toBe(piece());
+	});
+
+	test("an arrow key walks the piece a step across the board", () => {
+		render(props());
+		keyDown("ArrowRight");
+		expect(piecePosition()).toEqual({ x: 30, y: 100 });
+	});
+
+	test("holding shift walks it a finer step", () => {
+		render(props());
+		keyDown("ArrowRight", { shiftKey: true });
+		expect(piecePosition()).toEqual({ x: 22, y: 100 });
+	});
+
+	test("all four arrows move the piece the way they point", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowDown");
+		keyDown("ArrowLeft");
+		keyDown("ArrowUp");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+	});
+
+	test("the board's edge stops the piece just as a drag does", () => {
+		render(props());
+		for (let press = 0; press < 5; press++) keyDown("ArrowLeft");
+		expect(piecePosition()).toEqual({ x: 0, y: 100 });
+	});
+
+	test("home puts the piece back where it started", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowDown");
+		keyDown("Home");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+	});
+
+	test("enter hands over where the piece is, with the trail", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		expect(onComplete).toHaveBeenCalledTimes(1);
+		const [finalX, finalY, events] = onComplete.mock.calls[0] ?? [];
+		expect(finalX).toBe(40);
+		expect(finalY).toBe(100);
+		expect(events?.map((event) => [event.x, event.y])).toEqual([
+			[30, 100],
+			[40, 100],
+		]);
+	});
+
+	test("space submits too", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown(" ");
+		expect(onComplete).toHaveBeenCalledWith(30, 100, [
+			expect.objectContaining({ x: 30, y: 100 }),
+		]);
+	});
+
+	test("a second keyboard go starts from a clean trail", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		keyDown("ArrowDown");
+		keyDown("Enter");
+		const events = onComplete.mock.calls[1]?.[2];
+		expect(events?.map((event) => [event.x, event.y])).toEqual([[30, 110]]);
+	});
+
+	test("a key press no user made is ignored", () => {
+		allowSyntheticEvents(false);
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("keys that mean nothing here are left to the page", () => {
+		render(props());
+		keyDown("a");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("the piece cannot be moved or submitted while a solution is in flight", () => {
+		render(props({ submitting: true }));
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("nor can it be tabbed to while a solution is in flight", () => {
+		render(props({ submitting: true }));
+		expect(piece().tabIndex).toBe(-1);
+	});
+
+	test("tab cannot leave the dialog for the page behind it", () => {
+		render(props());
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+		);
+		expect(document.activeElement).toBe(piece());
+	});
+
+	test("closing hands focus back to whatever opened the puzzle", () => {
+		const opener = document.createElement("button");
+		document.body.appendChild(opener);
+		opener.focus();
+
+		render(props());
+		expect(document.activeElement).toBe(piece());
+
+		destroy();
+		expect(document.activeElement).toBe(opener);
+
+		opener.remove();
+	});
+});
+
+describe("what it says to a screen reader", () => {
+	test("the panel announces itself as a named dialog", () => {
+		render(props());
+		expect(dialog().getAttribute("aria-label")).toBe("Puzzle challenge");
+		expect(dialog().getAttribute("aria-modal")).toBe("true");
+	});
+
+	test("the piece carries a name and says it can be dragged", () => {
+		render(props());
+		expect(piece().getAttribute("aria-label")).toBe("Puzzle piece");
+		expect(piece().getAttribute("aria-roledescription")).toBe(
+			"draggable puzzle piece",
+		);
+	});
+
+	test("the piece is described by the instruction and the key help", () => {
+		render(props());
+		expect(pieceDescription()).toContain("Drag the piece to the target");
+		expect(pieceDescription()).toContain("arrow keys");
+		expect(pieceDescription()).toContain("Escape");
+	});
+
+	test("taking focus reports where the piece is, in proportions", () => {
+		render(props());
+		expect(liveRegion().textContent).toBe("7 percent across, 50 percent down");
+	});
+
+	test("a move is reported once the keys stop, not on every press", () => {
+		vi.useFakeTimers();
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowRight");
+		expect(liveRegion().textContent).toBe("7 percent across, 50 percent down");
+		vi.advanceTimersByTime(500);
+		expect(liveRegion().textContent).toBe("13 percent across, 50 percent down");
+	});
+
+	test("a solution in flight is announced", () => {
+		render(props({ submitting: true }));
+		expect(liveRegion().textContent).toBe("Checking your answer");
+	});
+
+	test("a retry says the puzzle has been replaced", () => {
+		render(props({ showRetry: true }));
+		expect(liveRegion().textContent).toContain("A new puzzle has loaded");
+	});
+
+	test("the background tiles are left out of the reading order", () => {
+		render(props());
+		const images = Array.from(overlay().querySelectorAll("img"));
+		expect(images.length).toBeGreaterThan(0);
+		expect(images.every((image) => image.getAttribute("alt") === "")).toBe(
+			true,
+		);
+	});
+});
+
 describe("after it goes away", () => {
 	test("its document listeners go with it", () => {
 		render(props());
 		mouseDown(20, 100);
-		act(() => {
-			root.unmount();
-		});
+		destroy();
 		mouseMove(150, 90);
 		mouseUp();
 		expect(onComplete).not.toHaveBeenCalled();
-		act(() => {
-			root = createRoot(container);
-		});
+	});
+});
+
+describe("the audio alternative", () => {
+	const onRequestAudio = vi.fn<() => void>();
+	const offer = { onRequestAudio, label: "Use audio instead" };
+
+	const audioControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[data-cy="prosopo-audio-alternative"]',
+		);
+
+	const board = (): HTMLElement => required(piece().parentElement, "the board");
+
+	test("is absent when the site has not offered it", () => {
+		render(props());
+		expect(audioControl()).toBeNull();
+		expect(board().style.borderRadius).toBe("0 0 20px 20px");
+	});
+
+	test("sits below the board, which squares off its corners for it", () => {
+		render(props({ audioAlternative: offer }));
+		const control = required(audioControl(), "the audio alternative");
+		expect(control.textContent).toBe("Use audio instead");
+		expect(
+			board().compareDocumentPosition(control) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(board().style.borderRadius).toBe("0");
+	});
+
+	test("asks for audio without submitting the puzzle", () => {
+		render(props({ audioAlternative: offer }));
+		required(audioControl(), "the audio alternative").click();
+		expect(onRequestAudio).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("goes away when a later render withdraws the offer", () => {
+		render(props({ audioAlternative: offer }));
+		render(props());
+		expect(audioControl()).toBeNull();
+		expect(board().style.borderRadius).toBe("0 0 20px 20px");
+	});
+
+	test("is removed with the canvas", () => {
+		render(props({ audioAlternative: offer }));
+		destroy();
+		expect(audioControl()).toBeNull();
 	});
 });

@@ -14,13 +14,13 @@
 /// <reference types="cypress" />
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import type { Captcha, CaptchaType } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	beforeEach(() => {
@@ -47,12 +47,12 @@ describe("Captchas", () => {
 		}));
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-2",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 		cy.intercept("/dummy").as("dummy");
 
@@ -76,7 +76,7 @@ describe("Captchas", () => {
 		}).as("allRequests");
 
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			// Wait for the procaptcha script to be loaded
 			// This ensures tests work with both async and non-async script loading
 			cy.waitForProcaptchaScript();
@@ -129,11 +129,13 @@ describe("Captchas", () => {
 			cy.wait(2000);
 			cy.captchaImages().then(() => {
 				cy.get("@captchaImages").first().realClick();
+				// The tile reports its own selected state, which is what a screen
+				// reader reads and the one thing about a tile that does not change
+				// from one page load to the next.
 				cy.get("@captchaImages")
 					.first()
-					.siblings()
-					.first()
-					.should("have.css", "opacity", "1");
+					.parent()
+					.should("have.attr", "aria-pressed", "true");
 			});
 		});
 	});

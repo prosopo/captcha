@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Betg reussì da codar l'adressa nunvalida",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "L'obligaziun da soluziun dal captcha n'exista betg",
+		"SIGNER_UNDEFINED": "Suttascrivent betg definì",
+		"CANNOT_FIND_KEYPAIR": "Impussibel da chattar il pèr da clavs",
+		"INVALID_DATA_FORMAT": "Format da datas nunvalid"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Ambient nunenconuschent dumandà",
+		"INVALID_CAPTCHA_NUMBER": "Configurescha per plaschair correctamain ils parameters dals captchas",
+		"INVALID_LOG_LEVEL": "Nivel da protocol nunvalid",
+		"INVALID_PACKAGE_DIR": "Ordinatur dal pachet nunvalid"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Errur durant l'analisa da la collecziun da datas",
+		"SOLUTION_PARSE_ERROR": "Errur durant l'elavuraziun da la collecziun da datas",
+		"HASH_ERROR": "Errur durant il hashing da la collecziun da datas",
+		"DATASET_ID_UNDEFINED": "ID da la collecziun da datas betg definì",
+		"NOT_ENOUGH_LABELS": "Betg avunda etichettas",
+		"NOT_ENOUGH_IMAGES": "Betg avunda maletgs",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Il dumber da captchas en la collecziun da datas è pli pitschen ch'il dumber configurà",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Il dumber da soluziuns en la collecziun da datas è pli pitschen ch'il dumber configurà",
+		"DUPLICATE_IMAGE": "Maletg dublà constatà",
+		"MERKLE_ERROR": "Errur durant la construcziun da la planta Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Betg reussì d'importar il motor da la banca da datas",
+		"DATABASE_UNDEFINED": "Client da la banca da datas betg connectà",
+		"DATABASE_HOST_UNDEFINED": "Adressa dal host da la banca da datas betg definida",
+		"DATASET_LOAD_FAILED": "Chargiar la collecziun da datas n'è betg reussì",
+		"DATASET_GET_FAILED": "Betg reussì d'obtegnair la collecziun da datas",
+		"CAPTCHA_GET_FAILED": "Betg reussì d'obtegnair ils captchas",
+		"CAPTCHA_UPDATE_FAILED": "Betg reussì d'actualisar ils captchas",
+		"IMAGE_GET_FAILED": "Betg reussì d'obtegnair il maletg",
+		"PENDING_RECORD_NOT_FOUND": "Chattà nagins registraziuns pendentas",
+		"INVALID_HASH": "Hash nunvalid",
+		"SOLUTION_GET_FAILED": "Betg reussì d'obtegnair la soluziun",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Chattà nagina collecziun da datas cun il dumber necessari da soluziuns",
+		"SOLUTION_APPROVE_FAILED": "Betg reussì d'approvar la soluziun",
+		"SOLUTION_FLAG_FAILED": "Betg reussì da marcar la soluziun sco elavurada",
+		"TABLES_UNDEFINED": "Tabellas betg definidas",
+		"CONNECTION_UNDEFINED": "Connexiun betg definida",
+		"COMMITMENT_FLAG_FAILED": "Betg reussì da marcar l'obligaziun sco elavurada",
+		"UNKNOWN": "Errur nunenconuschenta da la banca da datas",
+		"QUERY_ERROR": "Dumonda a la banca da datas betg reussida",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Connexiun Redis da las reglas d'access betg definida",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Memoria da las reglas d'access d'utilisaders betg definida",
+		"SESSION_STORE_FAILED": "Betg reussì da memorisar la sesida",
+		"SESSION_CHECK_REMOVE_FAILED": "Betg reussì da verifitgar ed allontanar la sesida",
+		"SESSION_GET_FAILED": "Betg reussì d'obtegnair la sesida"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Impussibel da midar l'utilisader possessur",
+		"CANNOT_DELETE_OWN_USER": "Impussibel da stizzar tes agen conto",
+		"CANNOT_DELETE_LAST_USER": "Impussibel da stizzar l'ultim utilisader",
+		"USER_ALREADY_EXISTS": "L'utilisader exista gia",
+		"NO_SUGGESTIONS_FOUND": "Chattà nagins propostas",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Impussibel da deactivar l'ultima website activa",
+		"DUPLICATE_SITE_NAME": "Ina website cun quest num exista gia",
+		"INVALID_SITE_NAME": "Il num da la website dastga cuntegnair mo letras, cifras, sutlingias e lingias"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parameter nunvalid"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Datoteca betg chattada",
+		"FILE_ALREADY_EXISTS": "La datoteca exista gia",
+		"INVALID_DIR_FORMAT": "Format d'ordinatur nunvalid"
+	}
+}

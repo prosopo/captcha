@@ -119,13 +119,18 @@ export async function compareIPs(
 
 		const differentConnectionTypes = ip1ConnectionType !== ip2ConnectionType;
 
-		// Different providers?
 		const ip1Provider =
 			ip1Info.providerName || ip1Info.asnOrganization || "Unknown";
 		const ip2Provider =
 			ip2Info.providerName || ip2Info.asnOrganization || "Unknown";
 
-		const differentProviders = ip1Provider !== ip2Provider;
+		// Either signal alone wrongly splits real subscribers. The name differs
+		// when a carrier's IPv6 is delivered by a wholesaler (KDDI v4 and v6 both
+		// sit on AS2516, but the v6 block is named "Japan Internet Xing"); the ASN
+		// differs when one operator runs separate networks for v4 and v6 (AT&T).
+		const sameAsn =
+			!!ip1Info.asnNumber && ip1Info.asnNumber === ip2Info.asnNumber;
+		const differentProviders = !sameAsn && ip1Provider !== ip2Provider;
 
 		// Coords for checking distance between ips
 		let distanceKm: number | undefined;
@@ -175,6 +180,7 @@ export async function compareIPs(
 					countryCode: ip1Info.countryCode,
 					city: ip1Info.city,
 					coordinates: ip1Coordinates,
+					abuserScore: ip1Info.abuserScore,
 				},
 				ip2Details: {
 					provider: ip2Provider,
@@ -184,6 +190,7 @@ export async function compareIPs(
 					countryCode: ip2Info.countryCode,
 					city: ip2Info.city,
 					coordinates: ip2Coordinates,
+					abuserScore: ip2Info.abuserScore,
 				},
 			},
 		};

@@ -311,6 +311,7 @@ describe("signup", () => {
 			"0xtoken",
 			"203.0.113.9",
 			"user@example.com",
+			undefined,
 		);
 	});
 
@@ -329,6 +330,7 @@ describe("signup", () => {
 			"0xtoken",
 			"127.0.0.1",
 			"user@example.com",
+			undefined,
 		);
 	});
 });
@@ -418,6 +420,33 @@ describe("signup: verifying through the API endpoint", () => {
 			ip: "203.0.113.9",
 		});
 		expect(mocks.isVerified).not.toHaveBeenCalled();
+	});
+
+	test("does not log the site secret, but still posts it", async () => {
+		const infoSpy = vi
+			.spyOn(console, "info")
+			.mockImplementation(() => undefined);
+		const { connection } = connectionWith(userModel({}));
+		await signup(
+			connection,
+			serverConfig(),
+			VERIFY_ENDPOINT,
+			"api",
+			request({
+				body: signupBody(),
+				headers: { "x-client-ip": "203.0.113.9" },
+			}),
+			responseStub().response,
+			next,
+		);
+		const logged = infoSpy.mock.calls
+			.map((call) => call.map((arg) => String(arg)).join(" "))
+			.join("\n");
+		expect(logged).not.toContain(SECRET);
+		const postedBody: Record<string, string> = JSON.parse(
+			String(fetchMock.mock.calls[0]?.[1]?.body),
+		);
+		expect(postedBody.secret).toBe(SECRET);
 	});
 
 	test("withholds the IP in development", async () => {
@@ -633,6 +662,7 @@ describe("login", () => {
 			"0xtoken",
 			"NO_IP",
 			undefined,
+			undefined,
 		);
 	});
 
@@ -654,6 +684,32 @@ describe("login", () => {
 			"0xtoken",
 			"203.0.113.9",
 			undefined,
+			undefined,
+		);
+	});
+
+	test("forwards the caller's clientSessionId to the provider", async () => {
+		const user = await storedUser();
+		const { connection } = connectionWith(userModel({ found: user }));
+		await login(
+			connection,
+			serverConfig(),
+			VERIFY_ENDPOINT,
+			"local",
+			request({
+				body: { ...signupBody(), clientSessionId: "bumblebee-abc" },
+				headers: { "x-client-ip": "203.0.113.9" },
+			}),
+			responseStub().response,
+		);
+		// Positional: isVerified(token, ip, email, clientSessionId). Without
+		// this the widget can be rendered with data-sessionid and the dapp
+		// server silently drops it at verify, so no correlation happens.
+		expect(mocks.isVerified).toHaveBeenLastCalledWith(
+			"0xtoken",
+			"203.0.113.9",
+			undefined,
+			"bumblebee-abc",
 		);
 	});
 

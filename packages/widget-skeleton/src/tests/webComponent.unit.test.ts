@@ -14,6 +14,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, test } from "vitest";
+import { CHECKBOX_HOST_CSS_CLASS } from "../elements/checkbox.js";
 import {
 	WIDGET_MAX_WIDTH,
 	createWidgetSkeleton,
@@ -81,7 +82,11 @@ describe("attaching the skeleton to a container", () => {
 			TAG,
 		);
 		expect(webComponent.tagName.toLowerCase()).toBe(TAG);
-		expect(widgetInteractiveArea.className).toBe("prosopo-checkbox__content");
+		expect(
+			webComponent
+				.querySelector(`.${CHECKBOX_HOST_CSS_CLASS}`)
+				?.shadowRoot?.contains(widgetInteractiveArea),
+		).toBe(true);
 	});
 
 	test("mounts the host inside the container it was given", () => {
@@ -113,24 +118,21 @@ describe("attaching the skeleton to a container", () => {
 		expect(webComponent.shadowRoot).toBeNull();
 	});
 
-	test("throws when the skeleton has no interactive area", () => {
-		// A silent null here would produce a widget that looks right and can
-		// never be clicked, so it has to fail loudly at construction.
+	test("keeps the interactive area reachable once mounted", () => {
+		// It used to be looked up by class after mounting, which could silently
+		// return null; it is now carried out of the builder that made it.
 		const target = container();
-		const appendChild = Element.prototype.appendChild;
-		const stripped = function <T extends Node>(this: Element, node: T): T {
-			if (node instanceof HTMLElement) {
-				node.querySelector(".prosopo-checkbox")?.remove();
-			}
-			return appendChild.call(this, node) as T;
-		};
-		Element.prototype.appendChild = stripped as typeof appendChild;
+		const { widgetInteractiveArea } = createWidgetSkeleton(
+			target,
+			lightTheme,
+			TAG,
+		);
+		expect(widgetInteractiveArea.isConnected).toBe(false);
+		document.body.appendChild(target);
 		try {
-			expect(() => createWidgetSkeleton(target, lightTheme, TAG)).toThrow(
-				"Fail to initialize widget: interactive area is not found",
-			);
+			expect(widgetInteractiveArea.isConnected).toBe(true);
 		} finally {
-			Element.prototype.appendChild = appendChild;
+			target.remove();
 		}
 	});
 });

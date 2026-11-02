@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 
 export function getAddress(who?: string): string | undefined {
 	if (!who) {
@@ -48,7 +48,11 @@ export function getSecret(who?: string): string | undefined {
 
 export function getDB(): string {
 	if (!process.env.PROSOPO_DATABASE_HOST) {
-		throw new ProsopoEnvError("DATABASE.DATABASE_HOST_UNDEFINED");
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "CLI-4",
+			message: "Database host address is not defined",
+		});
 	}
 	return process.env.PROSOPO_DATABASE_HOST;
 }

@@ -250,6 +250,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 			accessRulesStorage,
 			{ numericIp: ipv4(999_997) },
 			"warmup",
+			{},
 			{ blockOnly: true },
 		);
 		// Warm-up populated the cache with a "no match" verdict for
@@ -280,6 +281,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 						accessRulesStorage,
 						HOT_SCOPE.userScope,
 						HOT_SCOPE.clientId,
+						{},
 						{ blockOnly: true },
 					);
 					const dur = performance.now() - start;
@@ -370,6 +372,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 			accessRulesStorage,
 			{ numericIp: ipv4(999_996) },
 			"warmup",
+			{},
 			{ blockOnly: true },
 		);
 		getVerdictCache().clear();
@@ -423,6 +426,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 						accessRulesStorage,
 						req.scope.userScope,
 						req.scope.clientId,
+						{},
 						{ blockOnly: true },
 					);
 					const dur = performance.now() - start;
@@ -527,6 +531,7 @@ describe("blacklistRequestInspector storm behaviour", () => {
 						accessRulesStorage,
 						HOT_SCOPE.userScope,
 						HOT_SCOPE.clientId,
+						{},
 						{ blockOnly: true },
 					),
 				),

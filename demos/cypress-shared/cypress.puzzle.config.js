@@ -30,7 +30,7 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
 		// puzzle-implicit.html has a signup form wired to /signup on the
 		// demo dapp server, matching how correct.captcha.signup.cy.ts drives

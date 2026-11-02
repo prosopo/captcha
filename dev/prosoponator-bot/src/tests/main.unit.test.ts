@@ -18,6 +18,25 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type BotDeps, defaultDeps, main } from "../bot.js";
 
 /**
+ * @actions/core 3 is native ESM, so its exports are non-configurable and
+ * vi.spyOn cannot replace them. Replacing the module is the only way to
+ * observe the two functions bot.ts calls; getInput keeps its real behaviour
+ * because the defaultDeps tests drive it through INPUT_* in the environment.
+ */
+vi.mock("@actions/core", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@actions/core")>();
+	return {
+		...actual,
+		getInput: vi.fn<typeof actual.getInput>(actual.getInput),
+		setFailed: vi.fn<typeof actual.setFailed>(),
+	};
+});
+
+const realGetInput: typeof core.getInput = (
+	await vi.importActual<typeof import("@actions/core")>("@actions/core")
+).getInput;
+
+/**
  * `context.repo` falls back to the event payload's `repository` when
  * GITHUB_REPOSITORY is unset, and inside a workflow that payload is populated —
  * so clearing the variable alone does not reach the throwing path.
@@ -56,6 +75,8 @@ beforeEach(() => {
 	set("GITHUB_TOKEN", undefined);
 	set("GH_TOKEN", undefined);
 	set("GITHUB_REPOSITORY", "prosopo/captcha");
+	vi.mocked(core.setFailed).mockReset();
+	vi.mocked(core.getInput).mockReset().mockImplementation(realGetInput);
 });
 
 afterEach(() => {
@@ -108,9 +129,7 @@ describe("defaultDeps", () => {
 
 describe("main", () => {
 	test("fails the action when the dependencies cannot be built", async () => {
-		const setFailed = vi
-			.spyOn(core, "setFailed")
-			.mockImplementation((): void => undefined);
+		const setFailed = vi.mocked(core.setFailed);
 		vi.spyOn(console, "error").mockImplementation((): void => undefined);
 		await main();
 		expect(setFailed).toHaveBeenCalledWith(
@@ -119,7 +138,6 @@ describe("main", () => {
 	});
 
 	test("does not reject — a thrown error would lose the annotation", async () => {
-		vi.spyOn(core, "setFailed").mockImplementation((): void => undefined);
 		vi.spyOn(console, "error").mockImplementation((): void => undefined);
 		await expect(main()).resolves.toBeUndefined();
 	});
@@ -127,7 +145,6 @@ describe("main", () => {
 	test("logs the whole error, not just its message", async () => {
 		// The message alone is what the annotation shows; the stack goes to the
 		// job log, which is the only place it can be read afterwards.
-		vi.spyOn(core, "setFailed").mockImplementation((): void => undefined);
 		const error = vi
 			.spyOn(console, "error")
 			.mockImplementation((): void => undefined);
@@ -139,9 +156,7 @@ describe("main", () => {
 		// The happy path that makes no requests: a token is present, the context
 		// is readable, and run() bails on the event name.
 		set("GITHUB_TOKEN", "ghp_notarealtoken");
-		const setFailed = vi
-			.spyOn(core, "setFailed")
-			.mockImplementation((): void => undefined);
+		const setFailed = vi.mocked(core.setFailed);
 		vi.spyOn(console, "log").mockImplementation((): void => undefined);
 		await main();
 		expect(setFailed).not.toHaveBeenCalled();
@@ -150,12 +165,10 @@ describe("main", () => {
 	test("fails the action when something that is not an Error is thrown", async () => {
 		// core.getInput throws on a malformed action input, and a thrown string
 		// has no .message — the annotation used to read "undefined".
-		vi.spyOn(core, "getInput").mockImplementation((): string => {
+		vi.mocked(core.getInput).mockImplementation((): string => {
 			throw "input is not valid";
 		});
-		const setFailed = vi
-			.spyOn(core, "setFailed")
-			.mockImplementation((): void => undefined);
+		const setFailed = vi.mocked(core.setFailed);
 		vi.spyOn(console, "error").mockImplementation((): void => undefined);
 		await main();
 		expect(setFailed).toHaveBeenCalledWith("input is not valid");

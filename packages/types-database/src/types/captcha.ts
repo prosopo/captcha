@@ -13,9 +13,13 @@
 // limitations under the License.
 
 import type { PoWCaptcha, UserCommitment } from "@prosopo/types";
-import { type RootFilterQuery, Schema } from "mongoose";
+import { type QueryFilter, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
+	type AudioCaptchaRecord,
+	AudioCaptchaRecordSchema,
+	type IconOrderCaptchaRecord,
+	IconOrderCaptchaRecordSchema,
 	type ConnectCaptchaRecord,
 	ConnectCaptchaRecordSchema,
 	type PoWCaptchaRecord,
@@ -48,6 +52,15 @@ export const StoredPuzzleCaptchaRecordSchema: Schema = new Schema({
 });
 StoredPuzzleCaptchaRecordSchema.index({ sessionId: 1 });
 
+export const StoredAudioCaptchaRecordSchema: Schema = new Schema({
+	...AudioCaptchaRecordSchema.obj,
+});
+StoredAudioCaptchaRecordSchema.index({ sessionId: 1 });
+
+export const StoredIconOrderCaptchaRecordSchema: Schema = new Schema({
+	...IconOrderCaptchaRecordSchema.obj,
+});
+StoredIconOrderCaptchaRecordSchema.index({ sessionId: 1 });
 export const StoredConnectCaptchaRecordSchema: Schema = new Schema({
 	...ConnectCaptchaRecordSchema.obj,
 });
@@ -59,15 +72,19 @@ export interface ICaptchaDatabase extends IDatabase {
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents?: PuzzleCaptchaRecord[],
+		iconOrderCaptchaEvents?: IconOrderCaptchaRecord[],
+		audioCaptchaEvents?: AudioCaptchaRecord[],
 		connectCaptchaEvents?: ConnectCaptchaRecord[],
 	): Promise<void>;
 	getCaptchas(
-		filter: RootFilterQuery<CaptchaProperties>,
+		filter: QueryFilter<CaptchaProperties>,
 		limit: number,
 	): Promise<{
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
+		audioCaptchaRecords: AudioCaptchaRecord[];
+		iconOrderCaptchaRecords: IconOrderCaptchaRecord[];
 		connectCaptchaRecords: ConnectCaptchaRecord[];
 	}>;
 }

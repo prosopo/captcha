@@ -46,7 +46,7 @@ const FORCE_PUZZLE_ROUTING_MACHINE = `
 `;
 
 describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 
@@ -74,7 +74,7 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 		).then((response) => {
 			expect(response.status).to.equal(200);
 		});
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 		});
@@ -106,7 +106,7 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 			"puzzleChallenge",
 		);
 
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 		cy.waitForProcaptchaScript();
 
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();

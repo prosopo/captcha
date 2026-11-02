@@ -29,30 +29,28 @@ describe("procaptcha:ready event", () => {
 	});
 
 	afterEach(() => {
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-		(global as any).document = undefined;
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-		(global as any).window = undefined;
+		Object.assign(global, { document: undefined, window: undefined });
 	});
 
-	it("should dispatch procaptcha:ready event when window.procaptcha is set", (done) => {
-		// Set up event listener before importing the module
-		document.addEventListener("procaptcha:ready", (event: Event) => {
-			const customEvent = event as CustomEvent;
-			expect(customEvent.detail).toBeDefined();
-			expect(typeof customEvent.detail.timestamp).toBe("number");
-			expect(customEvent.bubbles).toBe(true);
-			expect(customEvent.cancelable).toBe(false);
-
-			// Check that window.procaptcha is available when the event fires
-			expect(window.procaptcha).toBeDefined();
-			expect(window.procaptcha?.render).toBeDefined();
-			expect(window.procaptcha?.ready).toBeDefined();
-			expect(window.procaptcha?.reset).toBeDefined();
-			expect(window.procaptcha?.execute).toBeDefined();
+	it("should dispatch procaptcha:ready event when window.procaptcha is set", async () => {
+		const readyEvent = new Promise<CustomEvent>((resolve) => {
+			document.addEventListener("procaptcha:ready", (event: Event) =>
+				resolve(event as CustomEvent),
+			);
 		});
 
-		// Import the module which should set window.procaptcha and dispatch the event
-		import("../index.js");
+		await import("../index.js");
+		const customEvent = await readyEvent;
+
+		expect(customEvent.detail).toBeDefined();
+		expect(typeof customEvent.detail.timestamp).toBe("number");
+		expect(customEvent.bubbles).toBe(true);
+		expect(customEvent.cancelable).toBe(false);
+		expect(window.procaptcha).toBeDefined();
+		expect(window.procaptcha?.render).toBeDefined();
+		expect(window.procaptcha?.ready).toBeDefined();
+		expect(window.procaptcha?.reset).toBeDefined();
+		expect(window.procaptcha?.execute).toBeDefined();
+		expect(window.procaptcha?.start).toBeDefined();
 	});
 });

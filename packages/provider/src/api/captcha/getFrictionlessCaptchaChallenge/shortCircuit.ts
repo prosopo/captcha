@@ -19,6 +19,7 @@ import {
 	type ModeEnum,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -27,8 +28,9 @@ import { v4 as uuidv4 } from "uuid";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import type { Tasks } from "../../../tasks/index.js";
-import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
+import type { RefreshLineage } from "./refreshLineage.js";
 
 export type ShortCircuitInput = {
 	tasks: Tasks;
@@ -47,11 +49,14 @@ export type ShortCircuitInput = {
 	// bypass paths resolve the assigned bundleId via Redis and promote it
 	// onto the session so SIMD / BDP attach at later hops (challenge GET,
 	// solution submit) can find the right keypair. Without this, sessions on
-	// configured-captchaType sitekeys (pow / image / puzzle / connect) had no bundleId
-	// and every attach silently dropped the payload.
+	// configured-captchaType sitekeys (pow / image / puzzle / icon-order /
+	// connect) had no bundleId and every attach silently dropped the payload.
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Carried onto the session so a site pinned to a captcha type still
+	// records refreshes, and its refresh limit can still apply.
+	refresh?: RefreshLineage;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -77,9 +82,12 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		// synthesise one when the client had no detector to produce it.
 		token: input.token || `nodetector-${uuidv4()}`,
 		score: 0,
-		threshold:
-			input.clientRecord.settings?.frictionlessThreshold ??
-			DEFAULT_FRICTIONLESS_THRESHOLD,
+		// `Session.threshold` keeps its original meaning — the rung a silent
+		// pass has to stay under — so it records the puzzle rung, not the
+		// image one.
+		threshold: resolveScoreLadder(
+			input.clientRecord.settings?.frictionlessThreshold,
+		).botThreshold,
 		scoreComponents: { baseScore: 0 } as ScoreComponents,
 		ipAddress: input.ipAddress,
 		webView: false,
@@ -91,6 +99,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		mode: input.sessionMode,
 		userSitekeyIpHash: input.userSitekeyIpHash,
 		...(bundleId && { bundleId }),
+		...input.refresh,
 		...(input.tcpToChelloUs !== undefined && {
 			tcpToChelloUs: input.tcpToChelloUs,
 		}),
@@ -163,9 +172,9 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 			return res.json(
 				await input.tasks.frictionlessManager.sendImageCaptcha({
 					...sessionParams,
-					solvedImagesCount: Math.min(
+					solvedImagesCount: clampImageRounds(
 						input.env.config.captchas.solved.count,
-						input.clientRecord.settings.imageMaxRounds,
+						input.clientRecord.settings,
 					),
 				}),
 			);
@@ -176,6 +185,12 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		case CaptchaType.puzzle:
 			return res.json(
 				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
+			);
+		case CaptchaType.iconOrder:
+			return res.json(
+				await input.tasks.frictionlessManager.sendIconOrderCaptcha(
+					sessionParams,
+				),
 			);
 		case CaptchaType.connect:
 			return res.json(

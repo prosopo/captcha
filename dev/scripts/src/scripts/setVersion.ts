@@ -147,17 +147,19 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 			log.debug(() => ({ data: { pth }, msg: "setting version in" }));
 			const content = fs.readFileSync(pth, "utf8");
 			// replace version in all toml files
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			const tomlContent: any = parse(content);
+			const tomlContent = parse(content);
 			if (tomlContent.workspace) {
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				if ((tomlContent.workspace as any).version) {
-					// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-					(tomlContent.workspace as any).version = version;
+				const workspace = asTable(tomlContent.workspace);
+				if (workspace?.version) {
+					workspace.version = version;
 				}
 			} else {
 				// replace dependency versions in all toml files
-				tomlContent.package.version = version;
+				const pkg = asTable(tomlContent.package);
+				if (!pkg) {
+					throw new Error(`No [package] or [workspace] table in ${pth}`);
+				}
+				pkg.version = version;
 			}
 			fs.writeFileSync(pth, `${stringify(tomlContent)}\n`);
 		});
@@ -175,10 +177,9 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 			// replace version in all toml files
 			const tomlContent = parse(content);
 			if (tomlContent.workspace) {
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				if ((tomlContent.workspace as any).version) {
-					// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-					(tomlContent.workspace as any).version = version;
+				const workspace = asTable(tomlContent.workspace);
+				if (workspace?.version) {
+					workspace.version = version;
 				}
 			} else {
 				for (const obj of [
@@ -206,7 +207,6 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 					}
 				}
 			}
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			fs.writeFileSync(pth, `${stringify(tomlContent as any)}\n`);
+			fs.writeFileSync(pth, `${stringify(tomlContent)}\n`);
 		});
 }

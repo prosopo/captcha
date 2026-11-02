@@ -42,8 +42,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 		);
 
 		const list: string[] = [];
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		const traverse = async (data: any) => {
+		const traverse = async (data: unknown): Promise<unknown> => {
 			if (Array.isArray(data)) {
 				for (let i = 0; i < data.length; i++) {
 					data[i] = await traverse(data[i]);
@@ -65,8 +64,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 		const file = args.input;
 
 		// read the map file
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		const data: any = JSON.parse(fs.readFileSync(file, "utf8"));
+		const data: unknown = JSON.parse(fs.readFileSync(file, "utf8"));
 		await traverse(data);
 
 		bar.start(list.length, 0);

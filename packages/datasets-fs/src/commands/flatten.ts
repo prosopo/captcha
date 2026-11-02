@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaItemTypes,
 	type Data,
@@ -118,7 +118,10 @@ export class Flatten extends InputOutputCliCommand<ArgsSchemaType> {
 						}
 					}
 					if (!args.allowDuplicates) {
-						throw new ProsopoDatasetError("DATASET.DUPLICATE_IMAGE", {
+						throw new ProsopoError({
+							code: "DATASET_INVALID",
+							errorSite: "DSFS-2",
+							message: "duplicate image detected",
 							context: { image: `${label}/${image}` },
 						});
 					}

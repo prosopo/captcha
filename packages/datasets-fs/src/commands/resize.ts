@@ -1,6 +1,6 @@
 import fs from "node:fs";
-import { blake2b } from "@noble/hashes/blake2b";
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
+import { blake2b } from "@noble/hashes/blake2.js";
+import { ProsopoError } from "@prosopo/common";
 import { type Data, DataSchema, type Item } from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";
 import { lodash } from "@prosopo/util/lodash";
@@ -68,22 +68,20 @@ export class Resize extends InputOutputCliCommand<ArgsSchemaType> {
 
 		const mapFile: string = args.input;
 		if (!fs.existsSync(mapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`Map file does not exist: ${mapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-16",
+				message: `Map file does not exist: ${mapFile}`,
+			});
 		}
 		const outDir: string = args.output;
 		const overwrite = args.overwrite || false;
 		if (!overwrite && fs.existsSync(outDir)) {
-			throw new ProsopoEnvError(
-				new Error(`Output directory already exists: ${outDir}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-17",
+				message: `Output directory already exists: ${outDir}`,
+			});
 		}
 
 		// create the output directory

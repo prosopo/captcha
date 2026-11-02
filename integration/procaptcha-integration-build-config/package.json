@@ -1,43 +1,41 @@
 {
 	"name": "@prosopo/procaptcha-integration-build-config",
-	"version": "1.1.30",
+	"version": "1.1.35",
 	"type": "module",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
-		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
+		"build:types": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest --config ./vite.test.config.ts",
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --coverage --config ./vite.test.config.ts"
 	},
 	"dependencies": {
 		"deepmerge": "4.3.1",
-		"vite": "8.1.5",
-		"vite-plugin-dts": "5.0.3"
+		"vite": "8.1.6",
+		"vite-plugin-dts": "5.1.2"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.12",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "5.0.4",
 		"del-cli": "6.0.0",
 		"typescript": "5.6.2",
-		"vitest": "4.1.10"
+		"vitest": "5.0.4"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

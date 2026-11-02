@@ -11,5 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./components/ProcaptchaWidget.js";
-export * from "./components/ProcaptchaPuzzle.js";
+export * from "./components/procaptchaWidget.js";
+export * from "./components/procaptchaPuzzle.js";
+export * from "./components/puzzleCanvas.js";

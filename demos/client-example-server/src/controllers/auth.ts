@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { blake2b } from "@noble/hashes/blake2b";
+import { blake2b } from "@noble/hashes/blake2.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { getPair } from "@prosopo/keyring";
 import { getLogger } from "@prosopo/logger";
 import { ProsopoServer } from "@prosopo/server";
@@ -45,7 +46,7 @@ const SubscribeBodySpec = ProcaptchaResponse.merge(
 );
 
 function hashPassword(password: string): string {
-	return u8aToHex(blake2b(password));
+	return u8aToHex(blake2b(utf8ToBytes(password)));
 }
 
 const NO_IP = "NO_IP";
@@ -82,6 +83,9 @@ const getPairAndSecretForSiteKey = (
 		CaptchaType.image,
 		CaptchaType.frictionless,
 		CaptchaType.puzzle,
+		// Not a site type: the seed name of the audio demos' image site.
+		CaptchaType.audio,
+		CaptchaType.iconOrder,
 	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);
@@ -128,7 +132,7 @@ const getResponse = async (
 
 	logger.info(() => ({
 		data: {
-			body,
+			body: { ...body, [ApiParams.secret]: "[redacted]" },
 		},
 	}));
 
@@ -147,6 +151,10 @@ const verify = async (
 	secret: string,
 	ip: string,
 	email?: string,
+	// The session id the widget was rendered with. Forwarded so the provider
+	// can confirm the token was earned in this same session; omitted, no
+	// correlation is attempted.
+	clientSessionId?: string,
 ) => {
 	if (verifyType === "api") {
 		// verify using the API endpoint
@@ -172,7 +180,12 @@ const verify = async (
 		return response.verified;
 	}
 	// verify using the TypeScript library
-	const verified = await prosopoServer.isVerified(token, ip, email);
+	const verified = await prosopoServer.isVerified(
+		token,
+		ip,
+		email,
+		clientSessionId,
+	);
 	logger.info(() => ({
 		data: {
 			verified,
@@ -192,7 +205,11 @@ const signup = async (
 ) => {
 	try {
 		if (!config.account.secret) {
-			throw new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "CLEX-2",
+				message:
+					"Mnemonic Undefined. Please set the mnemonic in environment variables",
 				context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
 			});
 		}
@@ -225,6 +242,7 @@ const signup = async (
 			secret,
 			req.headers["x-client-ip"]?.toString() || "127.0.0.1",
 			email,
+			req.body[ApiParams.clientSessionId],
 		);
 
 		if (verified === true) {
@@ -285,7 +303,10 @@ const login = async (
 				const siteKey = payload[ApiParams.siteKey];
 
 				if (!config.account.secret) {
-					throw new ProsopoEnvError("GENERAL.SECRET_MISSING", {
+					throw new ProsopoError({
+						code: "CONFIG_INVALID",
+						errorSite: "CLEX-3",
+						message: "Missing secret key",
 						context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
 					});
 				}
@@ -303,6 +324,11 @@ const login = async (
 					token,
 					secret,
 					req.headers["x-client-ip"]?.toString() || NO_IP,
+					// login carries no email; the session id still has to reach
+					// the provider or a widget rendered with data-sessionid is
+					// silently unverified against its session.
+					undefined,
+					req.body[ApiParams.clientSessionId],
 				);
 
 				logger.info(() => ({

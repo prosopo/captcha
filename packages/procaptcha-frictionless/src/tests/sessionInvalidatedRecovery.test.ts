@@ -14,6 +14,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+	MAX_SESSION_INVALIDATED_RETRIES,
 	type MutableRef,
 	type RetryCoords,
 	consumeRetryMountProps,
@@ -25,70 +26,97 @@ const ref = <T>(initial: T): MutableRef<T> => ({ current: initial });
 
 describe("handleSessionInvalidated", () => {
 	it("records both coords and signals a restart on the first fire", () => {
-		const firedRef = ref(false);
+		const attemptsRef = ref(0);
 		const coordsRef = ref<RetryCoords | null>(null);
 
-		const result = handleSessionInvalidated(120, 340, firedRef, coordsRef);
+		const result = handleSessionInvalidated(120, 340, attemptsRef, coordsRef);
 
-		expect(result).toEqual({ shouldRestart: true });
-		expect(firedRef.current).toBe(true);
+		expect(result).toEqual({ shouldRestart: true, exhausted: false });
+		expect(attemptsRef.current).toBe(1);
 		expect(coordsRef.current).toEqual({ x: 120, y: 340 });
 	});
 
 	it("treats (0, 0) as 'no coords' — that's the autoStart / untrusted-event default, not a real click", () => {
-		const firedRef = ref(false);
+		const attemptsRef = ref(0);
 		const coordsRef = ref<RetryCoords | null>(null);
 
-		const result = handleSessionInvalidated(0, 0, firedRef, coordsRef);
+		const result = handleSessionInvalidated(0, 0, attemptsRef, coordsRef);
 
-		expect(result).toEqual({ shouldRestart: true });
+		expect(result).toEqual({ shouldRestart: true, exhausted: false });
 		expect(coordsRef.current).toBeNull();
 	});
 
 	it("carries a real click even if only one axis is at the origin", () => {
-		const firedRef = ref(false);
+		const attemptsRef = ref(0);
 		const coordsRef = ref<RetryCoords | null>(null);
 
-		handleSessionInvalidated(0, 340, firedRef, coordsRef);
+		handleSessionInvalidated(0, 340, attemptsRef, coordsRef);
 
 		expect(coordsRef.current).toEqual({ x: 0, y: 340 });
 	});
 
 	it("stores no coords when x or y is undefined (autoStart / non-trusted event)", () => {
-		const firedRef = ref(false);
+		const attemptsRef = ref(0);
 		const coordsRef = ref<RetryCoords | null>(null);
 
 		const result = handleSessionInvalidated(
 			undefined,
 			undefined,
-			firedRef,
+			attemptsRef,
 			coordsRef,
 		);
 
-		expect(result).toEqual({ shouldRestart: true });
-		expect(firedRef.current).toBe(true);
+		expect(result).toEqual({ shouldRestart: true, exhausted: false });
+		expect(attemptsRef.current).toBe(1);
 		expect(coordsRef.current).toBeNull();
 	});
 
 	it("stores no coords when only one axis is present — never emit NaN into the salt", () => {
-		const firedRef = ref(false);
+		const attemptsRef = ref(0);
 		const coordsRef = ref<RetryCoords | null>(null);
 
-		handleSessionInvalidated(120, undefined, firedRef, coordsRef);
+		handleSessionInvalidated(120, undefined, attemptsRef, coordsRef);
 
 		expect(coordsRef.current).toBeNull();
 	});
 
-	it("is one-shot per outer widget lifetime — a second call is a no-op", () => {
-		const firedRef = ref(false);
+	it("keeps re-minting up to the retry budget — a reload press is a legitimate new session", () => {
+		const attemptsRef = ref(0);
 		const coordsRef = ref<RetryCoords | null>(null);
 
-		handleSessionInvalidated(100, 200, firedRef, coordsRef);
-		const second = handleSessionInvalidated(500, 600, firedRef, coordsRef);
+		for (let i = 0; i < MAX_SESSION_INVALIDATED_RETRIES; i++) {
+			expect(
+				handleSessionInvalidated(100 + i, 200 + i, attemptsRef, coordsRef),
+			).toEqual({ shouldRestart: true, exhausted: false });
+		}
 
-		expect(second).toEqual({ shouldRestart: false });
-		// The second call must not overwrite the first attempt's coords.
+		expect(attemptsRef.current).toBe(MAX_SESSION_INVALIDATED_RETRIES);
+	});
+
+	it("reports exhausted once the budget is spent so the caller can fall over visibly", () => {
+		const attemptsRef = ref(MAX_SESSION_INVALIDATED_RETRIES);
+		const coordsRef = ref<RetryCoords | null>({ x: 100, y: 200 });
+
+		const result = handleSessionInvalidated(500, 600, attemptsRef, coordsRef);
+
+		expect(result).toEqual({ shouldRestart: false, exhausted: true });
+		// An exhausted call must not overwrite the pending attempt's coords.
 		expect(coordsRef.current).toEqual({ x: 100, y: 200 });
+		expect(attemptsRef.current).toBe(MAX_SESSION_INVALIDATED_RETRIES);
+	});
+
+	it("honours a caller-supplied budget", () => {
+		const attemptsRef = ref(0);
+		const coordsRef = ref<RetryCoords | null>(null);
+
+		expect(handleSessionInvalidated(1, 2, attemptsRef, coordsRef, 1)).toEqual({
+			shouldRestart: true,
+			exhausted: false,
+		});
+		expect(handleSessionInvalidated(3, 4, attemptsRef, coordsRef, 1)).toEqual({
+			shouldRestart: false,
+			exhausted: true,
+		});
 	});
 });
 

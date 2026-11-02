@@ -289,6 +289,34 @@ describe("getSessionRecordBySessionId projection", () => {
 		expect(got?.isEscalation).toBe(true);
 	});
 
+	// A refresh extends the chain from the session it replaced, and times the
+	// refresh from that session's creation. Without both projected, every
+	// refresh would look like the first and the puzzle would never give way to
+	// an image.
+	it("returns refreshCount and createdAt so a refresh can extend its chain", async () => {
+		const sessionId = "session-refreshed";
+		const createdAt = new Date("2026-09-28T12:00:00Z");
+		await db.tables.session.create({
+			sessionId,
+			createdAt,
+			token: "tok-refreshed",
+			score: 0.4,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.4 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.puzzle,
+			webView: false,
+			iFrame: false,
+			refreshOf: "session-before",
+			refreshCount: 2,
+			refreshedAfterMs: 4000,
+		});
+
+		const got = await db.getSessionRecordBySessionId(sessionId);
+		expect(got?.refreshCount).toBe(2);
+		expect(got?.createdAt).toEqual(createdAt);
+	});
+
 	// Regression guard for the 2026-08-20 finding: the verify-phase decision
 	// machines added TCP-fingerprint deny rules (`tcp-stack-dc-linux-ts-off`,
 	// `tcp-ttl-windows-ua-linux-stack`) that read `input.tcpOptsFlags`,

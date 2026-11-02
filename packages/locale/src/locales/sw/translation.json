@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Imeshindwa kusimba anwani batili",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Ahadi ya suluhisho la captcha haipo",
+		"SIGNER_UNDEFINED": "Mtiaji sahihi hajafafanuliwa",
+		"CANNOT_FIND_KEYPAIR": "Haiwezi kupata jozi ya funguo",
+		"INVALID_DATA_FORMAT": "Muundo wa data batili"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Mazingira yasiyojulikana yameombwa",
+		"INVALID_CAPTCHA_NUMBER": "Tafadhali sanidi mipangilio ya captcha ipasavyo",
+		"INVALID_LOG_LEVEL": "Kiwango cha kumbukumbu batili",
+		"INVALID_PACKAGE_DIR": "Saraka ya kifurushi batili"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Hitilafu katika kuchanganua seti ya data",
+		"SOLUTION_PARSE_ERROR": "Hitilafu katika kuchakata seti ya data",
+		"HASH_ERROR": "Hitilafu katika kuhashi seti ya data",
+		"DATASET_ID_UNDEFINED": "Kitambulisho cha seti ya data hakijafafanuliwa",
+		"NOT_ENOUGH_LABELS": "Lebo hazitoshi",
+		"NOT_ENOUGH_IMAGES": "Picha hazitoshi",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Idadi ya captcha katika seti ya data ni ndogo kuliko idadi iliyosanidiwa",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Idadi ya suluhisho katika seti ya data ni ndogo kuliko idadi iliyosanidiwa",
+		"DUPLICATE_IMAGE": "picha iliyorudiwa imegunduliwa",
+		"MERKLE_ERROR": "Hitilafu katika kuunda mti wa Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Imeshindwa kuingiza injini ya hifadhidata",
+		"DATABASE_UNDEFINED": "Mteja wa hifadhidata hajaunganishwa",
+		"DATABASE_HOST_UNDEFINED": "Anwani ya seva ya hifadhidata haijafafanuliwa",
+		"DATASET_LOAD_FAILED": "Kupakia seti ya data kumeshindwa",
+		"DATASET_GET_FAILED": "Imeshindwa kupata seti ya data",
+		"CAPTCHA_GET_FAILED": "Imeshindwa kupata captcha",
+		"CAPTCHA_UPDATE_FAILED": "Imeshindwa kusasisha captcha",
+		"IMAGE_GET_FAILED": "Imeshindwa kupata picha",
+		"PENDING_RECORD_NOT_FOUND": "Hakuna rekodi inayosubiri iliyopatikana",
+		"INVALID_HASH": "Hashi batili",
+		"SOLUTION_GET_FAILED": "Imeshindwa kupata suluhisho",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Hakuna seti za data zenye idadi inayohitajika ya suluhisho zilizopatikana",
+		"SOLUTION_APPROVE_FAILED": "Imeshindwa kuidhinisha suluhisho",
+		"SOLUTION_FLAG_FAILED": "Imeshindwa kualamisha suluhisho kuwa limechakatwa",
+		"TABLES_UNDEFINED": "Majedwali hayajafafanuliwa",
+		"CONNECTION_UNDEFINED": "Muunganisho haujafafanuliwa",
+		"COMMITMENT_FLAG_FAILED": "Imeshindwa kualamisha ahadi kuwa imechakatwa",
+		"UNKNOWN": "Hitilafu ya hifadhidata isiyojulikana",
+		"QUERY_ERROR": "Hoja ya hifadhidata imeshindwa",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Muunganisho wa Redis wa sheria za ufikiaji haujafafanuliwa",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Hifadhi ya sheria za ufikiaji za watumiaji haijafafanuliwa",
+		"SESSION_STORE_FAILED": "Imeshindwa kuhifadhi kipindi",
+		"SESSION_CHECK_REMOVE_FAILED": "Imeshindwa kukagua na kuondoa kipindi",
+		"SESSION_GET_FAILED": "Imeshindwa kupata kipindi"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Haiwezi kubadilisha mtumiaji mmiliki",
+		"CANNOT_DELETE_OWN_USER": "Huwezi kufuta akaunti yako mwenyewe",
+		"CANNOT_DELETE_LAST_USER": "Haiwezi kufuta mtumiaji wa mwisho",
+		"USER_ALREADY_EXISTS": "Mtumiaji tayari yupo",
+		"NO_SUGGESTIONS_FOUND": "Hakuna mapendekezo yaliyopatikana",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Haiwezi kuzima tovuti ya mwisho inayotumika",
+		"DUPLICATE_SITE_NAME": "Tovuti yenye jina hili tayari ipo",
+		"INVALID_SITE_NAME": "Jina la tovuti linaweza kuwa na herufi, nambari, vistari na mistari ya chini pekee"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Kigezo batili"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Faili haijapatikana",
+		"FILE_ALREADY_EXISTS": "Faili tayari ipo",
+		"INVALID_DIR_FORMAT": "Muundo wa saraka batili"
+	}
+}

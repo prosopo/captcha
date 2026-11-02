@@ -30,7 +30,7 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
 		// pow-implicit renders a signup form with a pow widget — matches the
 		// image demo's shape, just with a pow token in the procaptcha-response.
