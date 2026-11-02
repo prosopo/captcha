@@ -17,16 +17,19 @@ Full guide, including server-side verification and the optional extras:
 
 ## 1. Clone and generate your environment file
 
-Clone with submodules, install, and build the workspace once. The env script and every later step use the built
-packages. Then one script generates the provider account, the site key account and strong random passwords for Mongo and
-Redis, and fills in everything else from the hostname you give it.
+You need Node.js 24 and pnpm (via `corepack enable`) on the machine you build on. You do not need Rust: the
+provider's native code ships inside the image.
+
+Clone with submodules, install, and build the packages the env script and the widget use. Then one script generates
+the provider account, the site key account and strong random passwords for Mongo and Redis, and fills in everything
+else from the hostname you give it.
 
 ```bash
 git clone --recurse-submodules https://github.com/prosopo/captcha
 cd captcha
 corepack enable
 pnpm install --frozen-lockfile
-pnpm run build:all
+pnpm run build:self-hosted
 
 pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 ```
@@ -47,6 +50,9 @@ it up; regenerating gives your provider a new identity and new credentials for a
 
 Options: `--output <path>`, `--force` to overwrite.
 
+`build:self-hosted` builds only what this guide needs. `pnpm run build:all` builds the whole repository, including
+the provider's Rust addons, and fails without a Rust toolchain.
+
 ## 2. Start the stack
 
 The compose file, `docker-compose.self-hosted.yml`, ships with the repo. Your `.env` sets `COMPOSE_FILE` to it, so this
@@ -59,6 +65,11 @@ curl localhost:9229/healthz     # {"ok":true,"host":"captcha.example.com"}
 
 Four containers: Mongo, Redis, the provider, and Caddy terminating TLS in front of it. Redis must be `redis-stack` —
 the provider stores access rules in a RediSearch index, which stock Redis does not ship.
+
+The `prosopo/provider` and `prosopo/caddy` images are published for `linux/amd64` only. The compose file asks for that
+platform, so on an ARM host (Apple Silicon, Raspberry Pi, AWS Graviton) Docker runs them under emulation. That needs
+QEMU: Docker Desktop has it built in, and on Linux you can install it with
+`docker run --privileged --rm tonistiigi/binfmt --install amd64`. Emulated containers run noticeably slower.
 
 TLS is handled for you. The provider speaks plain HTTP on 9229; `docker/provider.Caddyfile` — the same config we run in
 production — sits in front of it and gets certificates over ACME, driven entirely by the `CADDY_*` vars in your `.env`.
@@ -143,16 +154,18 @@ be hosted together.
 
 ## No server? Run it on Cloudflare's free plan
 
-Steps 2 and 4 assume a server with a public IP and ports 80 and 443 open. If you don't have one, any machine that can
-run Docker will do — a spare PC, a home server — with Cloudflare in front of it. You need a free Cloudflare account and
-nothing else: no domain, no public IP, no open ports, no certificates.
+Steps 2 and 4 assume a server with a public IP and ports 80 and 443 open. If you don't have one, a machine at home
+will do — a spare PC, a home server — with Cloudflare in front of it. It must run Docker and stay on. The provider
+image is `linux/amd64` only, so an x86-64 machine is best; an ARM machine runs it under emulation
+([step 2](#2-start-the-stack)). You need a free Cloudflare account and nothing else: no domain, no public IP, no open
+ports, no certificates.
 
 One Worker on your free `workers.dev` subdomain serves the widget and forwards API calls to your provider through a
 Cloudflare Tunnel. The tunnel connects outbound from your machine, so nothing is exposed on your network. Cloudflare
 handles HTTPS, so Caddy is not used.
 
-Do step 1 up to `pnpm run build:all`, but don't generate the environment file yet — you'll generate it below with
-the Worker's hostname. Then, from the repository root:
+Do step 1 up to `pnpm run build:self-hosted`, but don't generate the environment file yet — you'll generate it below
+with the Worker's hostname. Then, from the repository root:
 
 ```bash
 npx wrangler@4.151.3 login
@@ -229,7 +242,7 @@ It reports a score of `1` when BotD flags the browser as automated (headless Chr
 others) and `0` otherwise. It makes no requests to anyone but your provider.
 
 ```bash
-pnpm --filter @prosopo/detector-botd run build
+pnpm --filter @prosopo/detector-botd run bundle
 pnpm --filter @prosopo/detector-botd run pool --out detector-pool.json
 
 docker compose exec -T provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js detector_pool_set < detector-pool.json

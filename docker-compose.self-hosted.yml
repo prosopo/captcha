@@ -47,6 +47,8 @@ services:
         max-file: '1'
 
   provider:
+    # Published for linux/amd64 only. An ARM host runs it under emulation.
+    platform: linux/amd64
     image: prosopo/provider:${PROSOPO_PROVIDER_IMAGE_VERSION:?set it in .env, or regenerate .env with generateSelfHostedEnv.ts}
     restart: unless-stopped
     depends_on:
@@ -89,6 +91,7 @@ services:
     # prosopo/caddy rather than upstream caddy: provider.Caddyfile uses four
     # plugins compiled into this image (caddy-l4, chaddy, caddy-ratelimit,
     # caddy-requestid) and will not start without them.
+    platform: linux/amd64
     image: prosopo/caddy:${CADDY_IMAGE_VERSION:-2.5.9}
     restart: unless-stopped
     depends_on:
