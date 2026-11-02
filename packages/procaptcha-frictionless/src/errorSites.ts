@@ -18,6 +18,9 @@ declare module "@prosopo/common" {
 		"FRIC-2": true;
 		"FRIC-3": true;
 		"FRIC-4": true;
+		"FRIC-5": true;
+		"FRIC-6": true;
+		"FRIC-7": true;
 	}
 }
 
