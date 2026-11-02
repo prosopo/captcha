@@ -36,8 +36,13 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { parseInteger } from "@prosopo/util";
 import { z } from "zod";
-import { measureSync } from "../../api/metrics.js";
+import { measureSync, recordSyncSpan } from "../../api/metrics.js";
 import { isDnsSidecarHealthy } from "../dnsEvent/dnsSidecarHealth.js";
+import {
+	clearDecisionMachineWorkers,
+	decisionMachineWorkersEnabled,
+	runDecisionMachine,
+} from "./decisionMachinePool.js";
 
 // Unset, malformed or non-positive values fall back to the default; a
 // negative timeout would make vm abort every run.
@@ -118,6 +123,7 @@ const loadMachine = (source: string): CachedMachine => {
  */
 export const invalidateDecisionMachineScriptCache = (): void => {
 	machineCache.clear();
+	clearDecisionMachineWorkers();
 };
 
 /** How long cached artifacts are considered fresh (ms). */
@@ -559,6 +565,30 @@ export class DecisionMachineRunner {
 		// produces T from unknown input", which is what the caller wants.
 		schema: z.ZodType<T, z.ZodTypeDef, unknown>,
 	): Promise<T | undefined> {
+		if (decisionMachineWorkersEnabled()) {
+			const run = await runDecisionMachine({
+				source: artifact.source,
+				exportNames,
+				input: options.input,
+				timeoutMs: EXEC_TIMEOUT_MS,
+				loadTimeoutMs: LOAD_TIMEOUT_MS,
+			});
+			if (!run.found) {
+				if (options.optional) return undefined;
+				throw new Error(
+					`Decision machine must export one of: ${exportNames.join(", ")}`,
+				);
+			}
+			recordSyncSpan("decision_machine_decide", run.runMs / 1000);
+			const parsed = schema.safeParse(run.result);
+			if (!parsed.success) {
+				throw new Error(
+					`Decision machine '${run.name}' output failed validation`,
+				);
+			}
+			return parsed.data;
+		}
+
 		const { exports } = loadMachine(artifact.source);
 		const named = this.findExport(exports, exportNames);
 		if (!named) {

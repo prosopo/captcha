@@ -408,14 +408,22 @@ export const measureSync = <T>(span: SyncSpan, fn: () => T): T => {
 	try {
 		return fn();
 	} finally {
-		const wallSeconds = Number(process.hrtime.bigint() - wallBefore) / 1e9;
-		const m = getMetrics();
 		// Counted in `finally` so a span that throws — a decoder handed the
 		// wrong key, say — still shows the time it burned getting there.
-		m.syncSpanCallsTotal.inc({ span });
-		m.syncSpanWallSecondsTotal.inc({ span }, wallSeconds);
-		m.syncSpanDuration.observe({ span }, wallSeconds);
+		recordSyncSpan(
+			span,
+			Number(process.hrtime.bigint() - wallBefore) / 1e9,
+		);
 	}
+};
+
+/** For a span timed elsewhere, such as inside a worker thread. */
+export const recordSyncSpan = (span: SyncSpan, wallSeconds: number): void => {
+	if (!metricsEnabled()) return;
+	const m = getMetrics();
+	m.syncSpanCallsTotal.inc({ span });
+	m.syncSpanWallSecondsTotal.inc({ span }, wallSeconds);
+	m.syncSpanDuration.observe({ span }, wallSeconds);
 };
 
 // ---------------------------------------------------------------------------
