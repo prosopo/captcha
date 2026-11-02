@@ -24,7 +24,11 @@ describe("parseVersion", () => {
 		expect(parseVersion(input)).toBe(expected);
 	});
 
-	it.each(["1x.2.3", "1.2", "1.2.3.4", "1.-2.3", "1.2.3-beta", "a.b.c", ""])(
+	it("drops a prerelease suffix on the patch part", () => {
+		expect(parseVersion("1.2.3-beta")).toBe("1.2.3");
+	});
+
+	it.each(["1x.2.3", "1.2", "1.2.3.4", "1.-2.3", "a.b.c", ""])(
 		"rejects %j",
 		(input) => {
 			expect(() => parseVersion(input)).toThrow(

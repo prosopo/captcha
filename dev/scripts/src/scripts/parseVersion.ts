@@ -17,9 +17,10 @@ import { parseInteger } from "@prosopo/util";
 /**
  * Normalise "x.y.z" (e.g. "01.2.3" → "1.2.3"). Each part must be a whole
  * non-negative integer: parseInt alone let "1x.2.3" through as "1.2.3".
+ * A prerelease suffix on the patch part is dropped ("1.2.3-beta" → "1.2.3").
  */
 export const parseVersion = (version: string): string => {
-	const parts = version.split(".");
+	const parts = version.replace(/-[^.]*$/, "").split(".");
 	const numbers = parts.map((part) => parseInteger(part, { min: 0 }));
 	if (parts.length !== 3 || numbers.some((n) => !n.ok)) {
 		throw new Error("Version must be in the format of x.y.z");

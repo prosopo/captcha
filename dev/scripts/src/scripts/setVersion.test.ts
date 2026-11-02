@@ -72,8 +72,7 @@ describe("version parsing", () => {
 	});
 
 	it("tolerates a trailing suffix on the patch part", async () => {
-		// `parseInt` stops at the first non-digit, so `3-beta` becomes `3`
-		write("package.json", JSON.stringify({ version: "0.0.1" }));
+				write("package.json", JSON.stringify({ version: "0.0.1" }));
 		await setVersion("1.2.3-beta");
 		expect(readJson("package.json").version).toBe("1.2.3");
 	});
