@@ -196,6 +196,17 @@ export function setGlobalDirectives(raw: string): void {
 	_globalDirectives = parseDirectives(raw);
 }
 
+let _globalContext: LogObject | undefined;
+
+/**
+ * Fields merged into every record from every logger, including module-level
+ * loggers created before the request began. Replaces any previous context.
+ * Only safe where one request runs at a time per process, such as AWS Lambda.
+ */
+export function setGlobalLogContext(context: LogObject | undefined): void {
+	_globalContext = context;
+}
+
 // Create a new logger with the given level and scope
 export function getLogger(logLevel: LogLevel, scope: string): Logger {
 	const logger = new NativeLogger(scope);
@@ -363,8 +374,8 @@ export class NativeLogger implements Logger {
 			}
 		}
 		// add any default data to the data object
-		if (this.defaultData) {
-			data = { ...this.defaultData, ...data };
+		if (_globalContext || this.defaultData) {
+			data = { ..._globalContext, ...this.defaultData, ...data };
 		}
 		// Promote `requestId` (set via `.with({requestId})` in the request
 		// logger middleware) to a top-level `req_id` on the emitted record.
