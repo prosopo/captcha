@@ -352,7 +352,7 @@ export const mountProcaptchaPuzzleWidget = (
 				callbacks.onError?.(
 					toCallbackError(
 						translator.i18n,
-						toPublicError(toProsopoError(error, "PUZZ-7"), "FRONTEND_ERROR"),
+						toPublicError(toProsopoError(error, "PUZZ-8"), "FRONTEND_ERROR"),
 					),
 				);
 			} finally {
@@ -397,7 +397,7 @@ export const mountProcaptchaPuzzleWidget = (
 				callbacks.onError?.(
 					toCallbackError(
 						translator.i18n,
-						toPublicError(toProsopoError(error, "PUZZ-7"), "FRONTEND_ERROR"),
+						toPublicError(toProsopoError(error, "PUZZ-9"), "FRONTEND_ERROR"),
 					),
 				);
 			} finally {

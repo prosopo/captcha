@@ -21,6 +21,8 @@ declare module "@prosopo/common" {
 		"PUZZ-5": true;
 		"PUZZ-6": true;
 		"PUZZ-7": true;
+		"PUZZ-8": true;
+		"PUZZ-9": true;
 	}
 }
 
