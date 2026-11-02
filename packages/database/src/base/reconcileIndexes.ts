@@ -148,15 +148,48 @@ const specOf = (
 	return { key, options };
 };
 
+// Mongo refuses a second index on the same key or name, so a replacement cannot
+// be built beside the index it replaces. A bridge keeps the old key as a prefix
+// and carries its uniqueness, so queries and constraints hold during the swap.
+// The extra field exists on no document and only makes the key distinct.
+const BRIDGE_SUFFIX = "_reconcile_bridge";
+const BRIDGE_FIELD = "__reconcileBridge";
+
+const bridgeOf = (
+	index: IndexDescriptionInfo,
+): { key: Record<string, IndexDirection>; options: CreateIndexesOptions } => {
+	const { options } = specOf(index);
+	// TTL indexes must be single-field; expiry just pauses during the swap.
+	const { expireAfterSeconds: _ttl, ...bridgeOptions } = options;
+	return {
+		key: { ...index.key, [BRIDGE_FIELD]: 1 },
+		options: { ...bridgeOptions, name: `${index.name}${BRIDGE_SUFFIX}` },
+	};
+};
+
+const dropIfPresent = async (
+	model: IndexedModel,
+	name: string,
+): Promise<void> => {
+	try {
+		await model.collection.dropIndex(name);
+	} catch (err) {
+		if ((err as { codeName?: string }).codeName !== "IndexNotFound") {
+			throw err;
+		}
+	}
+};
+
 /**
  * Brings a collection's indexes in line with its schema without the window of
  * a drop-everything-then-rebuild. Indexes that already match are left alone;
  * an existing index that clashes with a declared one (same name or same key,
- * different key or options) is dropped and rebuilt, because `createIndex`
- * refuses to change an index in place and mongoose's autoIndex only logs that
- * refusal. If a rebuild fails (e.g. a new unique index meets duplicates) the
- * index it replaced is restored, so a failed run never leaves a collection
- * with less than it started with.
+ * different key or options) is rebuilt, because `createIndex` refuses to change
+ * an index in place and mongoose's autoIndex only logs that refusal. A bridge
+ * index is built before the old one is dropped, so no query loses its index
+ * during the rebuild. If a rebuild fails (e.g. a new unique index meets
+ * duplicates) the index it replaced is restored, so a failed run never leaves
+ * a collection with less than it started with.
  */
 export const reconcileIndexes = async (
 	model: IndexedModel,
@@ -213,13 +246,35 @@ export const reconcileIndexes = async (
 		return result;
 	}
 
-	for (const index of toDrop) {
-		const name = index.name ?? "";
-		await model.collection.dropIndex(name);
-		result.dropped.push(name);
-	}
-
 	for (const w of wanted) {
+		const replaced = toDrop.filter(
+			(index) => clashes(index, w) && !result.dropped.includes(index.name ?? ""),
+		);
+		const bridges: string[] = [];
+		try {
+			for (const index of replaced) {
+				const { key, options: bridgeOptions } = bridgeOf(index);
+				await model.collection.createIndex(key, bridgeOptions);
+				bridges.push(bridgeOptions.name ?? "");
+			}
+		} catch (err) {
+			result.failed.push({
+				name: w.name,
+				error: `bridge failed: ${errorMessage(err)}`,
+			});
+			for (const bridge of bridges) {
+				await dropIfPresent(model, bridge);
+			}
+			continue;
+		}
+
+		for (const index of replaced) {
+			const name = index.name ?? "";
+			await dropIfPresent(model, name);
+			result.dropped.push(name);
+		}
+
+		let restoreFailed = false;
 		try {
 			await model.collection.createIndex(
 				toDriverKey(w.key),
@@ -228,17 +283,25 @@ export const reconcileIndexes = async (
 			result.created.push(w.name);
 		} catch (err) {
 			result.failed.push({ name: w.name, error: errorMessage(err) });
-			for (const replaced of toDrop.filter((index) => clashes(index, w))) {
-				const { key, options: replacedOptions } = specOf(replaced);
+			for (const index of replaced) {
+				const { key, options: replacedOptions } = specOf(index);
 				try {
 					await model.collection.createIndex(key, replacedOptions);
-					result.restored.push(replaced.name ?? "");
+					result.restored.push(index.name ?? "");
 				} catch (restoreErr) {
+					restoreFailed = true;
 					result.failed.push({
-						name: replaced.name ?? "",
+						name: index.name ?? "",
 						error: `restore failed: ${errorMessage(restoreErr)}`,
 					});
 				}
+			}
+		}
+
+		// With no restored index the bridge is all that serves those queries.
+		if (!restoreFailed) {
+			for (const bridge of bridges) {
+				await dropIfPresent(model, bridge);
 			}
 		}
 	}
@@ -249,6 +312,20 @@ export const reconcileIndexes = async (
 			result.created.push(extraName(e));
 		} catch (err) {
 			result.failed.push({ name: extraName(e), error: errorMessage(err) });
+		}
+	}
+
+	for (const index of toDrop) {
+		const name = index.name ?? "";
+		if (!result.dropped.includes(name) && !wanted.some((w) => clashes(index, w))) {
+			await dropIfPresent(model, name);
+			result.dropped.push(name);
+		}
+	}
+
+	for (const index of existing) {
+		if (index.name?.endsWith(BRIDGE_SUFFIX)) {
+			await dropIfPresent(model, index.name);
 		}
 	}
 

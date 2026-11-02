@@ -13,7 +13,15 @@
 // limitations under the License.
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose, { type Connection, type Model, Schema } from "mongoose";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+	afterAll,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import {
 	defaultIndexName,
 	reconcileIndexes,
@@ -173,6 +181,113 @@ describe("reconcileIndexes", () => {
 		expect(result.failed).toHaveLength(1);
 		expect(result.failed[0]?.error).toMatch(/duplicate key/i);
 		expect(await liveIndexes(model)).toEqual([{ name: "a_1", key: { a: 1 } }]);
+	});
+
+	it("keeps the old key served while an index is rebuilt", async () => {
+		const schema = new Schema<Doc>({ a: String });
+		schema.index({ a: 1 }, { unique: true });
+		const model = modelFor(schema);
+		await model.insertMany([{ a: "x" }]);
+		await model.collection.createIndex({ a: 1 });
+		const dropIndex = model.collection.dropIndex.bind(model.collection);
+		const liveAtDrop: string[][] = [];
+		const spy = vi
+			.spyOn(model.collection, "dropIndex")
+			.mockImplementation(async (name: string) => {
+				liveAtDrop.push((await liveIndexes(model)).map((i) => i.name));
+				return dropIndex(name);
+			});
+
+		await reconcileIndexes(model);
+		spy.mockRestore();
+
+		expect(liveAtDrop[0]).toEqual(["a_1", "a_1_reconcile_bridge"]);
+		expect(await liveIndexes(model)).toEqual([
+			{ name: "a_1", key: { a: 1 }, unique: true },
+		]);
+	});
+
+	it("keeps a unique constraint enforced by its bridge", async () => {
+		const schema = new Schema<Doc>({ a: String, b: String });
+		schema.index({ a: 1 }, { name: "a_u", unique: true, sparse: true });
+		const model = modelFor(schema);
+		await model.createCollection();
+		await model.collection.createIndex({ a: 1 }, { name: "a_u", unique: true });
+		const dropIndex = model.collection.dropIndex.bind(model.collection);
+		let duplicateRejected = false;
+		const spy = vi
+			.spyOn(model.collection, "dropIndex")
+			.mockImplementation(async (name: string) => {
+				const dropped = await dropIndex(name);
+				if (name === "a_u") {
+					await model.collection.insertOne({ a: "x" });
+					duplicateRejected = await model.collection
+						.insertOne({ a: "x" })
+						.then(() => false)
+						.catch(() => true);
+				}
+				return dropped;
+			});
+
+		await reconcileIndexes(model);
+		spy.mockRestore();
+
+		expect(duplicateRejected).toBe(true);
+	});
+
+	it("leaves the old index alone when its bridge cannot be built", async () => {
+		const schema = new Schema<Doc>({ a: String });
+		schema.index({ a: 1 }, { unique: true });
+		const model = modelFor(schema);
+		await model.createCollection();
+		await model.collection.createIndex({ a: 1 });
+		const spy = vi
+			.spyOn(model.collection, "createIndex")
+			.mockRejectedValueOnce(new Error("no bridge"));
+
+		const result = await reconcileIndexes(model);
+		spy.mockRestore();
+
+		expect(result.dropped).toEqual([]);
+		expect(result.failed[0]?.error).toMatch(/bridge failed: no bridge/);
+		expect(await liveIndexes(model)).toEqual([{ name: "a_1", key: { a: 1 } }]);
+	});
+
+	it("clears a bridge left by a run that died", async () => {
+		const schema = new Schema<Doc>({ a: String });
+		schema.index({ a: 1 });
+		const model = modelFor(schema);
+		await model.createCollection();
+		await model.collection.createIndex({ a: 1 });
+		await model.collection.createIndex(
+			{ a: 1, __reconcileBridge: 1 },
+			{ name: "a_1_reconcile_bridge" },
+		);
+
+		await reconcileIndexes(model);
+
+		expect(await liveIndexes(model)).toEqual([{ name: "a_1", key: { a: 1 } }]);
+	});
+
+	it("tolerates an index another process already dropped", async () => {
+		const schema = new Schema<Doc>({ a: String });
+		schema.index({ a: 1 }, { unique: true });
+		const model = modelFor(schema);
+		await model.createCollection();
+		await model.collection.createIndex({ a: 1 });
+		await model.collection.createIndex({ b: 1 });
+		const dropIndex = model.collection.dropIndex.bind(model.collection);
+		const spy = vi
+			.spyOn(model.collection, "dropIndex")
+			.mockImplementationOnce(async (name: string) => {
+				await dropIndex(name);
+				throw Object.assign(new Error("gone"), { codeName: "IndexNotFound" });
+			});
+
+		const result = await reconcileIndexes(model, { dropUndeclared: true });
+		spy.mockRestore();
+
+		expect(result.failed).toEqual([]);
 	});
 
 	it("keeps undeclared indexes unless told they are obsolete", async () => {
