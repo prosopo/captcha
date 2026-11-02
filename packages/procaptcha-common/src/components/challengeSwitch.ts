@@ -29,7 +29,9 @@ import {
 } from "../dom/element.js";
 import { createControl } from "../dom/obfuscation.js";
 
-export interface ImageSwitchButtonProps {
+export interface ChallengeSwitchButtonProps {
+	/** The kind of challenge the button switches to, which picks its icon. */
+	target: "image" | "puzzle";
 	themeColor: "light" | "dark";
 	onSwitch: () => void;
 	/** Accessible name, and the tooltip's text. */
@@ -56,6 +58,9 @@ const GRID_CELLS: readonly [number, number][] = [
 ];
 const GRID_CELL_SIZE = 5;
 
+// A jigsaw piece with a knob on its top and right edges.
+const PUZZLE_PIECE_PATH = "M4 8h5a3 3 0 1 1 6 0h5v5a3 3 0 1 1 0 6v4H4z";
+
 const buttonStyle: StyleMap = {
 	border: "none",
 	cursor: "pointer",
@@ -69,10 +74,10 @@ const buttonStyle: StyleMap = {
 	transition: "background-color 0.25s",
 };
 
-export const mountImageSwitchButton = (
+export const mountChallengeSwitchButton = (
 	container: HTMLElement,
-	initialProps: ImageSwitchButtonProps,
-): Component<ImageSwitchButtonProps> => {
+	initialProps: ChallengeSwitchButtonProps,
+): Component<ChallengeSwitchButtonProps> => {
 	const teardown = new Teardown();
 	let props = initialProps;
 	let hover = false;
@@ -81,17 +86,20 @@ export const mountImageSwitchButton = (
 	const themeFor = (themeColor: "light" | "dark") =>
 		"light" === themeColor ? lightTheme : darkTheme;
 
-	const cells = GRID_CELLS.map(([x, y]) =>
-		createSvgElement("rect", {
-			attributes: {
-				x: String(x),
-				y: String(y),
-				width: String(GRID_CELL_SIZE),
-				height: String(GRID_CELL_SIZE),
-				rx: "1",
-			},
-		}),
-	);
+	const shapes =
+		"puzzle" === props.target
+			? [createSvgElement("path", { attributes: { d: PUZZLE_PIECE_PATH } })]
+			: GRID_CELLS.map(([x, y]) =>
+					createSvgElement("rect", {
+						attributes: {
+							x: String(x),
+							y: String(y),
+							width: String(GRID_CELL_SIZE),
+							height: String(GRID_CELL_SIZE),
+							rx: "1",
+						},
+					}),
+				);
 
 	const svg = createSvgElement("svg", {
 		attributes: {
@@ -101,14 +109,14 @@ export const mountImageSwitchButton = (
 			"aria-hidden": "true",
 		},
 		style: { display: "flex", flexShrink: "0" },
-		children: cells,
+		children: shapes,
 	});
 
 	const button = createControl(teardown, {
 		className: randomToken(),
 		attributes: {
 			"aria-label": props.label,
-			"data-cy": isDevMode() ? "image-switch-button" : undefined,
+			"data-cy": isDevMode() ? `${props.target}-switch-button` : undefined,
 		},
 		children: [svg],
 		onActivate: (event: MouseEvent | KeyboardEvent) => {
@@ -160,8 +168,8 @@ export const mountImageSwitchButton = (
 		const fill = pinned
 			? theme.palette.primary.contrastText
 			: theme.palette.primaryContainer.contrastText;
-		for (const cell of cells) {
-			cell.setAttribute("fill", fill);
+		for (const shape of shapes) {
+			shape.setAttribute("fill", fill);
 		}
 		applyStyles(button, {
 			...buttonStyle,
@@ -207,7 +215,7 @@ export const mountImageSwitchButton = (
 	container.appendChild(wrapper);
 
 	return {
-		update: (nextProps: ImageSwitchButtonProps) => {
+		update: (nextProps: ChallengeSwitchButtonProps) => {
 			props = nextProps;
 			render();
 		},

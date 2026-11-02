@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Image challenge",
 		"CANNOT_LOAD": "Cannot load CAPTCHA",
 		"RELOAD": "Reload",
+		"SWITCH_TO_PUZZLE": "Switch to a puzzle challenge",
 		"VERIFIED_AGENT": "Verified agent",
 		"TRUSTED_REQUEST": "Trusted request",
 		"LOADING": "Loading",

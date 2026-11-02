@@ -35,6 +35,7 @@ import type {
 	GetFrictionlessCaptchaResponse,
 	ProcaptchaClientConfigOutput,
 	ProviderSelectRetryContext,
+	RefreshSwitchTarget,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import {
@@ -223,7 +224,7 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
 	refreshOf?: string,
-	switchToImage?: boolean,
+	switchTo?: RefreshSwitchTarget,
 	widgetSlot?: number,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
@@ -372,7 +373,7 @@ const customDetectBot: BotDetectionFunction = async (
 				fallbackIframeUrl,
 				clientSessionId,
 				refreshOf,
-				switchToImage,
+				switchTo,
 				fallbackFingerprintProof,
 				widgetSlot,
 			),
@@ -427,7 +428,7 @@ const customDetectBot: BotDetectionFunction = async (
 		iframeUrl,
 		clientSessionId,
 		refreshOf,
-		switchToImage,
+		switchTo,
 		fingerprintProof,
 		widgetSlot,
 	);

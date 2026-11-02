@@ -54,6 +54,7 @@ type MockTasks = {
 		setAudioAlternativeEnabled: MockFn;
 		setAllowedCaptchaTypes: MockFn;
 		setImageSwitchRequested: MockFn;
+		setRefreshLimitSwitchEnabled: MockFn;
 		applyRoutingMachine: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
@@ -205,6 +206,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					setAudioAlternativeEnabled: vi.fn(),
 					setAllowedCaptchaTypes: vi.fn(),
 					setImageSwitchRequested: vi.fn(),
+					setRefreshLimitSwitchEnabled: vi.fn(),
 					applyRoutingMachine: vi.fn(
 						async (baseline: { captchaType: CaptchaType }) => ({
 							captchaType: baseline.captchaType,
@@ -292,6 +294,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			setAudioAlternativeEnabled: vi.fn(),
 			setAllowedCaptchaTypes: vi.fn(),
 			setImageSwitchRequested: vi.fn(),
+			setRefreshLimitSwitchEnabled: vi.fn(),
 			applyRoutingMachine: vi.fn(
 				async (baseline: { captchaType: CaptchaType }) => ({
 					captchaType: baseline.captchaType,
@@ -501,6 +504,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		);
 		tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
 			siteKey: "siteRefresh",
+			userSitekeyIpHash: "hash-u-127.0.0.1-siteRefresh",
 			createdAt: new Date(Date.now() - 3000),
 			refreshCount: 1,
 		});
@@ -529,6 +533,52 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				refreshedAfterMs: expect.any(Number),
 			}),
 		);
+		expect(
+			tasksInstance.frictionlessManager.setRoutingContext,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				refresh: { count: 2, afterMs: expect.any(Number) },
+			}),
+		);
+	});
+
+	it("ignores a refresh of a session served to someone else", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteRefresh",
+			settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+		});
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+		tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
+			siteKey: "siteRefresh",
+			userSitekeyIpHash: "hash-someone-else-10.0.0.1-siteRefresh",
+			createdAt: new Date(Date.now() - 3000),
+			refreshCount: 5,
+		});
+
+		const { req, res, next } = buildReqRes({
+			token: "tBorrowed",
+			headHash: "hhBorrowed",
+			dapp: "siteRefresh",
+			user: "u",
+			refreshOf: "someone-elses-session",
+		});
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.setSessionParams,
+		).toHaveBeenCalledWith(
+			expect.not.objectContaining({ refreshOf: expect.anything() }),
+		);
+		expect(
+			tasksInstance.frictionlessManager.setRoutingContext,
+		).toHaveBeenCalledWith(
+			expect.not.objectContaining({ refresh: expect.anything() }),
+		);
 	});
 
 	describe("switching a puzzle to image", () => {
@@ -537,6 +587,8 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			widgetFeatureFlags: { puzzleImageSwitch?: boolean } | undefined,
 			switchToImage: boolean | undefined,
 			captchaType?: CaptchaType,
+			replacedReason?: FrictionlessReason,
+			switchToPuzzle?: boolean,
 		): Promise<void> => {
 			tasksInstance.db.getClientRecord.mockResolvedValue({
 				account: "siteSwitch",
@@ -552,8 +604,10 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			);
 			tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
 				siteKey: "siteSwitch",
+				userSitekeyIpHash: "hash-u-127.0.0.1-siteSwitch",
 				createdAt: new Date(Date.now() - 3000),
 				captchaType: replacedCaptchaType,
+				...(replacedReason && { reason: replacedReason }),
 			});
 
 			const { req, res, next } = buildReqRes({
@@ -563,6 +617,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				user: "u",
 				refreshOf: "replaced-puzzle",
 				...(switchToImage !== undefined && { switchToImage }),
+				...(switchToPuzzle !== undefined && { switchToPuzzle }),
 			});
 
 			// biome-ignore lint/suspicious/noExplicitAny: mock request
@@ -610,6 +665,58 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				undefined,
 			);
 			expect(switchRequested()).toBe(false);
+		});
+
+		it("keeps the user's image when they refresh it", async () => {
+			await requestSwitch(
+				CaptchaType.image,
+				{ puzzleImageSwitch: true },
+				undefined,
+				undefined,
+				FrictionlessReason.PUZZLE_USER_SWITCH,
+			);
+			expect(switchRequested()).toBe(true);
+		});
+
+		it("lets the user switch back to the puzzle", async () => {
+			await requestSwitch(
+				CaptchaType.image,
+				{ puzzleImageSwitch: true },
+				undefined,
+				undefined,
+				FrictionlessReason.PUZZLE_USER_SWITCH,
+				true,
+			);
+			expect(switchRequested()).toBe(false);
+		});
+
+		const refreshLimitSwitchEnabled = (): unknown =>
+			tasksInstance.frictionlessManager.setRefreshLimitSwitchEnabled.mock
+				.calls[0]?.[0];
+
+		it("lets the refresh limit switch a frictionless site", async () => {
+			await requestSwitch(CaptchaType.puzzle, undefined, undefined);
+			expect(refreshLimitSwitchEnabled()).toBe(true);
+		});
+
+		it("holds a site pinned to puzzle to its puzzle at the refresh limit", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				undefined,
+				undefined,
+				CaptchaType.puzzle,
+			);
+			expect(refreshLimitSwitchEnabled()).toBe(false);
+		});
+
+		it("lets the refresh limit switch a site pinned to puzzle that allows the switch", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				undefined,
+				CaptchaType.puzzle,
+			);
+			expect(refreshLimitSwitchEnabled()).toBe(true);
 		});
 	});
 

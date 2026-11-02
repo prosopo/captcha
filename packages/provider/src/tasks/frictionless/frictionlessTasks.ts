@@ -112,6 +112,7 @@ export class FrictionlessManager extends CaptchaManager {
 	private audioAlternativeEnabled = false;
 	private allowedCaptchaTypes?: IFrictionlessTypes;
 	private imageSwitchRequested = false;
+	private refreshLimitSwitchEnabled = true;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -156,12 +157,17 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	/**
-	 * Record that the user asked to swap their puzzle for an image challenge.
-	 * Only call this once the request has been checked as a refresh of a
-	 * puzzle on a site with the switch enabled.
+	 * Record that the user chose an image challenge over their puzzle. Only
+	 * call this once `isUserImageChoiceActive` has checked the request against
+	 * the refresh chain and the site's switch.
 	 */
 	setImageSwitchRequested(requested: boolean): void {
 		this.imageSwitchRequested = requested;
+	}
+
+	/** Whether the refresh limit may turn a puzzle into an image challenge. */
+	setRefreshLimitSwitchEnabled(enabled: boolean): void {
+		this.refreshLimitSwitchEnabled = enabled;
 	}
 
 	/**
@@ -572,11 +578,13 @@ export class FrictionlessManager extends CaptchaManager {
 			this.allowedCaptchaTypes,
 		);
 		const switchedByUser = userSwitchedCaptchaType !== enabledCaptchaType;
-		const finalCaptchaType = switchTypeAfterRefreshes(
-			userSwitchedCaptchaType,
-			effectiveParams.refreshCount,
-			this.allowedCaptchaTypes,
-		);
+		const finalCaptchaType = this.refreshLimitSwitchEnabled
+			? switchTypeAfterRefreshes(
+					userSwitchedCaptchaType,
+					effectiveParams.refreshCount,
+					this.allowedCaptchaTypes,
+				)
+			: userSwitchedCaptchaType;
 		const switchedByRefreshes = finalCaptchaType !== userSwitchedCaptchaType;
 		// The routing-machine output schema only bounds the count as a positive
 		// int, so clamp it to the sitekey's rounds here as every other sizing

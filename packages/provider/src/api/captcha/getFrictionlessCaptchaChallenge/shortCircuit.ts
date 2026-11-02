@@ -30,6 +30,7 @@ import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
+import type { RefreshLineage } from "./refreshLineage.js";
 
 export type ShortCircuitInput = {
 	tasks: Tasks;
@@ -53,6 +54,9 @@ export type ShortCircuitInput = {
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Carried onto the session so a site pinned to a captcha type still
+	// records refreshes, and its refresh limit can still apply.
+	refresh?: RefreshLineage;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -95,6 +99,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		mode: input.sessionMode,
 		userSitekeyIpHash: input.userSitekeyIpHash,
 		...(bundleId && { bundleId }),
+		...input.refresh,
 		...(input.tcpToChelloUs !== undefined && {
 			tcpToChelloUs: input.tcpToChelloUs,
 		}),
