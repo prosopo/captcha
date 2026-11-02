@@ -20,7 +20,7 @@ pnpm install
 pnpm run build:all
 docker compose --file docker/docker-compose.development.yml up -d
 cp demos/client-example-server/env.development demos/client-example-server/.env.development
-cp demos/client-example/env.development demos/client-example/.env.development
+cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.development
 cp dev/scripts/env.development .env.development
 cp dev/scripts/env.development dev/scripts/.env.development
 cp dev/scripts/env.development packages/cli/.env.development
@@ -37,8 +37,8 @@ pnpm run start:server
 # Terminal 2 - Provider API
 pnpm run start:provider
 
-# Terminal 3 - Demo app
-pnpm run start:demo
+# Terminal 3 - Demo pages (client-bundle-example)
+pnpm run start:bundle
 ```
 
 ### Step by Step

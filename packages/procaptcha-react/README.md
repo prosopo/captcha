@@ -18,7 +18,8 @@ import { Procaptcha } from "@prosopo/procaptcha-react"
 <Procaptcha config={config} callbacks={{ onHuman, onError, onExpired }} />
 ```
 
-See the [client example](https://github.com/prosopo/captcha/tree/main/demos/client-example) for a working demo.
+See the [React integration guide](https://docs.prosopo.io/en/framework-integrations/react-integration/) and
+`integration/frameworks/react/react-procaptcha-integration-demo` for a working demo.
 
 ### Callbacks
 

@@ -3,7 +3,7 @@
 This example server implements signup, login and authorisation methods for a typical node backend application. The code
 is based
 on [an article written by Agustin Fernandez](https://www.asapdevelopers.com/build-a-react-native-login-app-with-node-js-backend/)
-and is adapted to use a Mongo In-Memory Database. This backend server integrates with the client-example React app.
+and is adapted to use a Mongo In-Memory Database. The [client-bundle-example](https://github.com/prosopo/captcha/tree/main/demos/client-bundle-example) pages post their signup and login forms to it.
 
 ## Quickstart
 
@@ -28,7 +28,7 @@ PROSOPO_SITE_PRIVATE_KEY=<YOUR SECRET KEY HERE>
 ```
 
 Run this example API in conjunction with
-the [client-example](https://github.com/prosopo/captcha/tree/main/demos/client-example) React app.
+the [client-bundle-example](https://github.com/prosopo/captcha/tree/main/demos/client-bundle-example) pages.
 
 ## 🚧 Developing the Client Example Server
 
@@ -51,5 +51,4 @@ pnpm run start:server
 ### Use the API
 
 The server should now be running at localhost:9228. You can customise this in the `.env.development` file. Run this
-example API in conjunction with the [client-example](https://github.com/prosopo/captcha/tree/main/demos/client-example)
-React app.
+example API in conjunction with the [client-bundle-example](https://github.com/prosopo/captcha/tree/main/demos/client-bundle-example) pages.

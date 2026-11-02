@@ -50,7 +50,7 @@ If your IDE supports `biome` (directly, or via plugin), you can configure it to 
 * Installation: `pnpm install` (needs pnpm 11: `corepack enable`). When captcha is a submodule of captcha-private, run it
   from the captcha-private root instead.
 * Building packages: `pnpm run build:all`
-* Building the bundle: `pnpm run build:bundle`
+* Building the bundles: `pnpm run bundle:all`
 * Lint checks: `pnpm run lint`
 * Lint formatting fixes: `pnpm run lint-fix`
 
@@ -132,7 +132,7 @@ NODE_ENV=test pnpm run start:bundle
 Run tests:
 
 ```
-NODE_ENV=test pnpm --filter @prosopo/cypress-shared run cypress:open:client-bundle-example
+NODE_ENV=test pnpm --filter @prosopo/cypress-shared run cypress:open:client-bundle-example:pow
 ```
 
 ## 6. Local playground (demo)

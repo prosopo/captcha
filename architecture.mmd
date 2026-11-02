@@ -3,10 +3,11 @@ title: Prosopo Procaptcha System Architecture
 ---
 
 graph TB
-    %% Synced with the code 2026-09-25. Route list: packages/types/src/provider/api.ts:77-163.
-    %% Middleware order: packages/provider/src/api/startProviderApi.ts:257-449. Verify checks, in order:
-    %% packages/provider/src/api/verify.ts (maintenance, test site key :176-184, forward :189-202,
-    %% client record, dappSignature :230). Auth labels on the edges say what proves who the caller is.
+    %% Synced with the code 2026-11-02. Routes: ClientApiPaths, PublicApiPaths and AdminApiPaths in
+    %% packages/types/src/provider/api.ts. Middleware order: startProviderApi in
+    %% packages/provider/src/api/startProviderApi.ts. Verify checks, in order: interactiveVerifyHandler in
+    %% packages/provider/src/api/verify.ts (maintenance, test site key, forwardVerifyIfNotIssuer,
+    %% client record, dappSignatureError). Auth labels on the edges say what proves who the caller is.
     %% ===== ACTORS =====
     Developer["Website Developer<br/>(integrates Procaptcha)"]
     EndUser["End User<br/>(website visitor)"]

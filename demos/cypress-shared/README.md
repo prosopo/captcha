@@ -32,7 +32,7 @@ pnpm install
 
 ```bash
 cp demos/client-example-server/env.development demos/client-example-server/.env.development
-cp demos/client-example/env.development demos/client-example/.env.development
+cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.development
 cp dev/scripts/env.development dev/scripts/.env.development
 cp dev/scripts/env.development packages/cli/.env.development
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development
@@ -57,7 +57,7 @@ You can use this single command to run all of the above commands at once.
 ```bash
 pnpm install
 cp demos/client-example-server/env.development demos/client-example-server/.env.development
-cp demos/client-example/env.development demos/client-example/.env.development
+cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.development
 cp dev/scripts/env.development dev/scripts/.env.development
 cp dev/scripts/env.development packages/cli/.env.development
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development
@@ -67,14 +67,6 @@ pnpm run start:all
 
 ## Run the tests
 
-### Client Example React Demo
-
-This tests the React component in an example login page. Both the server and the client must be running.
-
-```bash
-pnpm --filter @prosopo/cypress-shared run cypress:open:client-example
-```
-
 ### Client Example Bundle Demo
 
 This tests the JavaScript bundle in a static HTML page. Make sure to build the bundle before running the tests. The
@@ -82,5 +74,7 @@ bundle will be copied to the client-bundle-example folder by the vite build comm
 
 ```bash
 NODE_ENV=development pnpm --filter @prosopo/procaptcha-bundle run bundle
-pnpm --filter @prosopo/cypress-shared run cypress:open:client-example-bundle
+pnpm --filter @prosopo/cypress-shared run cypress:open:client-bundle-example:pow
 ```
+
+Each spec in `cypress/e2e` has its own `cypress:open:client-bundle-example:<spec>` script; swap `pow` for the one you want.
