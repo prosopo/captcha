@@ -79,11 +79,12 @@ The image is `prosopo/caddy`, not upstream Caddy: that config needs `caddy-l4`, 
 Caddy asks for certificates for your domain plus `ipv4.` and `ipv6.` variants. They're separate certificates, so
 missing those two DNS records doesn't break the main one — you'll just see ACME retries in the log until you add them.
 
-`bundle pool directory does not exist` and `No datasets found in database` are expected on a self-hosted node. They mean
+`bundle pool loaded {"count":0}` and `No datasets found in database` are expected on a self-hosted node. They mean
 "no bot detector" and "no image dataset"; neither affects `pow` or `puzzle`.
 
 `PROSOPO_PROVIDER_IMAGE_VERSION` in your `.env` is set to the release your checkout documents. When you pull a newer
-checkout, change it to match. `CADDY_IMAGE_VERSION` pins Caddy the same way.
+checkout, change it to match. Caddy's version is pinned in the compose file, so a newer checkout brings the Caddy its
+`docker/provider.Caddyfile` needs; set `CADDY_IMAGE_VERSION` in `.env` only to override it.
 
 ## 3. Register a site key
 
@@ -299,9 +300,9 @@ agent and of `document.head`, a timestamp, and the encryption. Keep it as it is.
 ### What a self-built detector can and cannot do
 
 Your detector runs in the visitor's browser, and its public key ships inside the bundle. Anyone who reads the bundle can
-send any score they like. The provider checks that a token was made for this visitor, this browser and this page in the
-last ten minutes, but it cannot check that the score is honest. That is true of every client-side detector; ours resists
-it with obfuscation and per-bundle rotation, which the example does not attempt.
+send any score they like. The provider checks that a token was made for this visitor, this browser and this page, and
+counts one older than ten minutes against the visitor, but it cannot check that the score is honest. That is true of
+every client-side detector; ours resists it with obfuscation and per-bundle rotation, which the example does not attempt.
 
 So a detector like this one stops off-the-shelf automation — default headless browsers and frameworks that make no effort
 to hide — and it gives your rules signals to work with. It will not stop someone who studies your bundle and targets your
@@ -318,18 +319,18 @@ provider without it ignores them.
 A dataset holds image **URLs**, not images. You host the images yourself and the dataset points at them.
 
 ```bash
-pnpm --filter @prosopo/datasets-fs run build
+pnpm --filter @prosopo/datasets-fs run build:tsc
 cd packages/datasets-fs
 
-node dist/cli.js flatten --in ./data --out ./flat --overwrite
-node dist/cli.js labels --in ./flat/data.json --out ./labels.json --overwrite
+node dist/tsc/cli.js flatten --in ./data --out ./flat --overwrite
+node dist/tsc/cli.js labels --in ./flat/data.json --out ./labels.json --overwrite
 
 # Upload ./flat/images somewhere public, then rewrite the paths to match.
-node dist/cli.js relocate --in ./flat/data.json --out ./data-hosted.json \
-  --from /abs/path/flat/images --to https://img.example.com --overwrite
-node dist/cli.js get --in ./data-hosted.json      # confirms every URL resolves
+node dist/tsc/cli.js relocate --in ./flat/data.json --out ./data-hosted.json \
+  --from "$PWD/flat/images" --to https://img.example.com --overwrite
+node dist/tsc/cli.js get --in ./data-hosted.json      # logs "failed" for any URL that doesn't load
 
-node dist/cli.js generate-v2 --out ./captchas.json \
+node dist/tsc/cli.js generate-v2 --out ./captchas.json \
   --labelled ./data-hosted.json --unlabelled ./data-hosted.json \
   --labels ./labels.json --seed 0 --size 9 --count 100 \
   --minCorrect 1 --minIncorrect 1 --minLabelled 2 --maxLabelled 7 \

@@ -92,7 +92,7 @@ services:
     # plugins compiled into this image (caddy-l4, chaddy, caddy-ratelimit,
     # caddy-requestid) and will not start without them.
     platform: linux/amd64
-    image: prosopo/caddy:${CADDY_IMAGE_VERSION:-2.5.9}
+    image: prosopo/caddy:${CADDY_IMAGE_VERSION:-2.5.12}
     restart: unless-stopped
     depends_on:
       - provider
