@@ -14,11 +14,16 @@
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import type { DnsEvent } from "@prosopo/types";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ApiDnsEventEndpoint,
 	dnsEventToFields,
 } from "../../../../api/admin/apiDnsEventEndpoint.js";
+import {
+	buildDnsAssetUrl,
+	buildDnsEventUrl,
+	dnsBeaconUrls,
+} from "../../../../api/dnsEventUrl.js";
 import {
 	isDnsSidecarHealthy,
 	resetDnsSidecarHealth,
@@ -57,6 +62,74 @@ describe("dnsEventToFields", () => {
 			jti: "session-1",
 		};
 		expect(dnsEventToFields(event)).toEqual({ peerIp: "5.6.7.8" });
+	});
+
+	describe("with the asset URL configured", () => {
+		beforeEach(() => {
+			vi.stubEnv("DNS_EVENT_SUBZONE", "px.example.com");
+			vi.stubEnv("DNS_EVENT_HMAC_SECRET", "test-secret");
+		});
+		afterEach(() => {
+			vi.unstubAllEnvs();
+		});
+
+		const httpEvent = (url: string | undefined): DnsEvent => ({
+			kind: "http",
+			ts: "2026-06-08T15:00:00Z",
+			src_ip: "5.6.7.8",
+			jti: "session-1",
+			path: url ? new URL(url).pathname : undefined,
+			path_valid: false,
+		});
+
+		it("marks the asset seen, and leaves the main beacon's fields alone", () => {
+			expect(
+				dnsEventToFields(httpEvent(buildDnsAssetUrl("session-1"))),
+			).toEqual({ assetSeen: true });
+		});
+
+		it("does not take the main beacon's path for the asset", () => {
+			expect(
+				dnsEventToFields({
+					...httpEvent(buildDnsEventUrl("session-1")),
+					path_valid: true,
+				}),
+			).toEqual({ peerIp: "5.6.7.8", pathValid: true });
+		});
+
+		it("does not take another session's asset path for this one", () => {
+			expect(
+				dnsEventToFields(httpEvent(buildDnsAssetUrl("session-2"))),
+			).toEqual({ peerIp: "5.6.7.8", pathValid: false });
+		});
+	});
+});
+
+describe("dnsBeaconUrls", () => {
+	afterEach(() => {
+		vi.unstubAllEnvs();
+	});
+
+	it("puts both URLs on the session's host, on different paths", () => {
+		vi.stubEnv("DNS_EVENT_SUBZONE", "px.example.com");
+		vi.stubEnv("DNS_EVENT_HMAC_SECRET", "test-secret");
+		const { dns_url, dns_asset_url } = dnsBeaconUrls("session-1");
+		if (!dns_url || !dns_asset_url) throw new Error("expected both URLs");
+		const main = new URL(dns_url);
+		const asset = new URL(dns_asset_url);
+		expect(asset.host).toBe("session-1.px.example.com");
+		expect(asset.host).toBe(main.host);
+		expect(asset.pathname).not.toBe(main.pathname);
+		expect(asset.pathname).toMatch(/^\/[0-9a-f]{16}\.(gif|png|webp)$/);
+	});
+
+	it("omits both when the sidecar is not configured", () => {
+		vi.stubEnv("DNS_EVENT_SUBZONE", "");
+		vi.stubEnv("DNS_EVENT_HMAC_SECRET", "");
+		expect(dnsBeaconUrls("session-1")).toEqual({
+			dns_url: undefined,
+			dns_asset_url: undefined,
+		});
 	});
 });
 

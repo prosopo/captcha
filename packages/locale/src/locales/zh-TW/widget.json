@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "圖片驗證",
 		"CANNOT_LOAD": "無法載入驗證碼",
 		"RELOAD": "重新載入",
+		"SWITCH_TO_PUZZLE": "切換到拼圖驗證",
 		"VERIFIED_AGENT": "已驗證的代理",
 		"TRUSTED_REQUEST": "受信任的請求",
 		"LOADING": "載入中",

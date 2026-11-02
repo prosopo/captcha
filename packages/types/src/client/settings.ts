@@ -74,6 +74,8 @@ export const puzzleToleranceDefault = 15;
 export const puzzleMaxDifficultyDefault = 3;
 export const puzzleMaxDifficultyMax = 4;
 
+export const ipDetectorRiskWeightDefault = 0;
+
 // Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
 // `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
 // authoritative bounds and defaults; the renderer just receives resolved
@@ -703,15 +705,16 @@ export const SpamFilterRulesSchema = object({
 // 0..1 with 0 meaning "clean", so 0 would act on any non-zero score.
 export const trafficFilterAbuserScoreThresholdDefault = 0.2;
 
-// Operators almost always want the datacenter category to catch
-// scraping/automation traffic but not legitimate consumer relays that exit
-// from datacenter IPs. Entries match case-insensitively against
-// `datacenterName`, `providerName`, or `asnOrganization` — upstream
-// populates `datacenter.datacenter` only for curated named ranges, so the
-// providerName / asnOrganization fallback is needed to reach generic CDN
-// and cloud-provider IPs.
-const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
-const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
+// Entries match case-insensitively against `datacenterName`, `providerName`
+// or `asnOrganization`. Upstream populates `datacenter.datacenter` only for
+// curated named ranges, so the providerName / asnOrganization fallback is
+// needed to reach generic CDN and cloud-provider IPs.
+const MAX_NAME_LIST_ENTRIES = 50;
+const MAX_NAME_LIST_ENTRY_LENGTH = 128;
+
+const nameListSchema = array(string().min(1).max(MAX_NAME_LIST_ENTRY_LENGTH))
+	.max(MAX_NAME_LIST_ENTRIES)
+	.optional();
 
 export enum TrafficFilterAction {
 	Block = "block",
@@ -759,19 +762,24 @@ const countryCodesSchema = array(
 // filter's `marketCountries`: true matches inside the market, false outside
 // it, and neither matches while the market is unknown. `minAbuserScore`
 // compares against the higher of the IP's own and its company's abuser
-// score, inclusive.
+// score, inclusive. `mobile` tests the IP's `isMobile`: `mobile: false` keeps
+// a block off carrier networks, whose shared addresses carry real phones
+// alongside the rented SIMs that put them on proxy lists.
 export const TrafficCategoryExceptionSchema =
 	TrafficCategoryActionSchema.extend({
 		countries: countryCodesSchema.min(1).optional(),
 		inMarket: boolean().optional(),
 		minAbuserScore: number().min(0).max(1).optional(),
+		mobile: boolean().optional(),
 	}).refine(
 		(exception) =>
 			exception.countries !== undefined ||
 			exception.inMarket !== undefined ||
-			exception.minAbuserScore !== undefined,
+			exception.minAbuserScore !== undefined ||
+			exception.mobile !== undefined,
 		{
-			message: "An exception needs countries, inMarket or minAbuserScore",
+			message:
+				"An exception needs countries, inMarket, minAbuserScore or mobile",
 		},
 	);
 
@@ -782,10 +790,18 @@ export type ITrafficCategoryException = output<
 // When several `exceptions` match an IP the harshest wins (a block beats any
 // challenge, then by captcha severity); an IP matching none gets the
 // category's own action.
+// `nameAllowlist` takes a matching IP out of the category, so evaluation
+// moves on to the IP's next flag. `nameDenylist` keeps a matching IP in the
+// category even where the category's own qualifier (the ISP heuristic for
+// datacenter, the score threshold for abuser, the DNS-resolver skip for
+// crawler) or an allowlist entry would let it out. iCloud Private Relay is
+// allowlisted in every category except Tor without being configured.
 export const TrafficCategoryPolicySchema = TrafficCategoryActionSchema.extend({
 	exceptions: array(TrafficCategoryExceptionSchema)
 		.max(MAX_TRAFFIC_CATEGORY_EXCEPTIONS)
 		.optional(),
+	nameAllowlist: nameListSchema,
+	nameDenylist: nameListSchema,
 });
 
 export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
@@ -801,26 +817,11 @@ export const TrafficFilterSchema = object({
 		.optional()
 		.default(trafficFilterAbuserScoreThresholdDefault),
 	datacenter: TrafficCategoryPolicySchema.optional(),
-	datacenterNameAllowlist: array(
-		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
-	)
-		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
-		.optional(),
-	// Counterpart to `datacenterNameAllowlist`: any entry here forces the
-	// datacenter rule for a matching name, overriding both the
-	// `providerType === "isp"` bypass and any allowlist entry for the same
-	// name. Useful for named providers that upstream classifies as ISP but
-	// operators want treated as datacenter (for example IP-leasing platforms
-	// whose ranges sit on carrier ASNs but exit as proxy pools), or for
-	// iCloud Private Relay, which the provider exempts by default. Same
-	// case-insensitive, whitespace-trimmed matching as the allowlist and the
-	// same three name sources (`datacenterName`, `providerName`,
-	// `asnOrganization`).
-	datacenterNameDenylist: array(
-		string().min(1).max(MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH),
-	)
-		.max(MAX_DATACENTER_ALLOWLIST_ENTRIES)
-		.optional(),
+	// Superseded by `datacenter.nameAllowlist` / `datacenter.nameDenylist`.
+	// Still read, and merged into the datacenter lists, for sites saved before
+	// the lists moved onto every category.
+	datacenterNameAllowlist: nameListSchema,
+	datacenterNameDenylist: nameListSchema,
 	// When the catcher confirmed `dnsEvent.pathValid === true`, skip the
 	// datacenter / VPN / proxy / Tor evaluation on the DNS peer + resolver
 	// IPs. Default on: without this, users on public DoH resolvers or ISP
@@ -917,6 +918,12 @@ export const ClientSettingsSchema = object({
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
+	// How much of the IP's detector risk is added to the session's bot score
+	// before the score ladder is applied. 0 leaves the score untouched.
+	// Optional with no parse default, so code that builds a full settings
+	// object does not have to know the field; the provider reads an absent
+	// weight as `ipDetectorRiskWeightDefault`.
+	ipDetectorRiskWeight: number().min(0).max(1).optional(),
 	// Tolerance in pixels between the release point and the puzzle target
 	// centre (Euclidean distance). Default 15 matches what real solvers
 	// actually hit. The ceiling is deliberately larger than the puzzle

@@ -34,6 +34,7 @@ const onClick = vi.fn<(hash: string, x?: number, y?: number) => void>();
 const onNext = vi.fn<() => void>();
 const onReload = vi.fn<() => void>();
 const onRequestAudio = vi.fn<() => void>();
+const onSwitchToPuzzle = vi.fn<() => void>();
 
 const twoRoundChallenge = () =>
 	challengeResponse({
@@ -50,6 +51,7 @@ const props = (
 		solutions?: ImageSelection[][];
 		themeColor?: "light" | "dark";
 		audioAlternative?: AudioAlternativeOffer;
+		puzzleSwitch?: boolean;
 	} = {},
 ): CaptchaComponentProps => ({
 	challenge: overrides.challenge ?? challengeResponse(),
@@ -60,6 +62,7 @@ const props = (
 	onClick,
 	onNext,
 	onReload,
+	...(overrides.puzzleSwitch && { onSwitchToPuzzle }),
 	themeColor: overrides.themeColor ?? "light",
 	translator: translator(),
 	audioAlternative: overrides.audioAlternative,
@@ -304,5 +307,34 @@ describe("the audio alternative", () => {
 		expect(audioControl()?.style.color).toBe(
 			asRgb(darkTheme.palette.primary.main),
 		);
+	});
+});
+
+describe("the switch back to a puzzle", () => {
+	const PUZZLE_SWITCH = '[data-cy="puzzle-switch-button"]';
+
+	test("is not drawn on an image the user did not switch to", () => {
+		render();
+		expect(mounted.container.querySelector(PUZZLE_SWITCH)).toBeNull();
+	});
+
+	test("is named for assistive tech", () => {
+		render({ puzzleSwitch: true });
+		expect(buttonLabelled("WIDGET.SWITCH_TO_PUZZLE")).toBeDefined();
+	});
+
+	test("asks for the puzzle when pressed", () => {
+		render({ puzzleSwitch: true });
+		const control = mounted.container.querySelector(PUZZLE_SWITCH);
+		if (!control) throw new Error("expected a switch to a puzzle");
+		fire(control, "click");
+		expect(onSwitchToPuzzle).toHaveBeenCalledTimes(1);
+		expect(onReload).not.toHaveBeenCalled();
+	});
+
+	test("goes away when the next challenge does not offer it", () => {
+		render({ puzzleSwitch: true });
+		render();
+		expect(mounted.container.querySelector(PUZZLE_SWITCH)).toBeNull();
 	});
 });

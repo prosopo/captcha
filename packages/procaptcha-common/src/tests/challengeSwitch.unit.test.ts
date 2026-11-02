@@ -15,9 +15,9 @@
 import { lightTheme } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
-	type ImageSwitchButtonProps,
-	mountImageSwitchButton,
-} from "../components/imageSwitch.js";
+	type ChallengeSwitchButtonProps,
+	mountChallengeSwitchButton,
+} from "../components/challengeSwitch.js";
 import type { Component } from "../dom/component.js";
 import { type Mounted, asRgb, fire, mount } from "./domHarness.js";
 
@@ -25,13 +25,14 @@ const LABEL = "Switch to an image challenge";
 const CONTROL_SELECTOR = '[data-cy="image-switch-button"]';
 
 let mounted: Mounted;
-let button: Component<ImageSwitchButtonProps> | undefined;
+let button: Component<ChallengeSwitchButtonProps> | undefined;
 const onSwitch = vi.fn<() => void>();
 
 const render = (
-	overrides: Partial<ImageSwitchButtonProps> = {},
+	overrides: Partial<ChallengeSwitchButtonProps> = {},
 ): HTMLElement => {
-	const props: ImageSwitchButtonProps = {
+	const props: ChallengeSwitchButtonProps = {
+		target: "image",
 		themeColor: "light",
 		onSwitch,
 		label: LABEL,
@@ -40,7 +41,7 @@ const render = (
 	if (button) {
 		button.update(props);
 	} else {
-		button = mountImageSwitchButton(mounted.container, props);
+		button = mountChallengeSwitchButton(mounted.container, props);
 	}
 	const element =
 		mounted.container.querySelector<HTMLElement>(CONTROL_SELECTOR);
@@ -93,6 +94,37 @@ describe("the icon variant", () => {
 
 	test("asks for the switch when pressed", () => {
 		fire(render(), "click");
+		expect(onSwitch).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("the switch back to a puzzle", () => {
+	const PUZZLE_SELECTOR = '[data-cy="puzzle-switch-button"]';
+
+	test("draws a puzzle piece rather than the image grid", () => {
+		mountChallengeSwitchButton(mounted.container, {
+			target: "puzzle",
+			themeColor: "light",
+			onSwitch,
+			label: "Switch to a puzzle challenge",
+		});
+		const element =
+			mounted.container.querySelector<HTMLElement>(PUZZLE_SELECTOR);
+		expect(element?.querySelectorAll("path")).toHaveLength(1);
+		expect(element?.querySelectorAll("rect")).toHaveLength(0);
+	});
+
+	test("asks for the switch when pressed", () => {
+		mountChallengeSwitchButton(mounted.container, {
+			target: "puzzle",
+			themeColor: "light",
+			onSwitch,
+			label: "Switch to a puzzle challenge",
+		});
+		const element =
+			mounted.container.querySelector<HTMLElement>(PUZZLE_SELECTOR);
+		if (!element) throw new Error("expected a switch control to be rendered");
+		fire(element, "click");
 		expect(onSwitch).toHaveBeenCalledTimes(1);
 	});
 });

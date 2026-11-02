@@ -102,8 +102,29 @@ PROSOPO_PROVIDER_LIST=https://captcha.example.com \
 pnpm --filter @prosopo/procaptcha-bundle run bundle
 ```
 
-A widget built this way never contacts Prosopo — it skips the hosted provider list and the `/healthz` discovery call
-and goes straight to the providers you named. Set the same variable on your verifier, where it is read at runtime.
+A widget built this way skips the hosted provider list and the `/healthz` discovery call and goes straight to the
+providers you named. Set the same variable on your verifier, where it is read at runtime.
+
+### Usage beacon
+
+On about one widget render in a thousand, a self-hosted widget sends Prosopo a single request:
+
+```
+GET https://beacon.prosopo.io/v1/b.gif?host=<page hostname>&sitekey=<site key>&v=<bundle version>&p=0.001
+```
+
+That is everything it sends. It does not send the page path, cookies, the visitor's identity or anything from the
+captcha itself, and it is sent with no referrer. We use it to count self-hosted installs and the versions they run,
+so we can tell you when there is a new release or a fix you need.
+
+To turn it off, build with `PROSOPO_USAGE_BEACON=false`:
+
+```bash
+NODE_ENV=production \
+PROSOPO_PROVIDER_LIST=https://captcha.example.com \
+PROSOPO_USAGE_BEACON=false \
+pnpm --filter @prosopo/procaptcha-bundle run bundle
+```
 
 For several providers, pass comma-separated URLs, or the provider-list JSON if you want per-node weights. See the
 [`@prosopo/load-balancer` README](packages/load-balancer).

@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import type { Language } from "@prosopo/locale";
-import { getWindowCallback } from "@prosopo/procaptcha-common";
+import {
+	getWindowCallback,
+	startPageBehaviourCapture,
+} from "@prosopo/procaptcha-common";
 import {
 	type EnvironmentTypes,
 	PROCAPTCHA_START_EVENT,
@@ -31,6 +34,8 @@ import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
 const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
+
+startPageBehaviourCapture();
 
 /**
  * Everything needed to rebuild a widget in place.

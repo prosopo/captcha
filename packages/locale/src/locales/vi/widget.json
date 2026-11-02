@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "Thử thách hình ảnh",
 		"CANNOT_LOAD": "Không thể tải CAPTCHA",
 		"RELOAD": "Tải lại",
+		"SWITCH_TO_PUZZLE": "Chuyển sang thử thách ghép hình",
 		"VERIFIED_AGENT": "Tác nhân đã xác minh",
 		"TRUSTED_REQUEST": "Yêu cầu đáng tin cậy",
 		"LOADING": "Đang tải",

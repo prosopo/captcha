@@ -49,6 +49,7 @@ import {
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	imageThresholdDefault,
+	ipDetectorRiskWeightDefault,
 	isCaptchaTypeFeatureEnabled,
 	isWidgetFeatureEnabled,
 	powDifficultyDefault,
@@ -370,6 +371,32 @@ describe("ClientSettingsSchema", () => {
 		).toBe(false);
 	});
 
+	it("leaves the IP detector risk weight unset when absent, which the provider reads as 0", () => {
+		expect(ipDetectorRiskWeightDefault).toBe(0);
+		expect(parse(minimal).ipDetectorRiskWeight).toBeUndefined();
+	});
+
+	it("accepts an IP detector risk weight from 0 to 1", () => {
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 0 }).ipDetectorRiskWeight,
+		).toBe(0);
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 0.5 }).ipDetectorRiskWeight,
+		).toBe(0.5);
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 1 }).ipDetectorRiskWeight,
+		).toBe(1);
+	});
+
+	it("rejects an IP detector risk weight outside 0 to 1", () => {
+		for (const ipDetectorRiskWeight of [-0.1, 1.1]) {
+			expect(
+				ClientSettingsSchema.safeParse({ ...minimal, ipDetectorRiskWeight })
+					.success,
+			).toBe(false);
+		}
+	});
+
 	it("accepts many domains and does not deduplicate them", () => {
 		expect(parse({ domains: ["a.com", "a.com", "b.com"] }).domains).toEqual([
 			"a.com",
@@ -659,6 +686,16 @@ describe("TrafficFilterSchema", () => {
 		expect(filter.proxy?.exceptions?.[0]?.countries).toEqual(["GB"]);
 	});
 
+	it("accepts an exception conditioned only on mobile", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [{ mobile: true, action: TrafficFilterAction.Challenge }],
+			},
+		});
+		expect(filter.proxy?.exceptions?.[0]?.mobile).toBe(true);
+	});
+
 	it("accepts an exception conditioned only on the market", () => {
 		const filter = TrafficFilterSchema.parse({
 			proxy: {
@@ -691,6 +728,32 @@ describe("TrafficFilterSchema", () => {
 		expect(filter.datacenterNameAllowlist).toBeUndefined();
 		expect(filter.datacenterNameDenylist).toBeUndefined();
 	});
+
+	it.each(["nameAllowlist", "nameDenylist"])(
+		"accepts %s on every category and rejects an empty or overlong entry",
+		(key: string) => {
+			for (const category of [
+				"vpn",
+				"proxy",
+				"tor",
+				"abuser",
+				"datacenter",
+				"mobile",
+				"satellite",
+				"crawler",
+			]) {
+				const withList = (list: string[]): boolean =>
+					TrafficFilterSchema.safeParse({
+						[category]: { action: TrafficFilterAction.Block, [key]: list },
+					}).success;
+				expect(withList(["VPN by Google"])).toBe(true);
+				expect(withList([])).toBe(true);
+				expect(withList([""])).toBe(false);
+				expect(withList(["a".repeat(129)])).toBe(false);
+				expect(withList(new Array(51).fill("a"))).toBe(false);
+			}
+		},
+	);
 
 	it.each(["datacenterNameAllowlist", "datacenterNameDenylist"])(
 		"rejects an empty or overlong entry in %s",

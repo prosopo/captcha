@@ -21,6 +21,7 @@ import {
 	type ProcaptchaClientConfigOutput,
 	type ProcaptchaProps,
 	type RandomProvider,
+	type RefreshSwitchTarget,
 } from "@prosopo/types";
 import {
 	type Mock,
@@ -307,10 +308,10 @@ describe("refreshing the challenge", () => {
 	});
 });
 
-describe("switching the puzzle to an image challenge", () => {
+describe("switching between the puzzle and an image challenge", () => {
 	const refreshOfOnCall = (call: number): string | undefined =>
 		detectBot.mock.calls[call]?.[4];
-	const switchToImageOnCall = (call: number): boolean | undefined =>
+	const switchToOnCall = (call: number): RefreshSwitchTarget | undefined =>
 		detectBot.mock.calls[call]?.[5];
 
 	it("asks the next /frictionless run for an image challenge", async () => {
@@ -321,14 +322,32 @@ describe("switching the puzzle to an image challenge", () => {
 		await settle();
 
 		expect(refreshOfOnCall(1)).toBe("provider-session-1");
-		expect(switchToImageOnCall(1)).toBe(true);
+		expect(switchToOnCall(1)).toBe(CaptchaType.image);
 	});
 
-	it("does not ask for an image challenge on a plain refresh", async () => {
+	it("asks the next /frictionless run to go back to the puzzle", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			switchToPuzzle: true,
+		});
+		await settle();
+
+		expect(refreshOfOnCall(1)).toBe("provider-session-1");
+		expect(switchToOnCall(1)).toBe(CaptchaType.puzzle);
+	});
+
+	it("asks for no switch on a plain refresh", async () => {
 		lastMount().props.onReload?.(10, 20, { refresh: true });
 		await settle();
 
-		expect(switchToImageOnCall(1)).toBe(false);
+		expect(switchToOnCall(1)).toBeUndefined();
+	});
+
+	it("asks for no switch outside a refresh", async () => {
+		lastMount().props.onReload?.(10, 20, { switchToPuzzle: true });
+		await settle();
+
+		expect(switchToOnCall(1)).toBeUndefined();
 	});
 
 	it("does not carry the switch onto a later refresh", async () => {
@@ -340,7 +359,7 @@ describe("switching the puzzle to an image challenge", () => {
 		lastMount().props.onReload?.(10, 20, { refresh: true });
 		await settle();
 
-		expect(switchToImageOnCall(2)).toBe(false);
+		expect(switchToOnCall(2)).toBeUndefined();
 	});
 });
 

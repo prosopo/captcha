@@ -114,7 +114,11 @@ export interface ReloadOptions {
 	showRetry?: boolean;
 	refresh?: boolean;
 	switchToImage?: boolean;
+	switchToPuzzle?: boolean;
 }
+
+/** The challenge type a user asked their refresh to switch to. */
+export type RefreshSwitchTarget = CaptchaType.image | CaptchaType.puzzle;
 
 export interface ProcaptchaProps {
 	// the configuration for procaptcha

@@ -42,6 +42,7 @@ import {
 	type ProcaptchaFrictionlessProps,
 	type ProcaptchaProps,
 	type ProcaptchaStartEventDetail,
+	type RefreshSwitchTarget,
 	type ReloadOptions,
 	StartModeEnum,
 	type WidgetError,
@@ -88,6 +89,15 @@ const reloadableSolverLoaders: ReadonlyMap<
 	[CaptchaType.puzzle, ProcaptchaPuzzleLoader],
 	[CaptchaType.iconOrder, ProcaptchaIconOrderLoader],
 ]);
+
+const refreshSwitchTarget = (
+	options: ReloadOptions | undefined,
+): RefreshSwitchTarget | undefined => {
+	if (true !== options?.refresh) return undefined;
+	if (true === options.switchToImage) return CaptchaType.image;
+	if (true === options.switchToPuzzle) return CaptchaType.puzzle;
+	return undefined;
+};
 
 /** Mirrors the provider's `isAudioAlternativeSessionType`. */
 const offersAudioAlternative = (captchaType: string): boolean =>
@@ -166,8 +176,8 @@ export const mountProcaptchaFrictionless = (
 	// Survives provider retries for the same reason as `nextMountAutoStart`,
 	// and is cleared once a replacement session has been minted.
 	let nextRefreshOf: string | undefined;
-	// Whether that replacement should be an image challenge, as the user asked.
-	let nextSwitchToImage = false;
+	// The challenge type the user asked that replacement to switch to.
+	let nextSwitchTo: RefreshSwitchTarget | undefined;
 	// Challenges in a row replaced by a wrong answer or a refresh. Lets the
 	// puzzle draw its switch to an image challenge more prominently for a user
 	// who looks to be struggling.
@@ -401,9 +411,8 @@ export const mountProcaptchaFrictionless = (
 			nextMountShowRetry = true === options?.showRetry;
 			nextRefreshOf =
 				true === options?.refresh ? frictionlessState.sessionId : undefined;
-			nextSwitchToImage =
-				true === options?.refresh && true === options?.switchToImage;
-			replacementCount = nextSwitchToImage ? 0 : replacementCount + 1;
+			nextSwitchTo = refreshSwitchTarget(options);
+			replacementCount = nextSwitchTo ? 0 : replacementCount + 1;
 			// A reload mints a genuinely new session, so the invalidation
 			// budget for the *previous* one shouldn't count against it.
 			sessionInvalidatedAttempts.current = 0;
@@ -549,7 +558,7 @@ export const mountProcaptchaFrictionless = (
 					restart,
 					{ attempt: state.attemptCount },
 					nextRefreshOf,
-					nextSwitchToImage,
+					nextSwitchTo,
 					widgetSlot,
 				);
 				if (destroyed) return;
@@ -575,7 +584,7 @@ export const mountProcaptchaFrictionless = (
 				}
 
 				nextRefreshOf = undefined;
-				nextSwitchToImage = false;
+				nextSwitchTo = undefined;
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,

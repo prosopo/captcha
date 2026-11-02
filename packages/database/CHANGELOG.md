@@ -1,5 +1,71 @@
 # @prosopo/database
 
+## 4.5.1
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/types-database@5.16.1
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.15
+
+## 4.5.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/types-database@5.16.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.14
+
+## 4.4.4
+### Patch Changes
+
+- 11a38cc: Copy each puzzle's render inputs (piece size, board size, decoy settings and the two seeds) to the central database, so the portal can redraw the exact puzzle a user was served.
+  
+  The inputs are added to the local record after it has first been sent to central. The follow-up update re-read the record with a fixed list of fields that left them out, so no central puzzle record ever had them. The update stream now asks for them as well. Every other read is unchanged, so verify still never touches them.
+  
+  The seeds rebuild the clean background and give away the answer. The portal's audit API strips them for everyone except superadmins, and only returns them once a puzzle can no longer be solved (prosopo/captcha-private#5719). That change has to be deployed before this one.
+- Updated dependencies [e6b2206]
+- Updated dependencies [8bf0957]
+  - @prosopo/user-access-policy@3.15.13
+  - @prosopo/types@5.22.0
+  - @prosopo/types-database@5.15.0
+  - @prosopo/common@3.3.2
+
+## 4.4.3
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/types-database@5.14.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.12
+
+## 4.4.2
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/types-database@5.13.2
+  - @prosopo/user-access-policy@3.15.11
+  - @prosopo/logger@2.1.7
+  - @prosopo/redis-client@1.0.44
+  - @prosopo/util@3.4.0
+
 ## 4.4.1
 ### Patch Changes
 

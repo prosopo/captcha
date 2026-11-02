@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Предизвикателство с изображения",
 		"CANNOT_LOAD": "CAPTCHA не може да се зареди",
 		"RELOAD": "Презареждане",
+		"SWITCH_TO_PUZZLE": "Превключване към предизвикателство с пъзел",
 		"VERIFIED_AGENT": "Потвърден агент",
 		"TRUSTED_REQUEST": "Доверена заявка",
 		"LOADING": "Зареждане",

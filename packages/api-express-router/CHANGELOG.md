@@ -1,5 +1,55 @@
 # @prosopo/api-express-router
 
+## 3.3.11
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.88
+
+## 3.3.10
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.87
+
+## 3.3.9
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.86
+
+## 3.3.8
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.85
+
+## 3.3.7
+### Patch Changes
+
+- b52263f: The provider's request logs now include `bundleVersion` and `bundleOrigin`, the widget's `x-prosopo-bundle-version` and `x-prosopo-bundle-origin` headers, next to `integration`. Values that don't look like a release number (or `dev`), or an http(s) origin, are left out.
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.84
+  - @prosopo/api-route@2.6.67
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
 ## 3.3.6
 ### Patch Changes
 

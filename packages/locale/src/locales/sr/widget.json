@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "Провера сликама",
 		"CANNOT_LOAD": "Није могуће учитати CAPTCHA",
 		"RELOAD": "Поново учитај",
+		"SWITCH_TO_PUZZLE": "Пређите на задатак са слагалицом",
 		"VERIFIED_AGENT": "Верификовани агент",
 		"TRUSTED_REQUEST": "Поуздан захтев",
 		"LOADING": "Учитавање",

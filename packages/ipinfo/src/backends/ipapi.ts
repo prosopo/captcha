@@ -14,6 +14,7 @@
 
 import type { Logger } from "@prosopo/logger";
 import type {
+	IPApiReputationInfo,
 	IPApiResponse,
 	IPInfoResponse,
 	IPInfoResult,
@@ -73,6 +74,13 @@ export const parseAbuserScore = (
 	// as 0.5; isFinite also rejects "Infinity".
 	const parsed = Number(head);
 	return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+export const parseDetectorRisk = (
+	reputation: IPApiReputationInfo | undefined,
+): number | undefined => {
+	const risk = reputation?.detector_risk;
+	return typeof risk === "number" && risk >= 0 && risk <= 1 ? risk : undefined;
 };
 
 export class IpapiBackend {
@@ -172,6 +180,7 @@ export class IpapiBackend {
 
 					abuserScore: parseAbuserScore(data.asn?.abuser_score),
 					companyAbuserScore: parseAbuserScore(data.company?.abuser_score),
+					detectorRisk: parseDetectorRisk(data.reputation),
 				};
 
 				return result;

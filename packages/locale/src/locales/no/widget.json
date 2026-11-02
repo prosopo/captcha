@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "Bildeoppgave",
 		"CANNOT_LOAD": "Kan ikke laste inn CAPTCHA",
 		"RELOAD": "Last inn på nytt",
+		"SWITCH_TO_PUZZLE": "Bytt til en puslespilloppgave",
 		"VERIFIED_AGENT": "Verifisert agent",
 		"TRUSTED_REQUEST": "Klarert forespørsel",
 		"LOADING": "Laster inn",

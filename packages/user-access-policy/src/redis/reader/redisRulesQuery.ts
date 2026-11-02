@@ -239,7 +239,7 @@ export const getRulesRedisQuery = (
 	const queryParts = [];
 
 	if (filter.groupId) {
-		queryParts.push(`@groupId:{${filter.groupId}}`);
+		queryParts.push(`@groupId:{${escapeTagValue(filter.groupId)}}`);
 	}
 
 	if (filter.blockOnly) {

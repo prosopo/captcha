@@ -14,12 +14,14 @@
 import type { Translator } from "@prosopo/locale";
 import {
 	type AudioAlternativeOffer,
+	type ChallengeSwitchButtonProps,
 	type Component,
 	type StyleMap,
 	applyAttributes,
 	applyStyles,
 	createElement,
 	mountAudioAlternativeSlot,
+	mountChallengeSwitchButton,
 	mountReloadButton,
 	threeColumnBasis,
 	wrapRandomly,
@@ -54,6 +56,8 @@ export interface CaptchaComponentProps {
 	) => void;
 	onNext: () => void;
 	onReload: () => void;
+	/** Takes the user back to the puzzle they swapped for this image. Absent hides it. */
+	onSwitchToPuzzle?: () => void;
 	themeColor: "light" | "dark";
 	translator: Translator;
 	/** Renders "use audio instead" under the action row. Absent hides it. */
@@ -189,9 +193,13 @@ export const mountCaptchaComponent = (
 		children: [decoy(header)],
 	});
 
+	const puzzleSwitchHost = createElement("div", {
+		style: { marginTop: `${theme.spacing.unit}px`, marginLeft: "8px" },
+	});
+
 	const headerRow = createElement("div", {
 		style: { display: "flex", alignItems: "center", width: "100%" },
-		children: [decoy(headerBar)],
+		children: [decoy(headerBar), puzzleSwitchHost],
 	});
 
 	const gridHost = createElement("div", {
@@ -293,6 +301,31 @@ export const mountCaptchaComponent = (
 		theme,
 	});
 
+	const puzzleSwitchButtonProps = (): ChallengeSwitchButtonProps => ({
+		target: "puzzle",
+		themeColor: props.themeColor,
+		label: props.translator.t("WIDGET.SWITCH_TO_PUZZLE"),
+		onSwitch: () => props.onSwitchToPuzzle?.(),
+	});
+	let puzzleSwitchButton: Component<ChallengeSwitchButtonProps> | undefined;
+	const syncPuzzleSwitchButton = () => {
+		if (undefined === props.onSwitchToPuzzle) {
+			puzzleSwitchButton?.destroy();
+			puzzleSwitchButton = undefined;
+			applyStyles(puzzleSwitchHost, { display: "none" });
+			return;
+		}
+		applyStyles(puzzleSwitchHost, { display: "block" });
+		if (puzzleSwitchButton) {
+			puzzleSwitchButton.update(puzzleSwitchButtonProps());
+		} else {
+			puzzleSwitchButton = mountChallengeSwitchButton(
+				puzzleSwitchHost,
+				puzzleSwitchButtonProps(),
+			);
+		}
+	};
+
 	const render = () => {
 		const activeTheme = themeOf(props.themeColor);
 		applyStyles(root, outerStyle(activeTheme));
@@ -350,6 +383,8 @@ export const mountCaptchaComponent = (
 			offer: props.audioAlternative,
 			theme: activeTheme,
 		});
+
+		syncPuzzleSwitchButton();
 	};
 
 	render();
@@ -366,6 +401,7 @@ export const mountCaptchaComponent = (
 			reloadButton.destroy();
 			nextButton.destroy();
 			audioAlternative.destroy();
+			puzzleSwitchButton?.destroy();
 			root.parentNode?.removeChild(root);
 		},
 	};

@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Billedudfordring",
 		"CANNOT_LOAD": "Kan ikke indlæse CAPTCHA",
 		"RELOAD": "Genindlæs",
+		"SWITCH_TO_PUZZLE": "Skift til en puslespilsudfordring",
 		"VERIFIED_AGENT": "Verificeret agent",
 		"TRUSTED_REQUEST": "Betroet anmodning",
 		"LOADING": "Indlæser",
