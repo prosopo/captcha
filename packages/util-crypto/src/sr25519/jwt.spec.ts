@@ -4,7 +4,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { jwtVerify } from "../jwt/jwtVerify.js";
 import { randomAsU8a } from "../random/asU8a.js";
-import { sr25519jwtIssue } from "./jwt.js";
+import type { JWT } from "../types.js";
+import { sr25519jwtIssue, sr25519jwtParts } from "./jwt.js";
 import { sr25519FromSeed } from "./pair/fromSeed.js";
 
 describe("jwtIssue", (): void => {
@@ -136,5 +137,15 @@ describe("jwtIssue", (): void => {
 			expect(jwtVerify(jwt, pair.publicKey).isValid).toBe(true);
 			expect(jwtVerify(jwt, other.publicKey).isValid).toBe(false);
 		});
+	});
+});
+
+describe("sr25519jwtParts", (): void => {
+	it("reports undecodable header/payload JSON with a clear message", (): void => {
+		const notJson = btoa("not json").replace(/=+$/, "");
+		const jwt: JWT = `${notJson}.${notJson}.AAAA`;
+		expect(() => sr25519jwtParts(jwt)).toThrow(
+			"Invalid JWT format (cannot parse header/payload JSON)",
+		);
 	});
 });

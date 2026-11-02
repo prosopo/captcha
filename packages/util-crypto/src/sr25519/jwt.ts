@@ -59,10 +59,15 @@ export function sr25519jwtParts(jwt: JWT) {
 		throw new Error("Invalid JWT format, parts cannot be empty");
 	}
 
-	const header: JWTHeader = JSON.parse(u8aToString(base64URLDecode(parts[0])));
-	const payload: JWTPayload = JSON.parse(
-		u8aToString(base64URLDecode(parts[1])),
-	);
+	let header: JWTHeader;
+	let payload: JWTPayload;
+	try {
+		header = JSON.parse(u8aToString(base64URLDecode(parts[0])));
+		payload = JSON.parse(u8aToString(base64URLDecode(parts[1])));
+	} catch {
+		// Same message as jwtVerify, rather than a bare SyntaxError.
+		throw new Error("Invalid JWT format (cannot parse header/payload JSON)");
+	}
 	const signature = u8aToHex(base64URLDecode(parts[2]));
 
 	return {

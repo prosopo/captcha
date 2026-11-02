@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { stringifyJson } from "./parse.js";
+
 export function get<T>(
 	obj: T,
 	key: string | number | symbol,
@@ -26,7 +28,8 @@ export function get<T, V>(obj: T, key: unknown, required = true): V {
 	const value = obj[key as unknown as keyof T];
 	if (required && value === undefined) {
 		throw new Error(
-			`Object has no property '${String(key)}': ${JSON.stringify(obj, null, 2)}`,
+			// stringify can fail (cycles, bigints); that mustn't hide this error.
+			`Object has no property '${String(key)}': ${stringifyJson(obj, 2).unwrapOr(String(obj))}`,
 		);
 	}
 	return value as V;

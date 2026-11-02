@@ -138,6 +138,18 @@ describe("resolveRefreshLineage", () => {
 	});
 });
 
+describe("resolveRefreshLineage with an unreadable createdAt", () => {
+	it.each([
+		["an invalid Date", new Date(Number.NaN)],
+		["a missing createdAt", undefined],
+	])("ignores a session with %s", async (_label, createdAt) => {
+		const db = dbReturning(ownSession({ createdAt, refreshCount: 1 }));
+		expect(
+			await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW),
+		).toBeUndefined();
+	});
+});
+
 describe("isUserImageChoiceActive", () => {
 	const refreshOf = (
 		captchaType: CaptchaType,

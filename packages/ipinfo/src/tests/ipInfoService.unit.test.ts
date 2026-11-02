@@ -105,6 +105,8 @@ describe("isNonRoutable", () => {
 		expect(isNonRoutable("172.15.0.1")).toBe(false);
 		expect(isNonRoutable("172.32.0.1")).toBe(false);
 		expect(isNonRoutable("172.217.16.1")).toBe(false);
+		// parseInt would read "16abc" as 16.
+		expect(isNonRoutable("172.16abc.0.1")).toBe(false);
 	});
 
 	it("treats a malformed 172. address as routable rather than crashing", () => {

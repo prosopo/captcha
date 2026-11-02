@@ -33,16 +33,21 @@ import {
 	RoutingMachineOutputSchema,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import { parseInteger } from "@prosopo/util";
 import { z } from "zod";
 import { measureSync } from "../../api/metrics.js";
 import { isDnsSidecarHealthy } from "../dnsEvent/dnsSidecarHealth.js";
 
-const LOAD_TIMEOUT_MS =
-	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
-	1000;
-const EXEC_TIMEOUT_MS =
-	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) ||
-	2000;
+// Unset, malformed or non-positive values fall back to the default; a
+// negative timeout would make vm abort every run.
+const LOAD_TIMEOUT_MS = parseInteger(
+	process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS,
+	{ min: 1 },
+).unwrapOr(1000);
+const EXEC_TIMEOUT_MS = parseInteger(
+	process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS,
+	{ min: 1 },
+).unwrapOr(2000);
 
 /**
  * Module-level cache of loaded machine sandboxes, keyed by SHA-256 of
@@ -115,11 +120,10 @@ export const invalidateDecisionMachineScriptCache = (): void => {
 };
 
 /** How long cached artifacts are considered fresh (ms). */
-const ARTIFACT_CACHE_TTL_MS =
-	Number.parseInt(
-		process.env.DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS ?? "",
-		10,
-	) || 5 * 60 * 1000; // 5 minutes
+const ARTIFACT_CACHE_TTL_MS = parseInteger(
+	process.env.DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS,
+	{ min: 1 },
+).unwrapOr(5 * 60 * 1000); // 5 minutes
 
 const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,

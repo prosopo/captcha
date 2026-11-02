@@ -19,6 +19,7 @@ import {
 	type CounterSpec,
 	encodeCounterKey,
 } from "@prosopo/types";
+import { parseInteger } from "@prosopo/util";
 
 type RedisClient = Awaited<ReturnType<RedisConnection["getClient"]>>;
 
@@ -97,7 +98,13 @@ export class UsageCounters {
 				keys: [key],
 				arguments: [String(ttlSeconds)],
 			});
-			return Number(result);
+			// Anything but an integer reply means the key holds something else;
+			// treat it like any other Redis failure instead of returning NaN.
+			return parseInteger(
+				typeof result === "number" || typeof result === "string"
+					? result
+					: undefined,
+			).expect("counter incr reply");
 		} catch (error) {
 			this.logger.warn(() => ({
 				msg: "Counter incr failed",
@@ -200,7 +207,12 @@ export class UsageCounters {
 				const raw = values[i];
 				const key = keys[i];
 				if (key === undefined) continue;
-				out[key] = raw === null || raw === undefined ? 0 : Number(raw);
+				// A non-integer value fails the whole read, as a Redis error
+				// would, rather than feeding NaN into the rules.
+				out[key] =
+					raw === null || raw === undefined
+						? 0
+						: parseInteger(raw).expect(`counter ${key}`);
 			}
 			return out;
 		} catch (error) {

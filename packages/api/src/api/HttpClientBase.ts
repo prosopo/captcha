@@ -11,7 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { stringifyJson } from "@prosopo/util";
 import { HttpError } from "./HttpError.js";
+
+// JSON.stringify throws on a bigint; send it as a decimal string instead.
+// An undefined body stays undefined, as JSON.stringify would leave it.
+const jsonBody = (body: unknown): string | undefined =>
+	body === undefined ? undefined : stringifyJson(body).expect("request body");
 
 export class HttpClientBase {
 	protected readonly baseURL: string;
@@ -93,7 +99,7 @@ export class HttpClientBase {
 				this.baseURL + input,
 				this.withTimeout({
 					method: "POST",
-					body: JSON.stringify(body),
+					body: jsonBody(body),
 					...init,
 					headers,
 				}),
@@ -130,7 +136,7 @@ export class HttpClientBase {
 				this.baseURL + input,
 				this.withTimeout({
 					method: "POST",
-					body: JSON.stringify(body),
+					body: jsonBody(body),
 					...init,
 					headers,
 				}),

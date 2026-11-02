@@ -206,6 +206,15 @@ describe("post", () => {
 		expect(fetchStub.last().init?.body).toBe("[]");
 	});
 
+	test("a bigint in the body is sent as a decimal string, not thrown", async () => {
+		await client().send("/solve", { nonce: 12345678901234567890n });
+		expect(fetchStub.last().init?.body).toBe(
+			'{"nonce":"12345678901234567890"}',
+		);
+		await client().sendWithHeaders("/solve", { nonce: 1n });
+		expect(fetchStub.last().init?.body).toBe('{"nonce":"1"}');
+	});
+
 	test("returns the parsed response", async () => {
 		fetchStub.respond({ verified: true });
 		await expect(client().send("/solve", {})).resolves.toEqual({

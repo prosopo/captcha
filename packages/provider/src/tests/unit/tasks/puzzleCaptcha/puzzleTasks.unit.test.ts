@@ -232,6 +232,33 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
+		it.each(["12abc", "", "-1", "1.5"])(
+			"rejects a challenge whose timestamp is %j instead of verifying against NaN",
+			async (timestamp) => {
+				const a = buildArgs();
+				const challenge =
+					`${timestamp}${POW_SEPARATOR}${a.userAccount}${POW_SEPARATOR}${a.dappAccount}${POW_SEPARATOR}1` as PoWChallengeId;
+
+				await expect(
+					puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+						challenge,
+						a.providerSignature,
+						100,
+						100,
+						[],
+						1000,
+						a.userSignature,
+						a.ipAddress,
+						a.headers,
+					),
+				).rejects.toMatchObject({
+					code: "INVALID_TIMESTAMP",
+					errorSite: "PROV-97",
+				});
+				expect(db.getPuzzleCaptchaRecordByChallenge).not.toHaveBeenCalled();
+			},
+		);
+
 		it("refuses re-submission of an already-submitted challenge (replay guard)", async () => {
 			const a = buildArgs();
 			const challengeRecord: Partial<PuzzleCaptchaStored> = {

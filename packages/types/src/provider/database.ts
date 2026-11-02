@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { parseBigInt } from "@prosopo/util";
 import {
 	type ZodType,
 	type ZodTypeDef,
@@ -133,9 +134,16 @@ export type MongooseCompositeIpAddress = {
 export const parseMongooseCompositeIpAddress = (
 	ip: MongooseCompositeIpAddress,
 ): CompositeIpAddress => {
+	// A Decimal128 instance has no $numberDecimal but stringifies to its
+	// digits. BigInt() would throw a bare SyntaxError on a form like
+	// "1.5E+3"; name the field instead.
+	const toBigInt = (part: { $numberDecimal: string }, label: string) =>
+		parseBigInt(part.$numberDecimal ?? String(part)).expect(
+			`composite IP address ${label}`,
+		);
 	return {
-		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
-		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
+		lower: toBigInt(ip.lower, "lower"),
+		upper: ip.upper ? toBigInt(ip.upper, "upper") : undefined,
 		type: ip.type,
 	};
 };

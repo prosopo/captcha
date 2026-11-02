@@ -70,8 +70,10 @@ export const parseAbuserScore = (
 	if (!head) {
 		return undefined;
 	}
-	const parsed = Number.parseFloat(head);
-	return Number.isNaN(parsed) ? undefined : parsed;
+	// Number rather than parseFloat, so "0.5abc" is rejected instead of read
+	// as 0.5; isFinite also rejects "Infinity".
+	const parsed = Number(head);
+	return Number.isFinite(parsed) ? parsed : undefined;
 };
 
 export const parseDetectorRisk = (

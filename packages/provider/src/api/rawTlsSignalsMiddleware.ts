@@ -16,6 +16,7 @@ import type { IncomingHttpHeaders } from "node:http";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { parseInteger } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 
 // Raw TCP-handshake signals forwarded by the chaddy Caddy plugin. The plugin
@@ -199,15 +200,17 @@ const parseIntHeader = (
 	if (value === undefined) {
 		return undefined;
 	}
-	const parsed = Number.parseInt(value, 10);
-	if (Number.isNaN(parsed) || parsed < 0 || parsed > max) {
+	// parseInt would read "12abc" as 12; a header that isn't wholly a number
+	// is malformed.
+	const parsed = parseInteger(value, { min: 0, max });
+	if (!parsed.ok) {
 		logger.debug(() => ({
 			msg: "Ignoring malformed raw TLS signal header",
 			data: { header: headerName, raw: value },
 		}));
 		return undefined;
 	}
-	return parsed;
+	return parsed.value;
 };
 
 // Kernel monotonic ns bumps into Number.MAX_SAFE_INTEGER (2^53) territory
