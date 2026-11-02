@@ -20,6 +20,7 @@ declare module "@prosopo/common" {
 		"ICON-4": true;
 		"ICON-5": true;
 		"ICON-6": true;
+		"ICON-7": true;
 	}
 }
 

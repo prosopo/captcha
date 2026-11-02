@@ -24,6 +24,8 @@ import type { ProcaptchaApiInterface } from "./api.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 import { type ProcaptchaToken, ProcaptchaTokenSpec } from "./token.js";
 
+import type { CallbackError } from "@prosopo/locale";
+
 /** A failure the widget shows: a provider error body, or one of its own. */
 export type WidgetError = Pick<ApiJsonError, "code" | "errorId" | "message">;
 
@@ -85,7 +87,7 @@ export interface Callbacks {
 	onExtensionNotFound: () => void;
 	onChallengeExpired: () => void;
 	onExpired: () => void;
-	onError: (error: Error) => void;
+	onError: (error: CallbackError) => void;
 	onClose: () => void;
 	onOpen: () => void;
 	onFailed: () => void;

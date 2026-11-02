@@ -43,3 +43,4 @@ export * from "./components/checkbox.js";
 export * from "./components/challengeSurface.js";
 export * from "./components/honeypot.js";
 export * from "./components/testModeBanner.js";
+export { toCallbackError } from "@prosopo/locale";
