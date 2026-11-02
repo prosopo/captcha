@@ -671,6 +671,7 @@ export const SessionSchema = object({
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
+	tlsHandshakeRttUs: number().min(0).max(4_294_967_295).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -854,6 +855,10 @@ export type Session = {
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// Microseconds from the server's TLS handshake flight to the client's
+	// reply, timed by chaddy: a round trip to whatever terminates TLS, where
+	// synackNs → ackNs is a round trip to whatever opened the TCP connection.
+	tlsHandshakeRttUs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
