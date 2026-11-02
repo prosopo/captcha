@@ -34,6 +34,10 @@ verifyDepsBeforeRun: false
 # import it and `lint:refs` rightly rejects a dependency nothing imports.
 publicHoistPattern:
   - "sharp"
+  # packages/cli/vite.config.ts resolves the napi binaries to copy them beside
+  # the bundle, but only @prosopo/provider depends on them, so they have to be
+  # reachable from the cli too.
+  - "@prosopo/native-*"
 
 savePrefix: ""
 maxSockets: 10
