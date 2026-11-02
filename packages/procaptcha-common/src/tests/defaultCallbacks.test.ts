@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { CallbackError } from "@prosopo/locale";
 import { ApiParams } from "@prosopo/types";
 import type { ProcaptchaRenderOptions, ProcaptchaToken } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,6 +22,12 @@ import {
 	getDefaultCallbacks,
 	setUserCallbacks,
 } from "../callbacks/defaultCallbacks.js";
+
+const callbackError = (message: string): CallbackError =>
+	Object.assign(new Error(message), {
+		code: "UNEXPECTED",
+		errorId: "UNEXPECTED:TEST-1",
+	});
 
 describe("callbacks/defaultCallbacks", () => {
 	beforeEach(() => {
@@ -123,7 +130,7 @@ describe("callbacks/defaultCallbacks", () => {
 				.spyOn(console, "error")
 				.mockImplementation(() => {});
 			const callbacks = getDefaultCallbacks();
-			const error = new Error("Test error");
+			const error = callbackError("Test error");
 
 			callbacks.onError(error);
 
@@ -285,7 +292,7 @@ describe("callbacks/defaultCallbacks", () => {
 			getDefaultCallbacks(signup.widget).onHuman("signup-token");
 			vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-			getDefaultCallbacks(signup.widget).onError(new Error("boom"));
+			getDefaultCallbacks(signup.widget).onError(callbackError("boom"));
 
 			expect(tokenIn(login.form)).toBe("login-token");
 			expect(tokenIn(signup.form)).toBeUndefined();
@@ -454,7 +461,7 @@ describe("callbacks/defaultCallbacks", () => {
 				widget,
 			);
 
-			const error = new Error("Test error");
+			const error = callbackError("Test error");
 			callbacks.onError(error);
 
 			expect(errorCallback).toHaveBeenCalledWith(error);
