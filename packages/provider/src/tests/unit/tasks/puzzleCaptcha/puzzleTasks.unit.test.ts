@@ -1203,6 +1203,48 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
 			expect(typeof input.score).toBe("number");
 		});
+
+		it("forwards the puzzle's origin, target and tolerance into the decide() input", async () => {
+			const puzzleEvents = [
+				{ x: 41, y: 77, t: 1000 },
+				{ x: 203, y: 118, t: 1350 },
+			];
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					originX: 41,
+					originY: 77,
+					targetX: 207,
+					targetY: 121,
+					tolerance: 11,
+					puzzleEvents,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			const decideSpy = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" } as const);
+			mockDecisionMachine(decideSpy);
+
+			await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(decideSpy).toHaveBeenCalledOnce();
+			const input = decideSpy.mock.calls[0]?.[0];
+			expect(input.puzzleOrigin).toEqual({ x: 41, y: 77 });
+			expect(input.puzzleTarget).toEqual({ x: 207, y: 121 });
+			expect(input.puzzleTolerance).toBe(11);
+			expect(input.puzzleEvents).toEqual(puzzleEvents);
+		});
 	});
 
 	describe("serverVerifyPuzzleCaptchaSolution with maxEmailSubmissionCount", () => {
