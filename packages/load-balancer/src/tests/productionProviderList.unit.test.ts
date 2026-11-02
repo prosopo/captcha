@@ -253,6 +253,17 @@ describe("loadBalancer provider-list fetch timeout", () => {
 		expect(Date.now() - started).toBeLessThan(2_000);
 	});
 
+	it("fails on an error page instead of reading it as a provider list", async () => {
+		const mocked = vi.fn(
+			async () => new Response('{"error":"down"}', { status: 503 }),
+		);
+		globalThis.fetch = mocked as typeof fetch;
+		await expect(loadBalancer("production")).rejects.toMatchObject({
+			kind: "status",
+			status: 503,
+		});
+	});
+
 	it("bounds the fetch by default", async () => {
 		const mocked = vi.fn(
 			async (_input: RequestInfo | URL, _init?: RequestInit) =>
