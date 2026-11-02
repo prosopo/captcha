@@ -248,7 +248,8 @@ export const reconcileIndexes = async (
 
 	for (const w of wanted) {
 		const replaced = toDrop.filter(
-			(index) => clashes(index, w) && !result.dropped.includes(index.name ?? ""),
+			(index) =>
+				clashes(index, w) && !result.dropped.includes(index.name ?? ""),
 		);
 		const bridges: string[] = [];
 		try {
