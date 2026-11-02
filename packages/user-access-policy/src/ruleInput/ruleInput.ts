@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import type {
 	AccessPolicy,
@@ -99,7 +100,7 @@ export type AccessRulesFilterInput = AccessRulesFilter & {
 // `ZodType<T, ZodTypeDef, unknown>` form for the same reason.
 export const accessRulesFilterInput = z.object({
 	policyScope: policyScopeInput.optional(),
-	policyScopes: z.array(policyScopeInput).optional(),
+	policyScopes: z.array(policyScopeInput).max(INPUT_LIMITS.ARRAY).optional(),
 	policyScopeMatch: z
 		.nativeEnum(FilterScopeMatch)
 		.default(FilterScopeMatch.Exact),
@@ -107,7 +108,7 @@ export const accessRulesFilterInput = z.object({
 	userScopeMatch: z
 		.nativeEnum(FilterScopeMatch)
 		.default(FilterScopeMatch.Exact),
-	groupId: z.string().optional(),
+	groupId: z.string().max(INPUT_LIMITS.ID).optional(),
 	blockOnly: z.boolean().optional(),
 	includeDeferred: z.boolean().optional(),
 } satisfies AllKeys<AccessRulesFilterInput>);

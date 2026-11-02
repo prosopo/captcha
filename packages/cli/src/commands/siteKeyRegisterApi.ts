@@ -28,13 +28,14 @@ import {
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { z } from "zod";
 import { SiteKeyRegisterCommandArgsSpec } from "./siteKeyRegister.js";
 import { validateSiteKey } from "./validators.js";
 
 const SiteKeyRegisterApiCommandArgsSpec = SiteKeyRegisterCommandArgsSpec.extend(
 	{
-		url: z.string(),
+		url: z.string().max(INPUT_LIMITS.URL),
 	},
 );
 

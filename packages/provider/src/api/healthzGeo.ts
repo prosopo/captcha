@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/logger";
 import { PublicApiPaths } from "@prosopo/types";
 import type { IIpInfoService } from "@prosopo/types-env";
 import { parseInteger } from "@prosopo/util";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { z } from "zod";
 
 /**
@@ -64,7 +65,13 @@ const hostnameSchema = z
 	.max(253)
 	.regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/i);
 
-const routesSchema = z.record(z.string().regex(/^[a-z]{2}$/i), hostnameSchema);
+const routesSchema = z.record(
+	z
+		.string()
+		.max(INPUT_LIMITS.NAME)
+		.regex(/^[a-z]{2}$/i),
+	hostnameSchema,
+);
 
 export interface HealthzGeoConfig {
 	enabled: boolean;

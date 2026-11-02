@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/logger";
 import type { FtAggregateWithCursorOptions } from "@redis/search/dist/lib/commands/AGGREGATE_WITHCURSOR.js";
 import type { RedisClientType } from "redis";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { z } from "zod";
 import { REDIS_QUERY_DIALECT } from "#policy/redis/reader/redisRulesQuery.js";
 import {
@@ -63,7 +64,7 @@ export const aggregateRedisKeys = async (
 
 	const recordSchema = z.object({
 		// it's a reserved name for the record key
-		[keyField]: z.string(),
+		[keyField]: z.string().max(INPUT_LIMITS.LONG_TEXT),
 	});
 
 	const foundKeys: string[] = [];
