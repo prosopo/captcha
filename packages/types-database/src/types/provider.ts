@@ -1030,6 +1030,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// rows hold them and routing rules read them.
 	tcpOptsFlags: { type: Number, required: false },
 	tcpOptsOrder: { type: Number, required: false },
+	tlsHandshakeRttUs: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -1335,6 +1336,7 @@ export const SESSION_PROJECTION = {
 	ipTos: 1,
 	tcpOptsFlags: 1,
 	tcpOptsOrder: 1,
+	tlsHandshakeRttUs: 1,
 	"headers.user-agent": 1,
 	"headers.accept": 1,
 	"headers.accept-language": 1,
