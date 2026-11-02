@@ -106,6 +106,7 @@ import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 // structurally matches it (missing _bsontype/toHexString/...).
 import type { Types } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
+import { reconcileIndexes } from "../base/reconcileIndexes.js";
 import type {
 	CentralDbStreamer,
 	MarkStoredCallback,
@@ -363,40 +364,37 @@ export class ProviderDatabase
 	}
 
 	async ensureIndexes(): Promise<void> {
-		const indexPromises: Promise<void>[] = [];
-		if (!this.indexesEnsured) {
-			PROVIDER_TABLES.map(({ collectionName }) => {
-				indexPromises.push(
-					new Promise((resolve) => {
-						if (this.connected) {
-							this.tables[collectionName].collection.dropIndexes().then(() => {
-								this.tables[collectionName]
-									.ensureIndexes()
-									.then(() => {
-										this.logger.info(() => ({
-											msg: `Indexes ensured for collection ${collectionName}`,
-										}));
-										resolve();
-									})
-									.catch((err) => {
-										this.logger.warn(() => ({
-											err,
-											msg: `Error creating indexes for collection ${collectionName}`,
-										}));
-										resolve();
-									});
-							});
+		if (!this.indexesEnsured && this.connected) {
+			await Promise.all(
+				PROVIDER_TABLES.map(async ({ collectionName }) => {
+					try {
+						const result = await reconcileIndexes(this.tables[collectionName], {
+							dropUndeclared: true,
+						});
+						if (result.failed.length > 0) {
+							this.logger.warn(() => ({
+								msg: `Error creating indexes for collection ${collectionName}`,
+								data: result,
+							}));
 						} else {
 							this.logger.info(() => ({
-								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+								msg: `Indexes ensured for collection ${collectionName}`,
+								data: result,
 							}));
-							resolve();
 						}
-					}),
-				);
-			});
+					} catch (err) {
+						this.logger.warn(() => ({
+							err,
+							msg: `Error creating indexes for collection ${collectionName}`,
+						}));
+					}
+				}),
+			);
+		} else if (!this.connected) {
+			this.logger.info(() => ({
+				msg: "Skipping index creation as not connected",
+			}));
 		}
-		await Promise.all(indexPromises);
 		this.indexesEnsured = true;
 	}
 
