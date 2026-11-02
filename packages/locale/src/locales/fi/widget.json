@@ -107,6 +107,7 @@
 		"IMAGE_DIALOG_LABEL": "Kuvatehtävä",
 		"CANNOT_LOAD": "CAPTCHAa ei voi ladata",
 		"RELOAD": "Lataa uudelleen",
+		"SWITCH_TO_PUZZLE": "Vaihda palapelitehtävään",
 		"VERIFIED_AGENT": "Vahvistettu agentti",
 		"TRUSTED_REQUEST": "Luotettu pyyntö",
 		"LOADING": "Ladataan",

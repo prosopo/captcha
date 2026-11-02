@@ -77,6 +77,17 @@ export const isPuzzleImageSwitchAvailable = (
 	resolveSiteAllowedCaptchaTypes(settings).image;
 
 /**
+ * Whether the refresh limit may turn a puzzle into an image challenge. A site
+ * pinned to puzzle chose it deliberately, so there it takes the same switch
+ * that lets users swap the puzzle for an image themselves.
+ */
+export const isRefreshLimitSwitchEnabled = (
+	settings: Parameters<typeof isPuzzleImageSwitchAvailable>[0],
+): boolean =>
+	CaptchaType.puzzle !== settings.captchaType ||
+	isPuzzleImageSwitchAvailable(settings);
+
+/**
  * Image rounds served when the detector payload could not be decrypted.
  *
  * Deliberately short. A failed decrypt means we have no measurement of the

@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Obrázková úloha",
 		"CANNOT_LOAD": "CAPTCHA sa nedá načítať",
 		"RELOAD": "Znova načítať",
+		"SWITCH_TO_PUZZLE": "Prepnúť na úlohu so skladačkou",
 		"VERIFIED_AGENT": "Overený agent",
 		"TRUSTED_REQUEST": "Dôveryhodná požiadavka",
 		"LOADING": "Načítava sa",

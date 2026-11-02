@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "Desafío de imágenes",
 		"CANNOT_LOAD": "No se puede cargar el CAPTCHA",
 		"RELOAD": "Recargar",
+		"SWITCH_TO_PUZZLE": "Cambiar a un desafío de rompecabezas",
 		"VERIFIED_AGENT": "Agente verificado",
 		"TRUSTED_REQUEST": "Solicitud de confianza",
 		"LOADING": "Cargando",

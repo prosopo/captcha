@@ -67,6 +67,7 @@ import {
 import { handleAccessPolicy } from "./accessPolicy.js";
 import {
 	isPuzzleImageSwitchAvailable,
+	isRefreshLimitSwitchEnabled,
 	resolveScoreLadder,
 	resolveSiteAllowedCaptchaTypes,
 } from "./constants.js";
@@ -74,7 +75,7 @@ import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import {
-	isImageSwitchRequestValid,
+	isUserImageChoiceActive,
 	resolveRefreshLineage,
 } from "./refreshLineage.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
@@ -117,6 +118,7 @@ export default (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				switchToPuzzle,
 				fingerprintProof,
 				widgetSlot,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
@@ -618,6 +620,26 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
+			// Ahead of the short-circuits, so a site pinned to puzzle can still be
+			// switched to image and still has its refreshes recorded.
+			const refresh = await resolveRefreshLineage(
+				tasks.db,
+				refreshOf,
+				dapp,
+				userSitekeyIpHash,
+				new Date(),
+			);
+			tasks.frictionlessManager.setImageSwitchRequested(
+				isUserImageChoiceActive(
+					{ switchToImage, switchToPuzzle },
+					refresh,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				),
+			);
+			tasks.frictionlessManager.setRefreshLimitSwitchEnabled(
+				isRefreshLimitSwitchEnabled(clientRecord.settings),
+			);
+
 			const shortCircuitInput = {
 				tasks,
 				env,
@@ -643,23 +665,8 @@ export default (
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
 				...rawTlsSignalsForSession(req),
+				...(refresh && { refresh: refresh.lineage }),
 			};
-
-			// Ahead of the short-circuits, so a site pinned to puzzle can still be
-			// switched to image.
-			const refresh = await resolveRefreshLineage(
-				tasks.db,
-				refreshOf,
-				dapp,
-				new Date(),
-			);
-			tasks.frictionlessManager.setImageSwitchRequested(
-				isImageSwitchRequestValid(
-					switchToImage,
-					refresh,
-					isPuzzleImageSwitchAvailable(clientRecord.settings),
-				),
-			);
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
@@ -985,6 +992,12 @@ export default (
 				// Straight from the payload this request arrived with — the
 				// session record is written from the same value.
 				...(d !== undefined && { d }),
+				...(refresh && {
+					refresh: {
+						count: refresh.lineage.refreshCount,
+						afterMs: refresh.lineage.refreshedAfterMs,
+					},
+				}),
 				raw: {
 					headers: flatHeaders,
 					userAgent: requestUserAgent,

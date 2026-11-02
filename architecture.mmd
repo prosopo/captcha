@@ -216,6 +216,8 @@ graph TB
     PuzzleChallengeEP -->|"isValidRequest: refuse a type<br/>its feature flag switched off"| AllowedTypes
     PuzzleChallengeEP --> PuzzleTasks
     PuzzleCaptcha -->|"switch to image<br/>(refreshOf + switchToImage;<br/>only where widgetFeatureFlags<br/>.puzzleImageSwitch is on)"| FrictionlessEP
+    ImageCaptcha -->|"switch back to puzzle<br/>(refreshOf + switchToPuzzle; offered<br/>only on an image the user chose)"| FrictionlessEP
+    FrictionlessEP -->|"refreshOf: chain followed only for<br/>the same user, IP and site; count +<br/>timing go to the routing machine"| DecisionMachine
     PuzzleTasks -->|"background + notch placement<br/>(tolerance cascade: trafficFilter →<br/>session → siteSettings)"| PuzzleCaptcha
     PuzzleCaptcha -->|"dropped piece position<br/>+ behavioural data"| PuzzleSolutionEP
     PuzzleSolutionEP --> PuzzleTasks

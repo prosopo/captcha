@@ -512,6 +512,15 @@ export interface RoutingMachineInputBase {
 	// the originating Session. Undefined when the detector reported nothing,
 	// or when the payload could not be read.
 	d?: DetectorData;
+	// Set when this request replaces a challenge the user refreshed: how many
+	// refreshes in a row led here, and how long the replaced session had been
+	// alive. `route` phase only; undefined on every other request.
+	refresh?: RoutingMachineRefresh;
+}
+
+export interface RoutingMachineRefresh {
+	count: number;
+	afterMs: number;
 }
 
 export interface RoutingMachineInput extends RoutingMachineInputBase {

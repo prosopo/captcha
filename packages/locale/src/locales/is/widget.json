@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Myndaþraut",
 		"CANNOT_LOAD": "Ekki tókst að hlaða CAPTCHA",
 		"RELOAD": "Endurhlaða",
+		"SWITCH_TO_PUZZLE": "Skipta yfir í púsluþraut",
 		"VERIFIED_AGENT": "Staðfestur umboðsaðili",
 		"TRUSTED_REQUEST": "Treyst beiðni",
 		"LOADING": "Hleður",

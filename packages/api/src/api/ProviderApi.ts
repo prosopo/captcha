@@ -25,7 +25,7 @@ import {
 	type CaptchaSolution,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
-	type CaptchaType,
+	CaptchaType,
 	ClientApiPaths,
 	type ClientMetaData,
 	type DecisionMachineKind,
@@ -54,6 +54,7 @@ import {
 	PublicApiPaths,
 	type PuzzleCaptchaSolutionResponse,
 	type RandomProvider,
+	type RefreshSwitchTarget,
 	type RegisterSitekeyBodyTypeOutput,
 	type RegisterSitekeysBodyTypeOutput,
 	RemoveSitekeyBody,
@@ -625,7 +626,7 @@ export default class ProviderApi
 		iframeUrl?: string,
 		clientSessionId?: string,
 		refreshOf?: string,
-		switchToImage?: boolean,
+		switchTo?: RefreshSwitchTarget,
 		fingerprintProof?: string,
 		widgetSlot?: number,
 	): Promise<GetFrictionlessCaptchaResponse> {
@@ -646,7 +647,11 @@ export default class ProviderApi
 			}),
 			...(refreshOf && { [ApiParams.refreshOf]: refreshOf }),
 			...(refreshOf &&
-				switchToImage && { [ApiParams.switchToImage]: switchToImage }),
+				CaptchaType.image === switchTo && { [ApiParams.switchToImage]: true }),
+			...(refreshOf &&
+				CaptchaType.puzzle === switchTo && {
+					[ApiParams.switchToPuzzle]: true,
+				}),
 			...(fingerprintProof && {
 				[ApiParams.fingerprintProof]: fingerprintProof,
 			}),

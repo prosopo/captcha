@@ -151,6 +151,31 @@ describe("a refreshed puzzle session", () => {
 		);
 	});
 
+	it("keeps the puzzle at the refresh limit when the limit's switch is off", async () => {
+		const manager = managerFor({
+			refreshOf: "prev",
+			refreshCount: PUZZLE_REFRESHES_BEFORE_IMAGE,
+			refreshedAfterMs: 1000,
+		});
+		manager.setRefreshLimitSwitchEnabled(false);
+		await manager.sendPuzzleCaptcha();
+
+		expect(storedSession().captchaType).toBe(CaptchaType.puzzle);
+		expect(storedSession().refreshCount).toBe(PUZZLE_REFRESHES_BEFORE_IMAGE);
+	});
+
+	it("still honours the user's switch when the limit's switch is off", async () => {
+		const manager = managerFor(
+			{ refreshOf: "prev", refreshCount: 1, refreshedAfterMs: 1000 },
+			undefined,
+			true,
+		);
+		manager.setRefreshLimitSwitchEnabled(false);
+		await manager.sendPuzzleCaptcha();
+
+		expect(storedSession().reason).toBe(FrictionlessReason.PUZZLE_USER_SWITCH);
+	});
+
 	it("serves image with its own reason when the user asks to switch", async () => {
 		await managerFor(
 			{ refreshOf: "prev", refreshCount: 1, refreshedAfterMs: 1000 },
