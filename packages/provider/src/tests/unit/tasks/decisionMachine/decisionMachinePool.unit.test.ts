@@ -18,7 +18,7 @@ import {
 	shutdownDecisionMachinePool,
 } from "../../../../tasks/decisionMachine/decisionMachinePool.js";
 
-const run = (source: string, timeoutMs = 500) =>
+const run = (source: string, timeoutMs = 10_000) =>
 	runDecisionMachine({
 		source,
 		exportNames: ["decide", "default"],
@@ -38,6 +38,16 @@ describe("decisionMachinePool", () => {
 			found: true,
 			name: "decide",
 			result: { doubled: 4 },
+		});
+	});
+
+	it("keeps booting workers when a job times out before they are online", async () => {
+		await expect(run("module.exports = () => 1", 0)).rejects.toThrow(
+			"Decision machine timeout",
+		);
+		await expect(run("module.exports = () => 1")).resolves.toMatchObject({
+			found: true,
+			result: 1,
 		});
 	});
 

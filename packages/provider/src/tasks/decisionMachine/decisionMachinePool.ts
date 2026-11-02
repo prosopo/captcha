@@ -21,7 +21,7 @@ import { getLogger } from "@prosopo/logger";
 // limit is real: the main thread stays free and terminates the worker.
 const logger = getLogger("info", "provider:decision-machine-pool");
 
-const DEFAULT_WORKERS = 2;
+const WORKERS = 2;
 const DEFAULT_MAX_QUEUE = 1000;
 // A runaway allocation must kill the worker, not the provider.
 const WORKER_HEAP_LIMIT_MB = 256;
@@ -30,10 +30,6 @@ const numberFromEnv = (name: string, fallback: number): number => {
 	const parsed = Number.parseInt(process.env[name] ?? "", 10);
 	return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
 };
-
-/** `PROSOPO_DECISION_MACHINE_WORKERS=0` is the kill switch: run inline. */
-export const decisionMachineWorkersEnabled = (): boolean =>
-	numberFromEnv("PROSOPO_DECISION_MACHINE_WORKERS", DEFAULT_WORKERS) > 0;
 
 // Keeps a compiled sandbox per source so a call only pays for the run. Errors
 // are flattened to strings because they do not survive structured clone.
@@ -213,7 +209,14 @@ const spawn = (): Worker => {
 		resourceLimits: { maxOldGenerationSizeMb: WORKER_HEAP_LIMIT_MB },
 	});
 	worker.unref();
-	idle.push(worker);
+	// Idle only once booted. A job handed to a booting worker would spend the
+	// boot on its time limit, and timing out would kill that worker mid-boot,
+	// so on a busy host no worker ever came up and every decision failed open.
+	worker.once("online", () => {
+		if (!workers.includes(worker)) return;
+		idle.push(worker);
+		dispatch();
+	});
 	worker.on("message", (reply: WorkerReply) => onReply(worker, reply));
 	const lost = (reason: Error): void => {
 		const job = running.get(worker);
@@ -233,8 +236,7 @@ const spawn = (): Worker => {
 
 const ensurePool = (): void => {
 	if (workers.length > 0) return;
-	const size = numberFromEnv("PROSOPO_DECISION_MACHINE_WORKERS", DEFAULT_WORKERS);
-	for (let i = 0; i < size; i++) workers.push(spawn());
+	for (let i = 0; i < WORKERS; i++) workers.push(spawn());
 };
 
 /**
