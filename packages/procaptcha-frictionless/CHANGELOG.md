@@ -1,5 +1,90 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.23.2
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.10
+  - @prosopo/procaptcha-audio@0.2.18
+  - @prosopo/procaptcha-common@2.22.5
+  - @prosopo/procaptcha-icon-order@0.2.18
+  - @prosopo/procaptcha-pow@2.14.7
+  - @prosopo/procaptcha-puzzle@2.17.17
+  - @prosopo/procaptcha-react@2.14.18
+
+## 2.23.1
+### Patch Changes
+
+- 186debd: Record what the visitor does on the page from the moment the procaptcha script loads, and add it to the behavioural data sent with each solve.
+  
+  The detector's trackers only start once a widget renders. On sites that render it late, everything before that was missing. A checkout that mounts the widget when Buy is pressed, for example, loses the visitor's scroll down the page and the tap on Buy. A quick tap on the checkbox before detection finished was lost too. Those visitors were then judged on one or two stray events, or none at all, and sent to an image or puzzle challenge. The script now records mouse, touch, press and scroll events until detection finishes, then puts them in front of the detector's own data, dropping any event both recorded.
+- Updated dependencies [186debd]
+  - @prosopo/procaptcha-common@2.22.4
+  - @prosopo/procaptcha-audio@0.2.17
+  - @prosopo/procaptcha-icon-order@0.2.17
+  - @prosopo/procaptcha-pow@2.14.6
+  - @prosopo/procaptcha-puzzle@2.17.16
+  - @prosopo/procaptcha-react@2.14.17
+
+## 2.23.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/api@4.8.5
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.9
+  - @prosopo/procaptcha-audio@0.2.16
+  - @prosopo/procaptcha-common@2.22.3
+  - @prosopo/procaptcha-icon-order@0.2.16
+  - @prosopo/procaptcha-pow@2.14.5
+  - @prosopo/procaptcha-puzzle@2.17.15
+  - @prosopo/procaptcha-react@2.14.16
+
+## 2.22.4
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.8
+  - @prosopo/procaptcha-audio@0.2.15
+  - @prosopo/procaptcha-common@2.22.2
+  - @prosopo/procaptcha-icon-order@0.2.15
+  - @prosopo/procaptcha-pow@2.14.4
+  - @prosopo/procaptcha-puzzle@2.17.14
+  - @prosopo/procaptcha-react@2.14.15
+
+## 2.22.3
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/api@4.8.3
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.7
+  - @prosopo/procaptcha-audio@0.2.14
+  - @prosopo/procaptcha-common@2.22.1
+  - @prosopo/procaptcha-icon-order@0.2.14
+  - @prosopo/procaptcha-pow@2.14.3
+  - @prosopo/procaptcha-puzzle@2.17.13
+  - @prosopo/procaptcha-react@2.14.14
+
 ## 2.22.2
 ### Patch Changes
 

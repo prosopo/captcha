@@ -39,6 +39,7 @@ import {
 	encodeAssetToken,
 } from "@prosopo/datasets";
 import type { Asset, AssetsResolver } from "@prosopo/types";
+import { parseInteger } from "@prosopo/util";
 
 export { DEFAULT_ASSET_TOKEN_TTL_SECONDS };
 
@@ -129,9 +130,9 @@ export function getSignedAssetsResolver(
 		return undefined;
 	}
 
-	const ttlSeconds =
-		Number.parseInt(process.env.PROSOPO_ASSET_TOKEN_TTL_SECONDS ?? "", 10) ||
-		DEFAULT_ASSET_TOKEN_TTL_SECONDS;
+	const ttlSeconds = parseInteger(process.env.PROSOPO_ASSET_TOKEN_TTL_SECONDS, {
+		min: 1,
+	}).unwrapOr(DEFAULT_ASSET_TOKEN_TTL_SECONDS);
 
 	// Binding a URL to the requesting IP is stronger, but it has to match the
 	// zone's `ZoneSecurityIncludeHashRemoteIP` setting exactly, and it breaks

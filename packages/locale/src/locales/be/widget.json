@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Заданне з выявамі",
 		"CANNOT_LOAD": "Не ўдалося загрузіць CAPTCHA",
 		"RELOAD": "Перазагрузіць",
+		"SWITCH_TO_PUZZLE": "Перайсці да задання з пазлам",
 		"VERIFIED_AGENT": "Правераны агент",
 		"TRUSTED_REQUEST": "Давераны запыт",
 		"LOADING": "Загрузка",

@@ -234,6 +234,8 @@ export type DecisionMachineInput = {
 	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// See Session.tlsHandshakeRttUs.
+	tlsHandshakeRttUs?: number;
 	// The site's per-category traffic-filter policies. Gates the
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
@@ -446,6 +448,8 @@ export interface RoutingMachineRawSignals {
 	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// See Session.tlsHandshakeRttUs.
+	tlsHandshakeRttUs?: number;
 	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
 	// ipapi/isp mirror at request time. Undefined when the lookup failed
 	// or the middleware wasn't reached (dev requests bypassing the
@@ -484,6 +488,11 @@ export interface RoutingMachineRawSignals {
 	// The widget reports (0,0) for a keyboard activation as well as for the
 	// frictionless auto-start. `postPow` only.
 	coordsAllZero?: boolean;
+	// Canonical indices of the detectors that fired on the frictionless
+	// payload, as persisted in `scoreComponents.triggeredDetectors`. On
+	// `postPow` and the dedup replay they come from the originating Session.
+	// Undefined when none fired or the payload could not be read.
+	triggeredDetectors?: number[];
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
@@ -507,6 +516,15 @@ export interface RoutingMachineInputBase {
 	// the originating Session. Undefined when the detector reported nothing,
 	// or when the payload could not be read.
 	d?: DetectorData;
+	// Set when this request replaces a challenge the user refreshed: how many
+	// refreshes in a row led here, and how long the replaced session had been
+	// alive. `route` phase only; undefined on every other request.
+	refresh?: RoutingMachineRefresh;
+}
+
+export interface RoutingMachineRefresh {
+	count: number;
+	afterMs: number;
 }
 
 export interface RoutingMachineInput extends RoutingMachineInputBase {

@@ -37,6 +37,15 @@ vi.mock("@prosopo/api", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	PAGE_BEHAVIOUR_LIMITS: { mouse: 1000, touch: 500, press: 200, scroll: 500 },
+	getPageBehaviour: vi.fn(() => undefined),
+	mergeBehaviourPoints: vi.fn(
+		<T>(early: readonly T[], tracked: readonly T[]): T[] => [
+			...early,
+			...tracked,
+		],
+	),
+	stopPageBehaviourCapture: vi.fn(),
 	widgetRequestHeaders: (
 		siteLanguage: string | undefined,
 	): Record<string, string> => widgetLanguageHeaders(siteLanguage),

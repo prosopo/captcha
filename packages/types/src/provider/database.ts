@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { parseBigInt } from "@prosopo/util";
 import {
 	type ZodType,
 	type ZodTypeDef,
@@ -133,9 +134,16 @@ export type MongooseCompositeIpAddress = {
 export const parseMongooseCompositeIpAddress = (
 	ip: MongooseCompositeIpAddress,
 ): CompositeIpAddress => {
+	// A Decimal128 instance has no $numberDecimal but stringifies to its
+	// digits. BigInt() would throw a bare SyntaxError on a form like
+	// "1.5E+3"; name the field instead.
+	const toBigInt = (part: { $numberDecimal: string }, label: string) =>
+		parseBigInt(part.$numberDecimal ?? String(part)).expect(
+			`composite IP address ${label}`,
+		);
 	return {
-		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
-		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
+		lower: toBigInt(ip.lower, "lower"),
+		upper: ip.upper ? toBigInt(ip.upper, "upper") : undefined,
 		type: ip.type,
 	};
 };
@@ -442,6 +450,7 @@ export const ScoreComponentsSchema = object({
 	triggeredDetectors: array(number()).optional(),
 	shadowDomPenalty: boolean().optional(),
 	dnsAsymmetry: number().optional(),
+	ipDetectorRisk: number().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
@@ -510,6 +519,8 @@ export interface ScoreComponents {
 	triggeredDetectors?: number[];
 	shadowDomPenalty?: boolean;
 	dnsAsymmetry?: number;
+	/** Amount added to the score from the IP's detector risk. */
+	ipDetectorRisk?: number;
 }
 
 // Zod schema for Session
@@ -544,6 +555,10 @@ export const SessionSchema = object({
 	// to the origin for fields the escalation doesn't carry itself
 	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
 	originSessionId: string().optional(),
+	solveDevice: object({
+		deviceCapability: string().optional(),
+		touchEventCount: number().optional(),
+	}).optional(),
 	refreshOf: string().optional(),
 	refreshCount: number().optional(),
 	refreshedAfterMs: number().optional(),
@@ -656,10 +671,12 @@ export const SessionSchema = object({
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
+	tlsHandshakeRttUs: number().min(0).max(4_294_967_295).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
 		pathValid: boolean().optional(),
+		assetSeen: boolean().optional(),
 		receivedAt: date(),
 	}).optional(),
 	// See Session.clientMetaData.
@@ -668,6 +685,13 @@ export const SessionSchema = object({
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
+/** What a solve's behavioural payload says about the input device. */
+export interface SolveDeviceSignals {
+	/** The client's own touch-support reading: "mobile" or "desktop". */
+	deviceCapability?: string;
+	touchEventCount?: number;
+}
+
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
@@ -710,6 +734,9 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
+	// On an escalation: what the PoW solve it escalated from said about the
+	// input device, so a challenge issued for it judges the same device.
+	solveDevice?: SolveDeviceSignals;
 	// Set when this session was minted because the user pressed refresh on
 	// the challenge of `refreshOf`. `refreshCount` is how many refreshes in a
 	// row led here, and `refreshedAfterMs` how long the replaced session had
@@ -828,6 +855,10 @@ export type Session = {
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// Microseconds from the server's TLS handshake flight to the client's
+	// reply, timed by chaddy: a round trip to whatever terminates TLS, where
+	// synackNs → ackNs is a round trip to whatever opened the TCP connection.
+	tlsHandshakeRttUs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -844,6 +875,8 @@ export type Session = {
 		// True iff the HTTPS request path matched HMAC(sessionId, secret).
 		// False indicates a scanner / replayed sessionId / wrong secret.
 		pathValid?: boolean;
+		// True once the session's asset URL (`dns_asset_url`) was requested.
+		assetSeen?: boolean;
 		// Wall-clock time the first event for this session was received
 		// by the provider. Subsequent events update the individual fields
 		// above but don't bump this timestamp.

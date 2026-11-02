@@ -370,6 +370,43 @@ describe("emitted record", () => {
 			errorSpy.mockRestore();
 		}
 	});
+
+	it("writes bigints nested inside class instances as strings", () => {
+		class Holder {
+			constructor(readonly value: bigint) {}
+		}
+		const logger = getLogger("info", "bigint-scope");
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		try {
+			logger.info(() => ({
+				msg: "big",
+				data: { holder: new Holder(2n ** 70n) },
+			}));
+			const record = JSON.parse(String(infoSpy.mock.calls[0]?.[0]));
+			expect(record.data.holder.value).toBe((2n ** 70n).toString());
+		} finally {
+			infoSpy.mockRestore();
+		}
+	});
+
+	it("still logs, without throwing, when the data has a cycle", () => {
+		const logger = getLogger("info", "cycle-scope");
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		const cyclic: Record<string, unknown> = {};
+		cyclic.self = cyclic;
+		try {
+			expect(() =>
+				logger.info(() => ({ msg: "loop", data: { cyclic } })),
+			).not.toThrow();
+			const record = JSON.parse(String(infoSpy.mock.calls[0]?.[0]));
+			expect(record.msg).toBe("loop");
+			expect(record.scope).toBe("cycle-scope");
+			expect(record.data).toBeUndefined();
+			expect(record.logSerialisationError).toMatch(/circular/i);
+		} finally {
+			infoSpy.mockRestore();
+		}
+	});
 });
 
 describe("Logger.with subscope", () => {

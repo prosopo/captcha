@@ -31,6 +31,7 @@ import {
 	computeDnsAsymmetry,
 	enrichDnsEvent,
 } from "../../tasks/dnsEvent/enrichDnsEvent.js";
+import { isDnsAssetPath } from "../dnsEventUrl.js";
 
 // Only the first few invalid events are described in the log line so a
 // fully-garbage batch cannot produce an unbounded log entry.
@@ -41,9 +42,17 @@ type DnsEventBatchSchemaType = typeof DnsEventIngestBatchSchema;
 // Exported for unit tests — picks out the field(s) one DnsEvent contributes.
 export const dnsEventToFields = (
 	event: DnsEvent,
-): { resolverIp?: string; peerIp?: string; pathValid?: boolean } => {
+): {
+	resolverIp?: string;
+	peerIp?: string;
+	pathValid?: boolean;
+	assetSeen?: boolean;
+} => {
 	if (event.kind === "dns") {
 		return { resolverIp: event.src_ip };
+	}
+	if (event.jti && event.path && isDnsAssetPath(event.jti, event.path)) {
+		return { assetSeen: true };
 	}
 	const out: { peerIp: string; pathValid?: boolean } = {
 		peerIp: event.src_ip,

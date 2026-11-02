@@ -1,5 +1,114 @@
 # @prosopo/provider
 
+## 5.26.1
+### Patch Changes
+
+- bea67d6: Decide whether a visitor is on a phone in one place, from the same inputs, wherever the provider needs to know.
+  
+  Frictionless routing, post-PoW routing, the decision machines, puzzle sizing on escalation and puzzle issuance each built that verdict themselves, and fed it different evidence. Post-PoW routing judged the device before the solve was decrypted, so the touch readings the solve carried never counted, while the escalation that followed judged it again with them included. They now share `deriveDevice`, which takes the user agent, client hints, IP lookup, packet size, in-app flag and, wherever a solve exists, what that solve said about the input device. Post-PoW routing computes it once and the escalation reuses it. An escalated session keeps the solve's two device readings, so a puzzle issued for it judges the same device.
+  
+  An iPad that sends a Mac user agent but taps with a finger can now be recognised from its taps after a solve. The weighing itself is unchanged: a touchscreen laptop, or a phone browser asking for the desktop site, still counts as a desktop.
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/types-database@5.16.1
+  - @prosopo/api@4.8.6
+  - @prosopo/api-express-router@3.3.11
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.5.1
+  - @prosopo/datasets@3.2.19
+  - @prosopo/env@3.6.88
+  - @prosopo/fingerprint@2.8.10
+  - @prosopo/ipinfo@0.5.2
+  - @prosopo/keyring@2.10.19
+  - @prosopo/load-balancer@2.11.23
+  - @prosopo/types-env@2.11.34
+  - @prosopo/user-access-policy@3.15.15
+
+## 5.26.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/types-database@5.16.0
+  - @prosopo/database@4.5.0
+  - @prosopo/api@4.8.5
+  - @prosopo/api-express-router@3.3.10
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.18
+  - @prosopo/env@3.6.87
+  - @prosopo/fingerprint@2.8.9
+  - @prosopo/ipinfo@0.5.1
+  - @prosopo/keyring@2.10.18
+  - @prosopo/load-balancer@2.11.22
+  - @prosopo/types-env@2.11.33
+  - @prosopo/user-access-policy@3.15.14
+
+## 5.25.0
+### Minor Changes
+
+- 8bf0957: The IP lookup now reads a detector risk for the address (a number from 0 to 1, or nothing when there is no evidence) and keeps it on the lookup result, so it is saved with the session's IP info and written to the frictionless decision log next to the session's own bot score.
+  
+  Sites get a new setting, `ipDetectorRiskWeight` (0 to 1, default 0). When it is above 0, the frictionless flow adds weight × risk to the bot score, capped at 1, before comparing it with the site's thresholds. It can only change which challenge is served; it never blocks. The amount added is recorded in the session's score components, and the log shows the score before and after. At the default of 0 nothing changes.
+
+### Patch Changes
+
+- Updated dependencies [e6b2206]
+- Updated dependencies [8bf0957]
+- Updated dependencies [11a38cc]
+  - @prosopo/user-access-policy@3.15.13
+  - @prosopo/types@5.22.0
+  - @prosopo/types-database@5.15.0
+  - @prosopo/ipinfo@0.5.0
+  - @prosopo/database@4.4.4
+  - @prosopo/api@4.8.4
+  - @prosopo/api-express-router@3.3.9
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.17
+  - @prosopo/env@3.6.86
+  - @prosopo/fingerprint@2.8.8
+  - @prosopo/keyring@2.10.17
+  - @prosopo/load-balancer@2.11.21
+  - @prosopo/types-env@2.11.32
+
+## 5.24.0
+### Minor Changes
+
+- b18a733: Routing machines now see which detectors fired, as `raw.triggeredDetectors`.
+  
+  The provider already stored the triggered detectors on the session but never passed them to the routing machine, so a routing rule could not act on a single detector. They are now passed on the first request, on the post-PoW route and on the dedup replay. On the last two they come from the stored session.
+- fb7e3ec: A traffic-filter exception can now be conditioned on whether the IP is on a mobile network (`mobile: true` or `mobile: false`). This lets a site block high-scoring proxies everywhere except on carrier networks, where one shared address carries real phones alongside the rented SIMs that put it on proxy lists.
+- 25a151e: Every traffic-filter category (VPN, proxy, Tor, abuser, datacenter, mobile, satellite, crawler) now has the same two name lists. `nameAllowlist` takes a matching network out of that category, for example letting "VPN by Google" past a VPN block. `nameDenylist` keeps a matching network in that category even when it would otherwise be let out. Until now only the datacenter category had these lists. The old top-level `datacenterNameAllowlist` and `datacenterNameDenylist` still work and count as the datacenter category's lists. iCloud Private Relay is let through by every category except Tor unless a site denylists it.
+
+### Patch Changes
+
+- 3815778: iCloud Private Relay users are no longer blocked by a site's VPN or proxy rule. Our IP data provider has started marking some Private Relay addresses as VPNs, so sites that block VPNs were turning away ordinary iPhone users. Private Relay addresses are now exempt from every traffic-filter category except Tor, unless the site owner names Private Relay in `datacenterNameDenylist`.
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/types-database@5.14.0
+  - @prosopo/api@4.8.3
+  - @prosopo/api-express-router@3.3.8
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.3
+  - @prosopo/datasets@3.2.16
+  - @prosopo/env@3.6.85
+  - @prosopo/fingerprint@2.8.7
+  - @prosopo/ipinfo@0.4.29
+  - @prosopo/keyring@2.10.16
+  - @prosopo/load-balancer@2.11.20
+  - @prosopo/types-env@2.11.31
+  - @prosopo/user-access-policy@3.15.12
+
 ## 5.23.2
 ### Patch Changes
 

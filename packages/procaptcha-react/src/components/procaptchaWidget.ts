@@ -93,7 +93,7 @@ export const mountProcaptchaImageWidget = (
 		frictionlessState,
 		() => honeypot?.getValue(),
 		delegatesReload
-			? (x?: number, y?: number) => props.onReload?.(x, y, { refresh: true })
+			? (x, y, options) => props.onReload?.(x, y, { refresh: true, ...options })
 			: undefined,
 	);
 
@@ -134,6 +134,10 @@ export const mountProcaptchaImageWidget = (
 		onClick: manager.select,
 		onNext: manager.nextRound,
 		onReload: manager.reload,
+		...(delegatesReload &&
+			true === challenge.puzzleSwitchAvailable && {
+				onSwitchToPuzzle: () => manager.reload({ switchToPuzzle: true }),
+			}),
 		themeColor: config.theme ?? "light",
 		translator,
 		audioAlternative: audioAlternativeOffer(

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { stringifyBigInts } from "@prosopo/util";
+import { stringifyJson } from "@prosopo/util";
 
 export type LogObject = object;
 export type LogRecord = {
@@ -412,10 +412,26 @@ export class NativeLogger implements Logger {
 				dest(baseRecord);
 			}
 		} else {
-			// conversion to avoid "TypeError: Do not know how to serialize a BigInt" in JSON.stringify
-			const logRecord = stringifyBigInts(baseRecord) as object;
-
-			const output = JSON.stringify(logRecord, null, this.pretty);
+			// stringifyJson writes bigints as strings at any depth, including
+			// inside class instances, which a stringifyBigInts pre-pass skipped
+			// (and it recursed forever on cycles). A record that still can't be
+			// serialised, e.g. a cycle or a throwing toJSON, must not make the
+			// log call throw, so keep its plain fields and say what went wrong.
+			const output = stringifyJson(baseRecord, this.pretty).unwrapOrElse(
+				(error) =>
+					JSON.stringify(
+						{
+							...Object.fromEntries(
+								Object.entries(baseRecord).filter(
+									([, value]) => typeof value !== "object",
+								),
+							),
+							logSerialisationError: error.message,
+						},
+						null,
+						this.pretty,
+					),
+			);
 			dest(output);
 		}
 	}

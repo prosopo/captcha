@@ -40,6 +40,7 @@ import {
 	ProcaptchaConfigSchema,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
+	type ReloadOptions,
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
@@ -80,7 +81,11 @@ export function Manager(
 	// sessionId this challenge was issued against has already been consumed
 	// provider-side, so only the wrapper (which can run /frictionless again)
 	// can produce a fresh one. When absent the manager reloads itself.
-	onReloadRequest?: (x?: number, y?: number) => void,
+	onReloadRequest?: (
+		x?: number,
+		y?: number,
+		options?: Pick<ReloadOptions, "switchToPuzzle">,
+	) => void,
 ) {
 	const events = getDefaultEvents(callbacks);
 
@@ -499,7 +504,7 @@ export function Manager(
 		events.onClose();
 	};
 
-	const reload = async () => {
+	const reload = async (options?: Pick<ReloadOptions, "switchToPuzzle">) => {
 		// disable the time limit
 		clearTimeout();
 		// trigger the onReload event
@@ -511,7 +516,7 @@ export function Manager(
 			// back down to an unticked checkbox, which is what made reload
 			// look like it merely closed the modal.
 			resetState();
-			onReloadRequest(checkboxClickX, checkboxClickY);
+			onReloadRequest(checkboxClickX, checkboxClickY, options);
 			return;
 		}
 		// abandon the captcha process and restart frictionless, if it exists

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Asset, AssetsResolver } from "@prosopo/types";
+import { parseInteger } from "@prosopo/util";
 import { sealAssetPath } from "./assetSeal.js";
 import { parseSealKeys } from "./assetSealFormat.js";
 
@@ -105,9 +106,9 @@ export function getSealedAssetsResolver(): AssetsResolver | undefined {
 		);
 	}
 
-	const ttlSeconds =
-		Number.parseInt(process.env.PROSOPO_ASSET_SEAL_TTL_SECONDS ?? "", 10) ||
-		DEFAULT_ASSET_SEAL_TTL_SECONDS;
+	const ttlSeconds = parseInteger(process.env.PROSOPO_ASSET_SEAL_TTL_SECONDS, {
+		min: 1,
+	}).unwrapOr(DEFAULT_ASSET_SEAL_TTL_SECONDS);
 
 	return new SealedAssetsResolver({
 		key,

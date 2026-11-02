@@ -14,6 +14,7 @@ import { Readable } from "node:stream";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoError } from "@prosopo/common";
+import { stringifyJson } from "@prosopo/util";
 
 export function loadJSONFile(filePath: string) {
 	try {
@@ -34,6 +35,13 @@ export function writeJSONFile(
 	jsonData: Record<string, unknown>,
 ) {
 	return new Promise((resolve, reject) => {
+		// Bigints are written as decimal strings rather than throwing; a cycle
+		// rejects before the file is created or truncated.
+		const json = stringifyJson(jsonData);
+		if (!json.ok) {
+			reject(json.error);
+			return;
+		}
 		const writeStream: WriteStream = createWriteStream(filePath);
 
 		writeStream.setDefaultEncoding("utf-8");
@@ -47,7 +55,7 @@ export function writeJSONFile(
 		});
 
 		// https://stackoverflow.com/questions/64585940/writestream-nodejs-out-memory
-		const readable = Readable.from(JSON.stringify(jsonData));
+		const readable = Readable.from(json.value);
 
 		readable.pipe(writeStream);
 	});

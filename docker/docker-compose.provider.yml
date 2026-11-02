@@ -155,6 +155,9 @@ services:
       - "[::]:443:443"
     volumes:
       - ./provider.Caddyfile:/etc/caddy/Caddyfile
+      # Crawler user-agent and address list read by `crawler_list` in
+      # provider.Caddyfile. Deployed by ansible; an empty directory blocks nothing.
+      - ./caddy.d:/etc/caddy/conf.d:ro
       - caddy_data:/data
       - caddy_config:/config
       # Shared with the tcp-probe sidecar (docker-compose.provider.tcp-probe.yml). Chaddy's

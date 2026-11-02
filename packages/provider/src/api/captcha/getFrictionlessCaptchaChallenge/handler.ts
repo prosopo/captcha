@@ -39,7 +39,7 @@ import {
 import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
-	derivePlatform,
+	deriveDevice,
 	deriveTrafficPolicies,
 } from "../../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
@@ -50,7 +50,7 @@ import {
 	getRequestUserScope,
 	normalizeHeadersForMatching,
 } from "../../blacklistRequestInspector.js";
-import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import { dnsBeaconUrls } from "../../dnsEventUrl.js";
 import { errorCodeForReason } from "../../errorCodeForReason.js";
 import {
 	recordBotScore,
@@ -67,6 +67,7 @@ import {
 import { handleAccessPolicy } from "./accessPolicy.js";
 import {
 	isPuzzleImageSwitchAvailable,
+	isRefreshLimitSwitchEnabled,
 	resolveScoreLadder,
 	resolveSiteAllowedCaptchaTypes,
 } from "./constants.js";
@@ -74,7 +75,7 @@ import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import {
-	isImageSwitchRequestValid,
+	isUserImageChoiceActive,
 	resolveRefreshLineage,
 } from "./refreshLineage.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
@@ -117,6 +118,7 @@ export default (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				switchToPuzzle,
 				fingerprintProof,
 				widgetSlot,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
@@ -333,10 +335,6 @@ export default (
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.asnNumber
 						: undefined;
-				const dedupIsMobile =
-					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-						? req.ipInfo.isMobile
-						: undefined;
 				const dedupFlatHeaders = flatten(req.headers);
 				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
 				const dedupTrafficPolicies = deriveTrafficPolicies(
@@ -408,17 +406,13 @@ export default (
 								ip: normalizedIp,
 								...(dedupCountryCode && { countryCode: dedupCountryCode }),
 								score: dedup.session.score,
-								platform: derivePlatform(
-									dedupUserAgent,
-									dedup.session.webView,
-									{
-										headers: dedupFlatHeaders,
-										...(typeof dedupIsMobile === "boolean" && {
-											carrierNetwork: dedupIsMobile,
-										}),
-										...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
-									},
-								),
+								platform: deriveDevice({
+									userAgent: dedupUserAgent,
+									headers: dedupFlatHeaders,
+									ipInfo: req.ipInfo,
+									tcpMss: req.tcpMss,
+									webView: dedup.session.webView,
+								}).platform,
 								// Session-derived, like `score` and `webView` above:
 								// the replay never re-decrypts a payload.
 								...(dedup.session.d !== undefined && {
@@ -461,6 +455,12 @@ export default (
 									...(dedupTrafficPolicies && {
 										trafficPolicies: dedupTrafficPolicies,
 									}),
+									...(dedup.session.scoreComponents?.triggeredDetectors?.length
+										? {
+												triggeredDetectors:
+													dedup.session.scoreComponents.triggeredDetectors,
+											}
+										: {}),
 								},
 							},
 						)
@@ -600,7 +600,7 @@ export default (
 							| CaptchaType.iconOrder,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
-						dns_url: buildDnsEventUrl(dedup.sessionId),
+						...dnsBeaconUrls(dedup.sessionId),
 						...(offersAudioAlternative(
 							dedup.captchaType,
 							audioAlternativeEnabled,
@@ -619,6 +619,26 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.asnNumber
 					: undefined;
+
+			// Ahead of the short-circuits, so a site pinned to puzzle can still be
+			// switched to image and still has its refreshes recorded.
+			const refresh = await resolveRefreshLineage(
+				tasks.db,
+				refreshOf,
+				dapp,
+				userSitekeyIpHash,
+				new Date(),
+			);
+			tasks.frictionlessManager.setImageSwitchRequested(
+				isUserImageChoiceActive(
+					{ switchToImage, switchToPuzzle },
+					refresh,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				),
+			);
+			tasks.frictionlessManager.setRefreshLimitSwitchEnabled(
+				isRefreshLimitSwitchEnabled(clientRecord.settings),
+			);
 
 			const shortCircuitInput = {
 				tasks,
@@ -645,23 +665,8 @@ export default (
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
 				...rawTlsSignalsForSession(req),
+				...(refresh && { refresh: refresh.lineage }),
 			};
-
-			// Ahead of the short-circuits, so a site pinned to puzzle can still be
-			// switched to image.
-			const refresh = await resolveRefreshLineage(
-				tasks.db,
-				refreshOf,
-				dapp,
-				new Date(),
-			);
-			tasks.frictionlessManager.setImageSwitchRequested(
-				isImageSwitchRequestValid(
-					switchToImage,
-					refresh,
-					isPuzzleImageSwitchAvailable(clientRecord.settings),
-				),
-			);
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
@@ -746,7 +751,7 @@ export default (
 					[ApiParams.captchaType]: CaptchaType.authenticated,
 					[ApiParams.sessionId]: authenticatedSession.sessionId,
 					[ApiParams.status]: "ok",
-					dns_url: buildDnsEventUrl(authenticatedSession.sessionId),
+					...dnsBeaconUrls(authenticatedSession.sessionId),
 					...(verifiedSignerUrl && { agent: verifiedSignerUrl }),
 				});
 			};
@@ -959,10 +964,6 @@ export default (
 				...rawTlsSignalsForSession(req),
 			});
 
-			const ipInfoMobile =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.isMobile
-					: undefined;
 			// `userAgent` is hashed and only meaningful to
 			// `runUserAgentMismatchCheck`; passing it here left `isApple` and any
 			// UA classification permanently false. The dedup replay above already
@@ -981,16 +982,22 @@ export default (
 				imageMinRounds: clientRecord.settings.imageMinRounds,
 				baseImageRounds: env.config.captchas.solved.count,
 				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
-				platform: derivePlatform(requestUserAgent, webView, {
+				platform: deriveDevice({
+					userAgent: requestUserAgent,
 					headers: flatHeaders,
-					...(typeof ipInfoMobile === "boolean" && {
-						carrierNetwork: ipInfoMobile,
-					}),
-					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
-				}),
+					ipInfo: req.ipInfo,
+					tcpMss: req.tcpMss,
+					webView,
+				}).platform,
 				// Straight from the payload this request arrived with — the
 				// session record is written from the same value.
 				...(d !== undefined && { d }),
+				...(refresh && {
+					refresh: {
+						count: refresh.lineage.refreshCount,
+						afterMs: refresh.lineage.refreshedAfterMs,
+					},
+				}),
 				raw: {
 					headers: flatHeaders,
 					userAgent: requestUserAgent,
@@ -1013,6 +1020,8 @@ export default (
 					// Which egress categories this site blocks, so egress-sensitive
 					// route rules can skip sites that accept VPN / proxy / DC users.
 					...(trafficPolicies && { trafficPolicies }),
+					...(triggeredDetectors &&
+						triggeredDetectors.length > 0 && { triggeredDetectors }),
 				},
 			});
 

@@ -873,6 +873,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		triggeredDetectors: { type: [Number], required: false },
 		shadowDomPenalty: { type: Boolean, required: false },
 		dnsAsymmetry: { type: Number, required: false },
+		ipDetectorRisk: { type: Number, required: false },
 	},
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	captchaType: { type: String, enum: CaptchaType, required: true },
@@ -911,6 +912,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// gap only for fields that are inherently origin-populated; escalation-
 	// owned fields (captchaType, sessionId, score, etc.) are never overridden.
 	originSessionId: { type: String, required: false },
+	solveDevice: {
+		type: new Schema(
+			{ deviceCapability: String, touchEventCount: Number },
+			{ _id: false },
+		),
+		required: false,
+	},
 	refreshOf: { type: String, required: false },
 	refreshCount: { type: Number, required: false },
 	refreshedAfterMs: { type: Number, required: false },
@@ -1022,6 +1030,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// rows hold them and routing rules read them.
 	tcpOptsFlags: { type: Number, required: false },
 	tcpOptsOrder: { type: Number, required: false },
+	tlsHandshakeRttUs: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -1031,6 +1040,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 				resolverIp: { type: String, required: false },
 				peerIp: { type: String, required: false },
 				pathValid: { type: Boolean, required: false },
+				assetSeen: { type: Boolean, required: false },
 				receivedAt: { type: Date, required: true },
 			},
 			{ _id: false },
@@ -1268,6 +1278,8 @@ export const SESSION_PROJECTION = {
 	bundleId: 1,
 	dnsEvent: 1,
 	originSessionId: 1,
+	// Read when a challenge is issued for an escalation; see deriveDevice.
+	solveDevice: 1,
 	// Read by the next refresh to extend the chain and time it.
 	refreshCount: 1,
 	createdAt: 1,
@@ -1324,6 +1336,7 @@ export const SESSION_PROJECTION = {
 	ipTos: 1,
 	tcpOptsFlags: 1,
 	tcpOptsOrder: 1,
+	tlsHandshakeRttUs: 1,
 	"headers.user-agent": 1,
 	"headers.accept": 1,
 	"headers.accept-language": 1,
@@ -1760,6 +1773,7 @@ export interface IProviderDatabase extends IDatabase {
 			resolverIp?: string;
 			peerIp?: string;
 			pathValid?: boolean;
+			assetSeen?: boolean;
 		},
 		receivedAtIfAbsent: Date,
 	): Promise<boolean>;

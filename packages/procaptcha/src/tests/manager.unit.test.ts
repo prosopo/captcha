@@ -1434,7 +1434,16 @@ describe("reload", () => {
 		await harness.manager.start(120, 340);
 		await harness.manager.reload();
 		expect(harness.events.onReload).toHaveBeenCalledTimes(1);
-		expect(harness.onReloadRequest).toHaveBeenCalledWith(120, 340);
+		expect(harness.onReloadRequest).toHaveBeenCalledWith(120, 340, undefined);
+	});
+
+	test("passes a switch back to the puzzle on to the caller", async () => {
+		const harness = build({ delegateReload: true });
+		await harness.manager.start(120, 340);
+		await harness.manager.reload({ switchToPuzzle: true });
+		expect(harness.onReloadRequest).toHaveBeenCalledWith(120, 340, {
+			switchToPuzzle: true,
+		});
 	});
 
 	test("does not restart frictionless when the caller owns reload", async () => {

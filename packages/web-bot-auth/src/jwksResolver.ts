@@ -151,8 +151,21 @@ export const resolveJwksFromSignatureAgent = async (
 		throw new Error(`JWKS fetch ${response.status} at ${directoryUrl}`);
 	}
 
-	const body = JSON.parse(await readCappedText(response)) as { keys?: Jwk[] };
-	const keys = Array.isArray(body.keys) ? body.keys : [];
+	const text = await readCappedText(response);
+	let body: unknown;
+	try {
+		body = JSON.parse(text);
+	} catch {
+		throw new Error(`JWKS body at ${directoryUrl} is not JSON`);
+	}
+	// A `null` or scalar body has no keys rather than crashing on `.keys`.
+	const keys =
+		typeof body === "object" &&
+		body !== null &&
+		"keys" in body &&
+		Array.isArray(body.keys)
+			? (body.keys as Jwk[])
+			: [];
 
 	const ttl = Math.min(
 		options.ttlMs ??

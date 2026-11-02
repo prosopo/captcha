@@ -38,6 +38,7 @@ import {
 	Tier,
 	TrafficFilterAction,
 	iconOrderToleranceDefault,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -66,6 +67,7 @@ const FULLY_POPULATED_SETTINGS = {
 	puzzleTolerance: 20,
 	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+	ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 	puzzle: {
 		decoyCount: 7,
 		decoyEdgeDarkness: 25,
@@ -128,7 +130,11 @@ const FULLY_POPULATED_SETTINGS = {
 		},
 	},
 	trafficFilter: {
-		vpn: { action: TrafficFilterAction.Block },
+		vpn: {
+			action: TrafficFilterAction.Block,
+			nameAllowlist: ["VPN by Google"],
+			nameDenylist: ["Example VPN"],
+		},
 		proxy: { action: TrafficFilterAction.Block },
 		tor: { action: TrafficFilterAction.Block },
 		abuser: { action: TrafficFilterAction.Block },
@@ -137,6 +143,7 @@ const FULLY_POPULATED_SETTINGS = {
 			action: TrafficFilterAction.Challenge,
 			captchaType: CaptchaType.image,
 			solvedImagesCount: 5,
+			nameAllowlist: ["Cloudflare, Inc."],
 		},
 		datacenterNameAllowlist: ["iCloud Private Relay"],
 		datacenterNameDenylist: ["ScrapyIPLeaser"],

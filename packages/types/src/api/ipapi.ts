@@ -94,6 +94,15 @@ export interface IPApiVPNInfo {
 	longitude: number;
 }
 
+export interface IPApiReputationInfo {
+	/**
+	 * Risk in [0,1] from bot-detector fires on this address in recent
+	 * sessions, on the same additive scale as a session's bot score. Null or
+	 * absent means no evidence, not zero risk.
+	 */
+	detector_risk?: number | null;
+}
+
 export interface IPApiResponse {
 	ip: string;
 	rir: "ARIN" | "RIPE" | "APNIC" | "LACNIC" | "AFRINIC";
@@ -120,6 +129,7 @@ export interface IPApiResponse {
 	asn?: IPApiASNInfo;
 	location?: IPApiLocationInfo;
 	vpn?: IPApiVPNInfo;
+	reputation?: IPApiReputationInfo;
 	elapsed_ms: number;
 }
 
@@ -182,6 +192,8 @@ export interface IPInfoResult {
 	// Risk scoring
 	abuserScore?: number;
 	companyAbuserScore?: number;
+	/** Undefined when the address has no detector evidence. */
+	detectorRisk?: number;
 
 	// Raw response for debugging
 	rawResponse?: IPApiResponse;

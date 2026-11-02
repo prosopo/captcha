@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "이미지 인증",
 		"CANNOT_LOAD": "CAPTCHA를 불러올 수 없습니다",
 		"RELOAD": "새로고침",
+		"SWITCH_TO_PUZZLE": "퍼즐 챌린지로 전환",
 		"VERIFIED_AGENT": "인증된 에이전트",
 		"TRUSTED_REQUEST": "신뢰할 수 있는 요청",
 		"LOADING": "로드 중",

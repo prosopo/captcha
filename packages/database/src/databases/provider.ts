@@ -1197,9 +1197,19 @@ export class ProviderDatabase
 							record as PuzzleCaptchaRecord,
 							markStored,
 						),
+					// The render inputs are patched on after the record is first
+					// streamed, so only an update can carry them to the central
+					// copy the portal redraws from. They are read here and on no
+					// other path: verify never needs them.
 					streamUpdate: (challenge, markStored) =>
 						this.centralStreamer?.streamPuzzleUpdate(
-							() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+							() =>
+								this.getInteractiveCaptchaRecordByChallenge<PuzzleCaptchaRecord>(
+									this.interactiveCollection(CaptchaType.puzzle),
+									challenge,
+									"streamPuzzleUpdate",
+									{ render: 1 },
+								),
 							markStored,
 						),
 				};
@@ -1446,6 +1456,7 @@ export class ProviderDatabase
 		collection: InteractiveCaptchaCollection,
 		challenge: string,
 		failedFuncName: string,
+		extraProjection: Record<string, 1> = {},
 	): Promise<T | null> {
 		if (!this.tables) {
 			throw new ProsopoError({
@@ -1485,6 +1496,7 @@ export class ProviderDatabase
 						// See the PoW projection above — same verify-time read.
 						clientMetaData: 1,
 						...collection.answerProjection,
+						...extraProjection,
 					},
 				)
 				.lean<T>();
@@ -2428,6 +2440,7 @@ export class ProviderDatabase
 			resolverIp?: string;
 			peerIp?: string;
 			pathValid?: boolean;
+			assetSeen?: boolean;
 		},
 		receivedAtIfAbsent: Date,
 	): Promise<boolean> {
@@ -2448,6 +2461,9 @@ export class ProviderDatabase
 		}
 		if (fields.pathValid !== undefined) {
 			setStage["dnsEvent.pathValid"] = fields.pathValid;
+		}
+		if (fields.assetSeen !== undefined) {
+			setStage["dnsEvent.assetSeen"] = fields.assetSeen;
 		}
 		try {
 			const result = await this.tables.session.updateOne(
