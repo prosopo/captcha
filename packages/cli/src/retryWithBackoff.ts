@@ -17,39 +17,33 @@ import type { ProviderEnvironment } from "@prosopo/env";
 export type RetryOptions = {
 	initialDelayMs?: number;
 	maxDelayMs?: number;
-	maxElapsedMs?: number;
 	onRetry?: (event: {
 		attempt: number;
 		delayMs: number;
 		err: unknown;
 	}) => void;
 	sleep?: (ms: number) => Promise<void>;
-	now?: () => number;
 	random?: () => number;
 };
 
 const DEFAULT_INITIAL_DELAY_MS = 100;
 const DEFAULT_MAX_DELAY_MS = 5_000;
-// Bounded so a permanent fault such as bad credentials still exits and shows
-// up as a failed deploy, rather than a container that looks up but never serves.
-const DEFAULT_MAX_ELAPSED_MS = 5 * 60_000;
 
 const defaultSleep = (ms: number): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, ms));
 
+// Never gives up: an outage of any length must end with the provider serving
+// again, with no restart or operator involved.
 export async function retryWithBackoff<T>(
 	operation: () => Promise<T>,
 	{
 		initialDelayMs = DEFAULT_INITIAL_DELAY_MS,
 		maxDelayMs = DEFAULT_MAX_DELAY_MS,
-		maxElapsedMs = DEFAULT_MAX_ELAPSED_MS,
 		onRetry,
 		sleep = defaultSleep,
-		now = Date.now,
 		random = Math.random,
 	}: RetryOptions = {},
 ): Promise<T> {
-	const startedAt = now();
 	for (let attempt = 1; ; attempt++) {
 		try {
 			return await operation();
@@ -61,9 +55,6 @@ export async function retryWithBackoff<T>(
 			// Half fixed, half random: the two providers on a node start together
 			// and should not hit a recovering datastore in lockstep.
 			const delayMs = Math.round(ceilingMs / 2 + random() * (ceilingMs / 2));
-			if (now() - startedAt + delayMs > maxElapsedMs) {
-				throw err;
-			}
 			onRetry?.({ attempt, delayMs, err });
 			await sleep(delayMs);
 		}

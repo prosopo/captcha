@@ -27,14 +27,11 @@ const failTimes = (failures: number): (() => Promise<string>) => {
 };
 
 const fakeClock = () => {
-	let time = 0;
 	const delays: number[] = [];
 	return {
 		delays,
-		now: () => time,
 		sleep: async (ms: number) => {
 			delays.push(ms);
-			time += ms;
 		},
 	};
 };
@@ -69,16 +66,12 @@ describe("retryWithBackoff", () => {
 		expect(clock.delays).toEqual([50, 100]);
 	});
 
-	it("gives up with the last error once time runs out", async () => {
+	it("keeps retrying long after the delay has reached the cap", async () => {
 		const clock = fakeClock();
 		await expect(
-			retryWithBackoff(failTimes(Number.POSITIVE_INFINITY), {
-				...clock,
-				maxElapsedMs: 1000,
-				random: () => 1,
-			}),
-		).rejects.toThrow("failure 4");
-		expect(clock.delays).toEqual([100, 200, 400]);
+			retryWithBackoff(failTimes(1000), { ...clock, random: () => 1 }),
+		).resolves.toBe("ready");
+		expect(clock.delays).toHaveLength(1000);
 	});
 });
 

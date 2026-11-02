@@ -65,7 +65,7 @@ services:
   provider2:
     <<: *provider
     container_name: provider2
-    image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
+    image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
     # .env.2 differs from .env.1 only by the API port and the scheduled job
     # settings: scheduled jobs run on provider2 alone because their lock is not
     # atomic, so running them on both could double-run a job.
