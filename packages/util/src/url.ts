@@ -35,6 +35,17 @@ export const prependProtocolToUrl = (url: string): string => {
 	return url;
 };
 
+/** Removes every trailing `/`, so `${base}/path` cannot produce `//`. */
+export const stripTrailingSlashes = (url: string): string =>
+	url.replace(/\/+$/, "");
+
+/**
+ * Appends `path` to `base` using the URL constructor. Slashes where they meet are
+ * collapsed, and a path on `base` is kept, which `new URL("/x", base)` would drop.
+ */
+export const joinUrl = (base: string, path: string): string =>
+	new URL(path.replace(/^\/+/, ""), `${stripTrailingSlashes(base)}/`).href;
+
 export const getURLProtocol = (url: URL) => {
 	if (!isIPAddress(url.hostname)) {
 		return "https";

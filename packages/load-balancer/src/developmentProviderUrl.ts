@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { stripTrailingSlashes } from "@prosopo/util";
 
 /**
  * Where a development widget looks for its provider.
@@ -50,6 +51,6 @@ export const getDevelopmentProviderUrl = (
 ): string => {
 	const trimmed = override?.trim();
 	return trimmed
-		? trimmed.replace(/\/$/, "")
+		? stripTrailingSlashes(trimmed)
 		: DEFAULT_DEVELOPMENT_PROVIDER_URL;
 };

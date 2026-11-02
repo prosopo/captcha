@@ -16,7 +16,9 @@ import {
 	buildDomainSuffixCandidates,
 	decodeGoogleTranslateHost,
 	isProtectDeployment,
+	joinUrl,
 	sanitisePageUrl,
+	stripTrailingSlashes,
 	validateDomain,
 } from "../url.js";
 
@@ -300,5 +302,33 @@ describe("isProtectDeployment", () => {
 		expect(
 			isProtectDeployment("not a url", "https://protect.client.com/"),
 		).toBe(false);
+	});
+});
+
+describe("stripTrailingSlashes", () => {
+	it.each([
+		["https://a.io/", "https://a.io"],
+		["https://a.io///", "https://a.io"],
+		["https://a.io/x", "https://a.io/x"],
+		["", ""],
+	])("%s -> %s", (input: string, expected: string) => {
+		expect(stripTrailingSlashes(input)).toBe(expected);
+	});
+});
+
+describe("joinUrl", () => {
+	it.each([
+		["https://a.io", "x", "https://a.io/x"],
+		["https://a.io/", "/x", "https://a.io/x"],
+		["https://a.io//", "//x", "https://a.io/x"],
+		["https://a.io/dev/", "/x/y/", "https://a.io/dev/x/y/"],
+		["https://a.io/dev", "x?q=1", "https://a.io/dev/x?q=1"],
+		["https://a.io", "", "https://a.io/"],
+	])("%s + %s", (base: string, path: string, expected: string) => {
+		expect(joinUrl(base, path)).toBe(expected);
+	});
+
+	it("throws on a base that is not absolute", () => {
+		expect(() => joinUrl("a.io", "x")).toThrow();
 	});
 });
