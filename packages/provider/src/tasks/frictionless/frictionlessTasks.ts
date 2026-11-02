@@ -361,7 +361,13 @@ export class FrictionlessManager extends CaptchaManager {
 					),
 				);
 			}
-			await Promise.all(cachePromises).catch(() => {});
+			await Promise.all(cachePromises).catch((err) => {
+				this.logger.warn(() => ({
+					err,
+					data: { sessionId: sessionRecord.sessionId },
+					msg: "Failed to cache session",
+				}));
+			});
 		}
 
 		return sessionRecord;
@@ -424,7 +430,13 @@ export class FrictionlessManager extends CaptchaManager {
 					),
 				);
 			}
-			await Promise.all(cachePromises).catch(() => {});
+			await Promise.all(cachePromises).catch((err) => {
+				this.logger.warn(() => ({
+					err,
+					data: { sessionId: sessionRecord.sessionId },
+					msg: "Failed to cache session",
+				}));
+			});
 		}
 
 		return sessionRecord;

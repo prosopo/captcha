@@ -669,6 +669,37 @@ describe("Frictionless Task Manager", () => {
 			);
 		});
 
+		it("logs a failed session cache write and still returns the captcha", async () => {
+			const cacheFailure = new Error("redis down");
+			frictionlessTaskManager.writeQueue = {
+				cacheSession: vi.fn().mockRejectedValue(cacheFailure),
+				cacheSessionByHash: vi.fn().mockResolvedValue(true),
+			} as unknown as import("@prosopo/database").RedisWriteQueue;
+			const warn = vi.spyOn(frictionlessTaskManager.logger, "warn");
+
+			frictionlessTaskManager.setSessionParams({
+				token: "test-token",
+				score: 0.5,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.1.1.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				siteKey: "test-dapp",
+			});
+
+			const response = await frictionlessTaskManager.sendPowCaptcha();
+
+			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
+			expect(warn).toHaveBeenCalledOnce();
+			const entry = warn.mock.calls[0]?.[0]?.();
+			expect(entry).toMatchObject({
+				err: cacheFailure,
+				msg: "Failed to cache session",
+			});
+		});
+
 		it("should not cache when writeQueue is not set", async () => {
 			frictionlessTaskManager.setSessionParams({
 				token: "test-token",
