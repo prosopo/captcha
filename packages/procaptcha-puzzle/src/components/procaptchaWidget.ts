@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createTranslator, loadI18next, localiseError } from "@prosopo/locale";
+import { toProsopoError, toPublicError } from "@prosopo/common";
+import {
+	createTranslator,
+	loadI18next,
+	localiseError,
+	toCallbackError,
+} from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -118,7 +124,10 @@ export const mountProcaptchaPuzzleWidget = (
 			verified = await manager.submitSolution(finalX, finalY, puzzleEvents);
 		} catch (error) {
 			callbacks.onError?.(
-				error instanceof Error ? error : new Error(String(error)),
+				toCallbackError(
+					translator.i18n,
+					toPublicError(toProsopoError(error, "PUZZ-7"), "FRONTEND_ERROR"),
+				),
 			);
 		}
 
@@ -341,7 +350,10 @@ export const mountProcaptchaPuzzleWidget = (
 				// only produces an unhandled rejection, since nothing awaits this
 				// handler.
 				callbacks.onError?.(
-					error instanceof Error ? error : new Error(String(error)),
+					toCallbackError(
+						translator.i18n,
+						toPublicError(toProsopoError(error, "PUZZ-8"), "FRONTEND_ERROR"),
+					),
 				);
 			} finally {
 				// A rejected start would otherwise leave the spinner up for good,
@@ -383,7 +395,10 @@ export const mountProcaptchaPuzzleWidget = (
 				}
 			} catch (error) {
 				callbacks.onError?.(
-					error instanceof Error ? error : new Error(String(error)),
+					toCallbackError(
+						translator.i18n,
+						toPublicError(toProsopoError(error, "PUZZ-9"), "FRONTEND_ERROR"),
+					),
 				);
 			} finally {
 				loading = false;
