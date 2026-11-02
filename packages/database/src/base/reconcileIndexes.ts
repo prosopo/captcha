@@ -317,7 +317,10 @@ export const reconcileIndexes = async (
 
 	for (const index of toDrop) {
 		const name = index.name ?? "";
-		if (!result.dropped.includes(name) && !wanted.some((w) => clashes(index, w))) {
+		if (
+			!result.dropped.includes(name) &&
+			!wanted.some((w) => clashes(index, w))
+		) {
 			await dropIfPresent(model, name);
 			result.dropped.push(name);
 		}
