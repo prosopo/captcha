@@ -38,7 +38,7 @@ import {
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
 import type { JWT } from "@prosopo/util-crypto";
-import { packageDir } from "@prosopo/util/node";
+import { decodeBase64Url, packageDir } from "@prosopo/util/node";
 import cors, { type CorsOptions } from "cors";
 import express from "express";
 import type { Request } from "express";
@@ -165,7 +165,9 @@ export const getUserFromJWT = (req: Request): string | undefined => {
 			return undefined;
 		}
 		const payload = JSON.parse(
-			Buffer.from(parts[1], "base64url").toString("utf-8"),
+			decodeBase64Url(parts[1])
+				.expect("decoding the JWT payload")
+				.toString("utf-8"),
 		);
 		return payload.sub as string | undefined;
 	} catch (e) {

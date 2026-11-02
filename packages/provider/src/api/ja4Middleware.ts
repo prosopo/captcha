@@ -17,6 +17,7 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { randomAsHex } from "@prosopo/util-crypto";
+import { decodeBase64 } from "@prosopo/util/node";
 import type { NextFunction, Request, Response } from "express";
 import { calculateJa4 } from "./ja4.js";
 
@@ -37,7 +38,9 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 		const xTlsClientHello = (headers["x-tls-clienthello"] || "").toString();
 
 		// Decode the base64 ClientHello message
-		const clientHelloBuffer = Buffer.from(xTlsClientHello, "base64");
+		const clientHelloBuffer = decodeBase64(xTlsClientHello).expect(
+			"decoding the x-tls-clienthello header",
+		);
 
 		// Debug: Check first few bytes
 		logger.debug(() => ({
