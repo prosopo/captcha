@@ -13,6 +13,7 @@
 // limitations under the License.
 import { ProsopoError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
+import { fetchJson } from "@prosopo/util";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
 import { readProviderListOverride } from "./providerUrlOverride.js";
 
@@ -212,17 +213,22 @@ export const loadBalancer = async (
 		];
 	}
 
-	const providers: hostedProviders = await fetch(
+	const providers = await fetchJson<hostedProviders>(
 		getLoadBalancerUrl(environment),
 		{
 			method: "GET",
 			mode: "cors",
 			signal: timeoutSignal(timeoutMs),
 		},
-	).then((res) => res.json());
+	);
+	if (!providers.ok) {
+		// @prosopo/server answers 504 for an error named TimeoutError, so the
+		// original rejection has to survive.
+		throw providers.error.cause ?? providers.error;
+	}
 	// `ipMode` steers `convertHostedProvider` at the fetched JSON's
 	// `ipv4` / `ipv6` sub-object rather than the dual-stack default,
 	// so tokens minted with a single-stack sub-zone URL find their
 	// entry — see the `detectIpMode` doc-comment in @prosopo/server.
-	return convertHostedProvider(providers, ipMode);
+	return convertHostedProvider(providers.value, ipMode);
 };
