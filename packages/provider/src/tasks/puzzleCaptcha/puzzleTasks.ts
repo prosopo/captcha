@@ -89,7 +89,12 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 	protected decisionMachineEventFields(
 		record: PuzzleCaptchaRecord,
 	): Partial<DecisionMachineInput> {
-		return { puzzleEvents: record.puzzleEvents };
+		return {
+			puzzleEvents: record.puzzleEvents,
+			puzzleOrigin: { x: record.originX, y: record.originY },
+			puzzleTarget: { x: record.targetX, y: record.targetY },
+			puzzleTolerance: record.tolerance,
+		};
 	}
 
 	/**

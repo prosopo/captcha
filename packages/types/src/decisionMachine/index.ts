@@ -195,6 +195,14 @@ export type DecisionMachineInput = {
 	// captured client-side and persisted on the puzzle captcha record.
 	// Always undefined on pow / image / audio inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Puzzle-only: where the piece started and where the notch was cut, in
+	// the 300x200 puzzle frame, and how close a drop must land to pass — the
+	// same values the provider checks the drop against. Machines run on the
+	// provider, so the answer never reaches a client. Undefined on every other
+	// captcha type.
+	puzzleOrigin?: { x: number; y: number };
+	puzzleTarget?: { x: number; y: number };
+	puzzleTolerance?: number;
 	// Audio-only: playback and typing events, persisted on the audio record.
 	audioEvents?: AudioEvent[];
 	// Audio-only: how many times the clip was played before submitting.
