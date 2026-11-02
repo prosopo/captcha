@@ -59,6 +59,7 @@ export interface AugmentedRequest {
 	// older than prosopo/chaddy#16.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	tlsHandshakeRttUs?: number;
 }
 
 declare global {
@@ -95,6 +96,7 @@ declare global {
 			ipTos?: number;
 			tcpOptsFlags?: number;
 			tcpOptsOrder?: number;
+			tlsHandshakeRttUs?: number;
 		}
 		interface Locals {
 			padBytes?: number;

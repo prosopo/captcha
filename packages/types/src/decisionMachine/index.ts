@@ -234,6 +234,8 @@ export type DecisionMachineInput = {
 	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// See Session.tlsHandshakeRttUs.
+	tlsHandshakeRttUs?: number;
 	// The site's per-category traffic-filter policies. Gates the
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
@@ -446,6 +448,8 @@ export interface RoutingMachineRawSignals {
 	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// See Session.tlsHandshakeRttUs.
+	tlsHandshakeRttUs?: number;
 	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
 	// ipapi/isp mirror at request time. Undefined when the lookup failed
 	// or the middleware wasn't reached (dev requests bypassing the
