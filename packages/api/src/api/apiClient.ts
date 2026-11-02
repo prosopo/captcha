@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { stripTrailingSlashes } from "@prosopo/util";
 import HttpClientBase from "./HttpClientBase.js";
 
 export class ApiClient extends HttpClientBase {
@@ -24,10 +23,9 @@ export class ApiClient extends HttpClientBase {
 		timeoutMs?: number,
 		defaultHeaders?: Readonly<Record<string, string>>,
 	) {
-		const trimmedBaseUrl = stripTrailingSlashes(baseUrl);
-		const baseUrlWithProtocol = !trimmedBaseUrl.startsWith("http")
-			? `https://${trimmedBaseUrl}`
-			: trimmedBaseUrl;
+		const baseUrlWithProtocol = !baseUrl.startsWith("http")
+			? `https://${baseUrl}`
+			: baseUrl;
 
 		super(baseUrlWithProtocol, "", timeoutMs, defaultHeaders);
 

@@ -35,9 +35,12 @@ export const prependProtocolToUrl = (url: string): string => {
 	return url;
 };
 
-/** Removes every trailing `/`, so `${base}/path` cannot produce `//`. */
+/**
+ * Removes every trailing `/`, so `${base}/path` cannot produce `//`. A bare
+ * scheme such as `https://` is left whole, as those slashes are not a path.
+ */
 export const stripTrailingSlashes = (url: string): string =>
-	url.replace(/\/+$/, "");
+	url.endsWith("://") ? url : url.replace(/\/+$/, "");
 
 /**
  * Appends `path` to `base` using the URL constructor. Slashes where they meet are

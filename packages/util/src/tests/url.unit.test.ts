@@ -310,6 +310,7 @@ describe("stripTrailingSlashes", () => {
 		["https://a.io/", "https://a.io"],
 		["https://a.io///", "https://a.io"],
 		["https://a.io/x", "https://a.io/x"],
+		["https://", "https://"],
 		["", ""],
 	])("%s -> %s", (input: string, expected: string) => {
 		expect(stripTrailingSlashes(input)).toBe(expected);
