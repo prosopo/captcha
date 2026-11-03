@@ -14,6 +14,7 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
+import type { IIpInfoService } from "@prosopo/ipinfo";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -25,6 +26,7 @@ import {
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 	type IPAddress,
+	type IPInfoResponse,
 	type ISpamFilterRules,
 	type ITrafficFilter,
 	type InteractiveCaptchaStored,
@@ -35,6 +37,7 @@ import {
 	ResultReason,
 	type Session,
 	SimdReadingsStage,
+	encodeCounterKey,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -57,6 +60,7 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import {
+	type CounterIncrement,
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
@@ -75,6 +79,13 @@ import {
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
+import {
+	FAR_MISS_WINDOW,
+	MAX_FAR_MISSES_PER_ACCOUNT,
+	MAX_FAR_MISSES_PER_IP,
+	isAttributableAccount,
+	isAttributableAddress,
+} from "./farMisses.js";
 
 /** Fields the shared pipeline writes back onto a captcha record. */
 export type InteractiveCaptchaRecordUpdate = Partial<
@@ -111,6 +122,7 @@ export interface InteractiveSubmission<TRecord> {
 	simdReadings?: string;
 	clientMetaData?: ClientMetaData;
 	isCorrect: (record: TRecord) => boolean;
+	isFarMiss?: (record: TRecord) => boolean;
 	/** Persists the raw interaction trail, whatever the verdict. */
 	persistInteraction: () => Promise<void>;
 }
@@ -126,6 +138,10 @@ export abstract class InteractiveCaptchaManager<
 	POW_SEPARATOR: string;
 	protected decisionMachineRunner: DecisionMachineRunner;
 	protected readonly usageCounters: UsageCounters | null;
+	private readonly accountSightings: Pick<
+		IIpInfoService,
+		"accountSighting"
+	> | null;
 
 	constructor(
 		db: IProviderDatabase,
@@ -133,11 +149,13 @@ export abstract class InteractiveCaptchaManager<
 		config: ProsopoConfigOutput,
 		logger?: Logger,
 		usageCounters?: UsageCounters | null,
+		accountSightings?: Pick<IIpInfoService, "accountSighting"> | null,
 	) {
 		super(db, pair, config, logger);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
+		this.accountSightings = accountSightings ?? null;
 	}
 
 	protected abstract readonly captchaType: DecisionMachineCaptchaType;
@@ -278,26 +296,45 @@ export abstract class InteractiveCaptchaManager<
 			return false;
 		}
 
-		const correct = submission.isCorrect(challengeRecord);
+		const dappAccount = at(challengeSplit, 2);
+		const ip = submission.ipAddress.address;
+		const answeredCorrectly = submission.isCorrect(challengeRecord);
+		const tooManyFarMisses =
+			answeredCorrectly &&
+			(await this.hasTooManyFarMisses(
+				dappAccount,
+				ip,
+				userAccount,
+				challengeRecord.ipInfo,
+			));
+		const correct = answeredCorrectly && !tooManyFarMisses;
 		const result: CaptchaResult = correct
 			? { status: CaptchaStatus.approved }
 			: {
 					status: CaptchaStatus.disapproved,
-					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+					reason: tooManyFarMisses
+						? ResultReason.CAPTCHA_FAILED
+						: ResultReason.CAPTCHA_INVALID_SOLUTION,
 				};
+		if (tooManyFarMisses) {
+			this.logger.info(() => ({
+				msg: `Correct ${this.logLabel} answer refused after too many far misses`,
+				data: { challenge, userAccount, dappAccount },
+			}));
+		}
 
-		// Solved-counter writes: fire-and-forget, only on a correct solve.
-		// Runs before any decision-machine veto.
-		if (correct && this.usageCounters) {
-			this.usageCounters.incrManyAsync(
-				at(challengeSplit, 2),
-				buildAllWindowIncrements(
-					"solved",
-					this.captchaType,
-					submission.ipAddress.address,
-					userAccount,
-				),
-			);
+		if (this.usageCounters) {
+			const kind = correct
+				? "solved"
+				: !answeredCorrectly && submission.isFarMiss?.(challengeRecord)
+					? "farMiss"
+					: undefined;
+			if (kind) {
+				this.usageCounters.incrManyAsync(
+					dappAccount,
+					buildAllWindowIncrements(kind, this.captchaType, ip, userAccount),
+				);
+			}
 		}
 
 		// Unconditional, so the trail survives when the behavioural payload is
@@ -318,7 +355,7 @@ export abstract class InteractiveCaptchaManager<
 						msg: "Behavioral analysis completed",
 						data: {
 							userAccount,
-							dappAccount: at(challengeSplit, 2),
+							dappAccount,
 							challenge,
 							mouseEventsCount: decryptedData.collector1?.length || 0,
 							touchEventsCount: decryptedData.collector2?.length || 0,
@@ -377,6 +414,53 @@ export abstract class InteractiveCaptchaManager<
 		}
 
 		return correct;
+	}
+
+	private async hasTooManyFarMisses(
+		dappAccount: string,
+		ip: string,
+		userAccount: string,
+		ipInfo: IPInfoResponse | undefined,
+	): Promise<boolean> {
+		if (!this.usageCounters) {
+			return false;
+		}
+		const farMisses = (
+			dimension: "ip" | "userAccount",
+			value: string,
+		): CounterIncrement => ({
+			spec: {
+				kind: "farMiss",
+				captchaType: this.captchaType,
+				dimension,
+				window: FAR_MISS_WINDOW,
+			},
+			value,
+		});
+		const byAccount = farMisses("userAccount", userAccount);
+		const byIp = farMisses("ip", ip);
+		const counts = await this.usageCounters.batchGet(dappAccount, [
+			byAccount,
+			byIp,
+		]);
+		if (!counts) {
+			return false;
+		}
+		const count = (read: CounterIncrement): number =>
+			counts[encodeCounterKey(dappAccount, read.spec, read.value)] ?? 0;
+
+		if (count(byIp) >= MAX_FAR_MISSES_PER_IP && isAttributableAddress(ipInfo)) {
+			return true;
+		}
+		if (
+			count(byAccount) >= MAX_FAR_MISSES_PER_ACCOUNT &&
+			this.accountSightings
+		) {
+			return isAttributableAccount(
+				await this.accountSightings.accountSighting(dappAccount, userAccount),
+			);
+		}
+		return false;
 	}
 
 	/** Invalid salt disapproves the submission rather than being ignored. */

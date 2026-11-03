@@ -94,6 +94,15 @@ export interface IPApiVPNInfo {
 	longitude: number;
 }
 
+export const REPUTATION_SHARED_REASONS = [
+	"mobile",
+	"private_relay",
+	"crawler",
+	"many_accounts",
+	"attested_device",
+] as const;
+export type ReputationSharedReason = (typeof REPUTATION_SHARED_REASONS)[number];
+
 export interface IPApiReputationInfo {
 	/**
 	 * Risk in [0,1] from bot-detector fires on this address in recent
@@ -101,6 +110,20 @@ export interface IPApiReputationInfo {
 	 * absent means no evidence, not zero risk.
 	 */
 	detector_risk?: number | null;
+	shared_reason?: ReputationSharedReason | null;
+}
+
+export interface ReputationAccountResponse {
+	known: boolean;
+	user_agents_7d?: number;
+	device_types?: string[];
+	first_seen?: string;
+	last_seen?: string;
+}
+
+export interface AccountSighting {
+	userAgents7d: number;
+	deviceTypes: string[];
 }
 
 export interface IPApiResponse {
@@ -194,6 +217,7 @@ export interface IPInfoResult {
 	companyAbuserScore?: number;
 	/** Undefined when the address has no detector evidence. */
 	detectorRisk?: number;
+	sharedReason?: ReputationSharedReason;
 
 	// Raw response for debugging
 	rawResponse?: IPApiResponse;

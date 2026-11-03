@@ -109,6 +109,7 @@ export class Tasks {
 			this.config,
 			this.logger,
 			this.usageCounters,
+			env.ipInfoService,
 		);
 		this.audioCaptchaManager = new AudioCaptchaManager(
 			this.db,
@@ -116,6 +117,7 @@ export class Tasks {
 			this.config,
 			this.logger,
 			this.usageCounters,
+			env.ipInfoService,
 		);
 		this.iconOrderCaptchaManager = new IconOrderCaptchaManager(
 			this.db,
@@ -123,6 +125,7 @@ export class Tasks {
 			this.config,
 			this.logger,
 			this.usageCounters,
+			env.ipInfoService,
 		);
 		this.datasetManager = new DatasetManager(
 			this.config,

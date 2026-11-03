@@ -130,6 +130,9 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 	// Mock IP info service
 	const mockIpInfoService: IIpInfoService = {
 		initialize: vi.fn().mockResolvedValue(undefined),
+		accountSighting: vi
+			.fn<IIpInfoService["accountSighting"]>()
+			.mockResolvedValue(undefined),
 		lookup: vi.fn().mockResolvedValue({
 			ip: "127.0.0.1",
 			isValid: true,

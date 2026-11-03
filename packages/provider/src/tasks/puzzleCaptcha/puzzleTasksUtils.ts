@@ -26,3 +26,14 @@ export const validatePuzzleSolution = (
 	const distance = Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2);
 	return distance <= tolerance;
 };
+
+export const FAR_PUZZLE_MISS_DISTANCE = 50;
+
+export const isFarPuzzleMiss = (
+	finalX: number,
+	finalY: number,
+	targetX: number,
+	targetY: number,
+): boolean =>
+	Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2) >=
+	FAR_PUZZLE_MISS_DISTANCE;

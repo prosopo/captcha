@@ -319,7 +319,7 @@ export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
 	"24h": 86400,
 };
 
-export const COUNTER_KINDS = ["served", "solved"] as const;
+export const COUNTER_KINDS = ["served", "solved", "farMiss"] as const;
 export type CounterKind = (typeof COUNTER_KINDS)[number];
 
 /**

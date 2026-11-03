@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IPInfoResponse } from "@prosopo/types";
+import type { AccountSighting, IPInfoResponse } from "@prosopo/types";
 
 export interface IIpInfoService {
 	initialize(): Promise<void>;
@@ -23,5 +23,9 @@ export interface IIpInfoService {
 	 * answer is available.
 	 */
 	country(ip: string): string | undefined;
+	accountSighting(
+		siteKey: string,
+		account: string,
+	): Promise<AccountSighting | undefined>;
 	isAvailable(): boolean;
 }

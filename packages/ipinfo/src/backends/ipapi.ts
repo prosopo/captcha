@@ -13,11 +13,15 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import type {
-	IPApiReputationInfo,
-	IPApiResponse,
-	IPInfoResponse,
-	IPInfoResult,
+import {
+	type AccountSighting,
+	type IPApiReputationInfo,
+	type IPApiResponse,
+	type IPInfoResponse,
+	type IPInfoResult,
+	REPUTATION_SHARED_REASONS,
+	type ReputationAccountResponse,
+	type ReputationSharedReason,
 } from "@prosopo/types";
 
 /**
@@ -81,6 +85,35 @@ export const parseDetectorRisk = (
 ): number | undefined => {
 	const risk = reputation?.detector_risk;
 	return typeof risk === "number" && risk >= 0 && risk <= 1 ? risk : undefined;
+};
+
+export const parseSharedReason = (
+	reputation: IPApiReputationInfo | undefined,
+): ReputationSharedReason | undefined => {
+	const reason = reputation?.shared_reason;
+	return REPUTATION_SHARED_REASONS.find((known) => known === reason);
+};
+
+export const parseAccountSighting = (
+	body: ReputationAccountResponse | undefined,
+): AccountSighting | undefined => {
+	const userAgents = body?.user_agents_7d;
+	if (
+		body?.known !== true ||
+		typeof userAgents !== "number" ||
+		!Number.isInteger(userAgents) ||
+		userAgents < 0
+	) {
+		return undefined;
+	}
+	return {
+		userAgents7d: userAgents,
+		deviceTypes: Array.isArray(body.device_types)
+			? body.device_types.filter(
+					(type): type is string => typeof type === "string",
+				)
+			: [],
+	};
 };
 
 export class IpapiBackend {
@@ -181,6 +214,7 @@ export class IpapiBackend {
 					abuserScore: parseAbuserScore(data.asn?.abuser_score),
 					companyAbuserScore: parseAbuserScore(data.company?.abuser_score),
 					detectorRisk: parseDetectorRisk(data.reputation),
+					sharedReason: parseSharedReason(data.reputation),
 				};
 
 				return result;
@@ -203,6 +237,44 @@ export class IpapiBackend {
 				error: `Network or parsing error: ${error instanceof Error ? error.message : String(error)}`,
 				ip,
 			};
+		}
+	}
+
+	async accountSighting(
+		siteKey: string,
+		account: string,
+	): Promise<AccountSighting | undefined> {
+		if (!siteKey || !account) {
+			return undefined;
+		}
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+		try {
+			const url = new URL(
+				`/v1/account/${encodeURIComponent(siteKey)}/${encodeURIComponent(account)}`,
+				this.config.baseUrl,
+			);
+			const doFetch: FetchFn = this.config.fetch ?? globalThis.fetch;
+			const response = await doFetch(url.toString(), {
+				method: "GET",
+				headers: { Accept: "application/json" },
+				signal: controller.signal,
+			});
+			if (!response.ok) {
+				return undefined;
+			}
+			return parseAccountSighting(
+				(await response.json()) as ReputationAccountResponse,
+			);
+		} catch (error) {
+			this.config.logger?.debug(() => ({
+				msg: "Account sighting lookup failed",
+				err: error,
+				data: { siteKey },
+			}));
+			return undefined;
+		} finally {
+			clearTimeout(timeoutId);
 		}
 	}
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import type { IPInfoResponse } from "@prosopo/types";
+import type { AccountSighting, IPInfoResponse } from "@prosopo/types";
 import type { LookupCacheConfig } from "./lookupCache.js";
 
 export interface IIpInfoService {
@@ -25,6 +25,10 @@ export interface IIpInfoService {
 	 * answer is available.
 	 */
 	country(ip: string): string | undefined;
+	accountSighting(
+		siteKey: string,
+		account: string,
+	): Promise<AccountSighting | undefined>;
 	isAvailable(): boolean;
 }
 

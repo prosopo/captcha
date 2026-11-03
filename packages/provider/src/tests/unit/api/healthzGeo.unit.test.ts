@@ -44,6 +44,9 @@ const ipInfo = (options: {
 	country?: string | undefined;
 }): IIpInfoService => ({
 	initialize: vi.fn<() => Promise<void>>(async () => {}),
+	accountSighting: vi
+		.fn<IIpInfoService["accountSighting"]>()
+		.mockResolvedValue(undefined),
 	lookup: vi.fn<(ip: string) => Promise<IPInfoResponse>>(async () => {
 		throw new Error("lookup() must not be called by healthz");
 	}),

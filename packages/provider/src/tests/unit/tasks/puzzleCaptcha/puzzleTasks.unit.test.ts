@@ -14,11 +14,15 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
+import type { IIpInfoService } from "@prosopo/ipinfo";
 import {
 	CaptchaStatus,
 	CaptchaType,
 	type ClientMetaData,
+	type CounterSpec,
 	FrictionlessReason,
+	type IPInfoResponse,
+	type IPInfoResult,
 	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
@@ -26,6 +30,7 @@ import {
 	type RequestHeaders,
 	ResultReason,
 	type Session,
+	encodeCounterKey,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -39,8 +44,65 @@ import type { DecisionMachineRunner } from "../../../../tasks/decisionMachine/de
 import { checkPowSignature } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 import { PuzzleCaptchaManager } from "../../../../tasks/puzzleCaptcha/puzzleTasks.js";
 import { validatePuzzleSolution } from "../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js";
+import {
+	type CounterIncrement,
+	UsageCounters,
+} from "../../../../util/usageCounters.js";
 
 type DecideFn = DecisionMachineRunner["decide"];
+
+class InMemoryUsageCounters extends UsageCounters {
+	readonly counts = new Map<string, number>();
+	available = true;
+
+	constructor() {
+		super(
+			{ isReady: () => false } as unknown as ConstructorParameters<
+				typeof UsageCounters
+			>[0],
+			{
+				warn: vi.fn(),
+				error: vi.fn(),
+			} as unknown as ConstructorParameters<typeof UsageCounters>[1],
+		);
+	}
+
+	override async incr(
+		dappAccount: string,
+		spec: CounterSpec,
+		value: string,
+	): Promise<number | null> {
+		const key = encodeCounterKey(dappAccount, spec, value);
+		const next = (this.counts.get(key) ?? 0) + 1;
+		this.counts.set(key, next);
+		return next;
+	}
+
+	override incrManyAsync(
+		dappAccount: string,
+		increments: CounterIncrement[],
+	): void {
+		for (const { spec, value } of increments) {
+			const key = encodeCounterKey(dappAccount, spec, value);
+			this.counts.set(key, (this.counts.get(key) ?? 0) + 1);
+		}
+	}
+
+	override async batchGet(
+		dappAccount: string,
+		reads: CounterIncrement[],
+	): Promise<Record<string, number> | null> {
+		if (!this.available) {
+			return null;
+		}
+		const out: Record<string, number> = {};
+		for (const { spec, value } of reads) {
+			const key = encodeCounterKey(dappAccount, spec, value);
+			out[key] = this.counts.get(key) ?? 0;
+		}
+		return out;
+	}
+}
 
 // PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored. The tests
 // only care about a small subset of the stored fields; this helper widens
@@ -82,9 +144,19 @@ vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),
 }));
 
-vi.mock("../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js", () => ({
-	validatePuzzleSolution: vi.fn(),
-}));
+vi.mock(
+	"../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js",
+	async (importOriginal) => {
+		const actual =
+			await importOriginal<
+				typeof import("../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js")
+			>();
+		return {
+			...actual,
+			validatePuzzleSolution: vi.fn(),
+		};
+	},
+);
 
 describe("PuzzleCaptchaManager", () => {
 	let db: IProviderDatabase;
@@ -770,6 +842,191 @@ describe("PuzzleCaptchaManager", () => {
 				a.userSignature,
 				undefined, // coords — no salt supplied in this test
 			);
+		});
+	});
+
+	describe("far misses", () => {
+		const userAccount = "user";
+		const dappAccount = "dapp";
+		const ipAddress = getIPAddress("1.1.1.1");
+		const homeLine: IPInfoResult = {
+			ip: "1.1.1.1",
+			isValid: true,
+			isVPN: false,
+			isTor: false,
+			isProxy: false,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+			isCrawler: false,
+		};
+		let counters: InMemoryUsageCounters;
+		let accountSighting: ReturnType<
+			typeof vi.fn<IIpInfoService["accountSighting"]>
+		>;
+		let manager: PuzzleCaptchaManager;
+		let nonce = 0;
+
+		beforeEach(() => {
+			counters = new InMemoryUsageCounters();
+			accountSighting = vi
+				.fn<IIpInfoService["accountSighting"]>()
+				.mockResolvedValue({ userAgents7d: 1, deviceTypes: ["Windows"] });
+			manager = new PuzzleCaptchaManager(
+				db,
+				pair,
+				mockEnv.config,
+				undefined,
+				counters,
+				{ accountSighting },
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockImplementation(
+				(finalX, finalY, targetX, targetY, tolerance) =>
+					Math.hypot(finalX - targetX, finalY - targetY) <= tolerance,
+			);
+		});
+
+		const submit = async (
+			x: number,
+			y: number,
+			{
+				account = userAccount,
+				ipInfo = homeLine,
+			}: { account?: string; ipInfo?: IPInfoResponse } = {},
+		): Promise<boolean> => {
+			nonce += 1;
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}${account}${POW_SEPARATOR}${dappAccount}${POW_SEPARATOR}${nonce}`;
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: account,
+					targetX: 100,
+					targetY: 100,
+					tolerance: 15,
+					ipAddress: getCompositeIpAddress(ipAddress),
+					ipInfo,
+					result: { status: CaptchaStatus.pending },
+				}),
+			);
+			return manager.verifyPuzzleCaptchaSolution(
+				challenge,
+				"0xprov",
+				x,
+				y,
+				[],
+				1000,
+				"0xuser",
+				ipAddress,
+				{} as RequestHeaders,
+			);
+		};
+
+		const lastResult = () =>
+			vi.mocked(db.updatePuzzleCaptchaRecordResult).mock.lastCall?.[1];
+
+		const missFromFreshAccounts = async (
+			times: number,
+			ipInfo: IPInfoResponse = homeLine,
+		): Promise<void> => {
+			for (let i = 0; i < times; i++) {
+				await submit(200, 100, { account: `rotated-${nonce}`, ipInfo });
+			}
+		};
+
+		describe("by account", () => {
+			it("refuses a right answer after three far misses by a single-browser account", async () => {
+				const sharedLine: IPInfoResult = { ...homeLine, isMobile: true };
+				expect(await submit(200, 100, { ipInfo: sharedLine })).toBe(false);
+				expect(await submit(100, 180, { ipInfo: sharedLine })).toBe(false);
+				expect(await submit(40, 40, { ipInfo: sharedLine })).toBe(false);
+
+				expect(await submit(102, 101, { ipInfo: sharedLine })).toBe(false);
+				expect(lastResult()).toEqual({
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_FAILED,
+				});
+				expect(accountSighting).toHaveBeenCalledWith(dappAccount, userAccount);
+			});
+
+			it("lets a right answer through after two far misses", async () => {
+				await submit(200, 100);
+				await submit(100, 180);
+
+				expect(await submit(102, 101)).toBe(true);
+				expect(lastResult()).toEqual({ status: CaptchaStatus.approved });
+				expect(accountSighting).not.toHaveBeenCalled();
+			});
+
+			it("does not hold a shared account to it", async () => {
+				accountSighting.mockResolvedValue({
+					userAgents7d: 9,
+					deviceTypes: ["iOS"],
+				});
+				const sharedLine: IPInfoResult = { ...homeLine, isMobile: true };
+				for (let i = 0; i < 5; i++) {
+					await submit(200, 100, { ipInfo: sharedLine });
+				}
+				expect(await submit(102, 101, { ipInfo: sharedLine })).toBe(true);
+			});
+
+			it("does not hold an account the reputation DB does not know to it", async () => {
+				accountSighting.mockResolvedValue(undefined);
+				const sharedLine: IPInfoResult = { ...homeLine, isMobile: true };
+				for (let i = 0; i < 5; i++) {
+					await submit(200, 100, { ipInfo: sharedLine });
+				}
+				expect(await submit(102, 101, { ipInfo: sharedLine })).toBe(true);
+			});
+		});
+
+		describe("by address", () => {
+			it("refuses a right answer after four far misses from a line that is not shared", async () => {
+				accountSighting.mockResolvedValue(undefined);
+				await missFromFreshAccounts(3);
+				expect(await submit(102, 101, { account: "fresh" })).toBe(true);
+
+				await missFromFreshAccounts(1);
+				expect(await submit(102, 101, { account: "fresh-again" })).toBe(false);
+			});
+
+			it.each<[string, IPInfoResponse]>([
+				["a carrier network", { ...homeLine, isMobile: true }],
+				[
+					"shared egress in the reputation DB",
+					{ ...homeLine, sharedReason: "many_accounts" },
+				],
+				[
+					"an iCloud Private Relay exit",
+					{ ...homeLine, datacenterName: "iCloud Private Relay" },
+				],
+				["a crawler", { ...homeLine, isCrawler: true }],
+				[
+					"an address with no lookup",
+					{ isValid: false, error: "x", ip: "1.1.1.1" },
+				],
+			])("does not count far misses from %s", async (_label, ipInfo) => {
+				accountSighting.mockResolvedValue(undefined);
+				await missFromFreshAccounts(6, ipInfo);
+				expect(await submit(102, 101, { account: "fresh", ipInfo })).toBe(true);
+			});
+		});
+
+		it("does not count near misses", async () => {
+			for (const x of [120, 125, 130, 135, 140]) {
+				expect(await submit(x, 100)).toBe(false);
+			}
+			expect(await submit(102, 101)).toBe(true);
+		});
+
+		it("lets the right answer through when the counters cannot be read", async () => {
+			for (let i = 0; i < 4; i++) {
+				await submit(200, 100);
+			}
+			counters.available = false;
+			expect(await submit(102, 101)).toBe(true);
 		});
 	});
 
