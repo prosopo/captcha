@@ -1369,6 +1369,115 @@ describe("checkTrafficFilter", () => {
 		});
 	});
 
+	describe("pass", () => {
+		const passProxiesChallengeOutsideMarket: ITrafficFilter = {
+			proxy: {
+				action: TrafficFilterAction.Pass,
+				exceptions: [
+					{
+						inMarket: false,
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.puzzle,
+					},
+				],
+			},
+			marketCountries: ["GB"],
+			abuserScoreThreshold: 0.2,
+			skipExtrasOnValidDnsPath: true,
+		};
+
+		it("takes no decision on a category whose action is pass", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isProxy: true, countryCode: "GB" }),
+				passProxiesChallengeOutsideMarket,
+			);
+			expect(result).toEqual({ isBlocked: false, matches: [] });
+		});
+
+		it("still applies a matching exception", () => {
+			const result = checkTrafficFilter(
+				baseInfo({ isProxy: true, countryCode: "FR" }),
+				passProxiesChallengeOutsideMarket,
+			);
+			expect(result.matches).toEqual([
+				{
+					category: "proxy",
+					policy: {
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.puzzle,
+					},
+				},
+			]);
+		});
+
+		it("lets an exception pass part of a category", () => {
+			const filter: ITrafficFilter = {
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [{ mobile: true, action: TrafficFilterAction.Pass }],
+				},
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			};
+			expect(
+				checkTrafficFilter(baseInfo({ isProxy: true, isMobile: true }), filter),
+			).toEqual({ isBlocked: false, matches: [] });
+			expect(
+				checkTrafficFilter(baseInfo({ isProxy: true }), filter).isBlocked,
+			).toBe(true);
+		});
+
+		it("loses to any other matching exception, whatever the order", () => {
+			const filter: ITrafficFilter = {
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [
+						{ mobile: true, action: TrafficFilterAction.Pass },
+						{
+							countries: ["GB"],
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.pow,
+						},
+					],
+				},
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			};
+			const result = checkTrafficFilter(
+				baseInfo({ isProxy: true, isMobile: true, countryCode: "GB" }),
+				filter,
+			);
+			expect(result.matches).toEqual([
+				{
+					category: "proxy",
+					policy: {
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.pow,
+					},
+				},
+			]);
+		});
+
+		it("still owns the IP, so a lower category's policy is not consulted", () => {
+			const filter: ITrafficFilter = {
+				proxy: { action: TrafficFilterAction.Pass },
+				datacenter: { action: TrafficFilterAction.Block },
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			};
+			expect(
+				checkTrafficFilter(
+					baseInfo({
+						isProxy: true,
+						isDatacenter: true,
+						providerType: "hosting",
+					}),
+					filter,
+				),
+			).toEqual({ isBlocked: false, matches: [] });
+		});
+	});
+
 	describe("exceptions", () => {
 		const challenge = { action: TrafficFilterAction.Challenge } as const;
 
