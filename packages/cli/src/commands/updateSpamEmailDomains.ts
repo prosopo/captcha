@@ -31,45 +31,30 @@ export default (
 		command: "update_spam_email_domains",
 		describe: "Update spam email domains from configured URLs",
 		handler: async () => {
-			try {
-				const env = new ProviderEnvironment(config, pair);
-				await env.isReady();
-
-				const spamEmailDomainsUrls = config.spamEmailDomainsUrls || [];
-				if (spamEmailDomainsUrls.length === 0) {
-					logger.warn(() => ({
-						msg: "No spam email domains URLs configured. Set SPAM_EMAIL_DOMAINS_URLS in environment.",
-					}));
-					return;
-				}
-
-				logger.info(() => ({
-					msg: "Starting spam email domains update",
-					data: { urlCount: spamEmailDomainsUrls.length },
-				}));
-
-				await updateSpamEmailDomains(
-					env.getDb(),
-					env.logger,
-					spamEmailDomainsUrls,
-				).catch((err: Error) => {
-					env.logger.error(() => ({
-						msg: "Error updating spam email domains",
-						err,
-					}));
-					throw err;
-				});
-
-				logger.info(() => ({
-					msg: "Spam email domains update completed successfully",
-				}));
-			} catch (err) {
-				logger.error(() => ({
-					msg: "Failed to update spam email domains",
-					err,
-				}));
-				throw err;
+			const spamEmailDomainsUrls = config.spamEmailDomainsUrls || [];
+			if (spamEmailDomainsUrls.length === 0) {
+				throw new Error(
+					"No spam email domains URLs configured. Set SPAM_EMAIL_DOMAINS_URLS in environment.",
+				);
 			}
+
+			const env = new ProviderEnvironment(config, pair);
+			await env.isReady();
+
+			logger.info(() => ({
+				msg: "Starting spam email domains update",
+				data: { urlCount: spamEmailDomainsUrls.length },
+			}));
+
+			await updateSpamEmailDomains(
+				env.getDb(),
+				env.logger,
+				spamEmailDomainsUrls,
+			);
+
+			logger.info(() => ({
+				msg: "Spam email domains update completed successfully",
+			}));
 		},
 		middlewares: [],
 	};

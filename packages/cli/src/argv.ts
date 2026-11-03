@@ -15,7 +15,7 @@
 import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
-import yargs, { type CommandModule } from "yargs";
+import yargs, { type Argv, type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
 	commandDetectorPoolSet,
@@ -57,12 +57,23 @@ function getCommands(
 	];
 }
 
-export function processArgs(
+const rethrowFailure = (
+	msg: string | undefined,
+	err: Error | undefined,
+	parser: Argv,
+): never => {
+	if (!err) {
+		parser.showHelp("error");
+	}
+	throw err ?? new Error(msg);
+};
+
+export async function processArgs(
 	args: string[],
 	pair: KeyringPair,
 	authAccount: KeyringPair,
 	config: ProsopoConfigOutput,
-) {
+): Promise<AwaitedProcessedArgs> {
 	const logger = getLogger(LogLevel.enum.info, "cli");
 
 	// strictCommands so a command this release does not have fails loudly
@@ -70,6 +81,7 @@ export function processArgs(
 	const commandManager = yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")
 		.strictCommands()
+		.fail(rethrowFailure)
 		.option("api", { demand: false, default: false, type: "boolean" } as const)
 		.option("adminApi", {
 			demand: false,
@@ -83,5 +95,5 @@ export function processArgs(
 		commandManager.command(command);
 	}
 
-	return commandManager.parse();
+	return commandManager.parseAsync();
 }

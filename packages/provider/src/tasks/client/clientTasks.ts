@@ -252,6 +252,7 @@ export class ClientTaskManager {
 				ScheduledTaskStatus.Failed,
 				{ error: String(e) },
 			);
+			throw e;
 		}
 	}
 

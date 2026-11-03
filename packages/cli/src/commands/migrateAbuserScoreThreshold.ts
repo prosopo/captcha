@@ -38,58 +38,51 @@ export default (
 				description: "Run without making changes to verify the migration",
 			}),
 		handler: async (argv: ArgumentsCamelCase) => {
-			try {
-				const dryRun = (argv.dryRun as boolean) ?? false;
+			const dryRun = (argv.dryRun as boolean) ?? false;
 
+			logger.info(() => ({
+				msg: "Starting abuserScoreThreshold migration on provider DB...",
+				data: { dryRun },
+			}));
+
+			const env = new ProviderEnvironment(config, pair);
+			await env.isReady();
+			const tasks = new Tasks(env);
+
+			const clientModel = tasks.db.tables.client;
+			if (!clientModel) {
+				throw new Error("Client table not available");
+			}
+
+			const filter = {
+				"settings.trafficFilter": { $exists: true },
+				"settings.trafficFilter.abuserScoreThreshold": { $exists: false },
+			};
+
+			const count = await clientModel.countDocuments(filter);
+			logger.info(() => ({
+				msg: `Found ${count} client records needing migration`,
+			}));
+
+			if (!dryRun && count > 0) {
+				const result = await clientModel.updateMany(filter, {
+					$set: {
+						"settings.trafficFilter.abuserScoreThreshold": 0,
+					},
+				});
 				logger.info(() => ({
-					msg: "Starting abuserScoreThreshold migration on provider DB...",
-					data: { dryRun },
+					msg: `Updated ${result.modifiedCount} client records`,
 				}));
+			}
 
-				const env = new ProviderEnvironment(config, pair);
-				await env.isReady();
-				const tasks = new Tasks(env);
+			logger.info(() => ({
+				msg: "Migration completed",
+				data: { recordsFound: count, dryRun },
+			}));
 
-				const clientModel = tasks.db.tables.client;
-				if (!clientModel) {
-					throw new Error("Client table not available");
-				}
-
-				const filter = {
-					"settings.trafficFilter": { $exists: true },
-					"settings.trafficFilter.abuserScoreThreshold": { $exists: false },
-				};
-
-				const count = await clientModel.countDocuments(filter);
+			if (dryRun) {
 				logger.info(() => ({
-					msg: `Found ${count} client records needing migration`,
-				}));
-
-				if (!dryRun && count > 0) {
-					const result = await clientModel.updateMany(filter, {
-						$set: {
-							"settings.trafficFilter.abuserScoreThreshold": 0,
-						},
-					});
-					logger.info(() => ({
-						msg: `Updated ${result.modifiedCount} client records`,
-					}));
-				}
-
-				logger.info(() => ({
-					msg: "Migration completed",
-					data: { recordsFound: count, dryRun },
-				}));
-
-				if (dryRun) {
-					logger.info(() => ({
-						msg: "DRY RUN: No changes were made. Run without --dryRun to apply changes.",
-					}));
-				}
-			} catch (err) {
-				logger.error(() => ({
-					err,
-					msg: "Failed to migrate abuserScoreThreshold",
+					msg: "DRY RUN: No changes were made. Run without --dryRun to apply changes.",
 				}));
 			}
 		},

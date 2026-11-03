@@ -30,18 +30,13 @@ export default (
 		command: "store_captchas",
 		describe: "Store captcha records externally for billing purposes",
 		handler: async () => {
-			try {
-				const env = new ProviderEnvironment(config, pair);
-				await env.isReady();
-				const tasks = new Tasks(env);
-				await tasks.clientTaskManager
-					.storeCommitmentsExternal()
-					.catch((err) => {
-						env.logger.error(() => ({ err }));
-					});
-			} catch (err) {
-				logger.error(() => ({ err }));
+			if (!config.mongoCaptchaUri) {
+				throw new Error("mongoCaptchaUri not set in config");
 			}
+			const env = new ProviderEnvironment(config, pair);
+			await env.isReady();
+			await new Tasks(env).clientTaskManager.storeCommitmentsExternal();
+			logger.info(() => ({ msg: "Captchas stored externally" }));
 		},
 		middlewares: [],
 	};
