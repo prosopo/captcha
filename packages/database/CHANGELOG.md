@@ -1,5 +1,30 @@
 # @prosopo/database
 
+## 4.6.0
+### Minor Changes
+
+- c12d199: Add `reconcileIndexes`, which brings a collection's indexes in line with its schema. Mongoose's own `ensureIndexes`/autoIndex cannot change an existing index: when a declared index's key or options change (for example `pendingStage_partial` gaining `_id`, or a field becoming unique) it logs an error and leaves the old index in place, so the new one never appears. `reconcileIndexes` drops and rebuilds only those clashing indexes, puts the old one back if the rebuild fails (for example a new unique index meeting duplicates), can drop named obsolete indexes, can keep extra indexes declared outside the schema, and has a dry-run mode.
+  
+  The provider's `ensureIndexes` now uses it on its own database (dropping indexes the schema no longer declares). The central captcha database uses it too, but keeps indexes it does not know about, since other services add their own there.
+
+### Patch Changes
+
+- f31105a: Mongo connection URLs in logs now hide the username and password properly. The old redaction replaced the first `word:word` it found, so a password containing a `-` (which every password `generateSelfHostedEnv.ts` creates can) was logged in full or in part, with the host and port hidden instead. URLs without credentials no longer lose their host and port either.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/user-access-policy@3.15.16
+  - @prosopo/types-database@5.16.2
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/redis-client@1.0.45
+
 ## 4.5.1
 ### Patch Changes
 

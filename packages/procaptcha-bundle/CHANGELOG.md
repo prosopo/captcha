@@ -1,5 +1,23 @@
 # @prosopo/procaptcha-bundle
 
+## 4.6.6
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/procaptcha-common@2.23.0
+  - @prosopo/procaptcha-frictionless@2.24.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/util@3.5.0
+  - @prosopo/dotenv@3.0.65
+
 ## 4.6.5
 ### Patch Changes
 
