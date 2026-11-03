@@ -126,3 +126,28 @@ describe("MongoDatabase.connect", () => {
 		expect(fake.destroy).not.toHaveBeenCalled();
 	});
 });
+
+describe("MongoDatabase.safeURL", () => {
+	it.each([
+		["a word-character password", "mongodb://root:secret@mongo:27017"],
+		["a password with a dash", "mongodb://root:-se-cret_@mongo:27017"],
+		["a percent-encoded password", "mongodb://root:se%40cr%3Aet@mongo:27017"],
+	])("hides %s", (_name: string, url: string) => {
+		const db = new MongoDatabase(url, "prosopo", "admin", createMockLogger());
+
+		expect(db.safeURL).toBe(
+			"mongodb://<Credentials>@mongo:27017/prosopo?authSource=admin",
+		);
+	});
+
+	it("leaves a URL without credentials as it is", () => {
+		const db = new MongoDatabase(
+			"mongodb://mongo:27017",
+			"prosopo",
+			undefined,
+			createMockLogger(),
+		);
+
+		expect(db.safeURL).toBe("mongodb://mongo:27017/prosopo");
+	});
+});
