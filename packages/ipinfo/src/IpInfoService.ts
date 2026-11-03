@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IPInfoResponse } from "@prosopo/types";
+import type { AccountSighting, IPInfoResponse } from "@prosopo/types";
 import { IpapiBackend } from "./backends/ipapi.js";
 import { MaxMindBackend } from "./backends/maxmind.js";
 import { LookupCache } from "./lookupCache.js";
@@ -143,6 +143,16 @@ export class IpInfoService implements IIpInfoService {
 		if (isNonRoutable(ip)) return undefined;
 		if (!this.maxmindBackend?.isAvailable()) return undefined;
 		return this.maxmindBackend.countryCode(ip);
+	}
+
+	async accountSighting(
+		siteKey: string,
+		account: string,
+	): Promise<AccountSighting | undefined> {
+		if (!this.ipapiBackend?.isAvailable()) {
+			return undefined;
+		}
+		return this.ipapiBackend.accountSighting(siteKey, account);
 	}
 
 	async lookup(ip: string): Promise<IPInfoResponse> {

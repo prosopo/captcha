@@ -147,6 +147,7 @@ describe("Captcha type + params selection hierarchy (integration)", () => {
 		// upstream sidecar entirely.
 		env.ipInfoService = {
 			initialize: async () => {},
+			accountSighting: async (): Promise<undefined> => undefined,
 			isAvailable: () => true,
 			lookup: async () => currentIpInfo,
 			country: (): string | undefined => undefined,

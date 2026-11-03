@@ -46,6 +46,9 @@ const createMockService = (responses: IPInfoResponse[]): IIpInfoService => {
 	let callIndex = 0;
 	return {
 		initialize: vi.fn(),
+		accountSighting: vi
+			.fn<IIpInfoService["accountSighting"]>()
+			.mockResolvedValue(undefined),
 		lookup: vi.fn().mockImplementation(async () => {
 			const response = responses[callIndex];
 			callIndex++;
@@ -416,6 +419,9 @@ describe("compareIPs", () => {
 	it("should handle exceptions gracefully", async () => {
 		const service: IIpInfoService = {
 			initialize: vi.fn(),
+			accountSighting: vi
+				.fn<IIpInfoService["accountSighting"]>()
+				.mockResolvedValue(undefined),
 			lookup: vi.fn().mockRejectedValue(new Error("Network error")),
 			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),

@@ -15,6 +15,7 @@
 import type { Keyring } from "@prosopo/keyring";
 import type { Logger } from "@prosopo/logger";
 import type {
+	AccountSighting,
 	AssetsResolver,
 	EnvironmentTypes,
 	IPInfoResponse,
@@ -207,6 +208,10 @@ describe("IIpInfoService", () => {
 			lookup: async (_ip: string): Promise<IPInfoResponse> =>
 				stub<IPInfoResponse>(),
 			country: (_ip: string): string | undefined => undefined,
+			accountSighting: async (
+				_siteKey: string,
+				_account: string,
+			): Promise<AccountSighting | undefined> => undefined,
 			isAvailable: (): boolean => true,
 		});
 	});
@@ -250,9 +255,15 @@ describe("IIpInfoService", () => {
 		>();
 	});
 
-	test("has exactly the four members an implementation must provide", () => {
+	test("an account sighting may have no answer", () => {
+		expectTypeOf<IIpInfoService["accountSighting"]>().toEqualTypeOf<
+			(siteKey: string, account: string) => Promise<AccountSighting | undefined>
+		>();
+	});
+
+	test("has exactly the five members an implementation must provide", () => {
 		expectTypeOf<keyof IIpInfoService>().toEqualTypeOf<
-			"initialize" | "lookup" | "country" | "isAvailable"
+			"initialize" | "lookup" | "country" | "accountSighting" | "isAvailable"
 		>();
 	});
 });
