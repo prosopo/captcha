@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "არასწორი მისამართის კოდირება ვერ მოხერხდა",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha-ს გადაწყვეტის ვალდებულება არ არსებობს",
+		"SIGNER_UNDEFINED": "ხელმომწერი განსაზღვრული არ არის",
+		"CANNOT_FIND_KEYPAIR": "გასაღებების წყვილი ვერ მოიძებნა",
+		"INVALID_DATA_FORMAT": "მონაცემთა არასწორი ფორმატი"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "მოთხოვნილია უცნობი გარემო",
+		"INVALID_CAPTCHA_NUMBER": "სწორად დააკონფიგურირეთ captcha-ს პარამეტრები",
+		"INVALID_LOG_LEVEL": "ჟურნალის არასწორი დონე",
+		"INVALID_PACKAGE_DIR": "პაკეტის არასწორი დირექტორია"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "შეცდომა მონაცემთა ნაკრების დამუშავებისას",
+		"SOLUTION_PARSE_ERROR": "შეცდომა მონაცემთა ნაკრების დამუშავებისას",
+		"HASH_ERROR": "შეცდომა მონაცემთა ნაკრების ჰეშირებისას",
+		"DATASET_ID_UNDEFINED": "მონაცემთა ნაკრების ID განსაზღვრული არ არის",
+		"NOT_ENOUGH_LABELS": "ჭდეები საკმარისი არ არის",
+		"NOT_ENOUGH_IMAGES": "სურათები საკმარისი არ არის",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "მონაცემთა ნაკრებში captcha-ების რაოდენობა კონფიგურირებულზე ნაკლებია",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "მონაცემთა ნაკრებში გადაწყვეტების რაოდენობა კონფიგურირებულზე ნაკლებია",
+		"DUPLICATE_IMAGE": "აღმოჩენილია დუბლირებული სურათი",
+		"MERKLE_ERROR": "შეცდომა მერკლის ხის შექმნისას"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "მონაცემთა ბაზის ძრავის იმპორტი ვერ მოხერხდა",
+		"DATABASE_UNDEFINED": "მონაცემთა ბაზის კლიენტი დაკავშირებული არ არის",
+		"DATABASE_HOST_UNDEFINED": "მონაცემთა ბაზის ჰოსტის მისამართი განსაზღვრული არ არის",
+		"DATASET_LOAD_FAILED": "მონაცემთა ნაკრების ჩატვირთვა ვერ მოხერხდა",
+		"DATASET_GET_FAILED": "მონაცემთა ნაკრების მიღება ვერ მოხერხდა",
+		"CAPTCHA_GET_FAILED": "captcha-ს მიღება ვერ მოხერხდა",
+		"CAPTCHA_UPDATE_FAILED": "captcha-ს განახლება ვერ მოხერხდა",
+		"IMAGE_GET_FAILED": "სურათის მიღება ვერ მოხერხდა",
+		"PENDING_RECORD_NOT_FOUND": "მოლოდინში მყოფი ჩანაწერი ვერ მოიძებნა",
+		"INVALID_HASH": "არასწორი ჰეში",
+		"SOLUTION_GET_FAILED": "გადაწყვეტის მიღება ვერ მოხერხდა",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "საჭირო რაოდენობის გადაწყვეტების მქონე მონაცემთა ნაკრებები ვერ მოიძებნა",
+		"SOLUTION_APPROVE_FAILED": "გადაწყვეტის დამტკიცება ვერ მოხერხდა",
+		"SOLUTION_FLAG_FAILED": "გადაწყვეტის დამუშავებულად მონიშვნა ვერ მოხერხდა",
+		"TABLES_UNDEFINED": "ცხრილები განსაზღვრული არ არის",
+		"CONNECTION_UNDEFINED": "კავშირი განსაზღვრული არ არის",
+		"COMMITMENT_FLAG_FAILED": "ვალდებულების დამუშავებულად მონიშვნა ვერ მოხერხდა",
+		"UNKNOWN": "მონაცემთა ბაზის უცნობი შეცდომა",
+		"QUERY_ERROR": "მონაცემთა ბაზის მოთხოვნა ვერ შესრულდა",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-ის წვდომის წესების კავშირი განსაზღვრული არ არის",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "მომხმარებელთა წვდომის წესების საცავი განსაზღვრული არ არის",
+		"SESSION_STORE_FAILED": "სესიის შენახვა ვერ მოხერხდა",
+		"SESSION_CHECK_REMOVE_FAILED": "სესიის შემოწმება და წაშლა ვერ მოხერხდა",
+		"SESSION_GET_FAILED": "სესიის მიღება ვერ მოხერხდა"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "მფლობელი მომხმარებლის შეცვლა შეუძლებელია",
+		"CANNOT_DELETE_OWN_USER": "საკუთარი ანგარიშის წაშლა შეუძლებელია",
+		"CANNOT_DELETE_LAST_USER": "ბოლო მომხმარებლის წაშლა შეუძლებელია",
+		"USER_ALREADY_EXISTS": "მომხმარებელი უკვე არსებობს",
+		"NO_SUGGESTIONS_FOUND": "შემოთავაზებები ვერ მოიძებნა",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ბოლო აქტიური საიტის დეაქტივაცია შეუძლებელია",
+		"DUPLICATE_SITE_NAME": "ამ სახელით საიტი უკვე არსებობს",
+		"INVALID_SITE_NAME": "საიტის სახელი შეიძლება შეიცავდეს მხოლოდ ასოებს, ციფრებს, დეფისებსა და ქვედა ტირეებს"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "არასწორი პარამეტრი"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ფაილი ვერ მოიძებნა",
+		"FILE_ALREADY_EXISTS": "ფაილი უკვე არსებობს",
+		"INVALID_DIR_FORMAT": "დირექტორიის არასწორი ფორმატი"
+	}
+}

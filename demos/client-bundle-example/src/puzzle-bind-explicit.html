@@ -1,50 +1,35 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
 
-    <script src="index.js"></script>
-    <title>Procaptcha Puzzle Mode - Bound Button</title>
-<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha demo: Puzzle, bound button</title>
 </head>
 <body>
-    <div class="mui-container">
-        <h1>Procaptcha Puzzle Mode - Bound Button</h1>
-        <p>
-            The widget is rendered once and bound to the form's own submit button with
-            <code>bind: "#verify-btn"</code>. Clicking the button triggers that widget's challenge
-            without ticking the checkbox. Add <code>?placement=float</code> to anchor the
-            challenge to the widget instead of centring it.
-        </p>
+    <div class="demo-card">
 
-        <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
+        <form id="demo-form" class="demo-form">
+            <h2>Create an account</h2>
+            <p class="demo-note">The widget is bound to the submit button, so pressing it opens the challenge.</p>
 
-        <form id="demo-form" class="mui-form">
-            <h2>Example Form</h2>
-
-            <div class="mui-textfield mui-textfield--float-label">
+            <div class="demo-field">
                 <label for="name">Name</label>
                 <input type="text" id="name" name="name" required />
             </div>
 
-            <div class="mui-textfield mui-textfield--float-label">
+            <div class="demo-field">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" required />
             </div>
 
-            <!-- The container for the CAPTCHA -->
             <div id="procaptcha-container"></div>
 
-            <button type="submit" id="verify-btn" class="mui-btn mui-btn--raised mui-btn--primary">Verify &amp; submit</button>
+            <button type="submit" id="verify-btn" class="demo-button">Verify &amp; submit</button>
 
             <div id="error"></div>
         </form>
 
-        <div id="result" class="info-box" style="display: none;"></div>
+        <div id="result" class="demo-result" style="display: none;"></div>
 
-        <!-- Console output display area -->
-        <div id="console-output" class="console-output" style="display: none;"></div>
     </div>
 
     <script type="module">

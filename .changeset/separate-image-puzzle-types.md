@@ -3,30 +3,39 @@
 "@prosopo/types-database": patch
 "@prosopo/provider": patch
 "@prosopo/server": patch
-"@prosopo/procaptcha-frictionless": patch
 ---
 
-Name the captcha-type sets and group per-challenge session settings.
+Name the captcha-type sets, and serve or verify each type from one table.
 
-`ChallengeCaptchaType` (pow | image | puzzle) and `InteractiveCaptchaType`
-(image | puzzle) replace the anonymous unions that were spelled out across the
-escalation path, so adding a challenge type is a compile error at each site
-rather than a grep exercise. `DecisionMachineCaptchaTypeSchema` stays as an
-alias for stored decision-machine artefacts.
+`@prosopo/types` now exports three named sets in place of the unions that were
+spelled out by hand across the codebase:
 
-Challenge dispatch now goes through one exhaustive table
-(`sendChallenge` in the provider, `VERIFY_RECENCY` + the verifier record in
-`@prosopo/server`) instead of per-type if/switch chains in the configured-type
-short-circuit, the access-policy handler and the client verify path.
+- `ChallengeCaptchaType`: pow, image, puzzle, icon-order and audio. Anything a
+  user can be asked to solve.
+- `ConcreteCaptchaType`: the same minus audio. What a session can be minted
+  as (moved here from the provider).
+- `InteractiveCaptchaType`: image, puzzle and icon-order. What a PoW solve can
+  escalate into.
 
-Sessions additionally record `challengeParams`, a discriminated view of
-`solvedImagesCount` / `powDifficulty` / `blocked` keyed on the challenge type.
-This is dual-written alongside the existing flat fields, which remain the
-source of truth — no reader changes and no backfill is required by this
-release. `ClientSettingsSchema` likewise exposes derived `image`, `pow` and
-`puzzle` groups on parse while the flat keys stay authoritative.
+Each has a constant array, a schema and an `is…` guard.
+`DecisionMachineCaptchaTypeSchema` and `DecisionMachineCaptchaType` stay as
+aliases.
 
-`registerBlockedSession` now takes the captcha type the request would have
-been served instead of hardcoding `image`. Blocked sessions arising from an
-access rule that pins pow or puzzle are recorded against that type, matching
-what the same code path already logs.
+The provider serves a chosen type through one `sendChallenge` table, used by
+the configured-type short-circuit and the access-policy handler. The server
+verifies through one table keyed on `ChallengeCaptchaType`. A new type that is
+missing from either table is a compile error.
+
+Behaviour changes:
+
+- An access rule that pins icon-order now serves icon-order. Before, the
+  access-policy handler only knew image, pow and puzzle, so the rule was
+  ignored and the request fell through to the decision machine.
+- A blocked session is recorded against the type the request would have been
+  served instead of always `image`. Per-type session counts already exclude
+  blocked sessions, so traffic figures do not move.
+
+Sessions also store `challengeParams`, the type-specific knobs grouped under
+the type the session was minted as. It is written alongside the existing flat
+fields, which stay the source of truth, so no reader or backfill changes are
+needed.

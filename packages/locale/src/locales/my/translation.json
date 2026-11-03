@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "မမှန်ကန်သော လိပ်စာကို ကုဒ်ပြောင်း၍မရပါ",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha အဖြေ ကတိကဝတ် မရှိပါ",
+		"SIGNER_UNDEFINED": "လက်မှတ်ထိုးသူ မသတ်မှတ်ရသေးပါ",
+		"CANNOT_FIND_KEYPAIR": "ကီးအတွဲ ရှာမတွေ့ပါ",
+		"INVALID_DATA_FORMAT": "ဒေတာ ဖော်မတ် မမှန်ကန်ပါ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "မသိသော ပတ်ဝန်းကျင်ကို တောင်းဆိုထားသည်",
+		"INVALID_CAPTCHA_NUMBER": "captcha ဖွဲ့စည်းပုံများကို မှန်ကန်စွာ သတ်မှတ်ပါ",
+		"INVALID_LOG_LEVEL": "log အဆင့် မမှန်ကန်ပါ",
+		"INVALID_PACKAGE_DIR": "package ဖိုင်တွဲ မမှန်ကန်ပါ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ဒေတာစုကို ခွဲခြမ်းရာတွင် အမှား",
+		"SOLUTION_PARSE_ERROR": "ဒေတာစုကို လုပ်ဆောင်ရာတွင် အမှား",
+		"HASH_ERROR": "ဒေတာစုကို hash လုပ်ရာတွင် အမှား",
+		"DATASET_ID_UNDEFINED": "ဒေတာစု ID မသတ်မှတ်ရသေးပါ",
+		"NOT_ENOUGH_LABELS": "တံဆိပ် မလုံလောက်ပါ",
+		"NOT_ENOUGH_IMAGES": "ပုံ မလုံလောက်ပါ",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ဒေတာစုရှိ captcha အရေအတွက်သည် သတ်မှတ်ထားသော အရေအတွက်ထက် နည်းသည်",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ဒေတာစုရှိ အဖြေ အရေအတွက်သည် သတ်မှတ်ထားသော အရေအတွက်ထက် နည်းသည်",
+		"DUPLICATE_IMAGE": "ထပ်နေသော ပုံ တွေ့ရှိသည်",
+		"MERKLE_ERROR": "Merkle tree တည်ဆောက်ရာတွင် အမှား"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ဒေတာဘေ့စ် engine ကို တင်သွင်း၍မရပါ",
+		"DATABASE_UNDEFINED": "ဒေတာဘေ့စ် client မချိတ်ဆက်ရသေးပါ",
+		"DATABASE_HOST_UNDEFINED": "ဒေတာဘေ့စ် host လိပ်စာ မသတ်မှတ်ရသေးပါ",
+		"DATASET_LOAD_FAILED": "ဒေတာစု ဖွင့်ခြင်း မအောင်မြင်ပါ",
+		"DATASET_GET_FAILED": "ဒေတာစုကို ရယူ၍မရပါ",
+		"CAPTCHA_GET_FAILED": "captcha ကို ရယူ၍မရပါ",
+		"CAPTCHA_UPDATE_FAILED": "captcha ကို အပ်ဒိတ်လုပ်၍မရပါ",
+		"IMAGE_GET_FAILED": "ပုံကို ရယူ၍မရပါ",
+		"PENDING_RECORD_NOT_FOUND": "ဆိုင်းငံ့ထားသော မှတ်တမ်း ရှာမတွေ့ပါ",
+		"INVALID_HASH": "hash မမှန်ကန်ပါ",
+		"SOLUTION_GET_FAILED": "အဖြေကို ရယူ၍မရပါ",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "လိုအပ်သော အဖြေအရေအတွက်ရှိသည့် ဒေတာစု ရှာမတွေ့ပါ",
+		"SOLUTION_APPROVE_FAILED": "အဖြေကို အတည်ပြု၍မရပါ",
+		"SOLUTION_FLAG_FAILED": "အဖြေကို လုပ်ဆောင်ပြီးဟု မှတ်သား၍မရပါ",
+		"TABLES_UNDEFINED": "ဇယားများ မသတ်မှတ်ရသေးပါ",
+		"CONNECTION_UNDEFINED": "ချိတ်ဆက်မှု မသတ်မှတ်ရသေးပါ",
+		"COMMITMENT_FLAG_FAILED": "ကတိကဝတ်ကို လုပ်ဆောင်ပြီးဟု မှတ်သား၍မရပါ",
+		"UNKNOWN": "မသိသော ဒေတာဘေ့စ် အမှား",
+		"QUERY_ERROR": "ဒေတာဘေ့စ် query မအောင်မြင်ပါ",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ဝင်ရောက်ခွင့် စည်းမျဉ်း Redis ချိတ်ဆက်မှု မသတ်မှတ်ရသေးပါ",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "အသုံးပြုသူ ဝင်ရောက်ခွင့် စည်းမျဉ်း သိုလှောင်မှု မသတ်မှတ်ရသေးပါ",
+		"SESSION_STORE_FAILED": "session ကို သိမ်းဆည်း၍မရပါ",
+		"SESSION_CHECK_REMOVE_FAILED": "session ကို စစ်ဆေးဖယ်ရှား၍မရပါ",
+		"SESSION_GET_FAILED": "session ကို ရယူ၍မရပါ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ပိုင်ရှင် အသုံးပြုသူကို ပြင်ဆင်၍မရပါ",
+		"CANNOT_DELETE_OWN_USER": "သင့်ကိုယ်ပိုင် အကောင့်ကို ဖျက်၍မရပါ",
+		"CANNOT_DELETE_LAST_USER": "နောက်ဆုံး အသုံးပြုသူကို ဖျက်၍မရပါ",
+		"USER_ALREADY_EXISTS": "အသုံးပြုသူ ရှိပြီးသားဖြစ်သည်",
+		"NO_SUGGESTIONS_FOUND": "အကြံပြုချက် ရှာမတွေ့ပါ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "နောက်ဆုံး အသုံးပြုနေသော ဆိုက်ကို ပိတ်၍မရပါ",
+		"DUPLICATE_SITE_NAME": "ဤအမည်ဖြင့် ဆိုက် ရှိပြီးသားဖြစ်သည်",
+		"INVALID_SITE_NAME": "ဆိုက်အမည်တွင် စာလုံး၊ ဂဏန်း၊ တုံးတို နှင့် underscore များသာ ပါနိုင်သည်"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "ပါရာမီတာ မမှန်ကန်ပါ"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ဖိုင် ရှာမတွေ့ပါ",
+		"FILE_ALREADY_EXISTS": "ဖိုင် ရှိပြီးသားဖြစ်သည်",
+		"INVALID_DIR_FORMAT": "ဖိုင်တွဲ ဖော်မတ် မမှန်ကန်ပါ"
+	}
+}

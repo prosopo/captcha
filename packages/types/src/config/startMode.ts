@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { infer as zInfer } from "zod";
-import { enum as zEnum } from "zod";
-
 export enum StartModeEnum {
 	auto = "auto",
 	manual = "manual",
 }
 
-export const StartModeSchema = zEnum([
+export type StartMode = StartModeEnum;
+
+export const StartModes: readonly StartMode[] = [
 	StartModeEnum.auto,
 	StartModeEnum.manual,
-]);
-export type StartMode = zInfer<typeof StartModeSchema>;
+];
+
+// A plain guard rather than a zod enum: this module is read by the widget
+// before it renders, and a zod schema for two strings would put the whole of
+// zod on that path.
+export const isStartMode = (value: string): value is StartMode =>
+	(StartModes as readonly string[]).includes(value);
 
 export const PROCAPTCHA_START_EVENT = "procaptcha:start";
 

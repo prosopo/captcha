@@ -67,7 +67,7 @@ export default async function (
 			}),
 			VitePluginCopy({
 				srcDir: "src",
-				destDir: "dist",
+				destDir: "dist/cjs",
 				include: ["**/*.json"],
 			}),
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),

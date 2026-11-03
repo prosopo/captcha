@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { createRequire } from "node:module";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { CaptchaMerkleTree } from "@prosopo/datasets";
 import type { CaptchaSolution } from "@prosopo/types";
+import { measureSync } from "../../api/metrics.js";
 
 // Load the Rust napi module. In dev the workspace symlink resolves the
 // package; in the cli bundle vite copies the .node file next to the bundle
@@ -51,44 +52,46 @@ export const buildTreeAndGetCommitmentId = (
 ): { tree: CaptchaMerkleTree; commitmentId: string } => {
 	// Preserve the "no commitment" error contract the old JS impl exposed:
 	// native throws Error("leaves is empty") for zero solutions, but callers
-	// pattern-match on ProsopoEnvError with the CAPTCHA_SOLUTION_COMMITMENT_
+	// pattern-match on ProsopoError with the CAPTCHA_SOLUTION_COMMITMENT_
 	// DOES_NOT_EXIST translation key.
 	if (captchaSolutions.length === 0) {
-		throw new ProsopoEnvError(
-			"CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST",
-			{
-				context: {
-					failedFuncName: buildTreeAndGetCommitmentId.name,
-					commitmentId: null,
-				},
+		throw new ProsopoError({
+			code: "RECORD_NOT_FOUND",
+			errorSite: "PROV-69",
+			message: "Captcha solution commitment does not exist",
+			context: {
+				failedFuncName: buildTreeAndGetCommitmentId.name,
+				commitmentId: null,
 			},
-		);
+		});
 	}
 
-	const solutionsHashed = captchaSolutions.map((captcha) =>
-		nativeMerkle.computeCaptchaSolutionHash(
-			captcha.captchaId,
-			captcha.captchaContentId,
-			captcha.solution,
-			captcha.salt,
-		),
-	);
-	const layers = nativeMerkle.buildMerkleLayers(solutionsHashed);
+	const layers = measureSync("merkle_build", () => {
+		const solutionsHashed = captchaSolutions.map((captcha) =>
+			nativeMerkle.computeCaptchaSolutionHash(
+				captcha.captchaId,
+				captcha.captchaContentId,
+				captcha.solution,
+				captcha.salt,
+			),
+		);
+		return nativeMerkle.buildMerkleLayers(solutionsHashed);
+	});
 
 	const tree = new CaptchaMerkleTree();
 	tree.hydrateFromLayers(layers);
 
 	const commitmentId = tree.root?.hash;
 	if (!commitmentId) {
-		throw new ProsopoEnvError(
-			"CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST",
-			{
-				context: {
-					failedFuncName: buildTreeAndGetCommitmentId.name,
-					commitmentId: commitmentId,
-				},
+		throw new ProsopoError({
+			code: "RECORD_NOT_FOUND",
+			errorSite: "PROV-70",
+			message: "Captcha solution commitment does not exist",
+			context: {
+				failedFuncName: buildTreeAndGetCommitmentId.name,
+				commitmentId: commitmentId,
 			},
-		);
+		});
 	}
 
 	return { tree, commitmentId };

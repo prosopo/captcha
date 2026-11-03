@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "অবৈধ ঠিকনা এনক'ড কৰাত বিফল",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha সমাধানৰ প্ৰতিশ্ৰুতি নাই",
+		"SIGNER_UNDEFINED": "স্বাক্ষৰকাৰী নিৰ্ধাৰণ কৰা হোৱা নাই",
+		"CANNOT_FIND_KEYPAIR": "কী জোৰা পোৱা নগ'ল",
+		"INVALID_DATA_FORMAT": "অবৈধ ডেটা ফৰ্মেট"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "অজ্ঞাত পৰিৱেশ অনুৰোধ কৰা হৈছে",
+		"INVALID_CAPTCHA_NUMBER": "অনুগ্ৰহ কৰি captcha কনফিগাৰেচন শুদ্ধভাৱে ছেট কৰক",
+		"INVALID_LOG_LEVEL": "অবৈধ লগ স্তৰ",
+		"INVALID_PACKAGE_DIR": "অবৈধ পেকেজ ডাইৰেক্টৰী"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ডেটাছেট পাৰ্ছ কৰাত ত্ৰুটি",
+		"SOLUTION_PARSE_ERROR": "ডেটাছেট প্ৰক্ৰিয়াকৰণত ত্ৰুটি",
+		"HASH_ERROR": "ডেটাছেট হেশ্ব কৰাত ত্ৰুটি",
+		"DATASET_ID_UNDEFINED": "ডেটাছেট ID নিৰ্ধাৰণ কৰা হোৱা নাই",
+		"NOT_ENOUGH_LABELS": "পৰ্যাপ্ত লেবেল নাই",
+		"NOT_ENOUGH_IMAGES": "পৰ্যাপ্ত ছবি নাই",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ডেটাছেটত captcha ৰ সংখ্যা কনফিগাৰ কৰা সংখ্যাতকৈ কম",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ডেটাছেটত সমাধানৰ সংখ্যা কনফিগাৰ কৰা সংখ্যাতকৈ কম",
+		"DUPLICATE_IMAGE": "নকল ছবি ধৰা পৰিছে",
+		"MERKLE_ERROR": "মাৰ্কল গছ বনোৱাত ত্ৰুটি"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ডেটাবেছ ইঞ্জিন আমদানি কৰাত বিফল",
+		"DATABASE_UNDEFINED": "ডেটাবেছ ক্লায়েণ্ট সংযুক্ত নহয়",
+		"DATABASE_HOST_UNDEFINED": "ডেটাবেছ হ'ষ্ট ঠিকনা নিৰ্ধাৰণ কৰা হোৱা নাই",
+		"DATASET_LOAD_FAILED": "ডেটাছেট ল'ড বিফল",
+		"DATASET_GET_FAILED": "ডেটাছেট পোৱাত বিফল",
+		"CAPTCHA_GET_FAILED": "captcha পোৱাত বিফল",
+		"CAPTCHA_UPDATE_FAILED": "captcha আপডেট কৰাত বিফল",
+		"IMAGE_GET_FAILED": "ছবি পোৱাত বিফল",
+		"PENDING_RECORD_NOT_FOUND": "কোনো বাকী থকা ৰেকৰ্ড পোৱা নগ'ল",
+		"INVALID_HASH": "অবৈধ হেশ্ব",
+		"SOLUTION_GET_FAILED": "সমাধান পোৱাত বিফল",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "প্ৰয়োজনীয় সংখ্যক সমাধান থকা কোনো ডেটাছেট পোৱা নগ'ল",
+		"SOLUTION_APPROVE_FAILED": "সমাধান অনুমোদন কৰাত বিফল",
+		"SOLUTION_FLAG_FAILED": "সমাধান প্ৰক্ৰিয়াকৃত বুলি চিহ্নিত কৰাত বিফল",
+		"TABLES_UNDEFINED": "টেবুল নিৰ্ধাৰণ কৰা হোৱা নাই",
+		"CONNECTION_UNDEFINED": "সংযোগ নিৰ্ধাৰণ কৰা হোৱা নাই",
+		"COMMITMENT_FLAG_FAILED": "প্ৰতিশ্ৰুতি প্ৰক্ৰিয়াকৃত বুলি চিহ্নিত কৰাত বিফল",
+		"UNKNOWN": "অজ্ঞাত ডেটাবেছ ত্ৰুটি",
+		"QUERY_ERROR": "ডেটাবেছ কুৱেৰী বিফল",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "প্ৰৱেশ নিয়মৰ Redis সংযোগ নিৰ্ধাৰণ কৰা হোৱা নাই",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ব্যৱহাৰকাৰী প্ৰৱেশ নিয়মৰ সংৰক্ষণ নিৰ্ধাৰণ কৰা হোৱা নাই",
+		"SESSION_STORE_FAILED": "ছেছন সংৰক্ষণ কৰাত বিফল",
+		"SESSION_CHECK_REMOVE_FAILED": "ছেছন পৰীক্ষা কৰি আঁতৰোৱাত বিফল",
+		"SESSION_GET_FAILED": "ছেছন পোৱাত বিফল"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "মালিক ব্যৱহাৰকাৰীক সলনি কৰিব নোৱাৰি",
+		"CANNOT_DELETE_OWN_USER": "নিজৰ একাউণ্ট মচিব নোৱাৰি",
+		"CANNOT_DELETE_LAST_USER": "শেষ ব্যৱহাৰকাৰীক মচিব নোৱাৰি",
+		"USER_ALREADY_EXISTS": "ব্যৱহাৰকাৰী ইতিমধ্যে আছে",
+		"NO_SUGGESTIONS_FOUND": "কোনো পৰামৰ্শ পোৱা নগ'ল",
+		"CANNOT_DEACTIVATE_LAST_SITE": "শেষ সক্ৰিয় ছাইট নিষ্ক্ৰিয় কৰিব নোৱাৰি",
+		"DUPLICATE_SITE_NAME": "এই নামৰ ছাইট ইতিমধ্যে আছে",
+		"INVALID_SITE_NAME": "ছাইটৰ নামত কেৱল আখৰ, সংখ্যা, হাইফেন আৰু আণ্ডাৰস্ক'ৰ থাকিব পাৰে"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "অবৈধ পেৰামিটাৰ"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ফাইল পোৱা নগ'ল",
+		"FILE_ALREADY_EXISTS": "ফাইল ইতিমধ্যে আছে",
+		"INVALID_DIR_FORMAT": "অবৈধ ডাইৰেক্টৰী ফৰ্মেট"
+	}
+}

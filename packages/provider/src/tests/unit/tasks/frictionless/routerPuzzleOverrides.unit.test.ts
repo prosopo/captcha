@@ -20,6 +20,10 @@
 // read. These tests pin the persistence half.
 
 import {
+	MAX_AUTO_ESCALATION_LEVEL,
+	MAX_STALE_PAYLOAD_LEVEL,
+} from "@prosopo/captcha-severity";
+import {
 	CaptchaType,
 	FrictionlessPenalties,
 	FrictionlessReason,
@@ -231,8 +235,6 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 		expect(storedSession().puzzleTolerance).toBeDefined();
 	});
 
-	// OLD_TIMESTAMP sizes itself from timestampDecayFunction, which scales
-	// with staleness — a real graduated measurement, so it keeps the ladder.
 	it("still escalates on an old timestamp", async () => {
 		routerReturns({ captchaType: CaptchaType.puzzle });
 
@@ -242,6 +244,29 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 		});
 
 		expect(storedSession().puzzle).toBeDefined();
+		expect(storedSession().puzzleLevel).toBe(MAX_STALE_PAYLOAD_LEVEL);
+	});
+
+	it("caps an old timestamp however large the round count", async () => {
+		routerReturns({ captchaType: CaptchaType.puzzle });
+
+		await manager.sendPuzzleCaptcha({
+			solvedImagesCount: 8,
+			reason: FrictionlessReason.OLD_TIMESTAMP,
+		});
+
+		expect(storedSession().puzzleLevel).toBe(MAX_STALE_PAYLOAD_LEVEL);
+	});
+
+	it("leaves the same round count uncapped under another reason", async () => {
+		routerReturns({ captchaType: CaptchaType.puzzle });
+
+		await manager.sendPuzzleCaptcha({
+			solvedImagesCount: 8,
+			reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+		});
+
+		expect(storedSession().puzzleLevel).toBe(MAX_AUTO_ESCALATION_LEVEL);
 	});
 
 	// The site's own ceiling on escalation — the puzzle counterpart to
@@ -310,5 +335,39 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 
 			expect(storedSession().puzzle).toBeDefined();
 		});
+	});
+
+	it("persists router icon-order overrides on an icon-order session", async () => {
+		manager.setRoutingContext(context);
+		manager.setAllowedCaptchaTypes({
+			image: true,
+			puzzle: true,
+			iconOrder: true,
+		});
+		routerReturns({
+			captchaType: CaptchaType.iconOrder,
+			iconOrderTolerance: 0.5,
+			iconOrder: { decoyCount: 2 },
+		});
+
+		await manager.sendIconOrderCaptcha();
+
+		expect(storedSession().captchaType).toBe(CaptchaType.iconOrder);
+		expect(storedSession().iconOrderTolerance).toBe(0.5);
+		expect(storedSession().iconOrder).toEqual({ decoyCount: 2 });
+		expect(storedSession().puzzleTolerance).toBeUndefined();
+	});
+
+	it("drops icon-order overrides when the session is not icon-order", async () => {
+		routerReturns({
+			captchaType: CaptchaType.puzzle,
+			iconOrderTolerance: 0.5,
+			iconOrder: { decoyCount: 2 },
+		});
+
+		await manager.sendPuzzleCaptcha();
+
+		expect(storedSession().iconOrderTolerance).toBeUndefined();
+		expect(storedSession().iconOrder).toBeUndefined();
 	});
 });

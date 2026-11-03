@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { getWorkspacePatterns } from "@prosopo/workspace";
 import fg from "fast-glob";
 import type { Argv } from "yargs";
 import z from "zod";
@@ -43,12 +44,6 @@ const json = async (args: {
 	pkg: string;
 }) => {
 	console.log("Checking", args.pkg);
-	// read the pkg json file
-	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));
-	// only accept workspace pkg json
-	if (pkgJson.workspaces === undefined) {
-		throw new Error(`${args.pkg} is not a workspace`);
-	}
 
 	// get the path of the pkgJson file
 	const pkgJsonPath = path.resolve(args.pkg);
@@ -72,14 +67,12 @@ const json = async (args: {
 	}
 
 	// for each package in the workspace
-	const globs = z
-		.string()
-		.array()
-		.parse(pkgJson.workspaces)
-		.flatMap((g) => [
-			`${path.dirname(args.pkg)}/${g}/**/*.json`,
-			`!${path.dirname(args.pkg)}/${g}/**/node_modules/**`,
-		]);
+	const globs = [
+		...getWorkspacePatterns(args.pkg, "**/*.json"),
+		...getWorkspacePatterns(args.pkg, "**/node_modules/**")
+			.filter((pattern) => !pattern.startsWith("!"))
+			.map((pattern) => `!${pattern}`),
+	];
 	// glob the json files
 	// hardcoded ignores forked fpjs
 	const hardcodedIgnores = ["**/packages/fingerprintjs/**"];

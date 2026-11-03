@@ -17,10 +17,11 @@
 // hand the whole thing to `verifyWebBotAuth`. If any of the parser, base
 // construction, or verification stages drift out of step this test breaks.
 
-import { ed25519 } from "@noble/curves/ed25519";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { ed25519 } from "@noble/curves/ed25519.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type JwksFetch, clearJwksCache } from "../jwksResolver.js";
 import { buildSignatureBase } from "../signatureBase.js";
+import { parseSignatureInput } from "../structuredFields.js";
 import { verifyWebBotAuth } from "../verify.js";
 
 // Encode raw bytes as base64 without depending on Node's Buffer type in
@@ -44,6 +45,7 @@ const buildSignedRequest = (
 	privateKey: Uint8Array,
 	publicKey: Uint8Array,
 	expiresSeconds: number,
+	paramsOverride?: string,
 ): {
 	fetch: JwksFetch;
 	request: {
@@ -53,10 +55,18 @@ const buildSignedRequest = (
 	};
 } => {
 	const created = Math.floor(Date.now() / 1000);
-	const params = `("@authority" "signature-agent");created=${created};expires=${expiresSeconds};keyid="${KEY_ID}";alg="ed25519";tag="web-bot-auth"`;
+	const params =
+		paramsOverride ??
+		`("@authority" "signature-agent");created=${created};expires=${expiresSeconds};keyid="${KEY_ID}";alg="ed25519";tag="web-bot-auth"`;
 	const base = buildSignatureBase(
-		["@authority", "signature-agent"],
-		{ authority: AUTHORITY, signatureAgent: SIGNATURE_AGENT_HEADER },
+		parseSignatureInput(`sig1=${params}`)?.coveredComponents ?? [],
+		{
+			authority: AUTHORITY,
+			method: "GET",
+			targetUri: REQUEST_URL,
+			path: "/api/thing",
+			signatureAgent: SIGNATURE_AGENT_HEADER,
+		},
 		params,
 	);
 	const signature = ed25519.sign(new TextEncoder().encode(base), privateKey);
@@ -95,7 +105,7 @@ describe("verifyWebBotAuth", () => {
 	afterEach(() => clearJwksCache());
 
 	it("verifies a fresh, correctly-signed request", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request, fetch } = buildSignedRequest(
 			priv,
@@ -112,7 +122,7 @@ describe("verifyWebBotAuth", () => {
 	});
 
 	it("rejects when signature bytes are flipped", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request, fetch } = buildSignedRequest(
 			priv,
@@ -136,7 +146,7 @@ describe("verifyWebBotAuth", () => {
 	});
 
 	it("rejects an expired signature before touching JWKS", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const past = Math.floor(Date.now() / 1000) - 60;
 		const { request } = buildSignedRequest(priv, pub, past);
@@ -152,8 +162,89 @@ describe("verifyWebBotAuth", () => {
 		expect(fetched).toBe(false);
 	});
 
+	describe("replay window", () => {
+		const nowSeconds = (): number => Math.floor(Date.now() / 1000);
+		const COVERED = '("@authority" "signature-agent")';
+		const TAIL = `keyid="${KEY_ID}";alg="ed25519"`;
+		const cases: Array<{ name: string; params: () => string; reason: string }> =
+			[
+				{
+					name: "no expires, so it would verify forever",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};${TAIL};tag="web-bot-auth"`,
+					reason: "missing-created-or-expires",
+				},
+				{
+					name: "no created",
+					params: () =>
+						`${COVERED};expires=${nowSeconds() + 60};${TAIL};tag="web-bot-auth"`,
+					reason: "missing-created-or-expires",
+				},
+				{
+					name: "created in the future",
+					params: () =>
+						`${COVERED};created=${nowSeconds() + 3600};expires=${nowSeconds() + 3660};${TAIL};tag="web-bot-auth"`,
+					reason: "not-yet-valid",
+				},
+				{
+					name: "created just beyond the clock skew allowance",
+					params: () =>
+						`${COVERED};created=${nowSeconds() + 10};expires=${nowSeconds() + 70};${TAIL};tag="web-bot-auth"`,
+					reason: "not-yet-valid",
+				},
+				{
+					name: "a validity window longer than 24 hours",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};expires=${nowSeconds() + 400 * 24 * 3600};${TAIL};tag="web-bot-auth"`,
+					reason: "validity-too-long",
+				},
+				{
+					name: "no web-bot-auth tag",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};expires=${nowSeconds() + 60};${TAIL}`,
+					reason: "wrong-tag",
+				},
+				{
+					name: "a different tag",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};expires=${nowSeconds() + 60};${TAIL};tag="something-else"`,
+					reason: "wrong-tag",
+				},
+			];
+
+		for (const { name, params, reason } of cases) {
+			it(`rejects a correctly-signed request with ${name}`, async () => {
+				const priv = ed25519.utils.randomSecretKey();
+				const pub = ed25519.getPublicKey(priv);
+				const { request, fetch } = buildSignedRequest(priv, pub, 0, params());
+				let fetched = false;
+				const result = await verifyWebBotAuth(request, {
+					fetch: async (url: string, init?: RequestInit) => {
+						fetched = true;
+						return fetch(url, init);
+					},
+				});
+				expect(result).toEqual({ verified: false, reason });
+				expect(fetched).toBe(false);
+			});
+		}
+
+		it("accepts created a few seconds ahead, for clock skew", async () => {
+			const priv = ed25519.utils.randomSecretKey();
+			const pub = ed25519.getPublicKey(priv);
+			const { request, fetch } = buildSignedRequest(
+				priv,
+				pub,
+				0,
+				`${COVERED};created=${nowSeconds() + 3};expires=${nowSeconds() + 63};${TAIL};tag="web-bot-auth"`,
+			);
+			const result = await verifyWebBotAuth(request, { fetch });
+			expect(result.verified).toBe(true);
+		});
+	});
+
 	it("rejects when the JWKS has no matching kid", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request } = buildSignedRequest(
 			priv,
@@ -188,4 +279,112 @@ describe("verifyWebBotAuth", () => {
 			reason: "no-signature-headers",
 		});
 	});
+	it("rejects a signature covering a component it cannot reconstruct", async () => {
+		const priv = ed25519.utils.randomSecretKey();
+		const pub = ed25519.getPublicKey(priv);
+		const created = Math.floor(Date.now() / 1000);
+		const { request, fetch } = buildSignedRequest(priv, pub, created + 60);
+		request.headers["signature-input"] =
+			`sig1=("@authority" "signature-agent" "@query");created=${created};expires=${created + 60};keyid="${KEY_ID}";alg="ed25519";tag="web-bot-auth"`;
+
+		const result = await verifyWebBotAuth(request, { fetch });
+		expect(result).toEqual({
+			verified: false,
+			reason: "unsupported-component",
+		});
+	});
+});
+
+// Signatures captured from production frictionless requests on 2026-10-27,
+// verified against each signer's published key at the time.
+type CapturedRequest = {
+	name: string;
+	signerUrl: string;
+	keyid: string;
+	publicKey: string;
+	verifiedAt: number;
+	headers: Record<string, string>;
+};
+
+const FRICTIONLESS_URL =
+	"https://pronode12.prosopo.io/v1/prosopo/provider/client/captcha/frictionless";
+
+const CAPTURED_REQUESTS: CapturedRequest[] = [
+	{
+		name: "ChatGPT agent (@authority, @method, signature-agent)",
+		signerUrl: "https://chatgpt.com",
+		keyid: "ArwjqcCqtA5oxEWkzXGC-To_0A9whHmajCHtfe8I9aY",
+		publicKey: "P_1c4SX6fCavDcq6FRegWcVvaOKsp_aXHPEN1FcKDIA",
+		verifiedAt: 1793096048,
+		headers: {
+			"signature-agent": '"https://chatgpt.com"',
+			"signature-input":
+				'sig1=("@authority" "@method" "signature-agent");created=1793096046;keyid="ArwjqcCqtA5oxEWkzXGC-To_0A9whHmajCHtfe8I9aY";alg="ed25519";expires=1793099646;nonce="s80YihcxjXBtgoFHk3IWCEkE9QT1FqnPC5sf1cNW_Nb-_gyi3kjyXGG9NOP5l3_hJ8yG4bzwnC8cRjj7AKU_OQ";tag="web-bot-auth"',
+			signature:
+				"sig1=:zGfxBgX2xnFbbdGgsGqKS7Ek4EIX4P3qSm/DdTCMghRaTFClH5TQypxF5ga4C+joP5uHdYoLxOjmZZ6KgmmZDQ==:",
+		},
+	},
+	{
+		name: 'Google agent (@target-uri, @method, signature-agent;key="g")',
+		signerUrl: "https://agent.bot.goog",
+		keyid: "DYiMjA",
+		publicKey: "0cFRtAeGOa46EsjXFVKw1o_pMPFBGq4ReeznYs_RBrs",
+		verifiedAt: 1793094580,
+		headers: {
+			"signature-agent": 'g="https://agent.bot.goog"',
+			"signature-input":
+				'g=("@target-uri" "@method" "signature-agent";key="g");created=1793094577;expires=1793094877;keyid="DYiMjA";alg="ed25519";tag="web-bot-auth"',
+			signature:
+				"g=:tAIAbJkdRHeFhPSlvjf2oIbSQt89dxpiwclp90TZR66bd78TeYlh/oXuXrW+2hGVlVVAwRRarTGUU6cbLaivBg==:",
+		},
+	},
+];
+
+describe("verifyWebBotAuth against captured agent requests", () => {
+	beforeEach(() => clearJwksCache());
+	afterEach(() => {
+		clearJwksCache();
+		vi.useRealTimers();
+	});
+
+	const fetchFor =
+		(captured: CapturedRequest): JwksFetch =>
+		async () =>
+			new Response(
+				JSON.stringify({
+					keys: [
+						{
+							kty: "OKP",
+							crv: "Ed25519",
+							kid: captured.keyid,
+							x: captured.publicKey,
+						},
+					],
+				}),
+				{ status: 200 },
+			);
+
+	for (const captured of CAPTURED_REQUESTS) {
+		it(`verifies ${captured.name}`, async () => {
+			vi.useFakeTimers({ now: captured.verifiedAt * 1000 });
+			const result = await verifyWebBotAuth(
+				{ method: "POST", url: FRICTIONLESS_URL, headers: captured.headers },
+				{ fetch: fetchFor(captured) },
+			);
+			expect(result).toEqual({
+				verified: true,
+				signerUrl: captured.signerUrl,
+				keyid: captured.keyid,
+			});
+		});
+
+		it(`rejects ${captured.name} replayed with another method`, async () => {
+			vi.useFakeTimers({ now: captured.verifiedAt * 1000 });
+			const result = await verifyWebBotAuth(
+				{ method: "GET", url: FRICTIONLESS_URL, headers: captured.headers },
+				{ fetch: fetchFor(captured) },
+			);
+			expect(result).toEqual({ verified: false, reason: "bad-signature" });
+		});
+	}
 });

@@ -13,53 +13,78 @@
 // limitations under the License.
 
 import path from "node:path";
-import i18n from "i18next";
-import FSBackend from "i18next-fs-backend/cjs"; // https://github.com/i18next/i18next-fs-backend/issues/57
-import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
+import { fileURLToPath } from "node:url";
+import i18n, { type BackendModule, type NewableModule } from "i18next";
+import FSBackendCjs from "i18next-fs-backend/cjs";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
+import { createRequestLanguageDetector } from "./requestLanguageDetector.js";
+import { NAMESPACES } from "./translationKey.js";
 import { isServerSide } from "./util.js";
 
-const loadPath =
-	`${path.dirname(import.meta.url)}/locales/{{lng}}/{{ns}}.json`.replace(
-		"file://",
-		"",
+// Each build (dist/esm, dist/cjs) carries its own copy of the catalogues in
+// `locales/` beside it, as the source does.
+const cataloguePath = (): string =>
+	path.join(
+		path.dirname(fileURLToPath(import.meta.url)),
+		"locales",
+		"{{lng}}",
+		"{{ns}}.json",
 	);
+
+// The ESM entry uses top-level await, which breaks every non-ESM browser
+// bundle that reaches this file through loadI18next's dynamic import (the
+// Cypress spec bundles are UMD). The CJS entry has none, but its .d.ts
+// declares an ES default export while the file sets `module.exports` to the
+// class itself (https://github.com/i18next/i18next-fs-backend/issues/57), so
+// the value is checked rather than trusted.
+const isBackendClass = (
+	value: unknown,
+): value is NewableModule<BackendModule> =>
+	typeof value === "function" && "type" in value && value.type === "backend";
+
+export const fsBackend = (
+	loaded: unknown = FSBackendCjs,
+): NewableModule<BackendModule> => {
+	if (!isBackendClass(loaded)) {
+		throw new Error("i18next-fs-backend/cjs did not export a backend class");
+	}
+	return loaded;
+};
 
 export function initializeI18n(
 	i18nLoadedCallback?: (value: typeof i18n) => void,
 ) {
 	if (!i18n.isInitialized && isServerSide()) {
-		const lngDetector = new MiddlewareLanguageDetector(null, {
-			order: ["header", "query", "cookie"],
-		});
 		i18n
-			// @ts-ignore https://github.com/i18next/i18next-fs-backend/issues/57
-			.use(FSBackend)
-			.use(lngDetector) // this line should switch the language to the one the user reports in the Accept-Language header
-			.init({
-				...i18nSharedOptions,
-				ns: ["translation"],
-				backend: {
-					loadPath,
+			.use(fsBackend())
+			.use(createRequestLanguageDetector())
+			.init(
+				{
+					...i18nSharedOptions,
+					// Every namespace, so `t()` finds a key wherever it lives:
+					// default namespace first, then the others in order.
+					ns: [NAMESPACES.server, NAMESPACES.widget, NAMESPACES.target],
+					defaultNS: NAMESPACES.server,
+					fallbackNS: [NAMESPACES.widget, NAMESPACES.target],
+					backend: {
+						loadPath: cataloguePath(),
+					},
 				},
-			});
-		// "loaded" fires once per namespace, and again after changeLanguage(),
-		// so the raw event is not the one-shot signal the callback expects.
-		// Latch it here as well as in loadI18next: this callback is public and
-		// a caller could reasonably use it to run a side effect.
-		let notified = false;
-		i18n.on("loaded", () => {
-			if (notified) {
-				return;
-			}
-			notified = true;
-			i18nLoadedCallback?.(i18n);
-		});
+				// init's callback runs once, after every namespace of the initial
+				// languages has been read. The "loaded" event used before fires per
+				// backend batch, the first one before i18next is even initialised,
+				// so it released callers with `widget` and `target` still unread.
+				// An error (a missing file) still calls back: i18next then renders
+				// keys or English, and untranslated beats a server that never boots.
+				() => {
+					i18nLoadedCallback?.(i18n);
+				},
+			);
 	} else {
 		// Nothing to initialise — either i18next is already up (a frontend
-		// consumer got there first) or we are not on the server. The `loaded`
-		// handler above is only registered inside the init branch, so without
-		// this the callback would never fire and loadI18next() would stay
+		// consumer got there first) or we are not on the server. The init
+		// callback above only exists on the init branch, so without this the
+		// callback would never fire and loadI18next() would stay
 		// pending forever instead of handing back the instance we already have.
 		i18nLoadedCallback?.(i18n);
 	}

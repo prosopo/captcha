@@ -32,6 +32,7 @@ const buildInput = () => {
 			sendImageCaptcha: vi.fn().mockResolvedValue({ kind: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ kind: "pow" }),
 			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ kind: "puzzle" }),
+			sendIconOrderCaptcha: vi.fn().mockResolvedValue({ kind: "iconOrder" }),
 		},
 	};
 	return {
@@ -127,6 +128,18 @@ describe("handleAccessPolicy", () => {
 		const r = await handleAccessPolicy(input as never, res as never);
 		expect(r.handled).toBe(true);
 		expect(tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+	});
+
+	it("dispatches to sendIconOrderCaptcha for icon-order-typed policies", async () => {
+		const { tasks, input } = buildInput();
+		input.userAccessPolicy = {
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.iconOrder,
+		};
+		const res = buildRes();
+		const r = await handleAccessPolicy(input as never, res as never);
+		expect(r.handled).toBe(true);
+		expect(tasks.frictionlessManager.sendIconOrderCaptcha).toHaveBeenCalled();
 	});
 
 	it("dispatches to sendPuzzleCaptcha for puzzle-typed policies", async () => {
@@ -292,8 +305,6 @@ describe("handleAccessPolicy", () => {
 			const res = buildRes();
 			const r = await handleAccessPolicy(input as never, res as never);
 			expect(r.handled).toBe(true);
-			// The blocked session is recorded against the type the policy
-			// pinned, not a hardcoded `image`.
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
@@ -309,8 +320,6 @@ describe("handleAccessPolicy", () => {
 			const res = buildRes();
 			const r = await handleAccessPolicy(input as never, res as never);
 			expect(r.handled).toBe(true);
-			// The blocked session is recorded against the type the policy
-			// pinned, not a hardcoded `image`.
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
@@ -326,8 +335,6 @@ describe("handleAccessPolicy", () => {
 			const res = buildRes();
 			const r = await handleAccessPolicy(input as never, res as never);
 			expect(r.handled).toBe(true);
-			// The blocked session is recorded against the type the policy
-			// pinned, not a hardcoded `image`.
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(

@@ -12,50 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { boolean, discriminatedUnion, literal, number, object } from "zod";
-import { CaptchaType } from "../client/captchaType/captchaType.js";
+import { discriminatedUnion, literal, number, object } from "zod";
+import {
+	CaptchaType,
+	type ConcreteCaptchaType,
+} from "../client/captchaType/captchaType.js";
 
 /**
- * The per-challenge tuning a session was created with, as a discriminated
- * union keyed on the challenge type.
+ * The per-challenge tuning a session was created with, keyed on the type it
+ * was minted as.
  *
- * Session records historically carried `solvedImagesCount`, `powDifficulty`
- * and `blocked` as flat top-level fields regardless of which challenge the
- * session actually served — `solvedImagesCount` and `blocked` are meaningful
- * only for image, `powDifficulty` only for pow, and every writer had to
- * remember to null the irrelevant ones (see `sendCaptcha`). Grouping them
- * under the type they belong to makes "which knobs apply here?" a property of
- * the data rather than a convention.
- *
- * Written alongside the legacy flat fields, not instead of them: readers
- * (portal, audit, the central DB streamer) still consume the flat fields, so
- * this is additive until they migrate and a backfill has run.
+ * Sessions carry these knobs as flat top-level fields whatever type they
+ * serve, so every writer has to remember which ones to clear. Grouping them
+ * under their type makes that a property of the data. Written alongside the
+ * flat fields, which stay the source of truth until readers migrate.
  */
 export type ChallengeParams =
-	| {
-			type: CaptchaType.image;
-			solvedImagesCount?: number;
-			blocked?: boolean;
-	  }
-	| {
-			type: CaptchaType.pow;
-			powDifficulty?: number;
-	  }
-	| {
-			type: CaptchaType.puzzle;
-			// Pixel tolerance the solution is judged against. Set at
-			// session-creation time only when the routing machine chose an
-			// override (mirrors the flat `puzzleTolerance`); otherwise the puzzle
-			// flow resolves it from the client record when the challenge itself
-			// is issued (`getPuzzleCaptchaChallenge`).
-			tolerance?: number;
-	  };
+	| { type: CaptchaType.image; solvedImagesCount?: number }
+	| { type: CaptchaType.pow; powDifficulty?: number }
+	| { type: CaptchaType.puzzle; tolerance?: number }
+	| { type: CaptchaType.iconOrder; tolerance?: number };
 
 export const ChallengeParamsSchema = discriminatedUnion("type", [
 	object({
 		type: literal(CaptchaType.image),
 		solvedImagesCount: number().optional(),
-		blocked: boolean().optional(),
 	}),
 	object({
 		type: literal(CaptchaType.pow),
@@ -65,48 +46,49 @@ export const ChallengeParamsSchema = discriminatedUnion("type", [
 		type: literal(CaptchaType.puzzle),
 		tolerance: number().optional(),
 	}),
+	object({
+		type: literal(CaptchaType.iconOrder),
+		tolerance: number().optional(),
+	}),
 ]);
 
-/**
- * Build the `challengeParams` for a session from the flat fields its creator
- * already has to hand.
- *
- * Returns `undefined` for `frictionless`, which is a router rather than a
- * challenge and therefore never names a concrete session's challenge type.
- */
 export const deriveChallengeParams = (
-	captchaType: CaptchaType,
+	captchaType: ConcreteCaptchaType,
 	source: {
 		solvedImagesCount?: number;
 		powDifficulty?: number;
-		blocked?: boolean;
 		puzzleTolerance?: number;
+		iconOrderTolerance?: number;
 	},
-): ChallengeParams | undefined => {
+): ChallengeParams => {
 	switch (captchaType) {
 		case CaptchaType.image:
 			return {
-				type: CaptchaType.image,
+				type: captchaType,
 				...(source.solvedImagesCount !== undefined && {
 					solvedImagesCount: source.solvedImagesCount,
 				}),
-				...(source.blocked !== undefined && { blocked: source.blocked }),
 			};
 		case CaptchaType.pow:
 			return {
-				type: CaptchaType.pow,
+				type: captchaType,
 				...(source.powDifficulty !== undefined && {
 					powDifficulty: source.powDifficulty,
 				}),
 			};
 		case CaptchaType.puzzle:
 			return {
-				type: CaptchaType.puzzle,
+				type: captchaType,
 				...(source.puzzleTolerance !== undefined && {
 					tolerance: source.puzzleTolerance,
 				}),
 			};
-		default:
-			return undefined;
+		case CaptchaType.iconOrder:
+			return {
+				type: captchaType,
+				...(source.iconOrderTolerance !== undefined && {
+					tolerance: source.iconOrderTolerance,
+				}),
+			};
 	}
 };

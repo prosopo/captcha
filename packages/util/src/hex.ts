@@ -14,6 +14,7 @@
 
 import { at } from "./at.js";
 import { isArray } from "./checks.js";
+import { parseInteger } from "./parse.js";
 
 type Hash = string | number[];
 
@@ -30,15 +31,14 @@ for (let i = 0; i < 256; i++) {
 }
 
 /** @internal */
-// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-function hex(value: any, result: string) {
+function hex(value: Uint8Array, result: string): string {
 	const mod = (value.length % 2) | 0;
 	const length = (value.length - mod) | 0;
 	for (let i = 0; i < length; i += 2) {
-		result += U16[(value[i] << 8) | value[i + 1]];
+		result += U16[((value[i] ?? 0) << 8) | (value[i + 1] ?? 0)];
 	}
 	if (mod) {
-		result += U8[value[length] | 0];
+		result += U8[value[length] ?? 0];
 	}
 	return result;
 }
@@ -83,91 +83,81 @@ export const hashToHex = (hash: Hash) => {
 	return hash.toString();
 };
 
+const MAX_BYTE = 0xff;
+
+const toByteHex = (n: number): string => n.toString(16).padStart(2, "0");
+
+/**
+ * Writes `data` into `hexString`: a one-byte count, then a one-byte position
+ * and one-byte length per value at the start, and the values' hex digits
+ * packed backwards from the end. Values are rounded to the nearest integer,
+ * since click coordinates can be fractional. Positions are a single byte, so on a string
+ * longer than 256 chars the values are packed backwards from index 255.
+ */
 export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 	const hex = hexString.replace(/^0x/, "").split("");
 
-	let cursorStart = 0;
-	let cursorEnd = hex.length - 1;
-
-	const countHex = data.length.toString(16).padStart(2, "0");
-	hex[cursorStart++] = at(countHex, 0);
-	hex[cursorStart++] = at(countHex, 1);
-
-	const positions: number[] = [];
-	const lengths: number[] = [];
-	let totalLength = 0;
-
-	for (const d of data) {
-		const hexData = d.toString(16); // original hex string
-
-		const len = hexData.length;
-		totalLength += len;
-		const startPos = cursorEnd - len + 1;
-
-		positions.push(startPos);
-		lengths.push(len);
-
-		for (let i = 0; i < len; i++) {
-			hex[startPos + i] = at(hexData, i);
-		}
-
-		cursorEnd -= len;
-	}
-
-	if (totalLength > hexString.length) {
+	if (data.length > MAX_BYTE) {
 		throw new Error(
-			`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
+			`embedData: count ${data.length} exceeds the maximum of ${MAX_BYTE}`,
+		);
+	}
+	const values = data.map((d) => {
+		const rounded = Math.round(d);
+		if (!Number.isSafeInteger(rounded) || rounded < 0) {
+			throw new Error(`embedData: ${String(d)} is not a non-negative number`);
+		}
+		return rounded.toString(16);
+	});
+
+	const usableLength = Math.min(hex.length, MAX_BYTE + 1);
+	const totalLength =
+		2 + 4 * values.length + values.reduce((acc, v) => acc + v.length, 0);
+	if (totalLength > usableLength) {
+		throw new Error(
+			`Hex data length ${totalLength} exceeds length of hex string ${usableLength}`,
 		);
 	}
 
-	for (let i = 0; i < data.length; i++) {
-		const posHex = at(positions, i).toString(16).padStart(2, "0");
-
-		totalLength += posHex.length;
-
-		const lenHex = at(lengths, i).toString(16).padStart(2, "0");
-
-		totalLength += lenHex.length;
-
-		if (totalLength > hexString.length) {
-			throw new Error(
-				`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
-			);
-		}
-
-		hex[cursorStart++] = at(posHex, 0);
-		hex[cursorStart++] = at(posHex, 1);
-		hex[cursorStart++] = at(lenHex, 0);
-		hex[cursorStart++] = at(lenHex, 1);
+	let header = toByteHex(values.length);
+	let cursorEnd = usableLength;
+	for (const value of values) {
+		cursorEnd -= value.length;
+		hex.splice(cursorEnd, value.length, ...value);
+		header += toByteHex(cursorEnd) + toByteHex(value.length);
 	}
+	hex.splice(0, header.length, ...header);
 
 	return `0x${hex.join("")}`;
 };
 
-/** Throws if `n` isn't a safe non-negative integer. */
-const assertExtracted = (n: number, label: string): void => {
-	if (!Number.isSafeInteger(n) || n < 0) {
+/**
+ * Reads hex digits as a safe non-negative integer, or throws. Strict, unlike
+ * parseInt: a truncated string makes `hex[i]` undefined, and parseInt would
+ * read "a" + undefined as 0xa rather than failing.
+ */
+const readHex = (digits: string, label: string): number => {
+	const parsed = parseInteger(digits, { radix: 16, min: 0 });
+	if (!parsed.ok) {
 		throw new Error(
-			`extractData: ${label} parsed to invalid value ${String(n)}`,
+			`extractData: ${label} parsed to invalid value ${digits}: ${parsed.error.message}`,
 		);
 	}
+	return parsed.value;
 };
 
 export const extractData = (hexString: string): number[] => {
 	const hex = hexString.replace(/^0x/, "").split("");
 	let cursor = 0;
 
-	const count = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
-	assertExtracted(count, "count");
+	const count = readHex(at(hex, cursor) + hex[cursor + 1], "count");
 	cursor += 2;
 
 	const positions: number[] = [];
 	const lengths: number[] = [];
 	for (let i = 0; i < count; i++) {
-		const pos = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
-		const len = Number.parseInt(at(hex, cursor + 2) + hex[cursor + 3], 16);
-		assertExtracted(pos, `positions[${i}]`);
-		assertExtracted(len, `lengths[${i}]`);
+		const pos = readHex(at(hex, cursor) + hex[cursor + 1], `positions[${i}]`);
+		const len = readHex(at(hex, cursor + 2) + hex[cursor + 3], `lengths[${i}]`);
 		positions.push(pos);
 		lengths.push(len);
 		cursor += 4;
@@ -178,9 +168,7 @@ export const extractData = (hexString: string): number[] => {
 		const startPos = at(positions, i);
 		const len = at(lengths, i);
 		const valueHex = hex.slice(startPos, startPos + len).join("");
-		const value = Number.parseInt(valueHex, 16);
-		assertExtracted(value, `values[${i}]`);
-		results.push(value);
+		results.push(readHex(valueHex, `values[${i}]`));
 	}
 
 	return results;

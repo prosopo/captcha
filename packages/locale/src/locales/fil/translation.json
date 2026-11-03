@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Hindi na-encode ang di-wastong address",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Walang commitment ng solusyon sa captcha",
+		"SIGNER_UNDEFINED": "Hindi tinukoy ang signer",
+		"CANNOT_FIND_KEYPAIR": "Hindi mahanap ang keypair",
+		"INVALID_DATA_FORMAT": "Di-wastong format ng data"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Hindi kilalang environment ang hiniling",
+		"INVALID_CAPTCHA_NUMBER": "Pakiayos nang tama ang configuration ng mga captcha",
+		"INVALID_LOG_LEVEL": "Di-wastong log level",
+		"INVALID_PACKAGE_DIR": "Di-wastong package directory"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Error sa pag-parse ng dataset",
+		"SOLUTION_PARSE_ERROR": "Error sa pagproseso ng dataset",
+		"HASH_ERROR": "Error sa pag-hash ng dataset",
+		"DATASET_ID_UNDEFINED": "Hindi tinukoy ang dataset ID",
+		"NOT_ENOUGH_LABELS": "Kulang ang mga label",
+		"NOT_ENOUGH_IMAGES": "Kulang ang mga larawan",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Mas kaunti ang bilang ng captcha sa dataset kaysa sa naka-configure na bilang",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Mas kaunti ang bilang ng solusyon sa dataset kaysa sa naka-configure na bilang",
+		"DUPLICATE_IMAGE": "may natukoy na dobleng larawan",
+		"MERKLE_ERROR": "Error sa paggawa ng Merkle tree"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Hindi na-import ang database engine",
+		"DATABASE_UNDEFINED": "Hindi nakakonekta ang database client",
+		"DATABASE_HOST_UNDEFINED": "Hindi tinukoy ang host address ng database",
+		"DATASET_LOAD_FAILED": "Nabigo ang pag-load ng dataset",
+		"DATASET_GET_FAILED": "Hindi nakuha ang dataset",
+		"CAPTCHA_GET_FAILED": "Hindi nakuha ang captcha",
+		"CAPTCHA_UPDATE_FAILED": "Hindi na-update ang captcha",
+		"IMAGE_GET_FAILED": "Hindi nakuha ang larawan",
+		"PENDING_RECORD_NOT_FOUND": "Walang nakitang nakabinbing record",
+		"INVALID_HASH": "Di-wastong hash",
+		"SOLUTION_GET_FAILED": "Hindi nakuha ang solusyon",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Walang nakitang dataset na may kinakailangang bilang ng solusyon",
+		"SOLUTION_APPROVE_FAILED": "Hindi naaprubahan ang solusyon",
+		"SOLUTION_FLAG_FAILED": "Hindi namarkahang naproseso ang solusyon",
+		"TABLES_UNDEFINED": "Hindi tinukoy ang mga table",
+		"CONNECTION_UNDEFINED": "Hindi tinukoy ang koneksyon",
+		"COMMITMENT_FLAG_FAILED": "Hindi namarkahang naproseso ang commitment",
+		"UNKNOWN": "Hindi kilalang error sa database",
+		"QUERY_ERROR": "Nabigo ang query sa database",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Hindi tinukoy ang Redis connection ng access rules",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Hindi tinukoy ang storage ng access rules ng user",
+		"SESSION_STORE_FAILED": "Hindi na-store ang session",
+		"SESSION_CHECK_REMOVE_FAILED": "Hindi nasuri at naalis ang session",
+		"SESSION_GET_FAILED": "Hindi nakuha ang session"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Hindi mababago ang may-ari na user",
+		"CANNOT_DELETE_OWN_USER": "Hindi mo puwedeng i-delete ang sarili mong account",
+		"CANNOT_DELETE_LAST_USER": "Hindi puwedeng i-delete ang huling user",
+		"USER_ALREADY_EXISTS": "May user na",
+		"NO_SUGGESTIONS_FOUND": "Walang nakitang mungkahi",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Hindi puwedeng i-deactivate ang huling aktibong site",
+		"DUPLICATE_SITE_NAME": "May site na may ganitong pangalan",
+		"INVALID_SITE_NAME": "Mga titik, numero, gitling at underscore lang ang puwede sa pangalan ng site"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Di-wastong parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Hindi nakita ang file",
+		"FILE_ALREADY_EXISTS": "May file na",
+		"INVALID_DIR_FORMAT": "Di-wastong format ng directory"
+	}
+}

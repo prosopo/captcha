@@ -31,6 +31,10 @@ import {
 	invalidateAllDecisionMachineArtifactCaches,
 	invalidateDecisionMachineScriptCache,
 } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+import {
+	recordDnsSidecarBatch,
+	resetDnsSidecarHealth,
+} from "../../../../tasks/dnsEvent/dnsSidecarHealth.js";
 
 const stubLogger = (): Logger => {
 	const noop = (): void => {};
@@ -364,6 +368,57 @@ describe("DecisionMachineRunner", () => {
 		});
 
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
+	});
+
+	describe("dnsSidecarHealthy", () => {
+		const echoArtifact = (): DecisionMachineArtifact =>
+			buildArtifact(
+				`module.exports = (input) => ({
+					decision: "allow",
+					tags: ["dnsSidecarHealthy:" + input.dnsSidecarHealthy],
+				});`,
+				DecisionMachineScope.Global,
+			);
+
+		beforeEach(() => {
+			resetDnsSidecarHealth();
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(echoArtifact());
+		});
+
+		it("is false when no DNS batch has arrived", async () => {
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:false"]);
+		});
+
+		it("is true after a recent DNS batch", async () => {
+			recordDnsSidecarBatch(new Date());
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:true"]);
+		});
+
+		it("keeps a caller-supplied value", async () => {
+			recordDnsSidecarBatch(new Date());
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+				dnsSidecarHealthy: false,
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:false"]);
+		});
 	});
 
 	describe("route", () => {
@@ -714,6 +769,111 @@ describe("DecisionMachineRunner", () => {
 			expect(first.reason).toBe("old");
 			expect(second.reason).toBe("new");
 			expect(db.getDecisionMachineArtifact).toHaveBeenCalledTimes(4);
+		});
+
+		it("flushes a runner built before the invalidation but used after it", async () => {
+			// The registry this replaced could only reach runners it already held.
+			// The generation counter has to reach them by the value they carry, so
+			// pin the case that distinguishes the two.
+			const artifactOld = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "old" });',
+				DecisionMachineScope.Global,
+			);
+			const artifactNew = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "new" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifactOld)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifactNew);
+
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+			await runner.decide(input);
+			invalidateAllDecisionMachineArtifactCaches();
+
+			expect((await runner.decide(input)).reason).toBe("new");
+		});
+
+		it("shares cached artifacts between runners built on the same database", async () => {
+			// Runners are built per request, so a cache that lived on the
+			// runner never served a second lookup.
+			const artifact = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "shared" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifact);
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+
+			await new DecisionMachineRunner(db).decide(input);
+			const second = await new DecisionMachineRunner(db).decide(input);
+
+			expect(second.reason).toBe("shared");
+			expect(db.getDecisionMachineArtifact).toHaveBeenCalledTimes(2);
+		});
+
+		it("keeps the caches of different databases apart", async () => {
+			const otherDb = {
+				getDecisionMachineArtifact: vi.fn().mockResolvedValue(undefined),
+			} as unknown as IProviderDatabase;
+			(
+				db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue(undefined);
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+
+			await new DecisionMachineRunner(db).decide(input);
+			await new DecisionMachineRunner(otherDb).decide(input);
+
+			expect(otherDb.getDecisionMachineArtifact).toHaveBeenCalledTimes(2);
+		});
+
+		it("does not retain runners, so construction is not bounded by a registry", async () => {
+			// Runners are built per request. The previous implementation enrolled
+			// each one in a module-level Set that nothing pruned, so it grew
+			// without bound and construction eventually began to fail.
+			expect(() => {
+				for (let i = 0; i < 100_000; i++) {
+					new DecisionMachineRunner(db);
+				}
+			}).not.toThrow();
+
+			// Still functional, and still reachable by an invalidation.
+			const artifact = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "fresh" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifact);
+
+			invalidateAllDecisionMachineArtifactCaches();
+			const fresh = new DecisionMachineRunner(db);
+			const result = await fresh.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+
+			expect(result.reason).toBe("fresh");
 		});
 	});
 });

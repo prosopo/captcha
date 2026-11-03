@@ -64,6 +64,7 @@ const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	unsolvedImagesCount: { type: Number, required: false },
 	frictionlessScore: { type: Number, required: false },
 	deferToVerify: { type: Boolean, required: false },
+	messageKey: { type: String, required: false },
 } satisfies AllKeys<AccessPolicy>;
 
 export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
@@ -71,4 +72,7 @@ export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
 	...policyScopeSchema,
 	...userScopeSchema,
 	ruleGroupId: { type: String, required: false },
+	// `default: undefined` stops mongoose stamping an empty array on every
+	// rule, which would read as "has exclusions" to anything checking presence.
+	excludedClientIds: { type: [String], required: false, default: undefined },
 } satisfies Keys<AccessRuleRecord>;

@@ -1,0 +1,44 @@
+{
+	"name": "@prosopo/detector-botd",
+	"version": "0.2.1",
+	"private": true,
+	"description": "Example Procaptcha detector for self-hosted providers, built on BotD",
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"type": "module",
+	"engines": {
+		"node": "^24"
+	},
+	"scripts": {
+		"clean": "del-cli --verbose dist",
+		"bundle": "vite build --config vite.config.ts",
+		"build:tsc": "tsc --build --verbose",
+		"build:types": "tsc --project tsconfig.types.json",
+		"pool": "tsx src/pool.ts",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
+	},
+	"dependencies": {
+		"@fingerprintjs/botd": "2.0.0"
+	},
+	"devDependencies": {
+		"@prosopo/procaptcha-frictionless": "workspace:*",
+		"@prosopo/provider": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0",
+		"tsx": "4.20.3",
+		"typescript": "5.6.2",
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "demos/detector-botd"
+	},
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"sideEffects": false
+}

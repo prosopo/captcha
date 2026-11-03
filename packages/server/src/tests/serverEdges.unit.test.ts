@@ -133,8 +133,11 @@ beforeEach(() => {
 			.spyOn(ProviderApi.prototype, "verifyDappUser")
 			.mockResolvedValue({ status: "ok", verified: true }),
 	};
-	vi.spyOn(loadBalancerModule, "loadBalancer").mockResolvedValue(
-		stubProviderList(),
+	// ProsopoServer asks for the single provider that minted the token, so the
+	// seam is `findProvider`; stubProviderList still backs the url match.
+	vi.spyOn(loadBalancerModule, "findProvider").mockImplementation(
+		async (_env, providerUrl) =>
+			stubProviderList().find((p) => p.url === providerUrl),
 	);
 });
 
@@ -143,7 +146,7 @@ afterEach(() => {
 });
 
 describe("ProsopoServer.verifyProvider — signer failures", () => {
-	it("throws when the signer cannot produce a signature", async () => {
+	it("answers not verified when the signer cannot produce a signature", async () => {
 		const server = new ProsopoServer(
 			buildConfig(60_000),
 			stubPair(() => undefined),
@@ -151,7 +154,7 @@ describe("ProsopoServer.verifyProvider — signer failures", () => {
 
 		await expect(
 			server.isVerified(buildLegacyToken(Date.now(), true)),
-		).rejects.toThrow();
+		).resolves.toMatchObject({ verified: false });
 		expect(spies.pow).not.toHaveBeenCalled();
 	});
 });

@@ -1,0 +1,28 @@
+# Runs the self-hosted provider behind a Cloudflare Tunnel, for hosts with no
+# public address. Cloudflare terminates TLS, so Caddy is not started.
+#
+# Used on top of docker-compose.self-hosted.yml. generateSelfHostedEnv.ts
+# --cloudflare writes a COMPOSE_FILE that loads both.
+#
+# Guide: "Self-hosting on Cloudflare" in SELF_HOSTING.md.
+
+services:
+  caddy:
+    # Only started with --profile caddy, which a tunnelled node never needs.
+    profiles: ['caddy']
+
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.3
+    restart: unless-stopped
+    depends_on:
+      - provider
+    command: tunnel --no-autoupdate run
+    environment:
+      # Passed in the environment rather than on the command line so it does
+      # not show in the process list.
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?paste your tunnel token into CLOUDFLARE_TUNNEL_TOKEN in .env}
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'

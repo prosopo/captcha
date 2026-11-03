@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import path from "node:path";
+import { getWorkspacePatterns } from "@prosopo/workspace";
 import fg from "fast-glob";
 import type { Argv } from "yargs";
 import z from "zod";
@@ -45,28 +45,28 @@ const engines = async (args: {
 	console.log("Checking", args.pkg);
 	// read the pkg json file
 	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));
-	// only accept workspace pkg json
-	if (pkgJson.workspaces === undefined) {
-		throw new Error(`${args.pkg} is not a workspace`);
-	}
 
-	const enginesSchema = z.object({
-		node: z.string(),
-		npm: z.string(),
-	});
-	const engines = enginesSchema.parse(pkgJson.engines);
+	const engines = z
+		.object({
+			node: z.string(),
+			pnpm: z.string(),
+		})
+		.parse(pkgJson.engines);
+	// Members declare only node: the package manager is the workspace's choice,
+	// and a published package pinning one would constrain its consumers.
+	const memberEnginesSchema = z
+		.object({
+			node: z.string(),
+		})
+		.strict();
 
 	// for each package in the workspace, check their version matches the workspace version
-	const globs = z
-		.string()
-		.array()
-		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkg)}/${g}/package.json`);
+	const globs = getWorkspacePatterns(args.pkg, "package.json");
 	const pkgJsonPaths = fg.globSync(globs);
 	for (const pkgJsonPath of pkgJsonPaths) {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
-		const pkgEngineResult = enginesSchema.safeParse(pkgJson.engines);
+		const pkgEngineResult = memberEnginesSchema.safeParse(pkgJson.engines);
 		if (!pkgEngineResult.success) {
 			throw new Error(
 				`${pkgJsonPath} has invalid engines: ${pkgEngineResult.error.message}`,
@@ -76,11 +76,6 @@ const engines = async (args: {
 		if (pkgEngine.node !== engines.node) {
 			throw new Error(
 				`${pkgJsonPath} has node version ${pkgEngine.node}, should be ${engines.node}`,
-			);
-		}
-		if (pkgEngine.npm !== engines.npm) {
-			throw new Error(
-				`${pkgJsonPath} has npm version ${pkgEngine.npm}, should be ${engines.npm}`,
 			);
 		}
 	}

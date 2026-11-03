@@ -170,6 +170,42 @@ describe("applyTrafficFilterAtRequestTime", () => {
 			sourceCategories: ["tor"],
 		});
 	});
+
+	it("carries the tarpit padBytes on a challenge category", () => {
+		expect(
+			applyTrafficFilterAtRequestTime(ipInfo({ isProxy: true }), {
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.pow,
+					powDifficulty: 10,
+					padBytes: 262_144,
+				},
+			}),
+		).toMatchObject({
+			kind: "challenge",
+			powDifficulty: 10,
+			padBytes: 262_144,
+		});
+	});
+
+	it("carries the tarpit padBytes on a blocked category, whose request-time verdict is still a pass", () => {
+		// This is the tarpit's main case: proxy set to `block`, which at
+		// request time passes so the widget still mounts, and the issuance
+		// response it gets is padded on the way to the verify-time rejection.
+		expect(
+			applyTrafficFilterAtRequestTime(ipInfo({ isProxy: true }), {
+				proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+			}),
+		).toEqual({ kind: "pass", padBytes: 1_048_576 });
+	});
+
+	it("leaves padBytes unset when the matched category does not configure it", () => {
+		expect(
+			applyTrafficFilterAtRequestTime(ipInfo({ isProxy: true }), {
+				proxy: { action: TrafficFilterAction.Block },
+			}).padBytes,
+		).toBeUndefined();
+	});
 });
 
 const clientRecord = (imageMaxRounds = 5): ClientRecord =>

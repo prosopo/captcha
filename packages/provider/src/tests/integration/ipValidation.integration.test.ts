@@ -24,6 +24,7 @@ import {
 	CaptchaType,
 	ClientApiPaths,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
+	type GetFrictionlessCaptchaResponse,
 	type KeyringPair,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
@@ -85,7 +86,8 @@ describe("IP Validation Integration Tests", () => {
 			});
 
 			expect(responseFrictionless.status).toBe(200);
-			const dataFrictionless = await responseFrictionless.json();
+			const dataFrictionless =
+				(await responseFrictionless.json()) as GetFrictionlessCaptchaResponse;
 			console.log("Frictionless response:", dataFrictionless);
 			expect(dataFrictionless).toHaveProperty("sessionId");
 			expect(dataFrictionless).toHaveProperty("captchaType");

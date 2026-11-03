@@ -15,6 +15,7 @@
 import type { IPInfoResponse } from "@prosopo/types";
 import { IpapiBackend } from "./backends/ipapi.js";
 import { MaxMindBackend } from "./backends/maxmind.js";
+import { LookupCache } from "./lookupCache.js";
 import type { IIpInfoService, IpInfoServiceConfig } from "./types.js";
 
 /**
@@ -38,7 +39,9 @@ export function isNonRoutable(ip: string): boolean {
 
 	// 172.16.0.0 – 172.31.255.255
 	if (normalized.startsWith("172.")) {
-		const second = Number.parseInt(normalized.split(".")[1] ?? "", 10);
+		// Whole octet only: parseInt would read "16abc" as 16.
+		const octet = normalized.split(".")[1] ?? "";
+		const second = /^\d{1,3}$/.test(octet) ? Number(octet) : Number.NaN;
 		if (second >= 16 && second <= 31) return true;
 	}
 
@@ -69,9 +72,13 @@ export class IpInfoService implements IIpInfoService {
 	private maxmindBackend: MaxMindBackend | null = null;
 	private ipapiBackend: IpapiBackend | null = null;
 	private config: IpInfoServiceConfig;
+	private readonly cache: LookupCache | undefined;
 
 	constructor(config: IpInfoServiceConfig, backends?: IpInfoBackends) {
 		this.config = config;
+		this.cache = config.lookupCache
+			? new LookupCache(config.lookupCache)
+			: undefined;
 
 		if (backends) {
 			this.maxmindBackend = backends.maxmind ?? null;
@@ -139,6 +146,12 @@ export class IpInfoService implements IIpInfoService {
 	}
 
 	async lookup(ip: string): Promise<IPInfoResponse> {
+		return this.cache
+			? this.cache.getOrLookup(ip, (address) => this.lookupUncached(address))
+			: this.lookupUncached(ip);
+	}
+
+	private async lookupUncached(ip: string): Promise<IPInfoResponse> {
 		if (isNonRoutable(ip)) {
 			return {
 				isValid: false,

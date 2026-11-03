@@ -16,8 +16,12 @@ import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ApiToggleMaintenanceModeEndpoint,
+	clearMaintenanceModeSiteKeys,
 	getMaintenanceMode,
+	getMaintenanceModeSiteKeys,
+	isSiteKeyInMaintenanceMode,
 	setMaintenanceMode,
+	setMaintenanceModeForSiteKeys,
 } from "../../../../api/admin/apiToggleMaintenanceModeEndpoint.js";
 
 describe("getMaintenanceMode", () => {
@@ -136,5 +140,112 @@ describe("ApiToggleMaintenanceModeEndpoint", () => {
 	it("returns correct schema", () => {
 		const schema = endpoint.getRequestArgsSchema();
 		expect(schema).toBeDefined();
+	});
+});
+
+const KEY_A = "5EZVvsHMrKCFaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const KEY_B = "5FWoE4Z7K24tbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+describe("per-site-key maintenance mode", () => {
+	beforeEach(() => {
+		process.env.MAINTENANCE_MODE = "false";
+		clearMaintenanceModeSiteKeys();
+	});
+
+	afterEach(() => {
+		process.env.MAINTENANCE_MODE = undefined;
+		clearMaintenanceModeSiteKeys();
+	});
+
+	it("puts only the named site key into maintenance mode", () => {
+		setMaintenanceModeForSiteKeys([KEY_A], true);
+		expect(isSiteKeyInMaintenanceMode(KEY_A)).toBe(true);
+		expect(isSiteKeyInMaintenanceMode(KEY_B)).toBe(false);
+	});
+
+	it("removes a site key again", () => {
+		setMaintenanceModeForSiteKeys([KEY_A], true);
+		setMaintenanceModeForSiteKeys([KEY_A], false);
+		expect(isSiteKeyInMaintenanceMode(KEY_A)).toBe(false);
+		expect(getMaintenanceModeSiteKeys()).toEqual([]);
+	});
+
+	it("treats the node-wide flag as covering every site key", () => {
+		setMaintenanceMode(true);
+		expect(isSiteKeyInMaintenanceMode(KEY_A)).toBe(true);
+		expect(isSiteKeyInMaintenanceMode(KEY_B)).toBe(true);
+	});
+
+	it("returns false for an absent site key unless the node-wide flag is on", () => {
+		setMaintenanceModeForSiteKeys([KEY_A], true);
+		expect(isSiteKeyInMaintenanceMode(undefined)).toBe(false);
+		setMaintenanceMode(true);
+		expect(isSiteKeyInMaintenanceMode(undefined)).toBe(true);
+	});
+});
+
+describe("ApiToggleMaintenanceModeEndpoint with site keys", () => {
+	const endpoint = new ApiToggleMaintenanceModeEndpoint();
+	const mockLogger = {
+		info: vi.fn(),
+		with: vi.fn().mockReturnThis(),
+	};
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		process.env.MAINTENANCE_MODE = "false";
+		clearMaintenanceModeSiteKeys();
+	});
+
+	afterEach(() => {
+		process.env.MAINTENANCE_MODE = undefined;
+		clearMaintenanceModeSiteKeys();
+	});
+
+	it("scopes the toggle to the supplied site keys", async () => {
+		await endpoint.processRequest(
+			{ enabled: true, siteKeys: [KEY_A] },
+			mockLogger as never,
+		);
+		expect(isSiteKeyInMaintenanceMode(KEY_A)).toBe(true);
+		expect(isSiteKeyInMaintenanceMode(KEY_B)).toBe(false);
+	});
+
+	it("leaves the node-wide flag alone when scoping to site keys", async () => {
+		// The whole point of the scoped form: one customer must not take the
+		// node out of scoring for everybody else.
+		await endpoint.processRequest(
+			{ enabled: true, siteKeys: [KEY_A] },
+			mockLogger as never,
+		);
+		expect(getMaintenanceMode()).toBe(false);
+	});
+
+	it("still sets the node-wide flag when no site keys are given", async () => {
+		await endpoint.processRequest({ enabled: true }, mockLogger as never);
+		expect(getMaintenanceMode()).toBe(true);
+	});
+
+	it("treats an empty site key list as the node-wide form", async () => {
+		await endpoint.processRequest(
+			{ enabled: true, siteKeys: [] },
+			mockLogger as never,
+		);
+		expect(getMaintenanceMode()).toBe(true);
+	});
+
+	it("reports the current site keys back to the caller", async () => {
+		await endpoint.processRequest(
+			{ enabled: true, siteKeys: [KEY_A, KEY_B] },
+			mockLogger as never,
+		);
+		const response = await endpoint.processRequest(
+			{ enabled: false, siteKeys: [KEY_B] },
+			mockLogger as never,
+		);
+		expect(response.data).toMatchObject({
+			maintenanceMode: false,
+			maintenanceModeSiteKeys: [KEY_A],
+		});
 	});
 });

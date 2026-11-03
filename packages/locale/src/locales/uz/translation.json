@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Yaroqsiz manzilni kodlab bo‘lmadi",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha yechimi majburiyati mavjud emas",
+		"SIGNER_UNDEFINED": "Imzolovchi aniqlanmagan",
+		"CANNOT_FIND_KEYPAIR": "Kalitlar juftligi topilmadi",
+		"INVALID_DATA_FORMAT": "Yaroqsiz ma’lumotlar formati"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Noma’lum muhit so‘raldi",
+		"INVALID_CAPTCHA_NUMBER": "Captcha sozlamalarini to‘g‘ri sozlang",
+		"INVALID_LOG_LEVEL": "Yaroqsiz jurnal darajasi",
+		"INVALID_PACKAGE_DIR": "Yaroqsiz paket katalogi"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Ma’lumotlar to‘plamini tahlil qilishda xato",
+		"SOLUTION_PARSE_ERROR": "Ma’lumotlar to‘plamini tahlil qilishda xato",
+		"HASH_ERROR": "Ma’lumotlar to‘plamini xeshlashda xato",
+		"DATASET_ID_UNDEFINED": "Ma’lumotlar to‘plami ID aniqlanmagan",
+		"NOT_ENOUGH_LABELS": "Yorliqlar yetarli emas",
+		"NOT_ENOUGH_IMAGES": "Rasmlar yetarli emas",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Ma’lumotlar to‘plamidagi captchalar soni sozlangan sondan kam",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Ma’lumotlar to‘plamidagi yechimlar soni sozlangan sondan kam",
+		"DUPLICATE_IMAGE": "takroriy rasm aniqlandi",
+		"MERKLE_ERROR": "Merkl daraxtini yaratishda xato"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Ma’lumotlar bazasi dvigatelini import qilib bo‘lmadi",
+		"DATABASE_UNDEFINED": "Ma’lumotlar bazasi mijozi ulanmagan",
+		"DATABASE_HOST_UNDEFINED": "Ma’lumotlar bazasi xosti manzili aniqlanmagan",
+		"DATASET_LOAD_FAILED": "Ma’lumotlar to‘plamini yuklash muvaffaqiyatsiz tugadi",
+		"DATASET_GET_FAILED": "Ma’lumotlar to‘plamini olib bo‘lmadi",
+		"CAPTCHA_GET_FAILED": "Captchani olib bo‘lmadi",
+		"CAPTCHA_UPDATE_FAILED": "Captchani yangilab bo‘lmadi",
+		"IMAGE_GET_FAILED": "Rasmni olib bo‘lmadi",
+		"PENDING_RECORD_NOT_FOUND": "Kutilayotgan yozuv topilmadi",
+		"INVALID_HASH": "Yaroqsiz xesh",
+		"SOLUTION_GET_FAILED": "Yechimni olib bo‘lmadi",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Kerakli yechimlar soniga ega ma’lumotlar to‘plamlari topilmadi",
+		"SOLUTION_APPROVE_FAILED": "Yechimni tasdiqlab bo‘lmadi",
+		"SOLUTION_FLAG_FAILED": "Yechimni qayta ishlangan deb belgilab bo‘lmadi",
+		"TABLES_UNDEFINED": "Jadvallar aniqlanmagan",
+		"CONNECTION_UNDEFINED": "Ulanish aniqlanmagan",
+		"COMMITMENT_FLAG_FAILED": "Majburiyatni qayta ishlangan deb belgilab bo‘lmadi",
+		"UNKNOWN": "Noma’lum ma’lumotlar bazasi xatosi",
+		"QUERY_ERROR": "Ma’lumotlar bazasi so‘rovi muvaffaqiyatsiz tugadi",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis kirish qoidalari ulanishi aniqlanmagan",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Foydalanuvchilar kirish qoidalari ombori aniqlanmagan",
+		"SESSION_STORE_FAILED": "Seansni saqlab bo‘lmadi",
+		"SESSION_CHECK_REMOVE_FAILED": "Seansni tekshirib va o‘chirib bo‘lmadi",
+		"SESSION_GET_FAILED": "Seansni olib bo‘lmadi"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Egasi bo‘lgan foydalanuvchini o‘zgartirib bo‘lmaydi",
+		"CANNOT_DELETE_OWN_USER": "O‘z hisobingizni o‘chirib bo‘lmaydi",
+		"CANNOT_DELETE_LAST_USER": "Oxirgi foydalanuvchini o‘chirib bo‘lmaydi",
+		"USER_ALREADY_EXISTS": "Foydalanuvchi allaqachon mavjud",
+		"NO_SUGGESTIONS_FOUND": "Takliflar topilmadi",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Oxirgi faol saytni o‘chirib bo‘lmaydi",
+		"DUPLICATE_SITE_NAME": "Bunday nomli sayt allaqachon mavjud",
+		"INVALID_SITE_NAME": "Sayt nomida faqat harflar, raqamlar, defislar va pastki chiziqlar bo‘lishi mumkin"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Yaroqsiz parametr"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Fayl topilmadi",
+		"FILE_ALREADY_EXISTS": "Fayl allaqachon mavjud",
+		"INVALID_DIR_FORMAT": "Yaroqsiz katalog formati"
+	}
+}

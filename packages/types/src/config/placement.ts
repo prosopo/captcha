@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { infer as zInfer } from "zod";
-import { enum as zEnum } from "zod";
-
 /** Where a challenge opens. Distinct from `Mode`, which is whether the widget is visible. */
 export enum PlacementEnum {
 	/** Centred over the page. The default, and the only behaviour before this option existed. */
@@ -23,9 +20,18 @@ export enum PlacementEnum {
 	float = "float",
 }
 
-export const Placement = zEnum([PlacementEnum.popup, PlacementEnum.float]);
+export type PlacementType = PlacementEnum;
 
-export type PlacementType = zInfer<typeof Placement>;
+export const Placements: readonly PlacementType[] = [
+	PlacementEnum.popup,
+	PlacementEnum.float,
+];
+
+// A plain guard rather than a zod enum: the widget reads this before it
+// renders, and a zod schema for two strings would put the whole of zod on that
+// path.
+export const isPlacement = (value: string): value is PlacementType =>
+	(Placements as readonly string[]).includes(value);
 
 /** An invisible widget has nothing to anchor to, so float resolves to popup. */
 export const resolvePlacement = (

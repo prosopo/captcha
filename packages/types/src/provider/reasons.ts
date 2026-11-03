@@ -39,6 +39,15 @@ export enum FrictionlessReason {
 	// solves are escalated to an image captcha rather than approved outright
 	// (see verifyPowCaptchaSolution in @prosopo/provider).
 	MISSING_COORDINATES = "MISSING_COORDINATES",
+	// The address that asked for a PoW challenge is not the address that
+	// solved it. A challenge is short-lived and bound to one session, so the
+	// honest explanations are narrow — a mobile handoff mid-solve — while
+	// handing the challenge to a second host is the cheap way to farm the work
+	// out. Escalated to an image captcha rather than denied: a real network
+	// change should cost a picture, not a rejection. Judged on the network part
+	// only — the v6 /64 and the v4 /24 — since the host bits are reassigned by
+	// design on both (see isSameIpOrigin).
+	IP_CHANGED = "IP_CHANGED",
 	// The detector payload could not be decrypted: no bundle resolved for the
 	// session (expired/missing Redis binding, bundle no longer in the pool), or
 	// the ciphertext did not open with the bundle's keys. Distinct from a high
@@ -51,6 +60,12 @@ export enum FrictionlessReason {
 	MISSING_TOKEN = "MISSING_TOKEN",
 	// A token arrived without its accompanying head hash.
 	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
+	// The user kept refreshing the puzzle, so the replacement is an image
+	// challenge instead. Only ever this direction, and only where the site
+	// has image enabled (see switchTypeAfterRefreshes in @prosopo/provider).
+	PUZZLE_REFRESH_LIMIT = "PUZZLE_REFRESH_LIMIT",
+	// The user asked to swap the puzzle for an image challenge.
+	PUZZLE_USER_SWITCH = "PUZZLE_USER_SWITCH",
 }
 
 /**
@@ -111,6 +126,7 @@ export enum ResultReason {
 	SPAM_EMAIL_RULE = "API.SPAM_EMAIL_RULE",
 	SPAM_EMAIL_COUNT_EXCEEDED = "API.SPAM_EMAIL_COUNT_EXCEEDED",
 	TIMESTAMP_TOO_OLD = "API.TIMESTAMP_TOO_OLD",
+	TOO_MANY_LOCALHOST = "API.TOO_MANY_LOCALHOST",
 	TOR_BLOCKED = "API.TOR_BLOCKED",
 	VPN_BLOCKED = "API.VPN_BLOCKED",
 	CAPTCHA_INVALID_SALT = "CAPTCHA.INVALID_SALT",

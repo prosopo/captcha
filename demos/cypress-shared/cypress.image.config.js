@@ -33,7 +33,7 @@ export default defineConfig({
 		...process.env,
 		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
 		// is sometimes passed via --expose default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: "/",
+		default_page: "/image-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
@@ -79,6 +79,8 @@ export default defineConfig({
 			// bespoke lax-tolerance registration. Runs under its own
 			// cypress.puzzle.config.js.
 			"cypress/e2e/**/puzzle.cy.ts",
+			// Needs the `audioAnswer` task only cypress.audio.config.js registers.
+			"cypress/e2e/**/audio.cy.ts",
 			// Escalation spec drives the frictionless flow + installs a
 			// dapp-scoped routing machine; it has its own
 			// cypress.escalation.config.js and must not be pulled into

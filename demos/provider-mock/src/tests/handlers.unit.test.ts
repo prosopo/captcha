@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
 	type ApiNext,
@@ -48,8 +48,8 @@ beforeEach(() => {
 	};
 });
 
-const errorCode = (error: unknown): unknown =>
-	error instanceof ProsopoApiError ? error.context?.code : undefined;
+const errorStatus = (error: unknown): unknown =>
+	error instanceof ProsopoError ? error.status : undefined;
 
 describe("the verify handler", () => {
 	test("approves a token carrying a fixture", async () => {
@@ -132,8 +132,8 @@ describe("the verify handler", () => {
 					next,
 				);
 				expect(nextCalls).toHaveLength(1);
-				expect(nextCalls[0]).toBeInstanceOf(ProsopoApiError);
-				expect(errorCode(nextCalls[0])).toBe(400);
+				expect(nextCalls[0]).toBeInstanceOf(ProsopoError);
+				expect(errorStatus(nextCalls[0])).toBe(400);
 				expect(response.json).not.toHaveBeenCalled();
 			});
 		}
@@ -153,7 +153,7 @@ describe("the verify handler", () => {
 			throw new Error("bad codec");
 		});
 		await createVerifyHandler(mocks.deps)(createRequest(), response.res, next);
-		expect(errorCode(nextCalls[0])).toBe(500);
+		expect(errorStatus(nextCalls[0])).toBe(500);
 		expect(response.json).not.toHaveBeenCalled();
 	});
 
@@ -169,7 +169,7 @@ describe("the verify handler", () => {
 			response.res,
 			next,
 		);
-		expect(errorCode(nextCalls[0])).toBe(500);
+		expect(errorStatus(nextCalls[0])).toBe(500);
 	});
 
 	test("calls next exactly once, never alongside a response", async () => {
@@ -197,7 +197,7 @@ describe("the verify handler", () => {
 			throw "not an error";
 		});
 		await createVerifyHandler(mocks.deps)(createRequest(), response.res, next);
-		expect(errorCode(nextCalls[0])).toBe(500);
+		expect(errorStatus(nextCalls[0])).toBe(500);
 	});
 });
 

@@ -20,7 +20,7 @@ import {
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
-	isChallengeCaptchaType,
+	isConcreteCaptchaType,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -32,6 +32,7 @@ import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js"
 import type { Tasks } from "../../../tasks/index.js";
 import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
+import type { RefreshLineage } from "./refreshLineage.js";
 
 export type ShortCircuitInput = {
 	tasks: Tasks;
@@ -50,11 +51,14 @@ export type ShortCircuitInput = {
 	// bypass paths resolve the assigned bundleId via Redis and promote it
 	// onto the session so SIMD / BDP attach at later hops (challenge GET,
 	// solution submit) can find the right keypair. Without this, sessions on
-	// configured-captchaType sitekeys (pow / image / puzzle) had no bundleId
-	// and every attach silently dropped the payload.
+	// configured-captchaType sitekeys (pow / image / puzzle / icon-order)
+	// had no bundleId and every attach silently dropped the payload.
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Carried onto the session so a site pinned to a captcha type still
+	// records refreshes, and its refresh limit can still apply.
+	refresh?: RefreshLineage;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -97,6 +101,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		mode: input.sessionMode,
 		userSitekeyIpHash: input.userSitekeyIpHash,
 		...(bundleId && { bundleId }),
+		...input.refresh,
 		...(input.tcpToChelloUs !== undefined && {
 			tcpToChelloUs: input.tcpToChelloUs,
 		}),
@@ -152,7 +157,7 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	if (!configuredType || configuredType === CaptchaType.frictionless) {
 		return null;
 	}
-	if (!isChallengeCaptchaType(configuredType)) {
+	if (!isConcreteCaptchaType(configuredType)) {
 		throw new Error(
 			`Unhandled configured captchaType in /frictionless short-circuit: ${configuredType}`,
 		);
@@ -169,9 +174,6 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	}));
 
 	attachHoneypot(res, input.clientRecord);
-	// Only image is sized here: pow takes no count, and a puzzle reads
-	// `solvedImagesCount` as a difficulty signal that the configured-type
-	// default has no business setting.
 	return res.json(
 		await sendChallenge(input.tasks.frictionlessManager, configuredType, {
 			...sessionParams,

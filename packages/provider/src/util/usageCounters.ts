@@ -19,6 +19,7 @@ import {
 	type CounterSpec,
 	encodeCounterKey,
 } from "@prosopo/types";
+import { parseInteger } from "@prosopo/util";
 
 type RedisClient = Awaited<ReturnType<RedisConnection["getClient"]>>;
 
@@ -97,7 +98,13 @@ export class UsageCounters {
 				keys: [key],
 				arguments: [String(ttlSeconds)],
 			});
-			return Number(result);
+			// Anything but an integer reply means the key holds something else;
+			// treat it like any other Redis failure instead of returning NaN.
+			return parseInteger(
+				typeof result === "number" || typeof result === "string"
+					? result
+					: undefined,
+			).expect("counter incr reply");
 		} catch (error) {
 			this.logger.warn(() => ({
 				msg: "Counter incr failed",
@@ -200,7 +207,12 @@ export class UsageCounters {
 				const raw = values[i];
 				const key = keys[i];
 				if (key === undefined) continue;
-				out[key] = raw === null || raw === undefined ? 0 : Number(raw);
+				// A non-integer value fails the whole read, as a Redis error
+				// would, rather than feeding NaN into the rules.
+				out[key] =
+					raw === null || raw === undefined
+						? 0
+						: parseInteger(raw).expect(`counter ${key}`);
 			}
 			return out;
 		} catch (error) {
@@ -215,8 +227,13 @@ export class UsageCounters {
 }
 
 /**
- * Helper: produce the standard 24-counter served/solved write set for a given
- * captcha challenge. Used by both served (post-session) and solved hooks.
+ * Helper: produce the standard served/solved write set for a given captcha
+ * challenge. Used by both served (post-session) and solved hooks.
+ *
+ * `deviceBucket` is only written when the caller knows one, which for now is
+ * the PoW solve path with a verified proof of fingerprint. Omitting it leaves
+ * the key absent rather than at zero, so a bucket's count is over the requests
+ * that actually proved it.
  */
 export const buildAllWindowIncrements = (
 	kind: "served" | "solved",
@@ -224,6 +241,7 @@ export const buildAllWindowIncrements = (
 	ip: string,
 	userAccount: string,
 	peerIp?: string,
+	deviceBucket?: string,
 ): CounterIncrement[] => {
 	const out: CounterIncrement[] = [];
 	for (const window of [
@@ -245,6 +263,12 @@ export const buildAllWindowIncrements = (
 			out.push({
 				spec: { kind, captchaType, dimension: "peerIp", window },
 				value: peerIp,
+			});
+		}
+		if (deviceBucket) {
+			out.push({
+				spec: { kind, captchaType, dimension: "deviceBucket", window },
+				value: deviceBucket,
 			});
 		}
 		if (captchaType !== "any") {
@@ -272,6 +296,17 @@ export const buildAllWindowIncrements = (
 						window,
 					},
 					value: peerIp,
+				});
+			}
+			if (deviceBucket) {
+				out.push({
+					spec: {
+						kind,
+						captchaType: "any",
+						dimension: "deviceBucket",
+						window,
+					},
+					value: deviceBucket,
 				});
 			}
 		}

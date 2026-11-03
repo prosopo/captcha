@@ -59,6 +59,10 @@ const ALL_USER_SCOPE_FIELDS: ReadonlyArray<keyof UserScope> = [
 // the full rule set the way the old single-query path did.
 const GLOBAL_SCOPE_INNER = `@clientId:{${GLOBAL_CLIENT_SCOPE_SENTINEL}} | ismissing(@clientId)`;
 
+// Global rules that exclude the requesting client are still fetched here and
+// dropped by `rankCandidateRules`. Negating `@excludedClientIds` inside this
+// union is unreliable on RediSearch 2.8 (redis-stack 7.4): when the client's
+// own rule matches, it can also drop unrelated global rules.
 const buildScopeClause = (clientId: string | undefined): string => {
 	if (clientId === undefined) {
 		return `( ${GLOBAL_SCOPE_INNER} )`;

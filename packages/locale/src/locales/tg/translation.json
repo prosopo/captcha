@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Рамзгузории суроғаи нодуруст ноком шуд",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Ӯҳдадории ҳалли captcha вуҷуд надорад",
+		"SIGNER_UNDEFINED": "Имзокунанда муайян нашудааст",
+		"CANNOT_FIND_KEYPAIR": "Ҷуфти калидҳо ёфт намешавад",
+		"INVALID_DATA_FORMAT": "Формати нодурусти маълумот"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Муҳити номаълум дархост шуд",
+		"INVALID_CAPTCHA_NUMBER": "Лутфан танзимоти captcha-ро дуруст танзим кунед",
+		"INVALID_LOG_LEVEL": "Сатҳи нодурусти сабт",
+		"INVALID_PACKAGE_DIR": "Феҳристи нодурусти баста"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Хатои таҳлили маҷмӯаи маълумот",
+		"SOLUTION_PARSE_ERROR": "Хатои коркарди маҷмӯаи маълумот",
+		"HASH_ERROR": "Хатои ҳисоб кардани hash-и маҷмӯаи маълумот",
+		"DATASET_ID_UNDEFINED": "ID-и маҷмӯаи маълумот муайян нашудааст",
+		"NOT_ENOUGH_LABELS": "Тамғаҳо кофӣ нестанд",
+		"NOT_ENOUGH_IMAGES": "Тасвирҳо кофӣ нестанд",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Шумораи captcha дар маҷмӯаи маълумот аз шумораи танзимшуда камтар аст",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Шумораи ҳалҳо дар маҷмӯаи маълумот аз шумораи танзимшуда камтар аст",
+		"DUPLICATE_IMAGE": "Тасвири такрорӣ ошкор шуд",
+		"MERKLE_ERROR": "Хатои сохтани дарахти Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Воридоти муҳаррики пойгоҳи додаҳо ноком шуд",
+		"DATABASE_UNDEFINED": "Мизоҷи пойгоҳи додаҳо пайваст нест",
+		"DATABASE_HOST_UNDEFINED": "Суроғаи хости пойгоҳи додаҳо муайян нашудааст",
+		"DATASET_LOAD_FAILED": "Боркунии маҷмӯаи маълумот ноком шуд",
+		"DATASET_GET_FAILED": "Гирифтани маҷмӯаи маълумот ноком шуд",
+		"CAPTCHA_GET_FAILED": "Гирифтани captcha ноком шуд",
+		"CAPTCHA_UPDATE_FAILED": "Навсозии captcha ноком шуд",
+		"IMAGE_GET_FAILED": "Гирифтани тасвир ноком шуд",
+		"PENDING_RECORD_NOT_FOUND": "Ягон сабти интизорӣ ёфт нашуд",
+		"INVALID_HASH": "Hash-и нодуруст",
+		"SOLUTION_GET_FAILED": "Гирифтани ҳал ноком шуд",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Маҷмӯаи маълумот бо шумораи зарурии ҳалҳо ёфт нашуд",
+		"SOLUTION_APPROVE_FAILED": "Тасдиқи ҳал ноком шуд",
+		"SOLUTION_FLAG_FAILED": "Қайд кардани ҳал ҳамчун коркардшуда ноком шуд",
+		"TABLES_UNDEFINED": "Ҷадвалҳо муайян нашудаанд",
+		"CONNECTION_UNDEFINED": "Пайваст муайян нашудааст",
+		"COMMITMENT_FLAG_FAILED": "Қайд кардани ӯҳдадорӣ ҳамчун коркардшуда ноком шуд",
+		"UNKNOWN": "Хатои номаълуми пойгоҳи додаҳо",
+		"QUERY_ERROR": "Дархости пойгоҳи додаҳо ноком шуд",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Пайвасти Redis барои қоидаҳои дастрасӣ муайян нашудааст",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Анбори қоидаҳои дастрасии корбарон муайян нашудааст",
+		"SESSION_STORE_FAILED": "Нигоҳ доштани ҷаласа ноком шуд",
+		"SESSION_CHECK_REMOVE_FAILED": "Санҷидан ва нест кардани ҷаласа ноком шуд",
+		"SESSION_GET_FAILED": "Гирифтани ҷаласа ноком шуд"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Корбари соҳибро тағйир додан мумкин нест",
+		"CANNOT_DELETE_OWN_USER": "Ҳисоби худро нест кардан мумкин нест",
+		"CANNOT_DELETE_LAST_USER": "Корбари охиринро нест кардан мумкин нест",
+		"USER_ALREADY_EXISTS": "Корбар аллакай вуҷуд дорад",
+		"NO_SUGGESTIONS_FOUND": "Ягон пешниҳод ёфт нашуд",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Сомонаи фаъоли охиринро ғайрифаъол кардан мумкин нест",
+		"DUPLICATE_SITE_NAME": "Сомона бо ин ном аллакай вуҷуд дорад",
+		"INVALID_SITE_NAME": "Номи сомона метавонад танҳо ҳарфҳо, рақамҳо, зерхатҳо ва дефисҳоро дар бар гирад"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Параметри нодуруст"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Файл ёфт нашуд",
+		"FILE_ALREADY_EXISTS": "Файл аллакай вуҷуд дорад",
+		"INVALID_DIR_FORMAT": "Формати нодурусти феҳрист"
+	}
+}

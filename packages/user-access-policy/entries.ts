@@ -14,7 +14,7 @@
 
 import fg from "fast-glob";
 
-// package.json maps "#policy/*" to "./dist/*", so every emitted module is
+// package.json maps "#policy/*" to "./dist/esm/*", so every emitted module is
 // importable by consumers (the unit tests do exactly that). vite-plugin-no-bundle
 // emits one file per source module either way, but rolldown prunes named exports
 // that no *in-graph* module imports — rollup kept them. Left as just the four

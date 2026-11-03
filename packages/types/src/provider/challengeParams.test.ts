@@ -12,102 +12,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { CaptchaType } from "../client/captchaType/captchaType.js";
+import {
+	CONCRETE_CAPTCHA_TYPES,
+	CaptchaType,
+} from "../client/captchaType/captchaType.js";
 import {
 	ChallengeParamsSchema,
 	deriveChallengeParams,
 } from "./challengeParams.js";
 
-// The flat fields a session creator has to hand, with every type's knobs
-// present at once — the point of the derivation is that only the ones
-// belonging to the chosen type survive.
 const ALL_KNOBS = {
 	solvedImagesCount: 6,
 	powDifficulty: 4,
-	blocked: true,
 	puzzleTolerance: 20,
+	iconOrderTolerance: 30,
 };
 
 describe("deriveChallengeParams", () => {
-	it("keeps only the image knobs for image", () => {
+	it("keeps only the knobs that belong to the minted type", () => {
 		expect(deriveChallengeParams(CaptchaType.image, ALL_KNOBS)).toEqual({
 			type: CaptchaType.image,
 			solvedImagesCount: 6,
-			blocked: true,
 		});
-	});
-
-	it("keeps only the pow knobs for pow", () => {
 		expect(deriveChallengeParams(CaptchaType.pow, ALL_KNOBS)).toEqual({
 			type: CaptchaType.pow,
 			powDifficulty: 4,
 		});
-	});
-
-	it("keeps only the puzzle knobs for puzzle", () => {
 		expect(deriveChallengeParams(CaptchaType.puzzle, ALL_KNOBS)).toEqual({
 			type: CaptchaType.puzzle,
 			tolerance: 20,
 		});
-	});
-
-	it("returns undefined for frictionless", () => {
-		// Frictionless is a router — it never names a concrete challenge, so a
-		// session created under it has no challenge params to record.
-		expect(deriveChallengeParams(CaptchaType.frictionless, ALL_KNOBS)).toBe(
-			undefined,
-		);
+		expect(deriveChallengeParams(CaptchaType.iconOrder, ALL_KNOBS)).toEqual({
+			type: CaptchaType.iconOrder,
+			tolerance: 30,
+		});
 	});
 
 	it("omits absent knobs rather than writing undefined", () => {
-		// Mongo would otherwise persist explicit nulls for every unset knob.
-		expect(deriveChallengeParams(CaptchaType.image, {})).toEqual({
-			type: CaptchaType.image,
-		});
-		expect(deriveChallengeParams(CaptchaType.pow, {})).toEqual({
-			type: CaptchaType.pow,
-		});
-		expect(deriveChallengeParams(CaptchaType.puzzle, {})).toEqual({
-			type: CaptchaType.puzzle,
-		});
+		for (const type of CONCRETE_CAPTCHA_TYPES) {
+			expect(deriveChallengeParams(type, {})).toEqual({ type });
+		}
 	});
 
-	it("preserves a falsy blocked flag", () => {
-		expect(
-			deriveChallengeParams(CaptchaType.image, { blocked: false }),
-		).toEqual({ type: CaptchaType.image, blocked: false });
-	});
-
-	it("produces output the schema accepts for every challenge type", () => {
-		for (const type of [
-			CaptchaType.image,
-			CaptchaType.pow,
-			CaptchaType.puzzle,
-		]) {
-			const derived = deriveChallengeParams(type, ALL_KNOBS);
-			expect(ChallengeParamsSchema.safeParse(derived).success).toBe(true);
+	it("produces output the schema accepts for every concrete type", () => {
+		for (const type of CONCRETE_CAPTCHA_TYPES) {
+			expect(
+				ChallengeParamsSchema.safeParse(deriveChallengeParams(type, ALL_KNOBS))
+					.success,
+			).toBe(true);
 		}
 	});
 });
 
 describe("ChallengeParamsSchema", () => {
-	it("strips a knob that belongs to another challenge type", () => {
-		// Deliberately not `.strict()`: this schema also parses records read
-		// back out of Mongo, where the Mixed subdocument can carry extra keys.
-		// The guarantee is that a pow record can never surface image knobs to a
-		// reader, not that writing them is an error.
+	it("strips a knob that belongs to another type", () => {
 		const parsed = ChallengeParamsSchema.parse({
 			type: CaptchaType.pow,
 			solvedImagesCount: 6,
 		});
 		expect(parsed).toEqual({ type: CaptchaType.pow });
-		expect(parsed).not.toHaveProperty("solvedImagesCount");
 	});
 
-	it("rejects an unknown discriminator", () => {
-		expect(
-			ChallengeParamsSchema.safeParse({ type: CaptchaType.frictionless })
-				.success,
-		).toBe(false);
+	it("rejects types a session is never minted as", () => {
+		for (const type of [CaptchaType.frictionless, CaptchaType.audio]) {
+			expect(ChallengeParamsSchema.safeParse({ type }).success).toBe(false);
+		}
 	});
 });

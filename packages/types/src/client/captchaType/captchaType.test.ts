@@ -14,78 +14,72 @@
 import { describe, expect, it } from "vitest";
 import {
 	CHALLENGE_CAPTCHA_TYPES,
+	CONCRETE_CAPTCHA_TYPES,
 	CaptchaType,
 	ChallengeCaptchaTypeSchema,
 	DecisionMachineCaptchaTypeSchema,
 	INTERACTIVE_CAPTCHA_TYPES,
-	InteractiveCaptchaTypeSchema,
 	isChallengeCaptchaType,
+	isConcreteCaptchaType,
 	isInteractiveCaptchaType,
 } from "./captchaType.js";
 
 describe("challenge captcha types", () => {
 	it("covers every enum member except frictionless and authenticated", () => {
-		// Frictionless is the router and authenticated is a pre-verified
-		// pass-through; neither is a challenge. If a new challenge is added to
-		// the enum without being added to CHALLENGE_CAPTCHA_TYPES, this catches
-		// it.
 		expect(new Set(CHALLENGE_CAPTCHA_TYPES)).toEqual(
 			new Set(
 				Object.values(CaptchaType).filter(
-					(t) =>
-						t !== CaptchaType.frictionless && t !== CaptchaType.authenticated,
+					(type) =>
+						type !== CaptchaType.frictionless &&
+						type !== CaptchaType.authenticated,
 				),
 			),
 		);
 	});
 
-	it("accepts the three challenge types and rejects frictionless", () => {
-		for (const type of CHALLENGE_CAPTCHA_TYPES) {
-			expect(ChallengeCaptchaTypeSchema.safeParse(type).success).toBe(true);
-			expect(isChallengeCaptchaType(type)).toBe(true);
-		}
-		expect(
-			ChallengeCaptchaTypeSchema.safeParse(CaptchaType.frictionless).success,
-		).toBe(false);
-		expect(isChallengeCaptchaType(CaptchaType.frictionless)).toBe(false);
-	});
-
-	it("treats undefined as not a challenge type", () => {
-		expect(isChallengeCaptchaType(undefined)).toBe(false);
-		expect(isInteractiveCaptchaType(undefined)).toBe(false);
-	});
-
-	it("keeps DecisionMachineCaptchaTypeSchema as an alias", () => {
-		// Stored decision-machine artefacts still reference the old name.
-		expect(DecisionMachineCaptchaTypeSchema).toBe(ChallengeCaptchaTypeSchema);
-	});
-});
-
-describe("interactive captcha types", () => {
-	it("is image and puzzle only", () => {
-		expect(INTERACTIVE_CAPTCHA_TYPES).toEqual([
-			CaptchaType.image,
-			CaptchaType.puzzle,
-		]);
-	});
-
-	it("accepts image and puzzle, rejects pow and frictionless", () => {
-		for (const type of INTERACTIVE_CAPTCHA_TYPES) {
-			expect(InteractiveCaptchaTypeSchema.safeParse(type).success).toBe(true);
-			expect(isInteractiveCaptchaType(type)).toBe(true);
-		}
-		for (const type of [CaptchaType.pow, CaptchaType.frictionless]) {
-			expect(InteractiveCaptchaTypeSchema.safeParse(type).success).toBe(false);
+	it("rejects frictionless, authenticated and undefined", () => {
+		for (const type of [
+			CaptchaType.frictionless,
+			CaptchaType.authenticated,
+			undefined,
+		]) {
+			expect(isChallengeCaptchaType(type)).toBe(false);
+			expect(isConcreteCaptchaType(type)).toBe(false);
 			expect(isInteractiveCaptchaType(type)).toBe(false);
 		}
 	});
 
-	it("is a strict subset of the challenge types", () => {
+	it("keeps DecisionMachineCaptchaTypeSchema as an alias", () => {
+		expect(DecisionMachineCaptchaTypeSchema).toBe(ChallengeCaptchaTypeSchema);
+	});
+});
+
+describe("concrete captcha types", () => {
+	it("is every challenge except audio", () => {
+		expect(new Set(CONCRETE_CAPTCHA_TYPES)).toEqual(
+			new Set(
+				CHALLENGE_CAPTCHA_TYPES.filter((type) => type !== CaptchaType.audio),
+			),
+		);
+		expect(isConcreteCaptchaType(CaptchaType.audio)).toBe(false);
+	});
+});
+
+describe("interactive captcha types", () => {
+	it("is every concrete type except pow", () => {
+		expect(new Set(INTERACTIVE_CAPTCHA_TYPES)).toEqual(
+			new Set(
+				CONCRETE_CAPTCHA_TYPES.filter((type) => type !== CaptchaType.pow),
+			),
+		);
+		expect(isInteractiveCaptchaType(CaptchaType.pow)).toBe(false);
+	});
+
+	it("accepts each of its members", () => {
 		for (const type of INTERACTIVE_CAPTCHA_TYPES) {
+			expect(isInteractiveCaptchaType(type)).toBe(true);
+			expect(isConcreteCaptchaType(type)).toBe(true);
 			expect(isChallengeCaptchaType(type)).toBe(true);
 		}
-		expect(INTERACTIVE_CAPTCHA_TYPES.length).toBeLessThan(
-			CHALLENGE_CAPTCHA_TYPES.length,
-		);
 	});
 });

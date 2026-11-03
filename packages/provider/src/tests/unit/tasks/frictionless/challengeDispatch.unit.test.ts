@@ -13,76 +13,68 @@
 // limitations under the License.
 
 import {
-	CHALLENGE_CAPTCHA_TYPES,
+	CONCRETE_CAPTCHA_TYPES,
 	CaptchaType,
+	type ConcreteCaptchaType,
 	type GetFrictionlessCaptchaResponse,
+	type Session,
 } from "@prosopo/types";
-import { describe, expect, it, vi } from "vitest";
-import { sendChallenge } from "../../../../tasks/frictionless/challengeDispatch.js";
-import type { FrictionlessManager } from "../../../../tasks/frictionless/frictionlessTasks.js";
+import { type Mock, describe, expect, it, vi } from "vitest";
+import {
+	type ChallengeSenders,
+	sendChallenge,
+} from "../../../../tasks/frictionless/challengeDispatch.js";
 
-const buildManager = () => ({
-	sendImageCaptcha: vi.fn().mockResolvedValue({ status: "ok", from: "image" }),
-	sendPowCaptcha: vi.fn().mockResolvedValue({ status: "ok", from: "pow" }),
-	sendPuzzleCaptcha: vi
-		.fn()
-		.mockResolvedValue({ status: "ok", from: "puzzle" }),
-});
+type SenderMock = Mock<
+	(params?: Partial<Session>) => Promise<GetFrictionlessCaptchaResponse>
+>;
+
+const SENDER_FOR: Record<ConcreteCaptchaType, keyof ChallengeSenders> = {
+	[CaptchaType.image]: "sendImageCaptcha",
+	[CaptchaType.pow]: "sendPowCaptcha",
+	[CaptchaType.puzzle]: "sendPuzzleCaptcha",
+	[CaptchaType.iconOrder]: "sendIconOrderCaptcha",
+};
+
+const buildManager = (): Record<keyof ChallengeSenders, SenderMock> => {
+	const sender = (captchaType: ConcreteCaptchaType): SenderMock =>
+		vi.fn(
+			async (): Promise<GetFrictionlessCaptchaResponse> => ({
+				captchaType,
+				status: "ok",
+			}),
+		);
+	return {
+		sendImageCaptcha: sender(CaptchaType.image),
+		sendPowCaptcha: sender(CaptchaType.pow),
+		sendPuzzleCaptcha: sender(CaptchaType.puzzle),
+		sendIconOrderCaptcha: sender(CaptchaType.iconOrder),
+	};
+};
 
 describe("sendChallenge", () => {
-	it.each([
-		[CaptchaType.image, "sendImageCaptcha"],
-		[CaptchaType.pow, "sendPowCaptcha"],
-		[CaptchaType.puzzle, "sendPuzzleCaptcha"],
-	] as const)("routes %s to %s", async (captchaType, method) => {
-		const manager = buildManager();
-		const params = { siteKey: "site", solvedImagesCount: 4 };
-
-		const result = await sendChallenge(
-			manager as unknown as FrictionlessManager,
-			captchaType,
-			params,
-		);
-
-		expect(manager[method]).toHaveBeenCalledWith(params);
-		expect(
-			(result as GetFrictionlessCaptchaResponse & { from: string }).from,
-		).toBe(captchaType);
-
-		// Exactly one sender fires — no accidental double-dispatch.
-		const calls = [
-			manager.sendImageCaptcha,
-			manager.sendPowCaptcha,
-			manager.sendPuzzleCaptcha,
-		].filter((fn) => fn.mock.calls.length > 0);
-		expect(calls).toHaveLength(1);
-	});
-
-	it("has a sender for every challenge type", async () => {
-		// Guards the reason this table exists: a new challenge type must not be
-		// able to reach dispatch without a sender.
-		for (const captchaType of CHALLENGE_CAPTCHA_TYPES) {
+	it.each(CONCRETE_CAPTCHA_TYPES)(
+		"serves %s through its own sender and no other",
+		async (captchaType) => {
 			const manager = buildManager();
-			await expect(
-				sendChallenge(
-					manager as unknown as FrictionlessManager,
-					captchaType,
-					{},
-				),
-			).resolves.toBeDefined();
-		}
-	});
+			const params: Partial<Session> = {
+				siteKey: "site",
+				solvedImagesCount: 4,
+			};
 
-	it("passes image-only params through untouched for pow and puzzle", async () => {
-		// The callers that used to branch per type now pass solvedImagesCount
-		// unconditionally; sendCaptcha is what discards it. Dispatch must not
-		// silently filter it, or that contract would be hidden here instead.
+			const result = await sendChallenge(manager, captchaType, params);
+
+			expect(result.captchaType).toBe(captchaType);
+			expect(manager[SENDER_FOR[captchaType]]).toHaveBeenCalledWith(params);
+			expect(
+				Object.values(manager).filter((fn) => fn.mock.calls.length > 0),
+			).toHaveLength(1);
+		},
+	);
+
+	it("passes other types' knobs through for sendCaptcha to drop", async () => {
 		const manager = buildManager();
-		await sendChallenge(
-			manager as unknown as FrictionlessManager,
-			CaptchaType.pow,
-			{ solvedImagesCount: 9 },
-		);
+		await sendChallenge(manager, CaptchaType.pow, { solvedImagesCount: 9 });
 		expect(manager.sendPowCaptcha).toHaveBeenCalledWith({
 			solvedImagesCount: 9,
 		});

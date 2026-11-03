@@ -15,6 +15,8 @@
 import type { Languages } from "@prosopo/locale";
 import type { StartMode } from "../config/startMode.js";
 
+export * from "./integration.js";
+
 // note: do not use any Zod-related types inside the interface,
 // as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
 export interface ProcaptchaRenderOptions {
@@ -26,7 +28,7 @@ export interface ProcaptchaRenderOptions {
 	"expired-callback"?: string | (() => void);
 	"open-callback"?: string | (() => void);
 	"close-callback"?: string | (() => void);
-	"error-callback"?: string | (() => void);
+	"error-callback"?: string | ((error: Error) => void);
 	"failed-callback"?: string | (() => void);
 	"reset-callback"?: string | (() => void);
 	language?: (typeof Languages)[keyof typeof Languages];
@@ -51,4 +53,9 @@ export interface ProcaptchaRenderOptions {
 	// provider will reject the token unless the two agree.
 	sessionId?: string;
 	startMode?: StartMode;
+	// The platform embedding the widget, e.g. "mc4wp". Equivalent to the
+	// `data-integration` attribute. Sent to the provider in the
+	// x-prosopo-integration header.
+	integration?: string;
 }
+export * from "./headers.js";

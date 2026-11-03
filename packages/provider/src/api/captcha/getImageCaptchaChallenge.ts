@@ -1,18 +1,7 @@
-// Copyright 2021-2026 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import { isHex } from "@polkadot/util/is";
+import { ProsopoError, isProsopoError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
+import { Languages, isLanguage } from "@prosopo/locale";
 import {
 	ApiParams,
 	type Captcha,
@@ -36,12 +25,51 @@ import {
 	getRequestUserScope,
 	normalizeHeadersForMatching,
 } from "../blacklistRequestInspector.js";
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { errorCodeForReason } from "../errorCodeForReason.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { isPuzzleImageSwitchAvailable } from "./getFrictionlessCaptchaChallenge/constants.js";
+import { isPuzzleSwitchBackAvailable } from "./getFrictionlessCaptchaChallenge/refreshLineage.js";
+import { localiseTarget } from "./localiseTarget.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
+import { getSealedAssetsResolver } from "./sealedAssetsResolver.js";
 import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
+
+// A client-supplied datasetId that is not a stored dataset is bad input, not a
+// server fault. Any other lookup failure (e.g. the database being down) is
+// rethrown so it still surfaces as a 500.
+const clientDatasetExists = async (
+	tasks: Tasks,
+	datasetId: string | number[],
+): Promise<boolean> => {
+	if (typeof datasetId !== "string" || !isHex(datasetId)) {
+		return false;
+	}
+	try {
+		await tasks.db.getDatasetDetails(datasetId);
+		return true;
+	} catch (err) {
+		if (isProsopoError(err, "RECORD_NOT_FOUND")) {
+			return false;
+		}
+		throw err;
+	}
+};
 
 export default (
 	env: ProviderEnvironment,
@@ -57,10 +85,11 @@ export default (
 		const normalizedIp = normalizeRequestIp(req.ip, req.logger);
 		if (!normalizedIp) {
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: "IP address not found" },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-8",
+					message: "BadRequest",
+					context: { error: "IP address not found" },
 				}),
 			);
 		}
@@ -71,10 +100,11 @@ export default (
 			parsed = CaptchaRequestBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-9",
+					message: "Error parsing captcha",
+					cause: err,
 				}),
 			);
 		}
@@ -95,13 +125,13 @@ export default (
 
 		if (!datasetId) {
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-10",
+					message: "BadRequest",
 					context: {
-						code: 400,
 						error: "No dataset available. Please upload a dataset first.",
 					},
-					i18n: req.i18n,
-					logger: req.logger,
 				}),
 			);
 		}
@@ -139,10 +169,10 @@ export default (
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-11",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -218,14 +248,27 @@ export default (
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
-						context: {
-							code: 400,
-							siteKey: dapp,
-							user,
-						},
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: errorCodeForReason(reason),
+						errorSite: "PROV-81",
+						context: { siteKey: dapp, user },
+					}),
+				);
+			}
+
+			// After the type check, so a key that is not served image is told
+			// INCORRECT_CAPTCHA_TYPE whatever datasetId it sends. The demo monitor
+			// relies on that to tell which type a key serves.
+			if (
+				clientDatasetId !== undefined &&
+				!(await clientDatasetExists(tasks, clientDatasetId))
+			) {
+				return next(
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-94",
+						message: "Unknown dataset",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -295,22 +338,25 @@ export default (
 					// flat fields.
 					req.ipInfo,
 				);
-			// Signed URLs are minted per request so each challenge's images
-			// expire on their own clock (and can be bound to the requesting
-			// IP). Falls back to the env resolver, and thence to passing
-			// `item.data` through untouched, when no signing key is set.
 			const assetsResolver =
-				getSignedAssetsResolver(ipAddress.toString()) ?? env.assetsResolver;
+				getSealedAssetsResolver() ??
+				getSignedAssetsResolver(ipAddress.toString()) ??
+				env.assetsResolver;
+
+			const padBytes = trafficVerdict.padBytes;
 
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 					...captcha,
-					target: req.t(`TARGET.${captcha.target}`),
+					...localiseTarget(req.t, captcha.target, req.logger),
 					items: captcha.items.map((item) =>
 						parseCaptchaAssets(item, assetsResolver),
 					),
 				})),
+				[ApiParams.language]: isLanguage(req.language)
+					? req.language
+					: Languages.english,
 				[ApiParams.requestHash]: taskData.requestHash,
 				[ApiParams.timestamp]: taskData.timestamp.toString(),
 				[ApiParams.signature]: {
@@ -318,6 +364,10 @@ export default (
 						[ApiParams.requestHash]: taskData.signedRequestHash,
 					},
 				},
+				...(isPuzzleSwitchBackAvailable(
+					sessionRecord,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				) && { [ApiParams.puzzleSwitchAvailable]: true }),
 			};
 			req.logger.info(() => ({
 				msg: "Image captcha challenge issued",
@@ -330,6 +380,7 @@ export default (
 					sessionId,
 				},
 			}));
+			res.locals.padBytes = padBytes;
 			recordCaptchaIssued(CaptchaType.image);
 			return res.json(captchaResponse);
 		} catch (err) {
@@ -340,15 +391,12 @@ export default (
 				msg: "Error in image captcha challenge request",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						error: err,
-
-						code: 500,
-						params: req.params,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-12",
+					message: "BadRequest",
+					cause: err,
+					context: { params: req.params },
 				}),
 			);
 		}

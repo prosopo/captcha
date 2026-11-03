@@ -217,6 +217,25 @@ describe("resolvePort", () => {
 		};
 		expect(resolvePort(config)).toBe(DEFAULT_PORT);
 	});
+
+	test("ignores a path after the port", () => {
+		const config: ProsopoServerConfigOutput = {
+			...serverConfig(),
+			serverUrl: "http://localhost:9300/api",
+		};
+		expect(resolvePort(config)).toBe(9300);
+	});
+
+	test.each(["9228abc", "-1", "99999", "1.5"])(
+		"defaults when the port segment is %j",
+		(port) => {
+			const config: ProsopoServerConfigOutput = {
+				...serverConfig(),
+				serverUrl: `http://localhost:${port}`,
+			};
+			expect(resolvePort(config)).toBe(DEFAULT_PORT);
+		},
+	);
 });
 
 describe("createApp", () => {
@@ -300,9 +319,9 @@ describe("startServer", () => {
 	test("serves HTTPS in development when the certificates exist", async () => {
 		process.env.NODE_ENV = "development";
 		const root = certDir();
-		// startServer resolves ../../../certs relative to the module, so the
-		// fake module directory sits three levels below the cert directory.
-		const moduleDir = path.join(root, "certs", "a", "b");
+		// startServer resolves ../../certs from the package directory, so the
+		// fake package sits two levels below the repo holding the certs.
+		const moduleDir = path.join(root, "certs", "a");
 		fs.mkdirSync(moduleDir, { recursive: true });
 		const certs = path.join(root, "certs");
 		// A throwaway self-signed pair would need openssl; the files only have
@@ -316,7 +335,7 @@ describe("startServer", () => {
 			.mockReturnValue(
 				fake as unknown as ReturnType<typeof https.createServer>,
 			);
-		startServer(express(), 1234, path.join(certs, "a", "b"));
+		startServer(express(), 1234, path.join(certs, "a"));
 		expect(createServer).toHaveBeenCalledTimes(1);
 		const options = createServer.mock.calls[0]?.[0] as {
 			key: Buffer;

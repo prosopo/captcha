@@ -187,7 +187,12 @@ describe("getCaptchaChallenge", () => {
 	// untouched for the manager to surface — only transport failures throw.
 	test("returns an error response without rewriting urls", async () => {
 		const errored = challengeResponse({
-			error: { message: "no dataset", key: "API.BAD_REQUEST", code: 400 },
+			error: {
+				code: "INVALID_REQUEST",
+				errorId: "INVALID_REQUEST:PROV-1",
+				status: 400,
+				message: "no dataset",
+			},
 		});
 		getCaptchaChallenge.mockResolvedValue(errored);
 		const api = build();
@@ -202,7 +207,7 @@ describe("getCaptchaChallenge", () => {
 		getCaptchaChallenge.mockRejectedValue(new Error("network down"));
 		const api = build();
 		await expect(api.getCaptchaChallenge()).rejects.toThrow(
-			"CAPTCHA.INVALID_CAPTCHA_CHALLENGE",
+			"Invalid captcha challenge",
 		);
 	});
 
@@ -210,7 +215,7 @@ describe("getCaptchaChallenge", () => {
 		getCaptchaChallenge.mockRejectedValue("just a string");
 		const api = build();
 		await expect(api.getCaptchaChallenge()).rejects.toThrow(
-			"CAPTCHA.INVALID_CAPTCHA_CHALLENGE",
+			"Invalid captcha challenge",
 		);
 	});
 });
@@ -288,7 +293,7 @@ describe("submitCaptchaSolution", () => {
 				"1700000000000",
 				"0xprovider-signature",
 			),
-		).rejects.toThrow("CAPTCHA.INVALID_CAPTCHA_CHALLENGE");
+		).rejects.toThrow("Invalid captcha challenge");
 		expect(submitCaptchaSolution).not.toHaveBeenCalled();
 	});
 
@@ -303,7 +308,7 @@ describe("submitCaptchaSolution", () => {
 				"1700000000000",
 				"0xprovider-signature",
 			),
-		).rejects.toThrow("CAPTCHA.INVALID_CAPTCHA_CHALLENGE");
+		).rejects.toThrow("Invalid captcha challenge");
 	});
 
 	test("passes optional fields through as undefined when omitted", async () => {

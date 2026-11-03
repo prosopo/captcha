@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { CaptchaType } from "@prosopo/types";
+import type { CaptchaType, ResultReason } from "@prosopo/types";
 
 export enum AccessPolicyType {
 	Block = "block",
@@ -60,10 +60,19 @@ export type AccessPolicy = {
 	// signals (ja4, headersHash, etc.) when the operator wants the
 	// attacker to pay the captcha-solving cost before being rejected.
 	deferToVerify?: boolean;
+	// Replaces "Forbidden" in the 403 body of a matched Block policy.
+	messageKey?: ResultReason;
 };
 
 export type PolicyScope = {
 	clientId?: string;
+};
+
+export type PolicyScopeExclusions = {
+	// Clients a global rule (no clientId) does not apply to. Lets an operator
+	// exempt a customer from a platform-wide rule without fanning the rule out
+	// into one copy per remaining client. Ignored on client-scoped rules.
+	excludedClientIds?: string[];
 };
 
 export type UserIp = {
@@ -115,6 +124,7 @@ export type UserScope = UserAttributes & UserIp;
 // flat structure is used to fit the Redis requirements
 export type AccessRule = AccessPolicy &
 	PolicyScope &
+	PolicyScopeExclusions &
 	UserScope & {
 		groupId?: string;
 	};

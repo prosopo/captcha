@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	DataSchema,
 	type Item,
@@ -23,6 +23,7 @@ import { lodash, setSeedGlobal } from "@prosopo/util/lodash";
 // limitations under the License.
 import * as z from "zod";
 import { OutputArgsSchema, OutputCliCommand } from "../utils/output.js";
+import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = OutputArgsSchema.extend({
 	labels: z.string().optional(),
@@ -90,21 +91,19 @@ export abstract class Generate<
 		// if specified, check files exist
 		const labelledMapFile: string | undefined = args.labelled;
 		if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`labelled map file does not exist: ${labelledMapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-3",
+				message: `labelled map file does not exist: ${labelledMapFile}`,
+			});
 		}
 		const unlabelledMapFile: string | undefined = args.unlabelled;
 		if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-4",
+				message: `unlabelled map file does not exist: ${unlabelledMapFile}`,
+			});
 		}
 		this.labelledMapFile = labelledMapFile || "";
 		this.unlabelledMapFile = unlabelledMapFile || "";
@@ -127,14 +126,10 @@ export abstract class Generate<
 
 		// load the map to get the labelled and unlabelled data
 		this.labelled = this.labelledMapFile
-			? LabelledDataSchema.parse(
-					JSON.parse(fs.readFileSync(this.labelledMapFile, "utf8")),
-				).items
+			? LabelledDataSchema.parse(readJsonFile(this.labelledMapFile)).items
 			: [];
 		this.unlabelled = this.unlabelledMapFile
-			? DataSchema.parse(
-					JSON.parse(fs.readFileSync(this.unlabelledMapFile, "utf8")),
-				).items
+			? DataSchema.parse(readJsonFile(this.unlabelledMapFile)).items
 			: [];
 
 		// check for duplicates
@@ -160,11 +155,7 @@ export abstract class Generate<
 		this.labels = [];
 		if (args.labels && fs.existsSync(args.labels)) {
 			this.labels.push(
-				...[
-					...LabelsContainerSchema.parse(
-						JSON.parse(fs.readFileSync(args.labels, "utf8")),
-					).labels,
-				],
+				...[...LabelsContainerSchema.parse(readJsonFile(args.labels)).labels],
 			);
 		} else {
 			// else default to the labels in the labelled data
@@ -208,7 +199,10 @@ const addAllUnique = (all: Set<string>, entries: Item[], dataType: string) => {
 
 const addUnique = (all: Set<string>, entry: Item, dataType: string) => {
 	if (all.has(entry.data)) {
-		throw new ProsopoDatasetError("DATASET.DUPLICATE_IMAGE", {
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DSFS-5",
+			message: "duplicate image detected",
 			context: {
 				error: `Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}`,
 			},

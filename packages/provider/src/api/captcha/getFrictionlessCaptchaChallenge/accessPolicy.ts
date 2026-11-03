@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
@@ -19,7 +21,7 @@ import {
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
-	isChallengeCaptchaType,
+	isConcreteCaptchaType,
 	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -124,7 +126,14 @@ export const handleAccessPolicy = async (
 
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({
+					code: "ACCESS_POLICY_BLOCK",
+					errorSite: "PROV-89",
+					status: 401,
+				}),
+			),
 		};
 	}
 
@@ -145,7 +154,7 @@ export const handleAccessPolicy = async (
 			},
 		}));
 		await tasks.frictionlessManager.registerBlockedSession(
-			isChallengeCaptchaType(userAccessPolicy.captchaType)
+			isConcreteCaptchaType(userAccessPolicy.captchaType)
 				? userAccessPolicy.captchaType
 				: CaptchaType.image,
 			{
@@ -159,7 +168,10 @@ export const handleAccessPolicy = async (
 		);
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-90" }),
+			),
 		};
 	}
 
@@ -171,12 +183,10 @@ export const handleAccessPolicy = async (
 		headers: input.flatHeaders,
 	};
 
-	// A policy that pins a concrete challenge type serves it directly. The
-	// per-type branches this replaces differed only in `solvedImagesCount`:
-	// image clamps it to the sitekey's rounds, puzzle carries the rule's raw
-	// count so its severity reaches the difficulty ladder (a puzzle has no
-	// rounds), and pow takes none.
-	if (isChallengeCaptchaType(userAccessPolicy.captchaType)) {
+	// Image clamps the rule's round count to the sitekey's bounds. Puzzle takes
+	// the raw count because it sets the puzzle's difficulty, not a number of
+	// rounds. Pow and icon-order take none.
+	if (isConcreteCaptchaType(userAccessPolicy.captchaType)) {
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {

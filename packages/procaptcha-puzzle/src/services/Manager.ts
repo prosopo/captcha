@@ -14,16 +14,21 @@
 
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError, toPublicError } from "@prosopo/common";
+import { toCallbackError } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
 	buildUpdateState,
+	createManagerLifecycle,
+	createSpentSessionGuard,
+	encryptBehavioralDataForSubmit,
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
 	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
+	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import {
 	type Account,
@@ -53,6 +58,7 @@ interface PuzzleManagerHandle {
 		puzzleEvents: PuzzleEvent[],
 	) => Promise<boolean>;
 	resetState: (frictionlessRestart?: () => void) => void;
+	dispose: () => void;
 }
 
 export const Manager = (
@@ -64,6 +70,10 @@ export const Manager = (
 	// Reads the live honeypot input value at submit time. Returns undefined
 	// when the honeypot is disabled or the input hasn't been filled.
 	getHoneypotValue?: () => string | undefined,
+	// Set when the widget re-mints the session itself after a wrong answer.
+	// Restarting the whole frictionless flow as well would tear that widget
+	// down before it can, losing the retry prompt and its count of misses.
+	options: { widgetReloadsOnFailure?: boolean } = {},
 ): PuzzleManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
@@ -82,6 +92,7 @@ export const Manager = (
 	// resetState-cleared closure state so a retry can exclude it from the
 	// candidate pool and land on a different provider.
 	let previousProviderUrl: string | undefined;
+	const spentSession = createSpentSessionGuard();
 
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {
@@ -98,27 +109,15 @@ export const Manager = (
 		};
 	};
 
-	const clearTimeout = () => {
-		// clear the timeout
-		window.clearTimeout(Number(state.timeout));
-		// then clear the timeout from the state
-		updateState({ timeout: undefined });
-	};
-
 	const onFailed = () => {
 		updateState({
 			isHuman: false,
 			loading: false,
 		});
 		events.onFailed();
-		resetState(frictionlessState?.restart);
-	};
-
-	const clearSuccessfulChallengeTimeout = () => {
-		// clear the timeout
-		window.clearTimeout(Number(state.successfullChallengeTimeout));
-		// then clear the timeout from the state
-		updateState({ successfullChallengeTimeout: undefined });
+		resetState(
+			options.widgetReloadsOnFailure ? undefined : frictionlessState?.restart,
+		);
 	};
 
 	const getConfig = () => {
@@ -138,7 +137,9 @@ export const Manager = (
 
 	const getAccount = () => {
 		if (!state.account) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "PUZZ-1",
 				context: { error: "Account not loaded" },
 			});
 		}
@@ -148,7 +149,7 @@ export const Manager = (
 
 	const getDappAccount = () => {
 		if (!state.dappAccount) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "PUZZ-2" });
 		}
 
 		const dappAccount: string = state.dappAccount;
@@ -157,11 +158,10 @@ export const Manager = (
 
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
+	const lifecycle = createManagerLifecycle(state, updateState);
 
 	const resetState = (frictionlessRestart?: () => void) => {
-		// clear timeout just in case a timer is still active (shouldn't be)
-		clearTimeout();
-		clearSuccessfulChallengeTimeout();
+		lifecycle.clearTimers();
 		updateState(defaultState());
 		events.onReset();
 		// reset the frictionless state if necessary
@@ -178,16 +178,14 @@ export const Manager = (
 	};
 
 	const setValidChallengeTimeout = () => {
-		const timeMillis: number = getConfig().captchas.puzzle.solutionTimeout;
-		const successfullChallengeTimeout = setTimeout(() => {
-			// Human state expired, disallow user's claim to be human
-			updateState({ isHuman: false });
-
-			events.onExpired();
-			resetState(frictionlessState?.restart);
-		}, timeMillis);
-
-		updateState({ successfullChallengeTimeout });
+		lifecycle.expireSolutionAfter(
+			getConfig().captchas.puzzle.solutionTimeout,
+			() => {
+				updateState({ isHuman: false });
+				events.onExpired();
+				resetState(frictionlessState?.restart);
+			},
+		);
 	};
 
 	const start = async (
@@ -247,7 +245,9 @@ export const Manager = (
 
 				// check if account has been provided in config (doesn't matter in web2 mode)
 				if (!config.web2 && !config.userAccountAddress) {
-					throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+					throw new ProsopoError({
+						code: "ACCOUNT_NOT_FOUND",
+						errorSite: "PUZZ-3",
 						context: {
 							error: "Account address has not been set for web3 mode",
 						},
@@ -270,7 +270,30 @@ export const Manager = (
 				const providerUrl = getRandomProviderResponse.provider.url;
 				previousProviderUrl = providerUrl;
 
-				const providerApi = new ProviderApi(providerUrl, getDappAccount());
+				const providerApi = new ProviderApi(
+					providerUrl,
+					getDappAccount(),
+					undefined,
+					widgetRequestHeaders(getConfig().language, getConfig().integration),
+				);
+
+				// Short-circuit a challenge fetch we already know the provider
+				// will reject, and route straight to the recovery path the
+				// wrapper listens for — re-minting a session is the only way
+				// forward, and the doomed round trip only delays it.
+				const challengeSessionId = frictionlessState?.sessionId;
+				if (spentSession.isSpent(challengeSessionId)) {
+					const error = toPublicError(
+						new ProsopoError({
+							code: "NO_SESSION_FOUND",
+							errorSite: "PUZZ-6",
+						}),
+						"FRONTEND_ERROR",
+					);
+					updateState({ loading: false, error });
+					events.onError(toCallbackError(undefined, error));
+					return;
+				}
 
 				// Non-blocking check — attach SIMD readings only if the
 				// prefetched benchmark has already resolved.
@@ -280,17 +303,22 @@ export const Manager = (
 				const challenge = await providerApi.getPuzzleCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
-					frictionlessState?.sessionId,
+					challengeSessionId,
 					simdReadingsOnChallenge,
 				);
+				// The provider answered, so it has seen the id and consumed it —
+				// a challenge and a 4xx mean the same thing here. Marked after
+				// the await rather than before it on purpose: a throw is the one
+				// case where the request may never have landed, and that is
+				// exactly when `providerRetry` re-enters `start()` to fail over
+				// onto a different provider. Marking it spent up front would
+				// turn every transport blip into "No session found".
+				spentSession.markSpent(challengeSessionId);
 
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: {
-							message: challenge.error.message,
-							key: challenge.error.key || "API.UNKNOWN_ERROR",
-						},
+						error: challenge.error,
 					});
 					return;
 				}
@@ -334,7 +362,9 @@ export const Manager = (
 			!storedProviderUrl ||
 			!storedUser
 		) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "PUZZ-4",
 				context: { error: "No challenge data available. Call start() first." },
 			});
 		}
@@ -351,7 +381,10 @@ export const Manager = (
 			const signer = user.extension?.signer;
 
 			if (!signer || !signer.signRaw) {
-				throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+				throw new ProsopoError({
+					code: "CONFIG_INVALID",
+					errorSite: "PUZZ-5",
+					message: "Can't find the keyringpair for {{address}}",
 					context: {
 						error:
 							"Signer is not defined, cannot sign message to prove account ownership",
@@ -365,36 +398,8 @@ export const Manager = (
 				type: "bytes",
 			});
 
-			let encryptedBehavioralData: string | undefined;
-
-			// Collect and encrypt behavioral data before submission
-			if (
-				frictionlessState?.encryptBehavioralData &&
-				(frictionlessState?.behaviorCollector1 ||
-					frictionlessState?.behaviorCollector2 ||
-					frictionlessState?.behaviorCollector3)
-			) {
-				try {
-					const behavioralData = {
-						collector1: frictionlessState.behaviorCollector1?.getData() || [],
-						collector2: frictionlessState.behaviorCollector2?.getData() || [],
-						collector3: frictionlessState.behaviorCollector3?.getData() || [],
-						deviceCapability: frictionlessState.deviceCapability || "unknown",
-					};
-
-					// Pack the behavioral data before stringifying
-					const dataToEncrypt = frictionlessState.packBehavioralData
-						? frictionlessState.packBehavioralData(behavioralData)
-						: behavioralData;
-
-					encryptedBehavioralData =
-						await frictionlessState.encryptBehavioralData(
-							JSON.stringify(dataToEncrypt),
-						);
-				} catch {
-					// Silently ignore behavioral data errors - captcha should still work
-				}
-			}
+			const encryptedBehavioralData =
+				await encryptBehavioralDataForSubmit(frictionlessState);
 
 			// Encode the checkbox click coordinates into a random salt, same
 			// shape as the POW flow. The provider decodes this on submit and
@@ -429,6 +434,7 @@ export const Manager = (
 				simdReadings,
 				clientMetaData,
 			);
+			if (lifecycle.isDisposed()) return false;
 
 			if (verifiedSolution[ApiParams.verified]) {
 				updateState({
@@ -468,5 +474,6 @@ export const Manager = (
 		start,
 		submitSolution,
 		resetState,
+		dispose: lifecycle.dispose,
 	};
 };

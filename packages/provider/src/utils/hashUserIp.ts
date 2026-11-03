@@ -16,14 +16,24 @@ import { createHash } from "node:crypto";
 
 /**
  * Hash a user and IP address combination to create a unique session identifier
- * SHA-256 hash of user:ip:sitekey combination
+ * SHA-256 hash of user:ip:sitekey combination, plus the widget slot for every
+ * widget on the page but the first
  *
  * @param user - The user identifier
  * @param ip - The IP address
+ * @param widgetSlot - Which of the page's widgets for this site key is asking
  * @returns A 64-character hex string representing the hash
  */
-export function hashUserIp(user: string, ip: string, sitekey: string): string {
+export function hashUserIp(
+	user: string,
+	ip: string,
+	sitekey: string,
+	widgetSlot?: number,
+): string {
 	const hash = createHash("sha256");
-	hash.update(`${user}:${ip}:${sitekey}`, "utf8");
+	const key = widgetSlot
+		? `${user}:${ip}:${sitekey}:${widgetSlot}`
+		: `${user}:${ip}:${sitekey}`;
+	hash.update(key, "utf8");
 	return hash.digest("hex");
 }

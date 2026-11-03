@@ -14,7 +14,7 @@
 /// <reference types="cypress" />
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
@@ -84,12 +84,12 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 		}));
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-6",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 		cy.intercept("/dummy").as("dummy");
 
@@ -198,7 +198,7 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 
 		// And the image modal should be visible to the user — same DOM
 		// surface the image-flow tests reach via cy.captchaImages().
-		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+		getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 15000 }).should(
 			"be.visible",
 		);
 	});

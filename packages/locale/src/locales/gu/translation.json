@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "અમાન્ય સરનામું એન્કોડ કરવામાં નિષ્ફળ",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha ઉકેલની પ્રતિબદ્ધતા અસ્તિત્વમાં નથી",
+		"SIGNER_UNDEFINED": "સહી કરનાર વ્યાખ્યાયિત નથી",
+		"CANNOT_FIND_KEYPAIR": "કી જોડી મળી નથી",
+		"INVALID_DATA_FORMAT": "અમાન્ય ડેટા ફોર્મેટ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "અજ્ઞાત એન્વાયર્નમેન્ટની વિનંતી કરી",
+		"INVALID_CAPTCHA_NUMBER": "કૃપા કરીને captcha રૂપરેખાંકન યોગ્ય રીતે સેટ કરો",
+		"INVALID_LOG_LEVEL": "અમાન્ય લૉગ સ્તર",
+		"INVALID_PACKAGE_DIR": "અમાન્ય પૅકેજ ડિરેક્ટરી"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ડેટાસેટ પાર્સ કરવામાં ભૂલ",
+		"SOLUTION_PARSE_ERROR": "ડેટાસેટ પર પ્રક્રિયા કરવામાં ભૂલ",
+		"HASH_ERROR": "ડેટાસેટ હેશ કરવામાં ભૂલ",
+		"DATASET_ID_UNDEFINED": "ડેટાસેટ ID વ્યાખ્યાયિત નથી",
+		"NOT_ENOUGH_LABELS": "પૂરતાં લેબલ નથી",
+		"NOT_ENOUGH_IMAGES": "પૂરતાં ચિત્રો નથી",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ડેટાસેટમાં captchaની સંખ્યા રૂપરેખાંકિત સંખ્યા કરતાં ઓછી છે",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ડેટાસેટમાં ઉકેલોની સંખ્યા રૂપરેખાંકિત સંખ્યા કરતાં ઓછી છે",
+		"DUPLICATE_IMAGE": "બેવડું ચિત્ર મળ્યું",
+		"MERKLE_ERROR": "મર્કલ ટ્રી બનાવવામાં ભૂલ"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ડેટાબેઝ એન્જિન આયાત કરવામાં નિષ્ફળ",
+		"DATABASE_UNDEFINED": "ડેટાબેઝ ક્લાયન્ટ જોડાયેલ નથી",
+		"DATABASE_HOST_UNDEFINED": "ડેટાબેઝ હોસ્ટ સરનામું વ્યાખ્યાયિત નથી",
+		"DATASET_LOAD_FAILED": "ડેટાસેટ લોડ નિષ્ફળ",
+		"DATASET_GET_FAILED": "ડેટાસેટ મેળવવામાં નિષ્ફળ",
+		"CAPTCHA_GET_FAILED": "captcha મેળવવામાં નિષ્ફળ",
+		"CAPTCHA_UPDATE_FAILED": "captcha અપડેટ કરવામાં નિષ્ફળ",
+		"IMAGE_GET_FAILED": "ચિત્ર મેળવવામાં નિષ્ફળ",
+		"PENDING_RECORD_NOT_FOUND": "કોઈ બાકી રેકૉર્ડ મળ્યો નથી",
+		"INVALID_HASH": "અમાન્ય હેશ",
+		"SOLUTION_GET_FAILED": "ઉકેલ મેળવવામાં નિષ્ફળ",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "જરૂરી સંખ્યામાં ઉકેલો ધરાવતા કોઈ ડેટાસેટ મળ્યા નથી",
+		"SOLUTION_APPROVE_FAILED": "ઉકેલ મંજૂર કરવામાં નિષ્ફળ",
+		"SOLUTION_FLAG_FAILED": "ઉકેલને પ્રક્રિયા કરેલ તરીકે ચિહ્નિત કરવામાં નિષ્ફળ",
+		"TABLES_UNDEFINED": "કોષ્ટકો વ્યાખ્યાયિત નથી",
+		"CONNECTION_UNDEFINED": "કનેક્શન વ્યાખ્યાયિત નથી",
+		"COMMITMENT_FLAG_FAILED": "પ્રતિબદ્ધતાને પ્રક્રિયા કરેલ તરીકે ચિહ્નિત કરવામાં નિષ્ફળ",
+		"UNKNOWN": "અજ્ઞાત ડેટાબેઝ ભૂલ",
+		"QUERY_ERROR": "ડેટાબેઝ ક્વેરી નિષ્ફળ",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ઍક્સેસ નિયમોનું Redis કનેક્શન વ્યાખ્યાયિત નથી",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "વપરાશકર્તા ઍક્સેસ નિયમોનો સ્ટોરેજ વ્યાખ્યાયિત નથી",
+		"SESSION_STORE_FAILED": "સત્ર સંગ્રહ કરવામાં નિષ્ફળ",
+		"SESSION_CHECK_REMOVE_FAILED": "સત્ર તપાસીને દૂર કરવામાં નિષ્ફળ",
+		"SESSION_GET_FAILED": "સત્ર મેળવવામાં નિષ્ફળ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "માલિક વપરાશકર્તામાં ફેરફાર કરી શકાતો નથી",
+		"CANNOT_DELETE_OWN_USER": "તમારું પોતાનું એકાઉન્ટ કાઢી શકાતું નથી",
+		"CANNOT_DELETE_LAST_USER": "છેલ્લા વપરાશકર્તાને કાઢી શકાતા નથી",
+		"USER_ALREADY_EXISTS": "વપરાશકર્તા પહેલેથી અસ્તિત્વમાં છે",
+		"NO_SUGGESTIONS_FOUND": "કોઈ સૂચનો મળ્યાં નથી",
+		"CANNOT_DEACTIVATE_LAST_SITE": "છેલ્લી સક્રિય સાઇટ નિષ્ક્રિય કરી શકાતી નથી",
+		"DUPLICATE_SITE_NAME": "આ નામની સાઇટ પહેલેથી અસ્તિત્વમાં છે",
+		"INVALID_SITE_NAME": "સાઇટના નામમાં ફક્ત અક્ષરો, અંકો, હાઇફન અને અન્ડરસ્કોર જ હોઈ શકે"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "અમાન્ય પેરામીટર"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ફાઇલ મળી નથી",
+		"FILE_ALREADY_EXISTS": "ફાઇલ પહેલેથી અસ્તિત્વમાં છે",
+		"INVALID_DIR_FORMAT": "અમાન્ય ડિરેક્ટરી ફોર્મેટ"
+	}
+}

@@ -14,44 +14,40 @@
 
 import {
 	CaptchaType,
-	type ChallengeCaptchaType,
+	type ConcreteCaptchaType,
 	type GetFrictionlessCaptchaResponse,
 	type Session,
 } from "@prosopo/types";
 import type { FrictionlessManager } from "./frictionlessTasks.js";
 
-/**
- * Params accepted by every `send*Captcha` helper. Type-specific fields
- * (`solvedImagesCount`, `powDifficulty`) may always be supplied — the
- * manager's `sendCaptcha` discards the ones that don't apply to the type it
- * ends up serving, so callers don't need to branch before dispatching.
- */
-export type ChallengeSendParams = Partial<Session>;
+export type ChallengeSenders = Pick<
+	FrictionlessManager,
+	| "sendImageCaptcha"
+	| "sendPowCaptcha"
+	| "sendPuzzleCaptcha"
+	| "sendIconOrderCaptcha"
+>;
 
 type ChallengeSender = (
-	manager: FrictionlessManager,
-	params: ChallengeSendParams,
+	manager: ChallengeSenders,
+	params: Partial<Session>,
 ) => Promise<GetFrictionlessCaptchaResponse>;
 
-/**
- * Single dispatch table from challenge type → the manager call that issues it.
- *
- * Declared as a total `Record<ChallengeCaptchaType, …>` on purpose: the three
- * places that used to branch on captchaType (the configured-type
- * short-circuit, the access-policy handler, and the client-side verify
- * dispatch in `@prosopo/server`) each had their own if/switch chain, so adding
- * a challenge type meant finding all of them. Adding a member to
- * `ChallengeCaptchaType` now fails to compile here instead.
- */
-const CHALLENGE_SENDERS: Record<ChallengeCaptchaType, ChallengeSender> = {
+const CHALLENGE_SENDERS: Record<ConcreteCaptchaType, ChallengeSender> = {
 	[CaptchaType.image]: (manager, params) => manager.sendImageCaptcha(params),
 	[CaptchaType.pow]: (manager, params) => manager.sendPowCaptcha(params),
 	[CaptchaType.puzzle]: (manager, params) => manager.sendPuzzleCaptcha(params),
+	[CaptchaType.iconOrder]: (manager, params) =>
+		manager.sendIconOrderCaptcha(params),
 };
 
+/**
+ * Serve whichever challenge a caller has already decided on. Callers may pass
+ * every type's knobs: `sendCaptcha` drops the ones the served type ignores.
+ */
 export const sendChallenge = (
-	manager: FrictionlessManager,
-	captchaType: ChallengeCaptchaType,
-	params: ChallengeSendParams,
+	manager: ChallengeSenders,
+	captchaType: ConcreteCaptchaType,
+	params: Partial<Session>,
 ): Promise<GetFrictionlessCaptchaResponse> =>
 	CHALLENGE_SENDERS[captchaType](manager, params);

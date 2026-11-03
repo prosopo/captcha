@@ -22,8 +22,16 @@ import { randomBytes } from "node:crypto";
  * reproduction of the clean background. Given the clean background they can
  * diff it against the composite they were served and read the notch position
  * straight off the difference. Seeds are therefore 128 bits from the system
- * CSPRNG and must never leave the provider — not in the response, not in logs,
- * not on the session record.
+ * CSPRNG.
+ *
+ * A seed may be persisted on the captcha record (`PuzzleCaptchaStored.render`)
+ * so the portal can replay a served challenge exactly. It must not travel any
+ * further than that: never in a response body, never in a log line, and never
+ * on the session record, which several endpoints echo back to the client.
+ * Anything exposing the record to a caller has to drop `render.backgroundSeed`
+ * and `render.renderSeed`, and must not serve them while the challenge is
+ * still live — that would hand over the target of a puzzle the user has yet
+ * to solve.
  */
 export interface Prng {
 	/** Uniform in [0, 1). */

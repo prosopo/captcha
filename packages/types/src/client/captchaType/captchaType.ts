@@ -19,6 +19,8 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	audio = "audio",
+	iconOrder = "iconOrder",
 	// Web Bot Auth verified — no user-facing challenge. Issued only by the
 	// frictionless flow when the request carried a valid Ed25519 signature
 	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
@@ -32,82 +34,102 @@ enum CaptchaType {
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
 /**
- * The three concrete challenges a user can actually be asked to solve.
+ * Every challenge a user can be asked to solve, and so everything with a
+ * verify endpoint, a usage counter and a decision-machine input.
  *
- * `frictionless` is deliberately excluded: it is the *router* that picks one
- * of these, not a challenge in its own right, and `authenticated` is a
- * pre-verified pass-through with no scoring surface. Anything that describes
- * "what the user was shown" — session records, decision-machine inputs,
- * routing outputs, usage counters, metrics labels — is a
- * `ChallengeCaptchaType`.
+ * `frictionless` is the router that picks one of these and `authenticated` is
+ * a pre-verified pass-through, so neither is a challenge.
  */
 type ChallengeCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder
+	| CaptchaType.audio;
 
 const CHALLENGE_CAPTCHA_TYPES = [
 	CaptchaType.pow,
 	CaptchaType.image,
 	CaptchaType.puzzle,
+	CaptchaType.iconOrder,
+	CaptchaType.audio,
 ] as const satisfies readonly ChallengeCaptchaType[];
 
-const ChallengeCaptchaTypeSchema = z.union([
-	z.literal(CaptchaType.pow),
-	z.literal(CaptchaType.image),
-	z.literal(CaptchaType.puzzle),
-]);
+const ChallengeCaptchaTypeSchema = z.enum(CHALLENGE_CAPTCHA_TYPES);
 
 /**
- * The interactive (visual) challenge tier — the subset of challenges that put
- * a puzzle in front of the user rather than spending their CPU.
- *
- * This set previously existed only as an anonymous `CaptchaType.image |
- * CaptchaType.puzzle` union repeated across the escalation path (PoW escalation
- * envelope, the widget escalation handler, the frictionless re-render, the
- * post-PoW routing guard). Naming it means adding a fourth interactive type is
- * a compile error at each of those sites rather than a grep exercise.
+ * The challenges a session can be minted as. Audio is missing because it is
+ * only ever served as the accessibility alternative to one of these, on a
+ * session that already exists.
  */
-type InteractiveCaptchaType = CaptchaType.image | CaptchaType.puzzle;
+type ConcreteCaptchaType = Exclude<ChallengeCaptchaType, CaptchaType.audio>;
+
+const CONCRETE_CAPTCHA_TYPES = [
+	CaptchaType.pow,
+	CaptchaType.image,
+	CaptchaType.puzzle,
+	CaptchaType.iconOrder,
+] as const satisfies readonly ConcreteCaptchaType[];
+
+const ConcreteCaptchaTypeSchema = z.enum(CONCRETE_CAPTCHA_TYPES);
+
+/** The visual challenges a PoW solve can escalate into. */
+type InteractiveCaptchaType = Exclude<ConcreteCaptchaType, CaptchaType.pow>;
 
 const INTERACTIVE_CAPTCHA_TYPES = [
 	CaptchaType.image,
 	CaptchaType.puzzle,
+	CaptchaType.iconOrder,
 ] as const satisfies readonly InteractiveCaptchaType[];
 
-const InteractiveCaptchaTypeSchema = z.union([
-	z.literal(CaptchaType.image),
-	z.literal(CaptchaType.puzzle),
-]);
+const InteractiveCaptchaTypeSchema = z.enum(INTERACTIVE_CAPTCHA_TYPES);
 
 const isChallengeCaptchaType = (
 	value: CaptchaType | undefined,
 ): value is ChallengeCaptchaType =>
-	value !== undefined &&
-	(CHALLENGE_CAPTCHA_TYPES as readonly CaptchaType[]).includes(value);
+	ChallengeCaptchaTypeSchema.safeParse(value).success;
+
+const isConcreteCaptchaType = (
+	value: CaptchaType | undefined,
+): value is ConcreteCaptchaType =>
+	ConcreteCaptchaTypeSchema.safeParse(value).success;
 
 const isInteractiveCaptchaType = (
 	value: CaptchaType | undefined,
 ): value is InteractiveCaptchaType =>
-	value !== undefined &&
-	(INTERACTIVE_CAPTCHA_TYPES as readonly CaptchaType[]).includes(value);
+	InteractiveCaptchaTypeSchema.safeParse(value).success;
 
 /**
- * @deprecated Use {@link ChallengeCaptchaTypeSchema}. Retained because
- * operator-authored decision machines and stored artefacts reference the old
- * name; it is the identical union.
+ * @deprecated Use {@link ChallengeCaptchaTypeSchema}. Operator-authored
+ * decision machines and stored artefacts reference this name.
  */
 const DecisionMachineCaptchaTypeSchema = ChallengeCaptchaTypeSchema;
+
+// What a site, access rule or traffic category may select. Audio is only the
+// accessibility alternative, so a record naming it is rejected on write.
+const SelectableCaptchaTypeSchema = CaptchaTypeSchema.refine(
+	// `boolean`, not an inferred type predicate, so the output stays `CaptchaType`.
+	(captchaType): boolean => captchaType !== CaptchaType.audio,
+	{ message: "audio is only served as an accessibility alternative" },
+);
 
 export {
 	CaptchaType,
 	CaptchaTypeSchema,
 	CHALLENGE_CAPTCHA_TYPES,
 	ChallengeCaptchaTypeSchema,
+	CONCRETE_CAPTCHA_TYPES,
+	ConcreteCaptchaTypeSchema,
 	DecisionMachineCaptchaTypeSchema,
 	INTERACTIVE_CAPTCHA_TYPES,
 	InteractiveCaptchaTypeSchema,
 	isChallengeCaptchaType,
+	isConcreteCaptchaType,
 	isInteractiveCaptchaType,
+	SelectableCaptchaTypeSchema,
 };
-export type { ChallengeCaptchaType, InteractiveCaptchaType };
+export type {
+	ChallengeCaptchaType,
+	ConcreteCaptchaType,
+	InteractiveCaptchaType,
+};

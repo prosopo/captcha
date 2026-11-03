@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
 		"lib": ["es6", "dom"],
 		"allowJs": true
 	},
@@ -19,7 +20,25 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
+			"path": "../fingerprint"
+		},
+		{
 			"path": "../locale"
+		},
+		{
+			"path": "../procaptcha-audio"
+		},
+		{
+			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../procaptcha-icon-order"
 		},
 		{
 			"path": "../procaptcha-pow"
@@ -35,15 +54,6 @@
 		},
 		{
 			"path": "../widget-skeleton"
-		},
-		{
-			"path": "../api"
-		},
-		{
-			"path": "../common"
-		},
-		{
-			"path": "../procaptcha-common"
 		}
 	]
 }
