@@ -55,7 +55,6 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
-	type SolveDeviceSignals,
 	type StoredCaptcha,
 	type StoredIconTarget,
 	StoredStatusNames,
@@ -1815,6 +1814,26 @@ export class ProviderDatabase
 		);
 	}
 
+	/**
+	 * Take a failed puzzle for one retry. Succeeds once per puzzle, and only
+	 * for a puzzle that was submitted and disapproved.
+	 * @returns true when this call took it
+	 */
+	async claimPuzzleCaptchaRetry(challenge: PoWChallengeId): Promise<boolean> {
+		const tables = this.getTables();
+		const collection = this.interactiveCollection(CaptchaType.puzzle);
+		const result = await tables[collection.table].updateOne(
+			{
+				challenge,
+				userSubmitted: true,
+				"result.status": CaptchaStatus.disapproved,
+				retried: { $ne: true },
+			},
+			{ $set: { retried: true } },
+		);
+		return result.modifiedCount === 1;
+	}
+
 	async updateIconOrderCaptchaRecord(
 		challenge: PoWChallengeId,
 		updates: Partial<IconOrderCaptchaRecord>,
@@ -2514,40 +2533,6 @@ export class ProviderDatabase
 				code: "DB_QUERY_FAILED",
 				errorSite: "DBSE-35",
 				message: "Failed to get session",
-				cause: err,
-				context: { userSitekeyIpHash },
-			});
-		}
-	}
-
-	/**
-	 * What the latest solve by this user on this site and IP said about the
-	 * device, if one was submitted since `since`.
-	 * @param userSitekeyIpHash The hash of user, IP and sitekey combination
-	 * @param since Oldest session creation time to consider
-	 */
-	async getRecentSolveDevice(
-		userSitekeyIpHash: string,
-		since: Date,
-	): Promise<SolveDeviceSignals | undefined> {
-		try {
-			const session = await this.tables.session
-				.findOne(
-					{
-						userSitekeyIpHash,
-						createdAt: { $gte: since },
-						solveDevice: { $exists: true },
-					},
-					{ solveDevice: 1 },
-				)
-				.sort({ createdAt: -1 })
-				.lean<Pick<SessionRecord, "solveDevice">>();
-			return session?.solveDevice ?? undefined;
-		} catch (err) {
-			throw new ProsopoError({
-				code: "DB_QUERY_FAILED",
-				errorSite: "DBSE-52",
-				message: "Failed to get recent solve device",
 				cause: err,
 				context: { userSitekeyIpHash },
 			});

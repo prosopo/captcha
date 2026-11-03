@@ -217,6 +217,8 @@ export class FrictionlessManager extends CaptchaManager {
 			refreshOf: params.refreshOf,
 			refreshCount: params.refreshCount,
 			refreshedAfterMs: params.refreshedAfterMs,
+			retryOf: params.retryOf,
+			solveDevice: params.solveDevice,
 			fingerprintSummary: params.fingerprintSummary,
 		};
 	}
@@ -280,6 +282,8 @@ export class FrictionlessManager extends CaptchaManager {
 			refreshOf,
 			refreshCount,
 			refreshedAfterMs,
+			retryOf,
+			solveDevice,
 			isProtect,
 			matchedRule,
 			clientMetaData,
@@ -314,6 +318,10 @@ export class FrictionlessManager extends CaptchaManager {
 			...(refreshOf && { refreshOf }),
 			...(refreshCount !== undefined && { refreshCount }),
 			...(refreshedAfterMs !== undefined && { refreshedAfterMs }),
+			...(retryOf && { retryOf }),
+			// Not in this list before, so the escalation's solve readings were
+			// dropped here and its challenge was never sized for touch.
+			...(solveDevice && { solveDevice }),
 			decryptedHeadHash,
 			bundleId,
 			reason,

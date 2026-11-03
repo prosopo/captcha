@@ -82,6 +82,9 @@ export type BotDetectionFunction = (
 	switchTo?: RefreshSwitchTarget,
 	// This widget's slot among the page's widgets for the same site key.
 	widgetSlot?: number,
+	// The puzzle challenge the user just answered wrongly, when this run mints
+	// its replacement. Forwarded to the provider as `retryOf`.
+	retryOf?: string,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**

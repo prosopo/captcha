@@ -35,7 +35,6 @@ import {
 	ResultReason,
 	type Session,
 	SimdReadingsStage,
-	type SolveDeviceSignals,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -66,10 +65,7 @@ import {
 	isClientSessionMismatch,
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
-import {
-	deriveTrafficPolicies,
-	solveDeviceSignals,
-} from "../../utils/devicePlatform.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -327,7 +323,6 @@ export abstract class InteractiveCaptchaManager<
 			{ behavioural: behavioralData, simd: simdReadings },
 		);
 
-		let solveDevice: SolveDeviceSignals | undefined;
 		if (behavioralData) {
 			try {
 				const decryptedData = decodedPayloads.behavioural;
@@ -360,7 +355,6 @@ export abstract class InteractiveCaptchaManager<
 						behavioralDataPacked: packedData,
 						deviceCapability: decryptedData.deviceCapability,
 					});
-					solveDevice = solveDeviceSignals(packedData);
 				}
 			} catch (error) {
 				this.logger?.error(() => ({
@@ -386,7 +380,6 @@ export abstract class InteractiveCaptchaManager<
 			userTimestampSignature,
 			coords,
 			storedClientMetaData,
-			solveDevice,
 		);
 
 		if (challengeRecord.sessionId && decodedPayloads.simd) {
@@ -478,7 +471,6 @@ export abstract class InteractiveCaptchaManager<
 		userSignature: string,
 		coords: [number, number][][] | undefined,
 		clientMetaData?: ClientMetaData,
-		solveDevice?: SolveDeviceSignals,
 	): Promise<void> {
 		await this.updateSubmissionResult(
 			challengeRecord.challenge,
@@ -496,10 +488,6 @@ export abstract class InteractiveCaptchaManager<
 				// Mirrored so the session carries the clientSessionId that the
 				// verify call correlates against.
 				...(clientMetaData && { clientMetaData }),
-				// A failed solve consumes the session, and the challenge the user
-				// asks for next is issued on a new one. Kept here so that
-				// challenge can judge the device this solve showed.
-				...(solveDevice && { solveDevice }),
 			});
 		}
 	}
