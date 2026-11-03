@@ -59,8 +59,9 @@ RUN echo '#!/nodejs/bin/node' | cat - provider.cli.bundle.js > temp && \
 # them. Debian 12 is not an option: its distroless image stopped at Node
 # 24.14.0, before the CVE-2026-111497 Brotli fix in 24.22.1. Distroless
 # publishes no Node version tags, so the digest is what pins 24.22.1. All
-# four (@img/sharp, native-ja4, native-merkle, native-puzzle) are
-# linux-x64-gnu; an Alpine/musl runtime would break every one.
+# five (@img/sharp, native-ja4, native-merkle, native-puzzle,
+# native-bundle-payload) are linux-x64-gnu; an Alpine/musl runtime would break
+# every one.
 #
 # The `:nonroot` tag runs as uid/gid 65532 rather than root. The bind-mounted
 # detector-pool directory must be owned by that uid on the host or the pool
