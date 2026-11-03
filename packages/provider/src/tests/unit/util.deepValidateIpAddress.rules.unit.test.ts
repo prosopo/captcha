@@ -86,6 +86,9 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 		lookup = vi.fn();
 		ipInfoService = {
 			initialize: vi.fn(),
+			accountSighting: vi
+				.fn<IIpInfoService["accountSighting"]>()
+				.mockResolvedValue(undefined),
 			lookup: lookup as unknown as IIpInfoService["lookup"],
 			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),

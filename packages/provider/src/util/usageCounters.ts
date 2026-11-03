@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/logger";
 import type { RedisConnection } from "@prosopo/redis-client";
 import {
 	COUNTER_WINDOW_SECONDS,
+	type CounterKind,
 	type CounterSpec,
 	encodeCounterKey,
 } from "@prosopo/types";
@@ -227,8 +228,8 @@ export class UsageCounters {
 }
 
 /**
- * Helper: produce the standard served/solved write set for a given captcha
- * challenge. Used by both served (post-session) and solved hooks.
+ * Helper: produce the standard served/solved/farMiss write set for a given
+ * captcha challenge. Used by the served (post-session), solved and far-miss hooks.
  *
  * `deviceBucket` is only written when the caller knows one, which for now is
  * the PoW solve path with a verified proof of fingerprint. Omitting it leaves
@@ -236,7 +237,7 @@ export class UsageCounters {
  * that actually proved it.
  */
 export const buildAllWindowIncrements = (
-	kind: "served" | "solved",
+	kind: CounterKind,
 	captchaType: CounterSpec["captchaType"],
 	ip: string,
 	userAccount: string,

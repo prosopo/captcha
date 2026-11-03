@@ -22,14 +22,20 @@
 // validates, so the tests cover fields the type claims are required going
 // missing on the wire.
 
-import type { IPApiResponse, IPInfoResult } from "@prosopo/types";
+import type {
+	IPApiResponse,
+	IPInfoResult,
+	ReputationAccountResponse,
+} from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
 	DEFAULT_TIMEOUT_MS,
 	type FetchFn,
 	IpapiBackend,
 	parseAbuserScore,
+	parseAccountSighting,
 	parseDetectorRisk,
+	parseSharedReason,
 } from "../backends/ipapi.js";
 
 const BASE_URL = "https://api.ipapi.test/";
@@ -596,5 +602,122 @@ describe("IpapiBackend default fetch", () => {
 		}).lookup(IP);
 
 		expect(result.isValid).toBe(false);
+	});
+});
+
+describe("parseSharedReason", () => {
+	it("reads a reason this client knows", () => {
+		expect(parseSharedReason({ shared_reason: "many_accounts" })).toBe(
+			"many_accounts",
+		);
+	});
+
+	it("reports a null, absent or unknown reason as not shared", () => {
+		expect(parseSharedReason({ shared_reason: null })).toBeUndefined();
+		expect(parseSharedReason({})).toBeUndefined();
+		expect(parseSharedReason(undefined)).toBeUndefined();
+		// A reason added to the DB before this client learns it is not
+		// guessed at.
+		const fromTheWire = JSON.parse(
+			'{"shared_reason":"something_new"}',
+		) as Parameters<typeof parseSharedReason>[0];
+		expect(parseSharedReason(fromTheWire)).toBeUndefined();
+	});
+});
+
+describe("IpapiBackend.lookup shared reason", () => {
+	it("carries the reputation DB's shared reason onto the result", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: respondWith(
+				baseResponse({ reputation: { shared_reason: "mobile" } }),
+			),
+		});
+		const result = expectValid(await backend.lookup(IP));
+		expect(result.sharedReason).toBe("mobile");
+	});
+});
+
+describe("parseAccountSighting", () => {
+	it("reads a known account", () => {
+		expect(
+			parseAccountSighting({
+				known: true,
+				user_agents_7d: 3,
+				device_types: ["iOS", "Mac"],
+			}),
+		).toEqual({ userAgents7d: 3, deviceTypes: ["iOS", "Mac"] });
+	});
+
+	it("has no answer for an unknown account or a malformed body", () => {
+		expect(parseAccountSighting({ known: false })).toBeUndefined();
+		expect(parseAccountSighting(undefined)).toBeUndefined();
+		expect(parseAccountSighting({ known: true })).toBeUndefined();
+		expect(
+			parseAccountSighting({ known: true, user_agents_7d: -1 }),
+		).toBeUndefined();
+		expect(
+			parseAccountSighting({ known: true, user_agents_7d: 1.5 }),
+		).toBeUndefined();
+	});
+
+	it("drops device types that are not strings", () => {
+		const fromTheWire = JSON.parse(
+			'{"known":true,"user_agents_7d":1,"device_types":["iOS",3,null]}',
+		) as ReputationAccountResponse;
+		expect(parseAccountSighting(fromTheWire)?.deviceTypes).toEqual(["iOS"]);
+	});
+});
+
+describe("IpapiBackend.accountSighting", () => {
+	it("asks for the site's account by path", async () => {
+		const fetch = vi.fn<FetchFn>(
+			respondWith({ known: true, user_agents_7d: 2, device_types: [] }),
+		);
+		const backend = new IpapiBackend({ baseUrl: BASE_URL, fetch });
+
+		expect(await backend.accountSighting("5Site", "5User/x")).toEqual({
+			userAgents7d: 2,
+			deviceTypes: [],
+		});
+		expect(fetch.mock.calls[0]?.[0]).toBe(
+			"https://api.ipapi.test/v1/account/5Site/5User%2Fx",
+		);
+		expect(fetch.mock.calls[0]?.[1].method).toBe("GET");
+	});
+
+	it("has no answer when the DB has no account data", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: respondWith({ error: "not found" }, { status: 404 }),
+		});
+		expect(await backend.accountSighting("5Site", "5User")).toBeUndefined();
+	});
+
+	it("has no answer when the DB cannot be reached", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: async (): Promise<globalThis.Response> => {
+				throw new Error("connection refused");
+			},
+		});
+		expect(await backend.accountSighting("5Site", "5User")).toBeUndefined();
+	});
+
+	it("has no answer when the DB is too slow", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: respondNever,
+			timeoutMs: 5,
+		});
+		expect(await backend.accountSighting("5Site", "5User")).toBeUndefined();
+	});
+
+	it("does not call out without a site or an account", async () => {
+		const fetch = vi.fn<FetchFn>(respondWith({}));
+		const backend = new IpapiBackend({ baseUrl: BASE_URL, fetch });
+		expect(await backend.accountSighting("", "5User")).toBeUndefined();
+		expect(await backend.accountSighting("5Site", "")).toBeUndefined();
+		expect(fetch).not.toHaveBeenCalled();
 	});
 });

@@ -25,6 +25,7 @@ import {
 	DecisionMachineKind,
 	type DecisionMachineOutput,
 	DecisionMachineOutputSchema,
+	type DecisionMachineRequirements,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 	type RoutingMachineInput,
@@ -130,6 +131,11 @@ const DEFAULT_DECISION: DecisionMachineOutput = {
 };
 
 const RequiredCountersSchema = z.array(CounterSpecSchema);
+
+const NO_REQUIREMENTS: DecisionMachineRequirements = {
+	counters: [],
+	accountSighting: false,
+};
 
 interface CachedArtifact {
 	artifact: DecisionMachineArtifact | undefined;
@@ -287,6 +293,55 @@ export class DecisionMachineRunner {
 				data: { dappAccount: input.dappAccount },
 			}));
 			return DEFAULT_DECISION;
+		}
+	}
+
+	/**
+	 * Pre-fetch hook for decision machines, the counterpart of
+	 * {@link getRequiredCounters}: which counters the machine wants read into
+	 * its input (`requiredCounters()`), and whether it wants the account
+	 * sighting (`requiresAccountSighting()`). Both exports are optional; a
+	 * machine that has neither, or none at all, asks for nothing.
+	 */
+	async getDecisionRequirements(
+		input: Pick<
+			DecisionMachineInput,
+			"dappAccount" | "userAccount" | "captchaType"
+		>,
+		logger?: Logger,
+	): Promise<DecisionMachineRequirements> {
+		try {
+			const artifact = await this.selectArtifact(
+				input.dappAccount,
+				DecisionMachineKind.Decision,
+				input.captchaType,
+			);
+			if (!artifact || artifact.runtime !== DecisionMachineRuntime.Node) {
+				return NO_REQUIREMENTS;
+			}
+			const counters = await this.runArtifactExport(
+				artifact,
+				["requiredCounters"],
+				{ input, optional: true },
+				RequiredCountersSchema,
+			);
+			const accountSighting = await this.runArtifactExport(
+				artifact,
+				["requiresAccountSighting"],
+				{ input, optional: true },
+				z.boolean(),
+			);
+			return {
+				counters: counters ?? [],
+				accountSighting: accountSighting ?? false,
+			};
+		} catch (error) {
+			logger?.warn?.(() => ({
+				msg: "Decision machine requirements failed, proceeding with none",
+				err: error,
+				data: { dappAccount: input.dappAccount },
+			}));
+			return NO_REQUIREMENTS;
 		}
 	}
 
