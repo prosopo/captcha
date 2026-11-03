@@ -21,26 +21,27 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
  * BigInts must be cast to strings before applying JSON.stringify(), as it cannot serialize BigInt values and will
  * throw "TypeError: Do not know how to serialize a BigInt".
  *
- * Mutates objects and arrays in-place — do not pass a value you need to preserve unchanged.
+ * Returns a copy, so frozen or shared values are left untouched.
  *
  * @param value - The value to process (can be a primitive, object, or array)
- * @returns The same (mutated) value with all BigInt instances converted to strings
+ * @returns The value with all BigInt instances converted to strings
  */
 export const stringifyBigInts = (value: unknown): unknown => {
 	if ("bigint" === typeof value) {
 		return value.toString();
 	}
 
-	if (isObject(value)) {
-		for (const key of Object.keys(value)) {
-			value[key] = stringifyBigInts(value[key]);
-		}
+	if (Array.isArray(value)) {
+		return value.map(stringifyBigInts);
 	}
 
-	if (Array.isArray(value)) {
-		for (let i = 0; i < value.length; i++) {
-			value[i] = stringifyBigInts(value[i]);
-		}
+	if (isObject(value)) {
+		return Object.fromEntries(
+			Object.entries(value).map(([key, entry]) => [
+				key,
+				stringifyBigInts(entry),
+			]),
+		);
 	}
 
 	return value;

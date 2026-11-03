@@ -17,6 +17,7 @@ import cliProgress from "cli-progress";
 // limitations under the License.
 import * as z from "zod";
 import { InputArgsSchema, InputCliCommand } from "../utils/input.js";
+import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = InputArgsSchema.extend({});
 export type ArgsSchemaType = typeof ArgsSchema;
@@ -42,8 +43,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 		);
 
 		const list: string[] = [];
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		const traverse = async (data: any) => {
+		const traverse = async (data: unknown): Promise<unknown> => {
 			if (Array.isArray(data)) {
 				for (let i = 0; i < data.length; i++) {
 					data[i] = await traverse(data[i]);
@@ -65,8 +65,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 		const file = args.input;
 
 		// read the map file
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		const data: any = JSON.parse(fs.readFileSync(file, "utf8"));
+		const data: unknown = readJsonFile(file);
 		await traverse(data);
 
 		bar.start(list.length, 0);

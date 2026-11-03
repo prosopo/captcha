@@ -13,9 +13,11 @@
 // limitations under the License.
 
 import type { ApiEndpoint, ApiRoutesProvider } from "@prosopo/api-route";
+import type { ProsopoError } from "@prosopo/common";
 import type { LogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type {
+	ErrorRequestHandler,
 	NextFunction,
 	Request,
 	RequestHandler,
@@ -27,11 +29,13 @@ import type { ZodType } from "zod";
 import type * as barrel from "../index.js";
 import {
 	type ApiExpressEndpointAdapter,
+	type AuthMiddlewareOptions,
 	apiExpressRouterFactory,
 	authMiddleware,
 	createApiExpressDefaultEndpointAdapter,
 	handleErrors,
 	requestLoggerMiddleware,
+	sendProsopoError,
 	verifySignature,
 } from "../index.js";
 
@@ -48,8 +52,10 @@ describe("the barrel's shape", () => {
 			| "createApiExpressDefaultEndpointAdapter"
 			| "handleErrors"
 			| "authMiddleware"
+			| "createMemoryJwtReplayGuard"
 			| "verifySignature"
 			| "requestLoggerMiddleware"
+			| "sendProsopoError"
 		>();
 	});
 });
@@ -123,9 +129,13 @@ describe("the endpoint adapter interface", () => {
 });
 
 describe("the middleware", () => {
-	test("authMiddleware takes an optional pair and an optional auth account", () => {
+	test("authMiddleware takes an optional pair, auth account and options", () => {
 		expectTypeOf(authMiddleware).parameters.toEqualTypeOf<
-			[pair: KeyringPair | undefined, authAccount?: KeyringPair | undefined]
+			[
+				pair: KeyringPair | undefined,
+				authAccount?: KeyringPair | undefined,
+				options?: AuthMiddlewareOptions,
+			]
 		>();
 	});
 
@@ -178,13 +188,28 @@ describe("the error handler", () => {
 	test("takes an error first, which is what makes express treat it as one", () => {
 		// A three-parameter handler would be mounted as ordinary middleware and
 		// never see an error at all.
-		expectTypeOf(handleErrors).parameters.toMatchTypeOf<
-			[unknown, Request, Response, NextFunction]
-		>();
+		expectTypeOf<
+			Parameters<typeof handleErrors>["length"]
+		>().toEqualTypeOf<4>();
+		assertType<ErrorRequestHandler>(handleErrors);
 	});
 
 	test("rejects being mounted as an ordinary handler", () => {
 		// @ts-expect-error - the first parameter is an error, not a request
 		assertType<RequestHandler>(handleErrors);
+	});
+});
+
+describe("sendProsopoError", () => {
+	test("hands back the express response it was given, so a handler can return it", () => {
+		expectTypeOf(sendProsopoError<Response>).returns.toEqualTypeOf<Response>();
+		expectTypeOf(sendProsopoError<Response>)
+			.parameter(1)
+			.toEqualTypeOf<ProsopoError>();
+	});
+
+	test("rejects a raw Error, which has no code or site to report", () => {
+		// @ts-expect-error - only a ProsopoError carries a code and site
+		sendProsopoError({} as Response, new Error("boom"));
 	});
 });

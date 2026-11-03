@@ -76,7 +76,7 @@ const callRoute = async (path: ClientApiPaths): Promise<CapturedResponse> => {
 		body: {},
 		// The unit test asserts the key is looked up rather than the localised
 		// output, so the stub is the identity function.
-		i18n: { t: (key: string) => key },
+		i18n: { t: (key: string): string => key, exists: (): boolean => false },
 		logger: {
 			info: vi.fn(),
 			warn: vi.fn(),

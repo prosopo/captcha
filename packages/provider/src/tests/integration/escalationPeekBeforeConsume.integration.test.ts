@@ -274,15 +274,13 @@ describe("Escalation peek-before-consume integration test", () => {
 				},
 			);
 			const json = (await response.json()) as {
-				error?: { code?: number; key?: string };
+				error?: { code?: string; status?: number };
 			};
 
 			// Surface the new behaviour: the widget gets an explicit type
-			// mismatch rather than NO_SESSION_FOUND. The error envelope
-			// places the translation key (matching `ResultReason.INCORRECT_CAPTCHA_TYPE`)
-			// under `.error.key`; `.error.code` carries the HTTP status.
+			// mismatch rather than NO_SESSION_FOUND.
 			expect(response.status).toBe(400);
-			expect(json.error?.key).toBe("API.INCORRECT_CAPTCHA_TYPE");
+			expect(json.error?.code).toBe("INCORRECT_CAPTCHA_TYPE");
 
 			// Pin the contract this PR is fixing: the escalation session
 			// must still be present in Mongo AND still consumable. Before

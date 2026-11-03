@@ -26,6 +26,9 @@ import {
 	getAccessRuleRedisKey,
 } from "./redisRuleIndex.js";
 
+const EXCLUDED_CLIENT_IDS_FIELD =
+	"excludedClientIds" satisfies keyof AccessRule;
+
 export class RedisRulesWriter implements AccessRulesWriter {
 	constructor(
 		private readonly client: RedisClientType,
@@ -97,6 +100,12 @@ export class RedisRulesWriter implements AccessRulesWriter {
 			const ruleValue = getRedisRuleValue(rule);
 
 			queries.hSet(ruleKey, ruleValue);
+			// hSet merges into an existing hash, and exclusions are not part of
+			// the key, so a rule re-pushed without them would otherwise keep the
+			// list from its previous version.
+			if (ruleValue.excludedClientIds === undefined) {
+				queries.hDel(ruleKey, EXCLUDED_CLIENT_IDS_FIELD);
+			}
 
 			if (expiresUnixTimestamp) {
 				// Redis expireAt expects seconds. Validate that timestamp is in seconds, not milliseconds.
@@ -124,6 +133,14 @@ export const getRedisRuleValue = (rule: AccessRule): Record<string, string> => {
 	const record: Record<string, string> = {};
 	for (const [key, value] of Object.entries(rule)) {
 		if (value === undefined) {
+			continue;
+		}
+		if (Array.isArray(value)) {
+			// Joined on "," — the TAG field's default separator — so each id is
+			// indexed as its own tag.
+			if (value.length > 0) {
+				record[key] = value.join(",");
+			}
 			continue;
 		}
 		record[key] = String(value);

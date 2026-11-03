@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "បរាជ័យក្នុងការអ៊ិនកូដអាសយដ្ឋានមិនត្រឹមត្រូវ",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "ការប្តេជ្ញាដំណោះស្រាយ captcha មិនមានទេ",
+		"SIGNER_UNDEFINED": "មិនបានកំណត់អ្នកចុះហត្ថលេខា",
+		"CANNOT_FIND_KEYPAIR": "រកមិនឃើញគូសោ",
+		"INVALID_DATA_FORMAT": "ទម្រង់ទិន្នន័យមិនត្រឹមត្រូវ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "បានស្នើសុំបរិស្ថានដែលមិនស្គាល់",
+		"INVALID_CAPTCHA_NUMBER": "សូមកំណត់ការកំណត់រចនាសម្ព័ន្ធ captcha ឱ្យបានត្រឹមត្រូវ",
+		"INVALID_LOG_LEVEL": "កម្រិតកំណត់ហេតុមិនត្រឹមត្រូវ",
+		"INVALID_PACKAGE_DIR": "ថតកញ្ចប់មិនត្រឹមត្រូវ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "កំហុសក្នុងការញែកសំណុំទិន្នន័យ",
+		"SOLUTION_PARSE_ERROR": "កំហុសក្នុងការដំណើរការសំណុំទិន្នន័យ",
+		"HASH_ERROR": "កំហុសក្នុងការ hash សំណុំទិន្នន័យ",
+		"DATASET_ID_UNDEFINED": "មិនបានកំណត់លេខសម្គាល់សំណុំទិន្នន័យ",
+		"NOT_ENOUGH_LABELS": "ស្លាកមិនគ្រប់គ្រាន់",
+		"NOT_ENOUGH_IMAGES": "រូបភាពមិនគ្រប់គ្រាន់",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ចំនួន captcha ក្នុងសំណុំទិន្នន័យតិចជាងចំនួនដែលបានកំណត់",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ចំនួនដំណោះស្រាយក្នុងសំណុំទិន្នន័យតិចជាងចំនួនដែលបានកំណត់",
+		"DUPLICATE_IMAGE": "បានរកឃើញរូបភាពស្ទួន",
+		"MERKLE_ERROR": "កំហុសក្នុងការបង្កើតមែកធាង Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "បរាជ័យក្នុងការនាំចូលម៉ាស៊ីនមូលដ្ឋានទិន្នន័យ",
+		"DATABASE_UNDEFINED": "ម៉ាស៊ីនភ្ញៀវមូលដ្ឋានទិន្នន័យមិនបានតភ្ជាប់",
+		"DATABASE_HOST_UNDEFINED": "មិនបានកំណត់អាសយដ្ឋានម៉ាស៊ីនមូលដ្ឋានទិន្នន័យ",
+		"DATASET_LOAD_FAILED": "ការផ្ទុកសំណុំទិន្នន័យបានបរាជ័យ",
+		"DATASET_GET_FAILED": "បរាជ័យក្នុងការទាញយកសំណុំទិន្នន័យ",
+		"CAPTCHA_GET_FAILED": "បរាជ័យក្នុងការទាញយក captcha",
+		"CAPTCHA_UPDATE_FAILED": "បរាជ័យក្នុងការធ្វើបច្ចុប្បន្នភាព captcha",
+		"IMAGE_GET_FAILED": "បរាជ័យក្នុងការទាញយករូបភាព",
+		"PENDING_RECORD_NOT_FOUND": "រកមិនឃើញកំណត់ត្រាដែលកំពុងរង់ចាំ",
+		"INVALID_HASH": "hash មិនត្រឹមត្រូវ",
+		"SOLUTION_GET_FAILED": "បរាជ័យក្នុងការទាញយកដំណោះស្រាយ",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "រកមិនឃើញសំណុំទិន្នន័យដែលមានចំនួនដំណោះស្រាយដែលត្រូវការ",
+		"SOLUTION_APPROVE_FAILED": "បរាជ័យក្នុងការយល់ព្រមដំណោះស្រាយ",
+		"SOLUTION_FLAG_FAILED": "បរាជ័យក្នុងការសម្គាល់ដំណោះស្រាយថាបានដំណើរការ",
+		"TABLES_UNDEFINED": "មិនបានកំណត់តារាង",
+		"CONNECTION_UNDEFINED": "មិនបានកំណត់ការតភ្ជាប់",
+		"COMMITMENT_FLAG_FAILED": "បរាជ័យក្នុងការសម្គាល់ការប្តេជ្ញាថាបានដំណើរការ",
+		"UNKNOWN": "កំហុសមូលដ្ឋានទិន្នន័យដែលមិនស្គាល់",
+		"QUERY_ERROR": "សំណួរមូលដ្ឋានទិន្នន័យបានបរាជ័យ",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "មិនបានកំណត់ការតភ្ជាប់ Redis សម្រាប់ច្បាប់ចូលប្រើ",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "មិនបានកំណត់ការផ្ទុកច្បាប់ចូលប្រើរបស់អ្នកប្រើ",
+		"SESSION_STORE_FAILED": "បរាជ័យក្នុងការរក្សាទុកវគ្គ",
+		"SESSION_CHECK_REMOVE_FAILED": "បរាជ័យក្នុងការពិនិត្យ និងលុបវគ្គ",
+		"SESSION_GET_FAILED": "បរាជ័យក្នុងការទាញយកវគ្គ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "មិនអាចកែប្រែអ្នកប្រើជាម្ចាស់បានទេ",
+		"CANNOT_DELETE_OWN_USER": "មិនអាចលុបគណនីផ្ទាល់ខ្លួនរបស់អ្នកបានទេ",
+		"CANNOT_DELETE_LAST_USER": "មិនអាចលុបអ្នកប្រើចុងក្រោយបានទេ",
+		"USER_ALREADY_EXISTS": "អ្នកប្រើមានរួចហើយ",
+		"NO_SUGGESTIONS_FOUND": "រកមិនឃើញការណែនាំ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "មិនអាចបិទគេហទំព័រសកម្មចុងក្រោយបានទេ",
+		"DUPLICATE_SITE_NAME": "គេហទំព័រដែលមានឈ្មោះនេះមានរួចហើយ",
+		"INVALID_SITE_NAME": "ឈ្មោះគេហទំព័រអាចមានតែអក្សរ លេខ សហសញ្ញា និងសញ្ញាគូសក្រោមប៉ុណ្ណោះ"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "ប៉ារ៉ាម៉ែត្រមិនត្រឹមត្រូវ"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "រកមិនឃើញឯកសារ",
+		"FILE_ALREADY_EXISTS": "ឯកសារមានរួចហើយ",
+		"INVALID_DIR_FORMAT": "ទម្រង់ថតមិនត្រឹមត្រូវ"
+	}
+}

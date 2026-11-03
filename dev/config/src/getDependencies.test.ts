@@ -12,206 +12,228 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ExecException } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
 import type { UserConfig } from "vite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getDependencies } from "./dependencies.js";
 
-/** What `npm ls` handed back for a given command. */
-interface ExecResult {
-	stdout: string;
-	stderr: string;
+interface FixtureManifest {
+	name: string;
+	dependencies?: Record<string, string>;
+	devDependencies?: Record<string, string>;
+	optionalDependencies?: Record<string, string>;
+	peerDependencies?: Record<string, string>;
+	peerDependenciesMeta?: Record<string, { optional?: boolean }>;
 }
 
-type ExecCallback = (
-	error: ExecException | null,
-	stdout: string,
-	stderr: string,
-) => void;
+let root: string;
 
-/** Commands seen, in order, so the tests can assert on what was run. */
-let commands: string[] = [];
-/** Queue of responses, consumed one per `exec` call. */
-let responses: (ExecResult | Error)[] = [];
-
-const fakeExec = (command: string, callback: ExecCallback): void => {
-	commands.push(command);
-	const next = responses.shift();
-	if (next === undefined) {
-		throw new Error(`unexpected exec: ${command}`);
-	}
-	if (next instanceof Error) {
-		callback(next, "", "");
-		return;
-	}
-	callback(null, next.stdout, next.stderr);
+const writeManifest = (dir: string, manifest: FixtureManifest): string => {
+	const absolute = path.join(root, dir);
+	fs.mkdirSync(absolute, { recursive: true });
+	fs.writeFileSync(
+		path.join(absolute, "package.json"),
+		JSON.stringify(manifest),
+	);
+	return absolute;
 };
 
-// `util.promisify` honours this symbol, which is how the real
-// `child_process.exec` resolves to `{ stdout, stderr }` rather than to stdout
-// alone. The mock has to provide it or the promisified call shape differs from
-// production.
-Object.defineProperty(fakeExec, promisify.custom, {
-	value: (command: string): Promise<ExecResult> =>
-		new Promise((resolve, reject) => {
-			fakeExec(command, (error, stdout, stderr) => {
-				if (error) {
-					reject(error);
-				} else {
-					resolve({ stdout, stderr });
-				}
-			});
-		}),
-});
+/** Install `name` at `dir/node_modules/name`, as npm's hoisted layout would. */
+const install = (dir: string, manifest: FixtureManifest): string =>
+	writeManifest(path.join(dir, "node_modules", manifest.name), manifest);
 
-vi.mock("node:child_process", () => ({ default: { exec: fakeExec } }));
+/** Link `name` into `dir/node_modules` from `target`, as pnpm does. */
+const link = (dir: string, name: string, target: string): void => {
+	const linkPath = path.join(root, dir, "node_modules", name);
+	fs.mkdirSync(path.dirname(linkPath), { recursive: true });
+	fs.symlinkSync(target, linkPath, "dir");
+};
 
-const { getDependencies } = await import("./dependencies.js");
+const useCwd = (dir: string): void => {
+	vi.spyOn(process, "cwd").mockReturnValue(path.join(root, dir));
+};
 
 beforeEach(() => {
-	commands = [];
-	responses = [];
+	root = fs.realpathSync(
+		fs.mkdtempSync(path.join(os.tmpdir(), "prosopo-get-deps-")),
+	);
 });
 
 afterEach(() => {
-	expect(responses).toEqual([]);
+	vi.restoreAllMocks();
+	fs.rmSync(root, { recursive: true, force: true });
 });
 
-const ok = (stdout: string, stderr = ""): ExecResult => ({ stdout, stderr });
-
-/** `util.promisify` reads stdout/stderr off the error for a failing exec. */
-const failing = (stdout: string, stderr = ""): Error => {
-	const error: ExecException & { stdout?: string; stderr?: string } =
-		Object.assign(new Error("npm ls exited 1"), { stdout, stderr });
-	return error;
-};
-
-const TREE = [
-	"@prosopo/root@1.0.0 /repo",
-	"├─┬ mongodb@6.3.0",
-	"│ └── bson@6.2.0",
-	"└── zod@3.22.4",
-].join("\n");
-
 describe("getDependencies", () => {
-	it("parses every package name out of the npm ls tree", async () => {
-		responses = [ok(TREE)];
+	it("walks the installed tree transitively", async () => {
+		writeManifest("app", {
+			name: "@prosopo/app",
+			dependencies: { mongodb: "6.3.0", zod: "3.22.4" },
+		});
+		install("app", { name: "mongodb", dependencies: { bson: "6.2.0" } });
+		install("app", { name: "bson" });
+		install("app", { name: "zod" });
+		useCwd("app");
+
 		const { dependencies } = await getDependencies();
-		expect(dependencies).toEqual(["mongodb", "bson", "zod"]);
+		expect(dependencies.sort()).toEqual([
+			"@prosopo/app",
+			"bson",
+			"mongodb",
+			"zod",
+		]);
 	});
 
-	it("does not treat the root package line as a dependency", async () => {
-		// The root line has no leading whitespace, which is what the regex keys
-		// off — a package must never externalise itself.
-		responses = [ok(TREE)];
+	it("follows pnpm's symlinked virtual store", async () => {
+		writeManifest("app", {
+			name: "@prosopo/app",
+			dependencies: { mongodb: "6.3.0" },
+		});
+		const store = "node_modules/.pnpm/mongodb@6.3.0/node_modules";
+		const mongodb = writeManifest(`${store}/mongodb`, {
+			name: "mongodb",
+			dependencies: { bson: "6.2.0" },
+		});
+		writeManifest(`${store}/bson`, { name: "bson" });
+		link("app", "mongodb", mongodb);
+		useCwd("app");
+
 		const { dependencies } = await getDependencies();
-		expect(dependencies).not.toContain("@prosopo/root");
+		expect(dependencies.sort()).toEqual(["@prosopo/app", "bson", "mongodb"]);
 	});
 
-	it("collects unmet optional peers separately", async () => {
-		responses = [
-			ok(
-				[
-					"│ ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1",
-					"│ ├── UNMET OPTIONAL DEPENDENCY utf-8-validate@^5.0.2",
-					"└── zod@3.22.4",
-				].join("\n"),
-			),
-		];
-		const { dependencies, optionalPeerDependencies } = await getDependencies();
-		expect(optionalPeerDependencies).toEqual(["bufferutil", "utf-8-validate"]);
-		expect(dependencies).toEqual(["zod"]);
+	it("includes the starting package's devDependencies unless production", async () => {
+		writeManifest("app", {
+			name: "@prosopo/app",
+			dependencies: { zod: "3.22.4" },
+			devDependencies: { vitest: "4.0.0" },
+		});
+		install("app", { name: "zod" });
+		install("app", { name: "vitest", devDependencies: { tsx: "4.0.0" } });
+		useCwd("app");
+
+		await expect(getDependencies(undefined, false)).resolves.toMatchObject({
+			dependencies: ["@prosopo/app", "zod", "vitest"],
+		});
+		await expect(getDependencies(undefined, true)).resolves.toMatchObject({
+			dependencies: ["@prosopo/app", "zod"],
+		});
 	});
 
-	it("deduplicates packages that appear all over the tree", async () => {
-		responses = [ok(["├── zod@3.22.4", "│ └── zod@3.22.4"].join("\n"))];
+	it("reports optional dependencies and peers that are not installed", async () => {
+		writeManifest("app", {
+			name: "@prosopo/app",
+			dependencies: { ws: "8.0.0" },
+			optionalDependencies: { fsevents: "2.0.0" },
+		});
+		install("app", {
+			name: "ws",
+			peerDependencies: { bufferutil: "^4.0.1", zod: "^3" },
+			peerDependenciesMeta: { bufferutil: { optional: true } },
+		});
+		install("app", { name: "zod" });
+		useCwd("app");
+
 		await expect(getDependencies()).resolves.toEqual({
-			dependencies: ["zod"],
+			dependencies: ["@prosopo/app", "ws", "zod"],
+			optionalPeerDependencies: ["fsevents", "bufferutil"],
+		});
+	});
+
+	it("lists a required dependency that is not installed", async () => {
+		writeManifest("app", {
+			name: "@prosopo/app",
+			dependencies: { missing: "1.0.0" },
+		});
+		useCwd("app");
+
+		await expect(getDependencies()).resolves.toEqual({
+			dependencies: ["@prosopo/app", "missing"],
 			optionalPeerDependencies: [],
 		});
 	});
 
-	it("returns empty lists for an empty tree", async () => {
-		responses = [ok("")];
-		await expect(getDependencies()).resolves.toEqual({
-			dependencies: [],
-			optionalPeerDependencies: [],
+	it("stops at a cycle", async () => {
+		writeManifest("app", { name: "@prosopo/app", dependencies: { a: "1" } });
+		install("app", { name: "a", dependencies: { b: "1" } });
+		install("app", { name: "b", dependencies: { a: "1" } });
+		useCwd("app");
+
+		const { dependencies } = await getDependencies();
+		expect(dependencies.sort()).toEqual(["@prosopo/app", "a", "b"]);
+	});
+
+	it("starts from the named package when it is the one in cwd", async () => {
+		writeManifest("packages/server", {
+			name: "@prosopo/server",
+			dependencies: { zod: "3.22.4" },
+		});
+		install("packages/server", { name: "zod" });
+		useCwd("packages/server");
+
+		await expect(getDependencies("server")).resolves.toMatchObject({
+			dependencies: ["@prosopo/server", "zod"],
 		});
 	});
 
-	it("omits dev dependencies when asked for a production tree", async () => {
-		responses = [ok(TREE)];
-		await getDependencies(undefined, true);
-		expect(commands[0]).toContain("--omit=dev");
-	});
-
-	it("keeps dev dependencies otherwise", async () => {
-		responses = [ok(TREE)];
-		await getDependencies(undefined, false);
-		expect(commands[0]).not.toContain("--omit=dev");
-	});
-
-	it("resolves the package directory first and runs npm ls inside it", async () => {
-		responses = [ok("/repo/packages/server\n"), ok(TREE)];
-		await getDependencies("@prosopo/server");
-		expect(commands[0]).toBe("npm list @prosopo/server -ap");
-		expect(commands[1]).toContain("cd /repo/packages/server &&");
-	});
-
-	it("prefixes a bare package name with the scope", async () => {
-		responses = [ok("/repo/packages/server\n"), ok(TREE)];
-		await getDependencies("server");
-		expect(commands[0]).toBe("npm list @prosopo/server -ap");
-	});
-
-	it("leaves an already-scoped name alone", async () => {
-		responses = [ok("/repo/packages/server\n"), ok(TREE)];
-		await getDependencies("@prosopo/server");
-		expect(commands[0]).toBe("npm list @prosopo/server -ap");
-	});
-
-	it("falls back to the working directory when npm prints no path", async () => {
-		responses = [ok("  \n"), ok(TREE)];
-		await getDependencies("@prosopo/server");
-		expect(commands[1]).toContain(`cd ${process.cwd()} &&`);
-	});
-
-	it("rejects when the package cannot be located", async () => {
-		responses = [ok("", "npm ERR! code E404")];
-		await expect(getDependencies("@prosopo/absent")).rejects.toThrow(
-			"CONFIG.INVALID_PACKAGE_DIR",
+	it("finds a named package among the workspace members", async () => {
+		fs.writeFileSync(
+			path.join(root, "pnpm-workspace.yaml"),
+			"packages:\n  - apps/*\n  - packages/*\n",
 		);
-	});
+		writeManifest("apps/app", { name: "@prosopo/app" });
+		writeManifest("packages/server", {
+			name: "@prosopo/server",
+			dependencies: { zod: "3.22.4" },
+		});
+		install("packages/server", { name: "zod" });
+		useCwd("apps/app");
 
-	it("tolerates npm warnings on stderr that are not errors", async () => {
-		responses = [
-			ok("/repo/packages/server\n", "npm warn deprecated"),
-			ok(TREE),
-		];
 		await expect(getDependencies("@prosopo/server")).resolves.toMatchObject({
-			dependencies: ["mongodb", "bson", "zod"],
+			dependencies: ["@prosopo/server", "zod"],
 		});
 	});
 
-	it("still parses the tree when npm ls exits non-zero", async () => {
-		// `npm ls` exits 1 for any unmet or extraneous dependency but still
-		// prints the whole tree, so the build must not be blocked by it.
-		responses = [failing(TREE)];
-		const { dependencies } = await getDependencies();
-		expect(dependencies).toEqual(["mongodb", "bson", "zod"]);
+	it("uses the outermost workspace when workspaces are nested", async () => {
+		fs.writeFileSync(
+			path.join(root, "pnpm-workspace.yaml"),
+			"packages:\n  - sub/packages/*\n  - packages/*\n",
+		);
+		fs.mkdirSync(path.join(root, "sub"), { recursive: true });
+		fs.writeFileSync(
+			path.join(root, "sub/pnpm-workspace.yaml"),
+			"packages:\n  - packages/*\n",
+		);
+		writeManifest("sub/packages/app", { name: "@prosopo/app" });
+		writeManifest("packages/server", {
+			name: "@prosopo/server",
+			dependencies: { zod: "3.22.4" },
+		});
+		install("packages/server", { name: "zod" });
+		useCwd("sub/packages/app");
+
+		await expect(getDependencies("@prosopo/server")).resolves.toMatchObject({
+			dependencies: ["@prosopo/server", "zod"],
+		});
 	});
 
-	it("rethrows when a failing npm ls produced no output at all", async () => {
-		const error: ExecException = new Error("npm not found");
-		responses = [error];
-		await expect(getDependencies()).rejects.toThrow("npm not found");
-	});
+	it("falls back to cwd for a name that is not a workspace package", async () => {
+		fs.writeFileSync(
+			path.join(root, "pnpm-workspace.yaml"),
+			"packages:\n  - packages/*\n",
+		);
+		writeManifest("packages/app", {
+			name: "@prosopo/app",
+			dependencies: { zod: "3.22.4" },
+		});
+		install("packages/app", { name: "zod" });
+		useCwd("packages/app");
 
-	it("reads stderr as well as stdout, since npm splits the tree across both", async () => {
-		responses = [ok("├── zod@3.22.4", "\n└── axios@1.6.0")];
-		const { dependencies } = await getDependencies();
-		expect(dependencies).toEqual(["zod", "axios"]);
+		await expect(getDependencies("worker")).resolves.toMatchObject({
+			dependencies: ["@prosopo/app", "zod"],
+		});
 	});
 });
 
@@ -219,11 +241,16 @@ const { default: ViteBackendConfig } = await import(
 	"./vite/vite.backend.config.js"
 );
 
-/** Every backend config starts with the same two npm ls calls. */
-const npmLsResponses = (): (ExecResult | Error)[] => [
-	ok("/repo/packages/server\n"),
-	ok(TREE),
-];
+/** A server package whose installed tree the backend config walks. */
+const serverFixture = (): void => {
+	writeManifest("packages/server", {
+		name: "@prosopo/server",
+		dependencies: { mongodb: "6.3.0", zod: "3.22.4" },
+	});
+	install("packages/server", { name: "mongodb" });
+	install("packages/server", { name: "zod" });
+	useCwd("packages/server");
+};
 
 const externalsOf = (config: UserConfig): string[] => {
 	const external = config.build?.rollupOptions?.external;
@@ -252,7 +279,7 @@ describe("ViteBackendConfig", () => {
 		mode?: string,
 		outputDir?: string,
 	): Promise<UserConfig> => {
-		responses = npmLsResponses();
+		serverFixture();
 		return ViteBackendConfig(
 			"@prosopo/server",
 			"1.2.3",
@@ -337,7 +364,7 @@ describe("ViteBackendConfig", () => {
 	});
 
 	it("resolves a list of entries", async () => {
-		responses = npmLsResponses();
+		serverFixture();
 		const config = await ViteBackendConfig(
 			"@prosopo/server",
 			"1.2.3",
@@ -354,7 +381,7 @@ describe("ViteBackendConfig", () => {
 	});
 
 	it("resolves a named entry map", async () => {
-		responses = npmLsResponses();
+		serverFixture();
 		const config = await ViteBackendConfig(
 			"@prosopo/server",
 			"1.2.3",

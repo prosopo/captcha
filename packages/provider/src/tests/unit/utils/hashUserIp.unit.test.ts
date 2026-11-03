@@ -120,4 +120,21 @@ describe("hashUserIp", () => {
 		expect(result).toBe(result2);
 		expect(result).toHaveLength(64);
 	});
+
+	it("keeps the first widget slot on the original hash", () => {
+		expect(hashUserIp("user", "1.2.3.4", "site", 0)).toBe(
+			hashUserIp("user", "1.2.3.4", "site"),
+		);
+	});
+
+	it("gives each later widget slot its own hash", () => {
+		const slots: number[] = [0, 1, 2, 15];
+		const hashes = new Set<string>(
+			slots.map((slot: number) => hashUserIp("user", "1.2.3.4", "site", slot)),
+		);
+		expect(hashes.size).toBe(slots.length);
+		expect(hashUserIp("user", "1.2.3.4", "site", 1)).toBe(
+			hashUserIp("user", "1.2.3.4", "site", 1),
+		);
+	});
 });

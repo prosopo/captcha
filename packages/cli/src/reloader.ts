@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import fs from "node:fs";
+import fs, { type FSWatcher } from "node:fs";
 import type { Server } from "node:net";
 import { loadEnv } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
@@ -23,8 +23,7 @@ import { start } from "./start.js";
 const log = getLogger(LogLevel.enum.info, "cli");
 
 export default class ReloadingAPI {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	private _envWatcher: any;
+	private _envWatcher: FSWatcher | undefined;
 	private _envPath: string;
 	private _config: ProsopoConfigOutput;
 	private _pair: KeyringPair;

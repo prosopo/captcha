@@ -100,3 +100,62 @@ export const samplePuzzleDifficulty = (
 		},
 	};
 };
+
+/**
+ * Share of the background the decoys may cover before the puzzle stops being
+ * readable, as `decoyCount * pieceSize^2 / (width * height)`. Above 1.0 the
+ * decoys more than cover the image and start piling on top of each other.
+ *
+ * The ladder draws `decoyCount` and `pieceScale` from a band independently —
+ * one in `samplePuzzleDifficulty`, the other in the renderer's own piece-size
+ * draw — so nothing ties how many decoys there are to how big they are. Ten
+ * decoys against a 126px piece is a different puzzle from ten against a 42px
+ * one, and a level is not monotonic in what the user actually sees: at the
+ * table's current bands a level-0 render can be crowded 7x harder than a
+ * level-3 one.
+ *
+ * The ceiling is the top of the mid-band, so a render drawn near the middle of
+ * any level is untouched and only the crowded corner is trimmed.
+ */
+export const MAX_DECOY_COVERAGE = 1.2;
+
+/**
+ * The same ceiling for a touch device, which needs to be lower rather than
+ * equal.
+ *
+ * `easePieceScaleForTouch` raises the piece-scale floor to
+ * `TOUCH_MIN_PIECE_SCALE` so a finger does not hide the piece, but it leaves
+ * `decoyCount` alone. Bigger decoys in the same number is strictly more
+ * crowding, so easing for touch currently makes the readability problem worse:
+ * at level 4 the *minimum* coverage on touch is 1.56, meaning every render is
+ * a pile. A phone also shows the same 300x200 background on a far smaller
+ * screen, so the same coverage reads as busier.
+ */
+export const MAX_DECOY_COVERAGE_TOUCH = 0.85;
+
+/** Never trim below the lowest count any band asks for. */
+export const MIN_DECOY_COUNT = 4;
+
+/**
+ * Trim `decoyCount` so the decoys cannot cover more of the background than the
+ * ceiling allows at the piece size actually drawn.
+ *
+ * Only ever reduces: a render already inside the ceiling is returned
+ * unchanged, so this cannot make a puzzle harder than the ladder intended.
+ */
+export const capDecoyCountForCoverage = (
+	decoyCount: number,
+	pieceSizePx: number,
+	backgroundWidth: number,
+	backgroundHeight: number,
+	maxCoverage: number,
+): number => {
+	const backgroundArea = backgroundWidth * backgroundHeight;
+	if (pieceSizePx <= 0 || backgroundArea <= 0) return decoyCount;
+
+	const perDecoyCoverage = (pieceSizePx * pieceSizePx) / backgroundArea;
+	if (perDecoyCoverage <= 0) return decoyCount;
+
+	const allowed = Math.floor(maxCoverage / perDecoyCoverage);
+	return Math.max(MIN_DECOY_COUNT, Math.min(decoyCount, allowed));
+};

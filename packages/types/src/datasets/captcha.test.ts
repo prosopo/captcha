@@ -20,6 +20,7 @@ import {
 	CaptchaStates,
 	CaptchasSchema,
 	DataSchema,
+	InputMethod,
 	LabelledDataSchema,
 	POW_SEPARATOR,
 	PowChallengeIdSchema,
@@ -68,18 +69,19 @@ describe("PowChallengeIdSchema", () => {
 		expect(PowChallengeIdSchema.safeParse("").success).toBe(false);
 	});
 
-	it("does not check that the timestamp is numeric", () => {
-		// the parseInt result is discarded and parseInt never throws, so the
-		// validator only counts segments
-		expect(
-			PowChallengeIdSchema.safeParse(challenge(["notanumber", "u", "d", "0"]))
-				.success,
-		).toBe(true);
-	});
+	it.each(["notanumber", "12abc", "-1", "1.5", ""])(
+		"rejects a non-integer timestamp %s",
+		(timestamp) => {
+			expect(
+				PowChallengeIdSchema.safeParse(challenge([timestamp, "u", "d", "0"]))
+					.success,
+			).toBe(false);
+		},
+	);
 
-	it("accepts empty segments", () => {
+	it("accepts empty segments after the timestamp", () => {
 		expect(
-			PowChallengeIdSchema.safeParse(challenge(["", "", "", ""])).success,
+			PowChallengeIdSchema.safeParse(challenge(["1", "", "", ""])).success,
 		).toBe(true);
 	});
 
@@ -226,6 +228,28 @@ describe("CaptchaSolutionSchema", () => {
 		expect(
 			CaptchaSolutionSchema.safeParse({ ...solution, salt: "" }).success,
 		).toBe(true);
+	});
+
+	it("accepts how each selection was made", () => {
+		const declared = {
+			...solution,
+			inputMethods: [InputMethod.keyboard, InputMethod.pointer],
+		};
+		expect(CaptchaSolutionSchema.parse(declared).inputMethods).toEqual([
+			InputMethod.keyboard,
+			InputMethod.pointer,
+		]);
+	});
+
+	it("rejects an input method it does not know", () => {
+		expect(
+			CaptchaSolutionSchema.safeParse({ ...solution, inputMethods: ["voice"] })
+				.success,
+		).toBe(false);
+	});
+
+	it("leaves the input methods out when the widget does not send them", () => {
+		expect(CaptchaSolutionSchema.parse(solution).inputMethods).toBeUndefined();
 	});
 
 	it("validates an array of solutions, including an empty one", () => {

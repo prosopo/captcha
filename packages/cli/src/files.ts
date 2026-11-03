@@ -13,21 +13,35 @@ import { Readable } from "node:stream";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoCliError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
+import { stringifyJson } from "@prosopo/util";
 
 export function loadJSONFile(filePath: string) {
 	try {
 		return JSON.parse(fs.readFileSync(filePath, "utf8"));
 	} catch (error) {
-		throw new ProsopoCliError("GENERAL.JSON_LOAD_FAILED", {
-			context: { error, filePath },
+		throw new ProsopoError({
+			code: "FILE_ERROR",
+			errorSite: "CLI-3",
+			message: "Failed to load JSON file",
+			cause: error,
+			context: { filePath },
 		});
 	}
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-export function writeJSONFile(filePath: string, jsonData: Record<string, any>) {
+export function writeJSONFile(
+	filePath: string,
+	jsonData: Record<string, unknown>,
+) {
 	return new Promise((resolve, reject) => {
+		// Bigints are written as decimal strings rather than throwing; a cycle
+		// rejects before the file is created or truncated.
+		const json = stringifyJson(jsonData);
+		if (!json.ok) {
+			reject(json.error);
+			return;
+		}
 		const writeStream: WriteStream = createWriteStream(filePath);
 
 		writeStream.setDefaultEncoding("utf-8");
@@ -41,7 +55,7 @@ export function writeJSONFile(filePath: string, jsonData: Record<string, any>) {
 		});
 
 		// https://stackoverflow.com/questions/64585940/writestream-nodejs-out-memory
-		const readable = Readable.from(JSON.stringify(jsonData));
+		const readable = Readable.from(json.value);
 
 		readable.pipe(writeStream);
 	});

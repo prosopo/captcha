@@ -13,21 +13,35 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
+import {
+	FINGERPRINT_DISCLOSURE_KEYS,
+	encodeFingerprintProof,
+	getFingerprintProof,
+} from "@prosopo/fingerprint";
 import {
 	ExtensionLoader,
+	PAGE_BEHAVIOUR_LIMITS,
+	getPageBehaviour,
 	getProcaptchaRandomActiveProvider,
+	mergeBehaviourPoints,
 	pickIpMode,
+	resolveClientSessionId,
+	stopPageBehaviourCapture,
+	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
+	GetFrictionlessCaptchaResponse,
 	ProcaptchaClientConfigOutput,
 	ProviderSelectRetryContext,
+	RefreshSwitchTarget,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { readBypassKeyCookie } from "./bypassKeyCookie.js";
 import {
 	DetectorLoaderFromScript,
+	type DetectorOptions,
 	type DetectorType,
 } from "./detectorLoader.js";
 import {
@@ -113,6 +127,30 @@ const getCurrentPageUrls = (): PageUrls => {
 	return { currentUrl: local, iframeUrl: local };
 };
 
+// Fire-and-forget DNS observation beacons. Failures swallowed — observation
+// must never break the captcha flow.
+export const sendDnsBeacons = ({
+	dns_url,
+	dns_asset_url,
+}: Pick<GetFrictionlessCaptchaResponse, "dns_url" | "dns_asset_url">): void => {
+	try {
+		if (dns_url) {
+			void fetch(dns_url, {
+				method: "GET",
+				mode: "no-cors",
+				credentials: "omit",
+				keepalive: true,
+				cache: "no-store",
+			}).catch(() => undefined);
+		}
+		if (dns_asset_url && typeof Image === "function") {
+			new Image().src = dns_asset_url;
+		}
+	} catch {
+		/* swallow */
+	}
+};
+
 export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
@@ -120,7 +158,13 @@ export const withTimeout = async <T>(
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
 		timeoutId = setTimeout(() => {
-			reject(new ProsopoEnvError("API.UNKNOWN"));
+			reject(
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "FRIC-1",
+					message: "Unknown API error",
+				}),
+			);
 		}, ms);
 	});
 
@@ -138,14 +182,54 @@ export const withTimeout = async <T>(
 	}
 };
 
+// Sent with the frictionless request so the provider can record the device
+// bucket for every session, whichever captcha type it is then served.
+// Best-effort and capped: a proof that is slow or fails to build is left off
+// rather than delaying the captcha.
+const FINGERPRINT_PROOF_TIMEOUT_MS = 1000;
+
+const fingerprintProofIfReady = async (): Promise<string | undefined> => {
+	try {
+		const proof = await withTimeout(
+			getFingerprintProof(FINGERPRINT_DISCLOSURE_KEYS),
+			FINGERPRINT_PROOF_TIMEOUT_MS,
+		);
+		return encodeFingerprintProof(proof);
+	} catch {
+		return undefined;
+	}
+};
+
+type BehaviourCollector<T> = {
+	start: () => void;
+	stop: () => void;
+	getData: () => T[];
+	clear: () => void;
+};
+
+const withPageBehaviour = <
+	T extends { x: number; y: number; timestamp: number; eventType?: string },
+>(
+	collector: BehaviourCollector<T> | undefined,
+	early: readonly T[],
+	limit: number,
+): BehaviourCollector<T> | undefined =>
+	collector && {
+		...collector,
+		getData: () => mergeBehaviourPoints(early, collector.getData(), limit),
+	};
+
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
+	refreshOf?: string,
+	switchTo?: RefreshSwitchTarget,
+	widgetSlot?: number,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
-		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
 	}
 
 	const ipMode = pickIpMode(config);
@@ -175,8 +259,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// same stack. Resolved up front — before detection rather than alongside it —
 	// because the detector bundle is served BY this provider.
 	// The bundle entry starts provider resolution + assign as soon as it has read
-	// the site key off the DOM, which is well before React has mounted this
-	// widget. Claim that in-flight work if it exists rather than repeating it.
+	// the site key off the DOM, which is well before this widget has mounted.
+	// Claim that in-flight work if it exists rather than repeating it.
 	// Only valid on a first attempt: a retry is retrying *because* the pinned
 	// pronode failed, so it must re-resolve.
 	const isFirstAttempt = !retryContext || retryContext.attempt <= 1;
@@ -211,6 +295,8 @@ const customDetectBot: BotDetectionFunction = async (
 	const providerApi = new ProviderApi(
 		provider.provider.url,
 		config.account.address,
+		undefined,
+		widgetRequestHeaders(config.language, config.integration),
 	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY
@@ -220,6 +306,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// timeout) we have NO detector to run and there is no bundled fallback.
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
+	let detectorOptions: DetectorOptions | undefined;
 	try {
 		// Reuse the prefetched assignment when the entry already fetched one for
 		// this provider; otherwise issue it now.
@@ -235,6 +322,10 @@ const customDetectBot: BotDetectionFunction = async (
 			// we are already holding.
 			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
+			detectorOptions = {
+				clientUrl: assigned.clientUrl,
+				assetOrigin: assigned.assetOrigin,
+			};
 		}
 	} catch (err) {
 		// No detector available — fall through to the PoW request below.
@@ -256,6 +347,12 @@ const customDetectBot: BotDetectionFunction = async (
 	const ExtClass = await extClassPromise;
 	const ext = new ExtClass();
 
+	// Sent on this hop as well as on solution submit, so a session that is
+	// allowed frictionlessly — or abandoned before a solve — still correlates
+	// back to the site's (or Protect's) session. Undefined when Protect has not
+	// finished initialising yet; the solve-time read then supplies it.
+	const clientSessionId = resolveClientSessionId(config.clientSessionId);
+
 	// No provider detector ⇒ no detection is possible, so there is nothing to
 	// send. The request goes out with an empty token and the provider decides
 	// what to serve; the client gets no say in that.
@@ -263,6 +360,7 @@ const customDetectBot: BotDetectionFunction = async (
 		const userAccount = await ext.getAccount(config);
 		const { currentUrl: fallbackUrl, iframeUrl: fallbackIframeUrl } =
 			getCurrentPageUrls();
+		const fallbackFingerprintProof = await fingerprintProofIfReady();
 		const captcha = await withTimeout(
 			providerApi.getFrictionlessCaptcha(
 				undefined,
@@ -274,23 +372,16 @@ const customDetectBot: BotDetectionFunction = async (
 				undefined,
 				fallbackUrl,
 				fallbackIframeUrl,
+				clientSessionId,
+				refreshOf,
+				switchTo,
+				fallbackFingerprintProof,
+				widgetSlot,
 				readBypassKeyCookie(),
 			),
 			10000,
 		);
-		if (captcha.dns_url) {
-			try {
-				void fetch(captcha.dns_url, {
-					method: "GET",
-					mode: "no-cors",
-					credentials: "omit",
-					keepalive: true,
-					cache: "no-store",
-				}).catch(() => undefined);
-			} catch {
-				/* swallow */
-			}
-		}
+		sendDnsBeacons(captcha);
 		return {
 			captchaType: captcha.captchaType,
 			sessionId: captcha.sessionId,
@@ -300,16 +391,24 @@ const customDetectBot: BotDetectionFunction = async (
 			error: captcha.error,
 			hp: captcha.hp,
 			agent: captcha.agent,
+			audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		};
 	}
 
 	const detect: DetectorType = providerDetect;
 
-	const detectionResult = await detect(container, restartFn, () =>
-		ext.getAccount(config),
+	const detectionResult = await detect(
+		container,
+		restartFn,
+		() => ext.getAccount(config),
+		detectorOptions,
 	);
 
 	const userAccount = detectionResult.userAccount;
+	// The detector's trackers are running now, so the page-level capture has
+	// done its job; what it recorded is merged into every solve below.
+	stopPageBehaviourCapture();
+	const pageBehaviour = getPageBehaviour();
 
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
@@ -318,6 +417,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// burns. Readings still attach on the challenge GET and on solution
 	// submit (first-hop-wins server-side).
 	const { currentUrl, iframeUrl } = getCurrentPageUrls();
+	const fingerprintProof = await fingerprintProofIfReady();
 	const captchaPromise = providerApi.getFrictionlessCaptcha(
 		detectionResult.token,
 		detectionResult.encryptHeadHash,
@@ -328,6 +428,11 @@ const customDetectBot: BotDetectionFunction = async (
 		detectorSessionId,
 		currentUrl,
 		iframeUrl,
+		clientSessionId,
+		refreshOf,
+		switchTo,
+		fingerprintProof,
+		widgetSlot,
 		readBypassKeyCookie(),
 	);
 	if (detectionResult.getSimdReadings) {
@@ -337,21 +442,7 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 	const captcha = await withTimeout(captchaPromise, 10000);
 
-	// Fire-and-forget DNS observation beacon. Failures swallowed —
-	// observation must never break the captcha flow.
-	if (captcha.dns_url) {
-		try {
-			void fetch(captcha.dns_url, {
-				method: "GET",
-				mode: "no-cors",
-				credentials: "omit",
-				keepalive: true,
-				cache: "no-store",
-			}).catch(() => undefined);
-		} catch {
-			/* swallow */
-		}
-	}
+	sendDnsBeacons(captcha);
 
 	return {
 		captchaType: captcha.captchaType,
@@ -362,10 +453,28 @@ const customDetectBot: BotDetectionFunction = async (
 		error: captcha.error,
 		hp: captcha.hp,
 		agent: captcha.agent,
+		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		// Map specific trackers to generic behavioral collectors
-		behaviorCollector1: detectionResult.mouseTracker,
-		behaviorCollector2: detectionResult.touchTracker,
-		behaviorCollector3: detectionResult.clickTracker,
+		behaviorCollector1: withPageBehaviour(
+			detectionResult.mouseTracker,
+			pageBehaviour?.mouse ?? [],
+			PAGE_BEHAVIOUR_LIMITS.mouse,
+		),
+		behaviorCollector2: withPageBehaviour(
+			detectionResult.touchTracker,
+			pageBehaviour?.touch ?? [],
+			PAGE_BEHAVIOUR_LIMITS.touch,
+		),
+		behaviorCollector3: withPageBehaviour(
+			detectionResult.clickTracker,
+			pageBehaviour?.press ?? [],
+			PAGE_BEHAVIOUR_LIMITS.press,
+		),
+		behaviorCollector4: withPageBehaviour(
+			detectionResult.scrollTracker,
+			pageBehaviour?.scroll ?? [],
+			PAGE_BEHAVIOUR_LIMITS.scroll,
+		),
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,

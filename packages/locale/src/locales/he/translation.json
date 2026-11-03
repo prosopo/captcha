@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "קידוד הכתובת הלא תקינה נכשל",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "אין התחייבות לפתרון captcha",
+		"SIGNER_UNDEFINED": "החותם לא הוגדר",
+		"CANNOT_FIND_KEYPAIR": "זוג המפתחות לא נמצא",
+		"INVALID_DATA_FORMAT": "פורמט נתונים לא תקין"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "התבקשה סביבה לא ידועה",
+		"INVALID_CAPTCHA_NUMBER": "הגדירו כראוי את הגדרות ה-captcha",
+		"INVALID_LOG_LEVEL": "רמת יומן לא תקינה",
+		"INVALID_PACKAGE_DIR": "תיקיית חבילה לא תקינה"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "שגיאה בניתוח מאגר הנתונים",
+		"SOLUTION_PARSE_ERROR": "שגיאה בעיבוד מאגר הנתונים",
+		"HASH_ERROR": "שגיאה בגיבוב מאגר הנתונים",
+		"DATASET_ID_UNDEFINED": "מזהה מאגר הנתונים לא הוגדר",
+		"NOT_ENOUGH_LABELS": "אין מספיק תוויות",
+		"NOT_ENOUGH_IMAGES": "אין מספיק תמונות",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "מספר ה-captcha במאגר הנתונים קטן מהמספר שהוגדר",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "מספר הפתרונות במאגר הנתונים קטן מהמספר שהוגדר",
+		"DUPLICATE_IMAGE": "זוהתה תמונה כפולה",
+		"MERKLE_ERROR": "שגיאה בבניית עץ מרקל"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ייבוא מנוע מסד הנתונים נכשל",
+		"DATABASE_UNDEFINED": "לקוח מסד הנתונים אינו מחובר",
+		"DATABASE_HOST_UNDEFINED": "כתובת המארח של מסד הנתונים לא הוגדרה",
+		"DATASET_LOAD_FAILED": "טעינת מאגר הנתונים נכשלה",
+		"DATASET_GET_FAILED": "קבלת מאגר הנתונים נכשלה",
+		"CAPTCHA_GET_FAILED": "קבלת ה-captcha נכשלה",
+		"CAPTCHA_UPDATE_FAILED": "עדכון ה-captcha נכשל",
+		"IMAGE_GET_FAILED": "קבלת התמונה נכשלה",
+		"PENDING_RECORD_NOT_FOUND": "לא נמצאה רשומה ממתינה",
+		"INVALID_HASH": "גיבוב לא תקין",
+		"SOLUTION_GET_FAILED": "קבלת הפתרון נכשלה",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "לא נמצאו מאגרי נתונים עם מספר הפתרונות הנדרש",
+		"SOLUTION_APPROVE_FAILED": "אישור הפתרון נכשל",
+		"SOLUTION_FLAG_FAILED": "סימון הפתרון כמעובד נכשל",
+		"TABLES_UNDEFINED": "הטבלאות לא הוגדרו",
+		"CONNECTION_UNDEFINED": "החיבור לא הוגדר",
+		"COMMITMENT_FLAG_FAILED": "סימון ההתחייבות כמעובדת נכשל",
+		"UNKNOWN": "שגיאת מסד נתונים לא ידועה",
+		"QUERY_ERROR": "שאילתת מסד הנתונים נכשלה",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "חיבור Redis לכללי הגישה לא הוגדר",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "מאגר כללי הגישה של המשתמשים לא הוגדר",
+		"SESSION_STORE_FAILED": "שמירת הסשן נכשלה",
+		"SESSION_CHECK_REMOVE_FAILED": "בדיקת הסשן ומחיקתו נכשלו",
+		"SESSION_GET_FAILED": "קבלת הסשן נכשלה"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "לא ניתן לשנות את משתמש הבעלים",
+		"CANNOT_DELETE_OWN_USER": "לא ניתן למחוק את החשבון שלכם",
+		"CANNOT_DELETE_LAST_USER": "לא ניתן למחוק את המשתמש האחרון",
+		"USER_ALREADY_EXISTS": "המשתמש כבר קיים",
+		"NO_SUGGESTIONS_FOUND": "לא נמצאו הצעות",
+		"CANNOT_DEACTIVATE_LAST_SITE": "לא ניתן להשבית את האתר הפעיל האחרון",
+		"DUPLICATE_SITE_NAME": "כבר קיים אתר בשם הזה",
+		"INVALID_SITE_NAME": "שם האתר יכול להכיל רק אותיות, ספרות, מקפים וקווים תחתונים"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "פרמטר לא תקין"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "הקובץ לא נמצא",
+		"FILE_ALREADY_EXISTS": "הקובץ כבר קיים",
+		"INVALID_DIR_FORMAT": "פורמט תיקייה לא תקין"
+	}
+}

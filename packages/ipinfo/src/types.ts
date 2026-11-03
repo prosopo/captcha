@@ -14,6 +14,7 @@
 
 import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse } from "@prosopo/types";
+import type { LookupCacheConfig } from "./lookupCache.js";
 
 export interface IIpInfoService {
 	initialize(): Promise<void>;
@@ -33,4 +34,5 @@ export interface IpInfoServiceConfig {
 	ipapiUrl?: string;
 	ipapiKey?: string;
 	logger?: Logger;
+	lookupCache?: LookupCacheConfig;
 }

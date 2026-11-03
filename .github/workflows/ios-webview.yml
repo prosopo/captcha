@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   build:
+    name: ios-webview
     if: ${{ github.event.action != 'converted_to_draft' }}
     # Hosted, deliberately: this repository is public, so a fork PR running on
     # the self-hosted macOS runner would execute arbitrary code on it.

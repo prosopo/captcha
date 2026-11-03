@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Неуспешно кодиране на невалиден адрес",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Ангажиментът за решението на captcha не съществува",
+		"SIGNER_UNDEFINED": "Подписващият не е зададен",
+		"CANNOT_FIND_KEYPAIR": "Не може да се намери двойката ключове",
+		"INVALID_DATA_FORMAT": "Невалиден формат на данните"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Заявена е неизвестна среда",
+		"INVALID_CAPTCHA_NUMBER": "Конфигурирайте правилно настройките на captcha",
+		"INVALID_LOG_LEVEL": "Невалидно ниво на журналиране",
+		"INVALID_PACKAGE_DIR": "Невалидна директория на пакета"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Грешка при анализиране на набора от данни",
+		"SOLUTION_PARSE_ERROR": "Грешка при анализиране на набора от данни",
+		"HASH_ERROR": "Грешка при хеширане на набора от данни",
+		"DATASET_ID_UNDEFINED": "Идентификаторът на набора от данни не е зададен",
+		"NOT_ENOUGH_LABELS": "Няма достатъчно етикети",
+		"NOT_ENOUGH_IMAGES": "Няма достатъчно изображения",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Броят на captcha в набора от данни е по-малък от конфигурирания брой captcha",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Броят на решенията в набора от данни е по-малък от конфигурирания брой решения",
+		"DUPLICATE_IMAGE": "открито е дублирано изображение",
+		"MERKLE_ERROR": "Грешка при създаване на дървото на Меркъл"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Неуспешно импортиране на машината на базата данни",
+		"DATABASE_UNDEFINED": "Клиентът на базата данни не е свързан",
+		"DATABASE_HOST_UNDEFINED": "Адресът на хоста на базата данни не е зададен",
+		"DATASET_LOAD_FAILED": "Неуспешно зареждане на набора от данни",
+		"DATASET_GET_FAILED": "Неуспешно получаване на набора от данни",
+		"CAPTCHA_GET_FAILED": "Неуспешно получаване на captcha",
+		"CAPTCHA_UPDATE_FAILED": "Неуспешно обновяване на captcha",
+		"IMAGE_GET_FAILED": "Неуспешно получаване на изображението",
+		"PENDING_RECORD_NOT_FOUND": "Не е намерен чакащ запис",
+		"INVALID_HASH": "Невалиден хеш",
+		"SOLUTION_GET_FAILED": "Неуспешно получаване на решението",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Не са намерени набори от данни с нужния брой решения",
+		"SOLUTION_APPROVE_FAILED": "Неуспешно одобряване на решението",
+		"SOLUTION_FLAG_FAILED": "Неуспешно отбелязване на решението като обработено",
+		"TABLES_UNDEFINED": "Таблиците не са зададени",
+		"CONNECTION_UNDEFINED": "Връзката не е зададена",
+		"COMMITMENT_FLAG_FAILED": "Неуспешно отбелязване на ангажимента като обработен",
+		"UNKNOWN": "Неизвестна грешка в базата данни",
+		"QUERY_ERROR": "Неуспешна заявка към базата данни",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Връзката с Redis за правилата за достъп не е зададена",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Хранилището за правилата за достъп на потребителите не е зададено",
+		"SESSION_STORE_FAILED": "Неуспешно запазване на сесията",
+		"SESSION_CHECK_REMOVE_FAILED": "Неуспешна проверка и премахване на сесията",
+		"SESSION_GET_FAILED": "Неуспешно получаване на сесията"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Потребителят собственик не може да бъде променян",
+		"CANNOT_DELETE_OWN_USER": "Не можете да изтриете собствения си акаунт",
+		"CANNOT_DELETE_LAST_USER": "Последният потребител не може да бъде изтрит",
+		"USER_ALREADY_EXISTS": "Потребителят вече съществува",
+		"NO_SUGGESTIONS_FOUND": "Не са намерени предложения",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Последният активен сайт не може да бъде деактивиран",
+		"DUPLICATE_SITE_NAME": "Вече съществува сайт с това име",
+		"INVALID_SITE_NAME": "Името на сайта може да съдържа само букви, цифри, тирета и долни черти"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Невалиден параметър"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Файлът не е намерен",
+		"FILE_ALREADY_EXISTS": "Файлът вече съществува",
+		"INVALID_DIR_FORMAT": "Невалиден формат на директорията"
+	}
+}

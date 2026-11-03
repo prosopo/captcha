@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	MAX_STALE_PAYLOAD_LEVEL,
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -22,10 +26,13 @@ import {
 	DEFAULT_MAX_TIMESTAMP_AGE,
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
+	type IFrictionlessTypes,
 	type IPInfoResponse,
 	type ImageRoundsBounds,
 	type KeyringPair,
 	NO_MEASUREMENT_REASONS,
+	OPEN_DETECTOR_FORMAT,
+	type OpenDetectorFormat,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
@@ -39,17 +46,27 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
-import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
+import { dnsBeaconUrls } from "../../api/dnsEventUrl.js";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
+import { offersAudioAlternative } from "../audioAlternative.js";
 import { CaptchaManager } from "../captchaManager.js";
-import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
+import {
+	coerceToEnabledCaptchaType,
+	switchTypeAfterRefreshes,
+	switchTypeOnUserRequest,
+} from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
-import { getBotScore } from "../detection/getBotScore.js";
+import {
+	type DecodedDetectorPayload,
+	getBotScore,
+} from "../detection/getBotScore.js";
+import { decodeOpenPayload } from "../detection/openPayload.js";
 import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
 import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
@@ -92,6 +109,10 @@ export class FrictionlessManager extends CaptchaManager {
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
+	private audioAlternativeEnabled = false;
+	private allowedCaptchaTypes?: IFrictionlessTypes;
+	private imageSwitchRequested = false;
+	private refreshLimitSwitchEnabled = true;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -118,6 +139,35 @@ export class FrictionlessManager extends CaptchaManager {
 	 */
 	setRoutingContext(ctx: RoutingContext): void {
 		this.routingContext = ctx;
+	}
+
+	/** Separate from `setSessionParams`, which the short-circuit path bypasses. */
+	setAudioAlternativeEnabled(enabled: boolean): void {
+		this.audioAlternativeEnabled = enabled;
+	}
+
+	/**
+	 * The types this site may be served, from `resolveAllowedCaptchaTypes`.
+	 * Set before any path can mint a session, including the short-circuits
+	 * that skip routing, so the site's feature flags hold on every path.
+	 * Unset means the default flags and preferences.
+	 */
+	setAllowedCaptchaTypes(allowed: IFrictionlessTypes): void {
+		this.allowedCaptchaTypes = allowed;
+	}
+
+	/**
+	 * Record that the user chose an image challenge over their puzzle. Only
+	 * call this once `isUserImageChoiceActive` has checked the request against
+	 * the refresh chain and the site's switch.
+	 */
+	setImageSwitchRequested(requested: boolean): void {
+		this.imageSwitchRequested = requested;
+	}
+
+	/** Whether the refresh limit may turn a puzzle into an image challenge. */
+	setRefreshLimitSwitchEnabled(enabled: boolean): void {
+		this.refreshLimitSwitchEnabled = enabled;
 	}
 
 	/**
@@ -159,33 +209,15 @@ export class FrictionlessManager extends CaptchaManager {
 			headers: params.headers,
 			mode: params.mode,
 			simdReadings: params.simdReadings,
-			entropyMathRandomFingerprint: params.entropyMathRandomFingerprint,
-			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
-			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
-			sw: params.sw,
-			md: params.md,
-			bn: params.bn,
-			fs: params.fs,
-			entropyMathRandomFirst: params.entropyMathRandomFirst,
-			g: params.g,
-			i: params.i,
-			cv: params.cv,
-			sq: params.sq,
-			cg: params.cg,
-			sm: params.sm,
-			dz: params.dz,
-			b: params.b,
+			clientMetaData: params.clientMetaData,
+			d: params.d,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
-			synNs: params.synNs,
-			synackNs: params.synackNs,
-			ackNs: params.ackNs,
-			observedTtl: params.observedTtl,
-			tcpMss: params.tcpMss,
-			tcpWscale: params.tcpWscale,
-			tcpOptsFlags: params.tcpOptsFlags,
-			tcpOptsOrder: params.tcpOptsOrder,
-			tcpWindow: params.tcpWindow,
+			...rawTlsSignalsFromRecord(params),
+			refreshOf: params.refreshOf,
+			refreshCount: params.refreshCount,
+			refreshedAfterMs: params.refreshedAfterMs,
+			fingerprintSummary: params.fingerprintSummary,
 		};
 	}
 
@@ -234,40 +266,24 @@ export class FrictionlessManager extends CaptchaManager {
 			bundleId,
 			currentUrl,
 			iframeUrl,
-			entropyMathRandomFingerprint,
-			entropyCryptoFingerprint,
-			entropyWallClockOffsetMs,
-			entropyMathRandomFirst,
-			g,
-			i,
-			cv,
-			sq,
-			cg,
-			sm,
-			dz,
-			b,
-			sw,
-			md,
-			bn,
-			fs,
+			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
-			synNs,
-			synackNs,
-			ackNs,
-			observedTtl,
-			tcpMss,
-			tcpWscale,
-			tcpOptsFlags,
-			tcpOptsOrder,
-			tcpWindow,
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
+			puzzleLevel,
+			iconOrderTolerance,
+			iconOrder,
 			isEscalation,
 			originSessionId,
+			refreshOf,
+			refreshCount,
+			refreshedAfterMs,
 			isProtect,
 			matchedRule,
+			clientMetaData,
+			fingerprintSummary,
 			webView = false,
 			iFrame = false,
 			decryptedHeadHash = "",
@@ -287,11 +303,17 @@ export class FrictionlessManager extends CaptchaManager {
 			powDifficulty,
 			...(puzzleTolerance !== undefined && { puzzleTolerance }),
 			...(puzzle && { puzzle }),
+			...(puzzleLevel !== undefined && { puzzleLevel }),
+			...(iconOrderTolerance !== undefined && { iconOrderTolerance }),
+			...(iconOrder && { iconOrder }),
 			userSitekeyIpHash,
 			webView,
 			iFrame,
 			...(isEscalation && { isEscalation: true }),
 			...(originSessionId && { originSessionId }),
+			...(refreshOf && { refreshOf }),
+			...(refreshCount !== undefined && { refreshCount }),
+			...(refreshedAfterMs !== undefined && { refreshedAfterMs }),
 			decryptedHeadHash,
 			bundleId,
 			reason,
@@ -309,34 +331,15 @@ export class FrictionlessManager extends CaptchaManager {
 			...(simdReadings && {
 				simdReadingsStage: SimdReadingsStage.frictionless,
 			}),
-			entropyMathRandomFingerprint,
-			entropyCryptoFingerprint,
-			entropyWallClockOffsetMs,
-			entropyMathRandomFirst,
-			g,
-			i,
-			cv,
-			sq,
-			cg,
-			sm,
-			dz,
-			b,
-			sw,
-			md,
-			bn,
-			fs,
+			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
-			synNs,
-			synackNs,
-			ackNs,
-			observedTtl,
-			tcpMss,
-			tcpWscale,
-			tcpOptsFlags,
-			tcpOptsOrder,
-			tcpWindow,
+			...rawTlsSignalsFromRecord(input),
 			...(matchedRule && { matchedRule }),
+			// Stamped at issuance, not only mirrored up at solve time, so a
+			// session that is never solved still correlates back to the render.
+			...(clientMetaData && { clientMetaData }),
+			...(fingerprintSummary && { fingerprintSummary }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
@@ -373,7 +376,7 @@ export class FrictionlessManager extends CaptchaManager {
 	async createAuthenticatedSession(
 		token: string,
 		ipAddress: CompositeIpAddress,
-		webBotAuthAgent: string,
+		webBotAuthAgent: string | undefined,
 		siteKey: string,
 		userSitekeyIpHash?: string,
 		headers?: RequestHeaders,
@@ -399,8 +402,8 @@ export class FrictionlessManager extends CaptchaManager {
 			// Written rather than left absent so single-use enforcement can
 			// tell "never set" apart from "consumed".
 			serverChecked: false,
-			agent: true,
-			webBotAuthAgent,
+			agent: webBotAuthAgent !== undefined,
+			...(webBotAuthAgent && { webBotAuthAgent }),
 			...(ipInfo && { ipInfo }),
 			...(headers && { headers }),
 			...(clientSessionId && { clientMetaData: { clientSessionId } }),
@@ -484,7 +487,12 @@ export class FrictionlessManager extends CaptchaManager {
 				status: "API.CLIENT_SESSION_MISMATCH",
 			};
 		}
-		await this.db.updateSessionRecord(sessionId, { serverChecked: true });
+		if (!(await this.db.claimSessionServerCheck(sessionId))) {
+			return {
+				verified: false,
+				status: "API.USER_ALREADY_VERIFIED",
+			};
+		}
 		return { verified: true, status: "API.USER_VERIFIED" };
 	}
 
@@ -506,8 +514,18 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.puzzle, params);
 	}
 
+	async sendIconOrderCaptcha(
+		params?: Partial<Session>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.iconOrder, params);
+	}
+
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType:
+			| CaptchaType.image
+			| CaptchaType.pow
+			| CaptchaType.puzzle
+			| CaptchaType.iconOrder,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -549,11 +567,25 @@ export class FrictionlessManager extends CaptchaManager {
 		// the last word on captchaType. A session minted as a type we cannot
 		// fulfil strands the user on INCORRECT_CAPTCHA_TYPE, since the
 		// serve-time endpoints cannot substitute another type.
-		const finalCaptchaType = coerceToEnabledCaptchaType(
+		const enabledCaptchaType = coerceToEnabledCaptchaType(
 			routed.captchaType,
-			this.routingContext?.frictionlessTypes,
+			this.allowedCaptchaTypes,
 			this.logger,
 		);
+		const userSwitchedCaptchaType = switchTypeOnUserRequest(
+			enabledCaptchaType,
+			this.imageSwitchRequested,
+			this.allowedCaptchaTypes,
+		);
+		const switchedByUser = userSwitchedCaptchaType !== enabledCaptchaType;
+		const finalCaptchaType = this.refreshLimitSwitchEnabled
+			? switchTypeAfterRefreshes(
+					userSwitchedCaptchaType,
+					effectiveParams.refreshCount,
+					this.allowedCaptchaTypes,
+				)
+			: userSwitchedCaptchaType;
+		const switchedByRefreshes = finalCaptchaType !== userSwitchedCaptchaType;
 		// The routing-machine output schema only bounds the count as a positive
 		// int, so clamp it to the sitekey's rounds here as every other sizing
 		// path does. `effectiveParams` is already clamped by its caller.
@@ -578,23 +610,35 @@ export class FrictionlessManager extends CaptchaManager {
 		// score ladder left on the session params. Resolved here rather than
 		// beside its use on the session record below, because the puzzle
 		// overrides need it to tell an escalation from a missing measurement.
-		const finalReason =
-			(routed.reason as FrictionlessReason | undefined) ??
-			(effectiveParams.reason as FrictionlessReason | undefined);
+		const finalReason = switchedByUser
+			? FrictionlessReason.PUZZLE_USER_SWITCH
+			: switchedByRefreshes
+				? FrictionlessReason.PUZZLE_REFRESH_LIMIT
+				: ((routed.reason as FrictionlessReason | undefined) ??
+					(effectiveParams.reason as FrictionlessReason | undefined));
 		// Puzzle tunables persisted on the session so getPuzzleCaptchaChallenge
 		// can layer them over the site defaults — that endpoint re-derives its
 		// overrides from a live trafficFilter verdict, and a router- or
 		// severity-chosen puzzle has no verdict to re-derive from. Two sources,
 		// in precedence order: the difficulty ladder derived from the requested
 		// round count, then explicit router overrides, which win.
-		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
+		const finalPuzzleOverrides: Pick<
+			Session,
+			"puzzleTolerance" | "puzzle" | "puzzleLevel"
+		> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
 						// The site's own ceiling on automatic escalation; 0 pins the
 						// level to 0 so its configured puzzle settings render every time.
-						const maxLevel =
+						const maxLevel = resolveMaxEscalationLevel(
 							this.routingContext?.puzzleMaxDifficulty ??
-							puzzleMaxDifficultyDefault;
+								puzzleMaxDifficultyDefault,
+							this.routingContext?.platform.isMobile ?? false,
+						);
+						const ceiling =
+							finalReason === FrictionlessReason.OLD_TIMESTAMP
+								? Math.min(maxLevel, MAX_STALE_PAYLOAD_LEVEL)
+								: maxLevel;
 						// Paths that measured nothing carry a fixed fallback round count,
 						// not a severity, so they must not read as an escalation.
 						const level =
@@ -605,7 +649,7 @@ export class FrictionlessManager extends CaptchaManager {
 										requestedSolvedImagesCount,
 										this.routingContext?.baseImageRounds ??
 											this.config.captchas.solved.count,
-										maxLevel,
+										ceiling,
 									);
 						// Level 0 means nothing escalated this session: leave the session
 						// bare so getPuzzleCaptchaChallenge falls back to the site's own
@@ -615,6 +659,7 @@ export class FrictionlessManager extends CaptchaManager {
 								? samplePuzzleDifficulty(
 										level,
 										DEFAULT_RENDER_SETTINGS.holeDarken,
+										ceiling,
 									)
 								: undefined;
 						const tolerance = routed.puzzleTolerance ?? difficulty?.tolerance;
@@ -625,8 +670,23 @@ export class FrictionlessManager extends CaptchaManager {
 						return {
 							...(tolerance !== undefined && { puzzleTolerance: tolerance }),
 							...(puzzle !== undefined && { puzzle }),
+							...(difficulty !== undefined && {
+								puzzleLevel: difficulty.level,
+							}),
 						};
 					})()
+				: {};
+		const finalIconOrderOverrides: Pick<
+			Session,
+			"iconOrderTolerance" | "iconOrder"
+		> =
+			finalCaptchaType === CaptchaType.iconOrder
+				? {
+						...(routed.iconOrderTolerance !== undefined && {
+							iconOrderTolerance: routed.iconOrderTolerance,
+						}),
+						...(routed.iconOrder && { iconOrder: routed.iconOrder }),
+					}
 				: {};
 		const blocked =
 			finalCaptchaType === CaptchaType.image
@@ -650,6 +710,9 @@ export class FrictionlessManager extends CaptchaManager {
 			blocked,
 			puzzleTolerance: finalPuzzleOverrides.puzzleTolerance,
 			puzzle: finalPuzzleOverrides.puzzle,
+			puzzleLevel: finalPuzzleOverrides.puzzleLevel,
+			iconOrderTolerance: finalIconOrderOverrides.iconOrderTolerance,
+			iconOrder: finalIconOrderOverrides.iconOrder,
 			// Never set on this path; pinned so a stale value on
 			// `effectiveParams` can't reach the record through the spread.
 			deleted: undefined,
@@ -675,7 +738,11 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
-			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
+			...dnsBeaconUrls(sessionRecord.sessionId),
+			...(offersAudioAlternative(
+				finalCaptchaType,
+				this.audioAlternativeEnabled,
+			) && { audioAlternativeAvailable: true }),
 		};
 	}
 
@@ -710,6 +777,8 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted: true,
 			puzzleTolerance: undefined,
 			puzzle: undefined,
+			iconOrderTolerance: undefined,
+			iconOrder: undefined,
 			isEscalation: undefined,
 			originSessionId: undefined,
 		});
@@ -800,8 +869,10 @@ export class FrictionlessManager extends CaptchaManager {
 	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
 		attempts: {
 			key: string;
+			format?: OpenDetectorFormat;
 			innerConfig?: string;
 			payloadLayout?: string;
+			keyMap?: string;
 		}[];
 		bundleId?: string;
 	}> {
@@ -811,8 +882,10 @@ export class FrictionlessManager extends CaptchaManager {
 				attempts: [
 					{
 						key: bundle.key,
+						format: bundle.format,
 						innerConfig: bundle.innerConfig,
 						payloadLayout: bundle.payloadLayout,
+						keyMap: bundle.keyMap,
 					},
 				],
 				bundleId: bundle.bundleId,
@@ -840,31 +913,12 @@ export class FrictionlessManager extends CaptchaManager {
 			};
 		});
 
-		let baseBotScore: number | undefined;
-		let timestamp: number | undefined;
-		let userId: string | undefined;
-		let userAgent: string | undefined;
-		let webView: boolean | undefined;
-		let iFrame: boolean | undefined;
-		let decryptedHeadHash = "";
+		// One decoded result rather than a local per field. What the detector
+		// reports is its own business: the previous field-by-field unpacking
+		// meant every new signal had to be threaded through here by hand, and
+		// anything missed was dropped without a trace.
+		let decrypted: DecodedDetectorPayload | undefined;
 		let decryptionFailed = false;
-		let triggeredDetectors: number[] | undefined;
-		let shadowDomPenalty: boolean | undefined;
-		let entropyMathRandomFingerprint: string | undefined;
-		let entropyCryptoFingerprint: string | undefined;
-		let entropyWallClockOffsetMs: number | undefined;
-		let entropyMathRandomFirst: number | undefined;
-		let g: string | undefined;
-		let ii: boolean | undefined;
-		let cvv: number | undefined;
-		let sqq: number | undefined;
-		let cgg: string | undefined;
-		let smm: string | undefined;
-		let bb: Record<string, string[]> | undefined;
-		let sw: boolean | undefined;
-		let md: boolean | undefined;
-		let bn: boolean | undefined;
-		let fs: boolean | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -873,103 +927,54 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(attempt.key),
 					},
 				}));
-				const decrypted = await getBotScore(
-					token,
-					headHash,
-					attempt.key,
-					attempt.innerConfig,
-					attempt.payloadLayout,
-				);
-				decryptedHeadHash = decrypted.decryptedHeadHash || "";
-				const s = decrypted.baseBotScore;
-				const t = decrypted.timestamp;
-				const a = decrypted.userId;
-				const u = decrypted.userAgent;
-				const w = decrypted.isWebView;
-				const i = decrypted.isIframe;
-				const td = decrypted.triggeredDetectors;
-				const sd = decrypted.shadowDomPenalty;
-				const ef = decrypted.entropyMathRandomFingerprint;
-				const ec = decrypted.entropyCryptoFingerprint;
-				const eo = decrypted.entropyWallClockOffsetMs;
-				const em = decrypted.entropyMathRandomFirst;
-				const gv = decrypted.g;
-				const iv = decrypted.i;
-				const cvv2 = decrypted.cv;
-				const sqq2 = decrypted.sq;
-				const cgg2 = decrypted.cg;
-				const smm2 = decrypted.sm;
-				const bv = decrypted.b;
-				const swv = decrypted.sw;
-				const mdv = decrypted.md;
-				const bnv = decrypted.bn;
-				const fsv = decrypted.fs;
+				const result =
+					attempt.format === OPEN_DETECTOR_FORMAT
+						? decodeOpenPayload(token, headHash, attempt.key)
+						: await getBotScore(
+								token,
+								headHash,
+								attempt.key,
+								attempt.innerConfig,
+								attempt.payloadLayout,
+								attempt.keyMap,
+							);
+				decrypted = result;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
 						key: this.redactKeyForLogging(attempt.key),
-						baseBotScore: s,
-						timestamp: t,
-						userId: a,
-						userAgent: u,
-						webView: w,
-						iFrame: i,
-						triggeredDetectors: td,
-						shadowDomPenalty: sd,
-						entropyMathRandomFingerprint: ef,
-						entropyCryptoFingerprint: ec,
-						entropyWallClockOffsetMs: eo,
-						entropyMathRandomFirst: em,
-						sw: swv,
-						md: mdv,
-						bn: bnv,
-						fs: fsv,
+						baseBotScore: result.baseBotScore,
+						timestamp: result.timestamp,
+						userId: result.userId,
+						userAgent: result.userAgent,
+						webView: result.isWebView,
+						iFrame: result.isIframe,
+						triggeredDetectors: result.triggeredDetectors,
+						shadowDomPenalty: result.shadowDomPenalty,
+						// Keys only. The values are the detector's output and
+						// have no business in a log line.
+						detectorData: Object.keys(result.d ?? {}),
 					},
 				}));
-				baseBotScore = s;
-				timestamp = t;
-				userId = a;
-				userAgent = u;
-				webView = w;
-				iFrame = i;
-				triggeredDetectors = td;
-				shadowDomPenalty = sd;
-				entropyMathRandomFingerprint = ef;
-				entropyCryptoFingerprint = ec;
-				entropyWallClockOffsetMs = eo;
-				entropyMathRandomFirst = em;
-				g = gv;
-				ii = iv;
-				cvv = cvv2;
-				sqq = sqq2;
-				cgg = cgg2;
-				smm = smm2;
-				bb = bv;
-				sw = swv;
-				md = mdv;
-				bn = bnv;
-				fs = fsv;
 				break;
-			} catch (err) {
+			} catch {
 				if (keyIndex === decryptKeys.length - 1) {
 					this.logger.warn(() => ({
 						msg: "Error decrypting score: no more keys to try",
 					}));
-					baseBotScore = 1;
-					timestamp = 0;
-					decryptedHeadHash = "";
-					decryptionFailed = true;
 				}
 			}
 		}
 
-		const baseBotScoreUndefined =
-			baseBotScore === undefined || Number.isNaN(baseBotScore);
-		const timestampUndefined =
-			timestamp === undefined || Number.isNaN(timestamp);
-		const undefinedCount =
-			Number(baseBotScoreUndefined) + Number(timestampUndefined);
-		if (undefinedCount > 0) {
+		let baseBotScore = decrypted?.baseBotScore;
+		let timestamp = decrypted?.timestamp;
+		let decryptedHeadHash = decrypted?.decryptedHeadHash || "";
+		if (
+			baseBotScore === undefined ||
+			Number.isNaN(baseBotScore) ||
+			timestamp === undefined ||
+			Number.isNaN(timestamp)
+		) {
 			this.logger.error(() => ({
 				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
 			}));
@@ -978,51 +983,35 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash = "";
 			decryptionFailed = true;
 		}
+
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
 			data: {
-				baseBotScore: baseBotScore,
-				timestamp: timestamp,
-				userId,
-				userAgent,
-				webView,
-				iFrame,
+				baseBotScore,
+				timestamp,
+				userId: decrypted?.userId,
+				userAgent: decrypted?.userAgent,
+				webView: decrypted?.isWebView,
+				iFrame: decrypted?.isIframe,
 				decryptedHeadHash,
 				decryptionFailed,
-				shadowDomPenalty,
-				sw,
-				md,
-				bn,
-				fs,
+				shadowDomPenalty: decrypted?.shadowDomPenalty,
+				detectorData: Object.keys(decrypted?.d ?? {}),
 			},
 		}));
 
 		return {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),
-			userId,
-			userAgent,
-			webView: webView || false,
-			iFrame: iFrame || false,
+			userId: decrypted?.userId,
+			userAgent: decrypted?.userAgent,
+			webView: decrypted?.isWebView ?? false,
+			iFrame: decrypted?.isIframe ?? false,
 			decryptedHeadHash,
 			decryptionFailed,
-			triggeredDetectors,
-			shadowDomPenalty,
-			entropyMathRandomFingerprint,
-			entropyCryptoFingerprint,
-			entropyWallClockOffsetMs,
-			entropyMathRandomFirst,
-			g,
-			i: ii,
-			cv: cvv,
-			sq: sqq,
-			cg: cgg,
-			sm: smm,
-			b: bb,
-			sw,
-			md,
-			bn,
-			fs,
+			triggeredDetectors: decrypted?.triggeredDetectors,
+			shadowDomPenalty: decrypted?.shadowDomPenalty,
+			d: decrypted?.d,
 			// Promoted onto the session so the later behavioural-data hop can
 			// resolve the same keypair/inner cfg.
 			bundleId,

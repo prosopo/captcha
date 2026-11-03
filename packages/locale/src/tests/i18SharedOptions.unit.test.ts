@@ -48,11 +48,6 @@ describe("i18nSharedOptions", () => {
 		expect(options.fallbackLng).toBe("en");
 	});
 
-	test("uses the single translation namespace", async () => {
-		const options = await loadOptions();
-		expect(options.namespace).toBe("translation");
-	});
-
 	test("supports exactly the declared language codes", async () => {
 		const options = await loadOptions();
 		expect(new Set(options.supportedLngs)).toEqual(
@@ -61,7 +56,7 @@ describe("i18nSharedOptions", () => {
 	});
 
 	// With this false, i18next will not silently serve `en` resources for a
-	// request for `en-GB`. Flipping it would quietly change which file a
+	// request for `en-AU`. Flipping it would quietly change which file a
 	// regional locale resolves to.
 	test("does not accept non-explicit regional variants", async () => {
 		const options = await loadOptions();

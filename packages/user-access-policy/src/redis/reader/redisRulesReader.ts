@@ -128,6 +128,7 @@ const RULE_LOAD_FIELDS = [
 	"@unsolvedImagesCount",
 	"@frictionlessScore",
 	"@deferToVerify",
+	"@messageKey",
 	"@clientId",
 	"@groupId",
 	"@userId",
@@ -609,7 +610,9 @@ export class RedisRulesReader implements AccessRulesReader {
 				msg: "Failed to execute search query for rule IDs",
 			}));
 
-			return [];
+			// Callers delete whatever ids come back, so an empty list here would
+			// report a failed delete as a successful one.
+			throw e;
 		}
 
 		this.logger.debug(() => ({

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
@@ -122,7 +124,14 @@ export const handleAccessPolicy = async (
 
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({
+					code: "ACCESS_POLICY_BLOCK",
+					errorSite: "PROV-89",
+					status: 401,
+				}),
+			),
 		};
 	}
 
@@ -152,7 +161,10 @@ export const handleAccessPolicy = async (
 		});
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-90" }),
+			),
 		};
 	}
 

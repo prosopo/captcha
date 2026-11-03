@@ -28,6 +28,7 @@ import {
 	ModeEnum,
 	PublicApiPaths,
 	type RandomProvider,
+	type RefreshSwitchTarget,
 	type RemoveSitekeysBodyTypeOutput,
 	type StoredEvents,
 	Tier,
@@ -559,6 +560,11 @@ describe("getFrictionlessCaptcha", () => {
 			undefined, // detectorSessionId
 			"https://site.example/page",
 			"https://iframe.example",
+			"bumblebee-abc",
+			undefined, // refreshOf
+			undefined, // switchTo
+			undefined, // fingerprintProof
+			undefined, // widgetSlot
 			"pbk_example",
 		);
 		expect(body()).toMatchObject({
@@ -566,8 +572,58 @@ describe("getFrictionlessCaptcha", () => {
 			[ApiParams.simdReadings]: "readings",
 			[ApiParams.currentUrl]: "https://site.example/page",
 			[ApiParams.iframeUrl]: "https://iframe.example",
+			[ApiParams.clientSessionId]: "bumblebee-abc",
 			[ApiParams.bypassKey]: "pbk_example",
 		});
+	});
+
+	const frictionlessRefresh = (switchTo?: RefreshSwitchTarget) =>
+		api().getFrictionlessCaptcha(
+			"token",
+			"0xhead",
+			SITE_KEY,
+			USER,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			"previous-session",
+			switchTo,
+		);
+
+	test("asks for an image challenge when the refresh switches to one", async () => {
+		fetchStub.respond(frictionlessBody);
+		await frictionlessRefresh(CaptchaType.image);
+		expect(body()).toMatchObject({
+			[ApiParams.refreshOf]: "previous-session",
+			[ApiParams.switchToImage]: true,
+		});
+		expect(body()).not.toHaveProperty(ApiParams.switchToPuzzle);
+	});
+
+	test("asks to go back to the puzzle when the refresh switches to one", async () => {
+		fetchStub.respond(frictionlessBody);
+		await frictionlessRefresh(CaptchaType.puzzle);
+		expect(body()).toMatchObject({
+			[ApiParams.refreshOf]: "previous-session",
+			[ApiParams.switchToPuzzle]: true,
+		});
+		expect(body()).not.toHaveProperty(ApiParams.switchToImage);
+	});
+
+	test("sends no switch on a plain refresh", async () => {
+		fetchStub.respond(frictionlessBody);
+		await frictionlessRefresh();
+		expect(body()).not.toHaveProperty(ApiParams.switchToImage);
+		expect(body()).not.toHaveProperty(ApiParams.switchToPuzzle);
+	});
+
+	test("omits the session id when the widget has none to report", async () => {
+		fetchStub.respond(frictionlessBody);
+		await api().getFrictionlessCaptcha("token", "0xhead", SITE_KEY, USER);
+		expect(body()).not.toHaveProperty(ApiParams.clientSessionId);
 	});
 
 	test("moves the honeypot from the meta header onto the response", async () => {

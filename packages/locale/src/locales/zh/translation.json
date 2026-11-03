@@ -1,0 +1,71 @@
+{
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",
+		"CANNOT_DELETE_OWN_USER": "无法删除您自己的帐户",
+		"CANNOT_DELETE_LAST_USER": "无法删除最后一个用户",
+		"USER_ALREADY_EXISTS": "用户已经存在",
+		"NO_SUGGESTIONS_FOUND": "未找到建议",
+		"CANNOT_DEACTIVATE_LAST_SITE": "无法停用最后一个活动站点",
+		"DUPLICATE_SITE_NAME": "已存在同名站点",
+		"INVALID_SITE_NAME": "站点名称只能包含字母、数字、连字符和下划线"
+	},
+	"CONTRACT": {
+		"INVALID_ADDRESS": "无法编码无效地址",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "验证码解决方案承诺不存在",
+		"SIGNER_UNDEFINED": "签署者未定义",
+		"CANNOT_FIND_KEYPAIR": "找不到密钥对",
+		"INVALID_DATA_FORMAT": "无效的数据格式"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "请求的环境未知",
+		"INVALID_CAPTCHA_NUMBER": "请正确配置验证码配置",
+		"INVALID_LOG_LEVEL": "无效的日志级别",
+		"INVALID_PACKAGE_DIR": "无效的包目录"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "解析数据集时出错",
+		"SOLUTION_PARSE_ERROR": "解析数据集时出错",
+		"HASH_ERROR": "哈希数据集时出错",
+		"DATASET_ID_UNDEFINED": "数据集ID未定义",
+		"NOT_ENOUGH_LABELS": "标签不足",
+		"NOT_ENOUGH_IMAGES": "图像不足",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "数据集中的验证码数量少于配置的验证码数量",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "数据集中的解决方案数量少于配置的解决方案数量",
+		"DUPLICATE_IMAGE": "检测到重复图像",
+		"MERKLE_ERROR": "创建默克尔树时出错"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "导入数据库引擎失败",
+		"DATABASE_UNDEFINED": "数据库客户端未连接",
+		"DATABASE_HOST_UNDEFINED": "未定义数据库主机地址",
+		"DATASET_LOAD_FAILED": "数据集加载失败",
+		"DATASET_GET_FAILED": "获取数据集失败",
+		"CAPTCHA_GET_FAILED": "获取验证码失败",
+		"CAPTCHA_UPDATE_FAILED": "更新验证码失败",
+		"IMAGE_GET_FAILED": "获取图像失败",
+		"PENDING_RECORD_NOT_FOUND": "未找到待处理记录",
+		"INVALID_HASH": "无效的哈希",
+		"SOLUTION_GET_FAILED": "获取解决方案失败",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "找不到具有所需数量解决方案的数据集",
+		"SOLUTION_APPROVE_FAILED": "批准解决方案失败",
+		"SOLUTION_FLAG_FAILED": "标记解决方案为已处理失败",
+		"TABLES_UNDEFINED": "未定义表",
+		"CONNECTION_UNDEFINED": "连接未定义",
+		"COMMITMENT_FLAG_FAILED": "标记承诺为已处理失败",
+		"UNKNOWN": "未知数据库错误",
+		"QUERY_ERROR": "数据库查询失败",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "访问规则的 Redis 连接未定义",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "用户访问规则存储未定义",
+		"SESSION_STORE_FAILED": "存储会话失败",
+		"SESSION_CHECK_REMOVE_FAILED": "检查并移除会话失败",
+		"SESSION_GET_FAILED": "获取会话失败"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "无效的参数"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "未找到文件",
+		"FILE_ALREADY_EXISTS": "文件已存在",
+		"INVALID_DIR_FORMAT": "无效的目录格式"
+	}
+}

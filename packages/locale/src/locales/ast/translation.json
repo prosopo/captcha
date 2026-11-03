@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Nun pudo codificase la direición non válida",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Nun esiste'l compromisu de solución del captcha",
+		"SIGNER_UNDEFINED": "Roblador ensin definir",
+		"CANNOT_FIND_KEYPAIR": "Nun pue atopase'l par de claves",
+		"INVALID_DATA_FORMAT": "Formatu de datos non válidu"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Solicitóse un entornu desconocíu",
+		"INVALID_CAPTCHA_NUMBER": "Configura correutamente les opciones de los captchas",
+		"INVALID_LOG_LEVEL": "Nivel de rexistru non válidu",
+		"INVALID_PACKAGE_DIR": "Direutoriu de paquete non válidu"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Fallu al analizar el conxuntu de datos",
+		"SOLUTION_PARSE_ERROR": "Fallu al procesar el conxuntu de datos",
+		"HASH_ERROR": "Fallu al calcular el hash del conxuntu de datos",
+		"DATASET_ID_UNDEFINED": "ID del conxuntu de datos ensin definir",
+		"NOT_ENOUGH_LABELS": "Nun hai abondes etiquetes",
+		"NOT_ENOUGH_IMAGES": "Nun hai abondes imáxenes",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "El númberu de captchas del conxuntu de datos ye menor que'l configuráu",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "El númberu de soluciones del conxuntu de datos ye menor que'l configuráu",
+		"DUPLICATE_IMAGE": "Deteutóse una imaxe duplicada",
+		"MERKLE_ERROR": "Fallu al construyir l'árbol de Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Nun pudo importase'l motor de la base de datos",
+		"DATABASE_UNDEFINED": "El veceru de la base de datos nun ta coneutáu",
+		"DATABASE_HOST_UNDEFINED": "La direición del agospiador de la base de datos nun ta definida",
+		"DATASET_LOAD_FAILED": "Falló la carga del conxuntu de datos",
+		"DATASET_GET_FAILED": "Nun pudo consiguise'l conxuntu de datos",
+		"CAPTCHA_GET_FAILED": "Nun pudieron consiguise los captchas",
+		"CAPTCHA_UPDATE_FAILED": "Nun pudieron anovase los captchas",
+		"IMAGE_GET_FAILED": "Nun pudo consiguise la imaxe",
+		"PENDING_RECORD_NOT_FOUND": "Nun s'atoparon rexistros pendientes",
+		"INVALID_HASH": "Hash non válidu",
+		"SOLUTION_GET_FAILED": "Nun pudo consiguise la solución",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nun s'atopó nengún conxuntu de datos col númberu necesariu de soluciones",
+		"SOLUTION_APPROVE_FAILED": "Nun pudo aprobase la solución",
+		"SOLUTION_FLAG_FAILED": "Nun pudo marcase la solución como procesada",
+		"TABLES_UNDEFINED": "Tables ensin definir",
+		"CONNECTION_UNDEFINED": "Conexón ensin definir",
+		"COMMITMENT_FLAG_FAILED": "Nun pudo marcase'l compromisu como procesáu",
+		"UNKNOWN": "Fallu desconocíu de la base de datos",
+		"QUERY_ERROR": "Falló la consulta a la base de datos",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Conexón de Redis pa les regles d'accesu ensin definir",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Almacén de regles d'accesu d'usuariu ensin definir",
+		"SESSION_STORE_FAILED": "Nun pudo guardase la sesión",
+		"SESSION_CHECK_REMOVE_FAILED": "Nun pudo comprobase y desaniciase la sesión",
+		"SESSION_GET_FAILED": "Nun pudo consiguise la sesión"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nun pue camudase l'usuariu propietariu",
+		"CANNOT_DELETE_OWN_USER": "Nun pues desaniciar la to propia cuenta",
+		"CANNOT_DELETE_LAST_USER": "Nun pue desaniciase l'últimu usuariu",
+		"USER_ALREADY_EXISTS": "L'usuariu yá esiste",
+		"NO_SUGGESTIONS_FOUND": "Nun s'atoparon suxerencies",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nun pue desactivase l'últimu sitiu activu",
+		"DUPLICATE_SITE_NAME": "Yá esiste un sitiu con esti nome",
+		"INVALID_SITE_NAME": "El nome del sitiu namás pue contener lletres, númberos, guiones baxos y guiones"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parámetru non válidu"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Nun s'atopó'l ficheru",
+		"FILE_ALREADY_EXISTS": "El ficheru yá esiste",
+		"INVALID_DIR_FORMAT": "Formatu de direutoriu non válidu"
+	}
+}

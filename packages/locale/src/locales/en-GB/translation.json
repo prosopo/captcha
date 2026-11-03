@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Failed to encode invalid address",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha solution commitment does not exist",
+		"SIGNER_UNDEFINED": "Signer undefined",
+		"CANNOT_FIND_KEYPAIR": "Cannot find keypair",
+		"INVALID_DATA_FORMAT": "Invalid data format"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Unknown environment requested",
+		"INVALID_CAPTCHA_NUMBER": "Please configure captchas configurations correctly",
+		"INVALID_LOG_LEVEL": "Invalid log level",
+		"INVALID_PACKAGE_DIR": "Invalid package directory"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Error parsing dataset",
+		"SOLUTION_PARSE_ERROR": "Error parsing dataset",
+		"HASH_ERROR": "Error hashing dataset",
+		"DATASET_ID_UNDEFINED": "Dataset id undefined",
+		"NOT_ENOUGH_LABELS": "Not enough labels",
+		"NOT_ENOUGH_IMAGES": "Not enough images",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Number of captchas in dataset is less than configured number of captchas",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Number of solutions in dataset is less than configured number of solutions",
+		"DUPLICATE_IMAGE": "duplicate image detected",
+		"MERKLE_ERROR": "Error creating merkle tree"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Failed to import database engine",
+		"DATABASE_UNDEFINED": "Database client is not connected",
+		"DATABASE_HOST_UNDEFINED": "Database host address is not defined",
+		"DATASET_LOAD_FAILED": "Data set load failed",
+		"DATASET_GET_FAILED": "Failed to get dataset",
+		"CAPTCHA_GET_FAILED": "Failed to get captcha",
+		"CAPTCHA_UPDATE_FAILED": "Failed to update captcha",
+		"IMAGE_GET_FAILED": "Failed to get image",
+		"PENDING_RECORD_NOT_FOUND": "No pending record found",
+		"INVALID_HASH": "Invalid hash",
+		"SOLUTION_GET_FAILED": "Failed to get solution",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "No datasets found with required number of solutions",
+		"SOLUTION_APPROVE_FAILED": "Failed to approve solution",
+		"SOLUTION_FLAG_FAILED": "Failed to flag solution as processed",
+		"TABLES_UNDEFINED": "Tables undefined",
+		"CONNECTION_UNDEFINED": "Connection undefined",
+		"COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed",
+		"UNKNOWN": "Unknown database error",
+		"QUERY_ERROR": "Database query failed",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage undefined",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
+		"CANNOT_DELETE_OWN_USER": "Cannot delete your own account",
+		"CANNOT_DELETE_LAST_USER": "Cannot delete last user",
+		"USER_ALREADY_EXISTS": "User already exists",
+		"NO_SUGGESTIONS_FOUND": "No suggestions found",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannot deactivate the last active site",
+		"DUPLICATE_SITE_NAME": "A site with this name already exists",
+		"INVALID_SITE_NAME": "Site name must contain only letters, numbers, hyphens, and underscores"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Invalid parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "File not found",
+		"FILE_ALREADY_EXISTS": "File already exists",
+		"INVALID_DIR_FORMAT": "Invalid directory format"
+	}
+}

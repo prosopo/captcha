@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "अमान्य ठेगाना इन्कोड गर्न असफल",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha समाधान प्रतिबद्धता अवस्थित छैन",
+		"SIGNER_UNDEFINED": "हस्ताक्षरकर्ता परिभाषित गरिएको छैन",
+		"CANNOT_FIND_KEYPAIR": "कुञ्जी जोडी फेला परेन",
+		"INVALID_DATA_FORMAT": "अमान्य डेटा ढाँचा"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "अज्ञात वातावरण अनुरोध गरियो",
+		"INVALID_CAPTCHA_NUMBER": "कृपया captcha कन्फिगरेसनहरू सही रूपमा सेट गर्नुहोस्",
+		"INVALID_LOG_LEVEL": "अमान्य लग स्तर",
+		"INVALID_PACKAGE_DIR": "अमान्य प्याकेज डाइरेक्टरी"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "डेटासेट पार्स गर्दा त्रुटि",
+		"SOLUTION_PARSE_ERROR": "डेटासेट प्रशोधन गर्दा त्रुटि",
+		"HASH_ERROR": "डेटासेट ह्यास गर्दा त्रुटि",
+		"DATASET_ID_UNDEFINED": "डेटासेट ID परिभाषित गरिएको छैन",
+		"NOT_ENOUGH_LABELS": "पर्याप्त लेबलहरू छैनन्",
+		"NOT_ENOUGH_IMAGES": "पर्याप्त तस्बिरहरू छैनन्",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "डेटासेटमा captcha को सङ्ख्या कन्फिगर गरिएको सङ्ख्याभन्दा कम छ",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "डेटासेटमा समाधानको सङ्ख्या कन्फिगर गरिएको सङ्ख्याभन्दा कम छ",
+		"DUPLICATE_IMAGE": "दोहोरिएको तस्बिर पत्ता लाग्यो",
+		"MERKLE_ERROR": "मर्कल ट्री बनाउँदा त्रुटि"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "डेटाबेस इन्जिन आयात गर्न असफल",
+		"DATABASE_UNDEFINED": "डेटाबेस क्लाइन्ट जडान भएको छैन",
+		"DATABASE_HOST_UNDEFINED": "डेटाबेस होस्ट ठेगाना परिभाषित गरिएको छैन",
+		"DATASET_LOAD_FAILED": "डेटासेट लोड असफल भयो",
+		"DATASET_GET_FAILED": "डेटासेट प्राप्त गर्न असफल",
+		"CAPTCHA_GET_FAILED": "captcha प्राप्त गर्न असफल",
+		"CAPTCHA_UPDATE_FAILED": "captcha अद्यावधिक गर्न असफल",
+		"IMAGE_GET_FAILED": "तस्बिर प्राप्त गर्न असफल",
+		"PENDING_RECORD_NOT_FOUND": "कुनै बाँकी रेकर्ड फेला परेन",
+		"INVALID_HASH": "अमान्य ह्यास",
+		"SOLUTION_GET_FAILED": "समाधान प्राप्त गर्न असफल",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "आवश्यक सङ्ख्यामा समाधान भएको कुनै डेटासेट फेला परेन",
+		"SOLUTION_APPROVE_FAILED": "समाधान स्वीकृत गर्न असफल",
+		"SOLUTION_FLAG_FAILED": "समाधानलाई प्रशोधित भनी चिन्ह लगाउन असफल",
+		"TABLES_UNDEFINED": "तालिकाहरू परिभाषित गरिएका छैनन्",
+		"CONNECTION_UNDEFINED": "जडान परिभाषित गरिएको छैन",
+		"COMMITMENT_FLAG_FAILED": "प्रतिबद्धतालाई प्रशोधित भनी चिन्ह लगाउन असफल",
+		"UNKNOWN": "अज्ञात डेटाबेस त्रुटि",
+		"QUERY_ERROR": "डेटाबेस क्वेरी असफल भयो",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "पहुँच नियमहरूको Redis जडान परिभाषित गरिएको छैन",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "प्रयोगकर्ता पहुँच नियमहरूको भण्डारण परिभाषित गरिएको छैन",
+		"SESSION_STORE_FAILED": "सत्र भण्डारण गर्न असफल",
+		"SESSION_CHECK_REMOVE_FAILED": "सत्र जाँच गरी हटाउन असफल",
+		"SESSION_GET_FAILED": "सत्र प्राप्त गर्न असफल"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "मालिक प्रयोगकर्तालाई परिमार्जन गर्न सकिँदैन",
+		"CANNOT_DELETE_OWN_USER": "आफ्नै खाता मेटाउन सकिँदैन",
+		"CANNOT_DELETE_LAST_USER": "अन्तिम प्रयोगकर्तालाई मेटाउन सकिँदैन",
+		"USER_ALREADY_EXISTS": "प्रयोगकर्ता पहिले नै अवस्थित छ",
+		"NO_SUGGESTIONS_FOUND": "कुनै सुझाव फेला परेन",
+		"CANNOT_DEACTIVATE_LAST_SITE": "अन्तिम सक्रिय साइट निष्क्रिय गर्न सकिँदैन",
+		"DUPLICATE_SITE_NAME": "यो नामको साइट पहिले नै अवस्थित छ",
+		"INVALID_SITE_NAME": "साइटको नाममा अक्षर, अङ्क, हाइफन र अन्डरस्कोर मात्र हुन सक्छन्"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "अमान्य प्यारामिटर"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "फाइल फेला परेन",
+		"FILE_ALREADY_EXISTS": "फाइल पहिले नै अवस्थित छ",
+		"INVALID_DIR_FORMAT": "अमान्य डाइरेक्टरी ढाँचा"
+	}
+}

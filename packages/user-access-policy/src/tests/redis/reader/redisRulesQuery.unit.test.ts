@@ -250,6 +250,19 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
 	});
 
+	it("escapes the signer URL in a webBotAuthAgent query", () => {
+		const filter = {
+			userScope: {
+				webBotAuthAgent: "https://chatgpt.com",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("( @webBotAuthAgent:{https\\:\\/\\/chatgpt\\.com} )");
+	});
+
 	it("includes both headHash and coords when both provided", () => {
 		const filter = {
 			userScope: {
@@ -345,5 +358,15 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toContain("@type:{block}");
 		expect(query).toContain("@clientId:{site-A}");
 		expect(query).toContain("@ja4Hash:{ja4Hash}");
+	});
+
+	it("escapes the group id, whose hyphens are otherwise a syntax error", () => {
+		const filter: AccessRulesFilter = {
+			groupId: "example-rule-group",
+		};
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("@groupId:{example\\-rule\\-group}");
 	});
 });

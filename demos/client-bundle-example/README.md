@@ -13,13 +13,13 @@ Run these commands from the root of the [captcha](https://github.com/prosopo/cap
 ./install_cert.sh && \
 cp dev/scripts/env.development dev/scripts/.env.development && \
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development && \
-docker compose --file ./docker/docker-compose.development.yml up -d && \
-npm i && \
-npm run build:all && \
-npm run setup:all && \
-NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle
-NODE_ENV=development npm -w @prosopo/procaptcha-bundle run serve
-NODE_ENV=development npm run start:all
+docker compose --file ./docker/docker-compose.test.yml up -d && \
+pnpm install && \
+pnpm run build:all && \
+pnpm run setup:all && \
+NODE_ENV=development pnpm --filter @prosopo/procaptcha-bundle run bundle
+NODE_ENV=development pnpm --filter @prosopo/procaptcha-bundle run serve
+NODE_ENV=development pnpm run start:all
 ```
 
 ### 2. Visit the App

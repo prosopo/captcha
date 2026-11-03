@@ -22,7 +22,10 @@ describe("parseSignatureInput", () => {
 		const entry = parseSignatureInput(header);
 		expect(entry).not.toBeNull();
 		expect(entry?.label).toBe("sig1");
-		expect(entry?.coveredComponents).toEqual(["@authority", "signature-agent"]);
+		expect(entry?.coveredComponents.map((c) => c.name)).toEqual([
+			"@authority",
+			"signature-agent",
+		]);
 		expect(entry?.params.created).toBe(1735689600);
 		expect(entry?.params.expires).toBe(1735693200);
 		expect(entry?.params.keyid).toBe("abc");
@@ -46,6 +49,20 @@ describe("parseSignatureInput", () => {
 	it("tolerates unquoted alg tokens (RFC 8941 tokens)", () => {
 		const header = 'sig1=("@authority");keyid="k";alg=ed25519';
 		expect(parseSignatureInput(header)?.params.alg).toBe("ed25519");
+	});
+
+	it("keeps per-component parameters and the verbatim identifier", () => {
+		const header =
+			'g=("@target-uri" "@method" "signature-agent";key="g");keyid="k"';
+		expect(parseSignatureInput(header)?.coveredComponents).toEqual([
+			{ name: "@target-uri", params: {}, identifier: '"@target-uri"' },
+			{ name: "@method", params: {}, identifier: '"@method"' },
+			{
+				name: "signature-agent",
+				params: { key: "g" },
+				identifier: '"signature-agent";key="g"',
+			},
+		]);
 	});
 
 	it("handles an empty inner list", () => {

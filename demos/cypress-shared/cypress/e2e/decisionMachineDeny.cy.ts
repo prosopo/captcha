@@ -29,7 +29,7 @@
 //      DM denies → /signup returns 401.
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { type Captcha, CaptchaType } from "@prosopo/types";
 import {
@@ -105,10 +105,12 @@ describe("Decision machine denies an otherwise-valid solve at verify", () => {
 
 		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{ context: { datasetWithSolutionHashes } },
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-5",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 
 		cy.intercept("/dummy").as("dummy");

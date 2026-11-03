@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
 import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
+import { assetDocumentRouter } from "./assetDocument.js";
 import { getHealthzGeoRouter } from "./healthzGeo.js";
 import {
 	metricsEnabled,
@@ -72,7 +73,7 @@ export function publicRouter(env: ProviderEnvironment): Router {
 
 	// Prometheus metrics endpoint. Lives in the public router so it runs before
 	// rate-limiting, auth and blocking middleware — scrapes are never throttled
-	// or blocked. Vector scrapes this over the internal docker network.
+	// or blocked. `metricsAccess` limits it to internal callers or token holders.
 	if (metricsEnabled()) {
 		router.get(PublicApiPaths.Metrics, metricsHandler(env));
 	}
@@ -124,12 +125,16 @@ export function publicRouter(env: ProviderEnvironment): Router {
 				msg: "Error getting provider details",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-34",
+					message: "BadRequest",
 				}),
 			);
 		}
 	});
+
+	router.use(assetDocumentRouter());
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.

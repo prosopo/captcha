@@ -1,0 +1,77 @@
+# Check the translation catalogues in packages/locale on every PR that touches
+# them: one file per namespace (widget, target, translation) with the same keys
+# as English's, checked at type level too; no empty or untranslated values
+# (other than the curated packages/locale/src/tests/keptAsIs.ts); the right
+# script for non-Latin languages; no U+FFFD or look-alike Latin letters; and
+# matching {{placeholders}}.
+#
+# These tests also run inside tests.yml, but only after a full workspace build
+# and docker stack, so a broken translation shows up there after ~30 minutes
+# among hundreds of other results. This runs the catalogue tests alone in a few
+# minutes and reports under its own name.
+
+name: locales
+
+on:
+  pull_request:
+    branches: [main, dev, staging, release/*]
+    # Inclusion-based on purpose: the tests read nothing outside the locale
+    # package. Safe against the "required check never reports" trap because the
+    # required context, `check` in required-check.yml, has no path filter.
+    paths:
+      - 'packages/locale/**'
+      - '.github/workflows/locales.yml'
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: locales
+    # Hosted, as in lint.yml: this repository is public, so a fork PR must not
+    # run on the self-hosted fleet.
+    # Runs on drafts too: it is cheap, and translators iterate on drafts.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: "recursive"
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.22.1'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
+
+      # vite.test.config.ts imports the built @prosopo/config and needs an
+      # .env.test, and the type tests resolve locale's other workspace
+      # dependencies (such as @prosopo/util) through their dist/types.
+      - run: pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
+
+      - run: cp dev/scripts/env.test .env.test
+
+      - name: Catalogue tests
+        working-directory: packages/locale
+        run: >-
+          pnpm exec vitest run --config ./vite.test.config.ts
+          src/tests/locales.unit.test.ts
+          src/tests/localePlaceholders.unit.test.ts
+          src/tests/translations.unit.test.ts
+          src/tests/catalogues.test-d.ts

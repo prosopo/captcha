@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
 		"lib": ["dom", "dom.iterable", "esnext"]
 	},
 	"include": [
@@ -48,9 +49,6 @@
 		},
 		{
 			"path": "../../dev/config"
-		},
-		{
-			"path": "../../packages/locale"
 		},
 		{
 			"path": "../../packages/util-crypto"

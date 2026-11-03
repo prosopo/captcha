@@ -1,0 +1,8 @@
+# Overlay: local/test redis with the Insight UI and a fixed password. Use with:
+#   docker compose -f docker-compose.redis.yml -f docker-compose.redis.dev.yml up -d
+services:
+  redis-stack:
+    ports:
+      - '8001:8001' # Insight tool
+    environment:
+      - REDIS_ARGS=--requirepass root

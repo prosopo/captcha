@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Ekki tókst að kóða ógilt heimilisfang",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Skuldbinding captcha-lausnar er ekki til",
+		"SIGNER_UNDEFINED": "Undirritari óskilgreindur",
+		"CANNOT_FIND_KEYPAIR": "Finn ekki lyklapar",
+		"INVALID_DATA_FORMAT": "Ógilt gagnasnið"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Óþekkt umhverfi beðið um",
+		"INVALID_CAPTCHA_NUMBER": "Stilltu captcha-stillingarnar rétt",
+		"INVALID_LOG_LEVEL": "Ógilt annálsstig",
+		"INVALID_PACKAGE_DIR": "Ógild pakkamappa"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Villa við að þátta gagnasafn",
+		"SOLUTION_PARSE_ERROR": "Villa við að þátta gagnasafn",
+		"HASH_ERROR": "Villa við að reikna tætigildi gagnasafns",
+		"DATASET_ID_UNDEFINED": "Auðkenni gagnasafns óskilgreint",
+		"NOT_ENOUGH_LABELS": "Ekki nógu mörg merki",
+		"NOT_ENOUGH_IMAGES": "Ekki nógu margar myndir",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Fjöldi captcha-þrauta í gagnasafni er minni en stilltur fjöldi",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Fjöldi lausna í gagnasafni er minni en stilltur fjöldi",
+		"DUPLICATE_IMAGE": "tvítekin mynd greind",
+		"MERKLE_ERROR": "Villa við að búa til Merkle-tré"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Ekki tókst að flytja inn gagnagrunnsvél",
+		"DATABASE_UNDEFINED": "Gagnagrunnsbiðlari er ekki tengdur",
+		"DATABASE_HOST_UNDEFINED": "Vistfang gagnagrunnshýsils er ekki skilgreint",
+		"DATASET_LOAD_FAILED": "Hleðsla gagnasafns mistókst",
+		"DATASET_GET_FAILED": "Ekki tókst að sækja gagnasafn",
+		"CAPTCHA_GET_FAILED": "Ekki tókst að sækja captcha",
+		"CAPTCHA_UPDATE_FAILED": "Ekki tókst að uppfæra captcha",
+		"IMAGE_GET_FAILED": "Ekki tókst að sækja mynd",
+		"PENDING_RECORD_NOT_FOUND": "Engin færsla í bið fannst",
+		"INVALID_HASH": "Ógilt tætigildi",
+		"SOLUTION_GET_FAILED": "Ekki tókst að sækja lausn",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Engin gagnasöfn fundust með tilskildum fjölda lausna",
+		"SOLUTION_APPROVE_FAILED": "Ekki tókst að samþykkja lausn",
+		"SOLUTION_FLAG_FAILED": "Ekki tókst að merkja lausn sem afgreidda",
+		"TABLES_UNDEFINED": "Töflur óskilgreindar",
+		"CONNECTION_UNDEFINED": "Tenging óskilgreind",
+		"COMMITMENT_FLAG_FAILED": "Ekki tókst að merkja skuldbindingu sem afgreidda",
+		"UNKNOWN": "Óþekkt gagnagrunnsvilla",
+		"QUERY_ERROR": "Gagnagrunnsfyrirspurn mistókst",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Tenging Redis-aðgangsreglna óskilgreind",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Geymsla aðgangsreglna notenda óskilgreind",
+		"SESSION_STORE_FAILED": "Ekki tókst að vista lotu",
+		"SESSION_CHECK_REMOVE_FAILED": "Ekki tókst að athuga og fjarlægja lotu",
+		"SESSION_GET_FAILED": "Ekki tókst að sækja lotu"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Ekki er hægt að breyta eigandanotanda",
+		"CANNOT_DELETE_OWN_USER": "Ekki er hægt að eyða eigin reikningi",
+		"CANNOT_DELETE_LAST_USER": "Ekki er hægt að eyða síðasta notandanum",
+		"USER_ALREADY_EXISTS": "Notandi er þegar til",
+		"NO_SUGGESTIONS_FOUND": "Engar tillögur fundust",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Ekki er hægt að gera síðasta virka vefinn óvirkan",
+		"DUPLICATE_SITE_NAME": "Vefur með þessu nafni er þegar til",
+		"INVALID_SITE_NAME": "Nafn vefs má aðeins innihalda bókstafi, tölustafi, bandstrik og undirstrik"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Ógild færibreyta"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Skrá fannst ekki",
+		"FILE_ALREADY_EXISTS": "Skrá er þegar til",
+		"INVALID_DIR_FORMAT": "Ógilt möppusnið"
+	}
+}

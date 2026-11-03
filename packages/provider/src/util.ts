@@ -14,7 +14,7 @@
 
 import { hexToU8a } from "@polkadot/util/hex";
 import { isHex } from "@polkadot/util/is";
-import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	type IIPValidation,
@@ -39,7 +39,10 @@ export function encodeStringAddress(address: string) {
 			isHex(address) ? hexToU8a(address) : decodeAddress(address),
 		);
 	} catch (err) {
-		throw new ProsopoContractError("CONTRACT.INVALID_ADDRESS", {
+		throw new ProsopoError({
+			code: "INVALID_DATA",
+			errorSite: "PROV-77",
+			message: "Failed to encode invalid address",
 			context: { address },
 		});
 	}
@@ -93,7 +96,7 @@ export const getIPAddress = (ipAddressString: string): IPAddress => {
 			return new Address6(ipAddressString);
 		}
 	} catch (e) {
-		throw new ProsopoEnvError("API.INVALID_IP");
+		throw new ProsopoError({ code: "INVALID_IP", errorSite: "PROV-78" });
 	}
 };
 
@@ -104,7 +107,7 @@ export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
 		}
 		return Address4.fromBigInt(BigInt(ipAddressBigInt));
 	} catch (e) {
-		throw new ProsopoEnvError("API.INVALID_IP");
+		throw new ProsopoError({ code: "INVALID_IP", errorSite: "PROV-79" });
 	}
 };
 

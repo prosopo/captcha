@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Get token for gh app
         id: app_token
-        uses: peter-murray/workflow-application-token-action@v5
+        uses: peter-murray/workflow-application-token-action@dad2b81e50ce3edeb5f3b7ffbd79f731368bd668 # v5
         with:
           application_id: ${{ vars.PROSOPONATOR_APP_ID }}
           application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
@@ -45,8 +45,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
-          cache: 'npm'
+          node-version: '24.22.1'
 
       - name: Git config
         run: |

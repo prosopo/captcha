@@ -86,8 +86,8 @@ describe("getRootDir", () => {
 	});
 
 	test("locates the root the same way whether imported from src or dist", () => {
-		// Both layouts sit at the same depth (dev/workspace/{src,dist}), which is
-		// what makes the fixed `../../..` correct. If either moves, this breaks.
+		// The root is found from the package, not the module, so src and the
+		// deeper dist/<variant> layouts agree.
 		expect(path.basename(path.dirname(getDevDir()))).toBe(
 			path.basename(getRootDir()),
 		);

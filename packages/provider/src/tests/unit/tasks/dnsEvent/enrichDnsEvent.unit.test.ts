@@ -331,9 +331,111 @@ describe("computeDnsAsymmetry", () => {
 			);
 			expect(score).toBe(0);
 		});
+
+		it("skips iCloud Private Relay with no allowlist configured", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						datacenterName: "iCloud Private Relay",
+					}),
+				}),
+				undefined,
+				filterAllowingVpn,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("skips iCloud Private Relay when no trafficFilter is supplied", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						datacenterName: "iCloud Private Relay",
+					}),
+				}),
+				undefined,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("counts iCloud Private Relay when the operator denylists it", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						datacenterName: "iCloud Private Relay",
+					}),
+				}),
+				undefined,
+				{
+					...filterAllowingVpn,
+					datacenterNameDenylist: ["iCloud Private Relay"],
+				},
+			);
+			expect(score).toBeGreaterThan(0);
+		});
+
+		it("follows the datacenter category's own name lists", () => {
+			const resolver = enrichedWith({
+				resolverIpInfo: baseInfo({
+					isDatacenter: true,
+					providerName: "Example DNS",
+				}),
+			});
+			expect(
+				computeDnsAsymmetry(resolver, undefined, {
+					...filterAllowingVpn,
+					datacenter: {
+						action: TrafficFilterAction.Block,
+						nameAllowlist: ["Example DNS"],
+					},
+				}),
+			).toBe(0);
+			expect(
+				computeDnsAsymmetry(
+					enrichedWith({
+						resolverIpInfo: baseInfo({
+							isDatacenter: true,
+							providerType: "isp",
+							providerName: "Example DNS",
+						}),
+					}),
+					undefined,
+					{
+						...filterAllowingVpn,
+						datacenter: {
+							action: TrafficFilterAction.Block,
+							nameDenylist: ["Example DNS"],
+						},
+					},
+				),
+			).toBeGreaterThan(0);
+		});
 	});
 
 	describe("abuser gating", () => {
+		it("does not count an abuser the abuser category allowlists", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isAbuser: true,
+						abuserScore: 1,
+						providerName: "Example DNS",
+					}),
+				}),
+				undefined,
+				{
+					...filterAllowingVpn,
+					abuser: {
+						action: TrafficFilterAction.Block,
+						nameAllowlist: ["Example DNS"],
+					},
+				},
+			);
+			expect(score).toBe(0);
+		});
+
 		it("does not count abuser when blockAbuser is false", () => {
 			const score = computeDnsAsymmetry(
 				enrichedWith({
