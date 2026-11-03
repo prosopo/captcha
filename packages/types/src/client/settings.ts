@@ -719,6 +719,11 @@ const nameListSchema = array(string().min(1).max(MAX_NAME_LIST_ENTRY_LENGTH))
 export enum TrafficFilterAction {
 	Block = "block",
 	Challenge = "challenge",
+	// No decision: the IP is treated as if its category had no policy, so the
+	// site's own settings decide the captcha. The least harsh action — any other
+	// exception that matches wins over it — which lets a policy act only on part
+	// of a category ("challenge proxies outside the market, leave the rest").
+	Pass = "pass",
 }
 
 export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
