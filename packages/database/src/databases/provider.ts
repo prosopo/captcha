@@ -87,6 +87,7 @@ import {
 	ScheduledTaskSchema,
 	SessionRecordSchema,
 	SolutionRecordSchema,
+	type SpamEmailDomain,
 	type SpamEmailDomainRecord,
 	SpamEmailDomainRecordSchema,
 	type Tables,
@@ -3457,29 +3458,55 @@ export class ProviderDatabase
 			.exec();
 	}
 
-	async bulkUpdateSpamEmailDomains(
-		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
-		upsert: boolean,
-	): Promise<void> {
+	/**
+	 * Store any of `domains` not already in the collection and return how many
+	 * were added. The source lists hold ~225k domains and barely change between
+	 * runs, so upserting all of them rewrote every row and held write locks for
+	 * ~8s per batch on each provider at the same moment. Reading the existing
+	 * set first is an index-only scan, and only the difference is written.
+	 */
+	async insertMissingSpamEmailDomains(
+		domains: Iterable<string>,
+	): Promise<number> {
 		if (!this.tables?.spamEmailDomain) {
 			throw new ProsopoError({
 				code: "DB_QUERY_FAILED",
 				errorSite: "DBSE-51",
 				message: "Failed to import database engine",
-				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
+				context: { failedFuncName: this.insertMissingSpamEmailDomains.name },
 			});
 		}
 
-		const bulkOps = domains.map((op) => ({
+		const missing = new Set(domains);
+		if (missing.size === 0) {
+			return 0;
+		}
+
+		// Projecting only `domain` and hinting its unique index makes this a
+		// covered query: mongod answers from the index without fetching docs.
+		const existing = this.tables.spamEmailDomain
+			.find({}, { domain: 1, _id: 0 })
+			.hint({ domain: 1 })
+			.lean<SpamEmailDomain>()
+			.cursor();
+		for await (const record of existing) {
+			missing.delete(record.domain);
+		}
+
+		if (missing.size === 0) {
+			return 0;
+		}
+
+		// Still an upsert so a concurrent run cannot fail on the unique index.
+		const bulkOps = Array.from(missing, (domain) => ({
 			updateOne: {
-				filter: op.filter,
-				update: { $set: op.update },
-				upsert,
+				filter: { domain },
+				update: { $set: { domain } },
+				upsert: true,
 			},
 		}));
+		await this.tables.spamEmailDomain.bulkWrite(bulkOps, { ordered: false });
 
-		if (bulkOps.length > 0) {
-			await this.tables.spamEmailDomain.bulkWrite(bulkOps);
-		}
+		return missing.size;
 	}
 }
