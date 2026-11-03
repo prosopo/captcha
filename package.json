@@ -11,6 +11,7 @@
 	"scripts": {
 		"hostid": "dig +short ${HOSTNAME}.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
 		"build:all": "turbo run build",
+		"build:self-hosted": "turbo run build --filter=@prosopo/procaptcha-bundle... --filter=@prosopo/keyring... --filter=@prosopo/logger... --filter=@prosopo/workspace...",
 		"build:all:tsc": "turbo run build:tsc",
 		"build:all:cjs": "turbo run build:cjs",
 		"build:docker:all": "node ./docker/bake.mjs",
