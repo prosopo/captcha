@@ -299,9 +299,13 @@ export class DecisionMachineRunner {
 	/**
 	 * Pre-fetch hook for decision machines, the counterpart of
 	 * {@link getRequiredCounters}: which counters the machine wants read into
-	 * its input (`requiredCounters()`), and whether it wants the account
+	 * its input (`requiredDecideCounters()`), and whether it wants the account
 	 * sighting (`requiresAccountSighting()`). Both exports are optional; a
 	 * machine that has neither, or none at all, asks for nothing.
+	 *
+	 * The counter export is not `requiredCounters()` because one bundle is
+	 * published as both the decision and the routing machine, and that name
+	 * already belongs to routing.
 	 */
 	async getDecisionRequirements(
 		input: Pick<
@@ -321,7 +325,7 @@ export class DecisionMachineRunner {
 			}
 			const counters = await this.runArtifactExport(
 				artifact,
-				["requiredCounters"],
+				["requiredDecideCounters"],
 				{ input, optional: true },
 				RequiredCountersSchema,
 			);

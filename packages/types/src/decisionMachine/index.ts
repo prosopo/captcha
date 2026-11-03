@@ -255,7 +255,7 @@ export type DecisionMachineInput = {
 	// Undefined when no frictionless session preceded, or when the detector
 	// reported nothing.
 	d?: DetectorData;
-	// The usage counters the machine declared in `requiredCounters()`, keyed
+	// The usage counters the machine declared in `requiredDecideCounters()`, keyed
 	// by `encodeCounterKey`, as routing machines get them. Undefined when the
 	// machine declared none or the counters could not be read, which a rule
 	// must not read as zero.
