@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type IFrictionlessTypes,
+	type PowCaptchaSolutionEscalation,
 	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 } from "@prosopo/types";
@@ -27,6 +28,16 @@ export type ConcreteCaptchaType =
 	| CaptchaType.image
 	| CaptchaType.puzzle
 	| CaptchaType.iconOrder;
+
+/** The interactive types a verified PoW solve can be escalated to. */
+export type EscalationCaptchaType = PowCaptchaSolutionEscalation["captchaType"];
+
+export const isEscalationCaptchaType = (
+	captchaType: CaptchaType | undefined,
+): captchaType is EscalationCaptchaType =>
+	CaptchaType.image === captchaType ||
+	CaptchaType.puzzle === captchaType ||
+	CaptchaType.iconOrder === captchaType;
 
 /**
  * Resolve a requested captcha type against what the site permits and what

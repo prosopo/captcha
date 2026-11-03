@@ -86,6 +86,7 @@ import {
 	solveDeviceSignals,
 } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
+import { isEscalationCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -571,14 +572,13 @@ export class PowCaptchaManager extends CaptchaManager {
 		let routingOutput = routed?.routingOutput;
 
 		// Either signal forces at least an image escalation, unless the routing
-		// machine already escalated to a visual challenge (image/puzzle) that we
-		// would keep anyway. Missing coords is reported in preference to a
+		// machine already escalated to an interactive challenge that we would
+		// keep anyway. Missing coords is reported in preference to a
 		// changed address when both fire: it is the stronger statement, since
 		// no legitimate widget omits them.
 		if (
 			(escalateForMissingCoords || escalateForIpChange) &&
-			routingOutput?.captchaType !== CaptchaType.image &&
-			routingOutput?.captchaType !== CaptchaType.puzzle
+			!isEscalationCaptchaType(routingOutput?.captchaType)
 		) {
 			routingOutput = {
 				captchaType: CaptchaType.image,

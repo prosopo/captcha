@@ -44,6 +44,7 @@ import { embedData, getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getVerdictCache } from "../../../../api/blacklistRequestInspector.js";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
+import { applyRouter } from "../../../../tasks/frictionless/routingMachine.js";
 import { PowCaptchaManager } from "../../../../tasks/powCaptcha/powTasks.js";
 import {
 	checkPowSignature,
@@ -76,9 +77,21 @@ vi.mock(
 	},
 );
 
+vi.mock(
+	"../../../../tasks/frictionless/routingMachine.js",
+	async (importOriginal) => {
+		const actual =
+			await importOriginal<
+				typeof import("../../../../tasks/frictionless/routingMachine.js")
+			>();
+		return { ...actual, applyRouter: vi.fn(actual.applyRouter) };
+	},
+);
+
 vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),
 	validateSolution: vi.fn(),
+	isCoordsAllZero: vi.fn(),
 }));
 
 describe("PowCaptchaManager", () => {
@@ -754,6 +767,80 @@ describe("PowCaptchaManager", () => {
 					reason: FrictionlessReason.MISSING_COORDINATES,
 				});
 			});
+		});
+
+		describe("missing coords after routing already chose a visual challenge", () => {
+			it.each([
+				CaptchaType.image,
+				CaptchaType.puzzle,
+				CaptchaType.iconOrder,
+			] as const)(
+				"keeps the %s challenge routing chose",
+				async (routedType) => {
+					const requestedAtTimestamp = 123456789;
+					const userAccount = "testUserAccount";
+					const providerSignature = "testSignature";
+					const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+					const ipAddress = getIPAddress("1.1.1.1");
+					const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+					const challengeRecord: PoWCaptchaStored = {
+						challenge,
+						difficulty: 4,
+						dappAccount: pair.address,
+						userAccount,
+						requestedAtTimestamp: new Date(requestedAtTimestamp),
+						submittedAtTimestamp: new Date(),
+						result: { status: CaptchaStatus.pending },
+						userSubmitted: false,
+						serverChecked: false,
+						ipAddress: getCompositeIpAddress(ipAddress),
+						headers,
+						ja4: "ja4",
+						providerSignature,
+						lastUpdatedTimestamp: new Date(),
+						sessionId: "linked-session-id",
+					};
+					const sessionRecord: Partial<Session> = {
+						sessionId: "linked-session-id",
+						scoreComponents: { baseScore: 0.5 },
+					};
+					vi.mocked(verifyRecency).mockReturnValue(true);
+					vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+					vi.mocked(validateSolution).mockReturnValue(true);
+					vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+						challengeRecord as unknown as PoWCaptchaRecord,
+					);
+					vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(
+						undefined,
+					);
+					vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+						sessionRecord as Session,
+					);
+					vi.mocked(applyRouter).mockResolvedValueOnce({
+						captchaType: routedType,
+					});
+					powCaptchaManager.setPostPowContext({
+						ip: "1.1.1.1",
+						device: { userAgent: "", headers },
+						raw: { headers, userAgent: "" },
+					});
+
+					const result = await powCaptchaManager.verifyPowCaptchaSolution(
+						challenge,
+						providerSignature,
+						12345,
+						1000,
+						"testTimestampSignature",
+						ipAddress,
+						headers,
+						undefined,
+						undefined, // no salt, so no coords
+					);
+
+					expect(result.verified).toBe(true);
+					expect(result.routingOutput).toEqual({ captchaType: routedType });
+				},
+			);
 		});
 	});
 
