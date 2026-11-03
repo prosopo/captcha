@@ -410,10 +410,7 @@ export const measureSync = <T>(span: SyncSpan, fn: () => T): T => {
 	} finally {
 		// Counted in `finally` so a span that throws — a decoder handed the
 		// wrong key, say — still shows the time it burned getting there.
-		recordSyncSpan(
-			span,
-			Number(process.hrtime.bigint() - wallBefore) / 1e9,
-		);
+		recordSyncSpan(span, Number(process.hrtime.bigint() - wallBefore) / 1e9);
 	}
 };
 

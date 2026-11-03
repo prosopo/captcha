@@ -84,6 +84,15 @@ describe("the base URL", () => {
 		await client().get("");
 		expect(fetchStub.last().url).toBe(BASE_URL);
 	});
+
+	test.each(["/", "///"])(
+		"a base URL ending in %s does not produce a double slash",
+		async (trailing: string) => {
+			fetchStub.respond({});
+			await new TestClient(`${BASE_URL}${trailing}`).get("/status");
+			expect(fetchStub.last().url).toBe(`${BASE_URL}/status`);
+		},
+	);
 });
 
 describe("fetch", () => {

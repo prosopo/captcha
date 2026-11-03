@@ -26,7 +26,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@noble/curves": "2.4.0"
+		"@noble/curves": "2.4.0",
+		"@prosopo/util": "workspace:*"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",

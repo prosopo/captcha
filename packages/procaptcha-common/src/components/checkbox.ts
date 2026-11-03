@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { joinUrl } from "@prosopo/util";
 import {
 	type Theme,
 	canHover,
@@ -81,9 +82,7 @@ const generateNames = (): CheckboxNames => ({
 });
 
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
-	? new URL(
-			`${process.env.PROSOPO_DOCS_URL.replace(/\/+$/, "")}/en/basics/faq/`,
-		).href
+	? joinUrl(process.env.PROSOPO_DOCS_URL, "en/basics/faq/")
 	: "https://docs.prosopo.io/en/basics/faq/";
 
 // localiseError appends the errorId as " (CODE:SITE)".
