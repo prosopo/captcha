@@ -113,6 +113,10 @@ export type ProcaptchaCallbacks = Partial<Callbacks>;
 export interface ReloadOptions {
 	showRetry?: boolean;
 	refresh?: boolean;
+	// The challenge of the puzzle the user just answered wrongly. Sent with the
+	// replacement request so the provider can judge the next puzzle on that
+	// solve's device. Ignored on a refresh, which is not a wrong answer.
+	retryOf?: string;
 	switchToImage?: boolean;
 	switchToPuzzle?: boolean;
 }

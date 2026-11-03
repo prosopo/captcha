@@ -788,6 +788,12 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// provider's own records (see `resolveRefreshLineage`). A client that
 	// omits it is treated as a fresh visit, exactly as a page reload already is.
 	[ApiParams.refreshOf]: boundedString(INPUT_LIMITS.ID).optional(),
+	// The challenge of the puzzle the user just answered wrongly, when this
+	// session replaces it. Only followed when that puzzle was submitted and
+	// failed, belongs to the same user, site and IP, and was served to the same
+	// client (user agent and TLS fingerprint). Each failed puzzle can be
+	// followed once. See `resolveRetrySolveDevice`.
+	[ApiParams.retryOf]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	// The user pressed the puzzle's switch-to-image control rather than plain
 	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
 	// on a site with the switch enabled.

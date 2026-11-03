@@ -1814,6 +1814,26 @@ export class ProviderDatabase
 		);
 	}
 
+	/**
+	 * Take a failed puzzle for one retry. Succeeds once per puzzle, and only
+	 * for a puzzle that was submitted and disapproved.
+	 * @returns true when this call took it
+	 */
+	async claimPuzzleCaptchaRetry(challenge: PoWChallengeId): Promise<boolean> {
+		const tables = this.getTables();
+		const collection = this.interactiveCollection(CaptchaType.puzzle);
+		const result = await tables[collection.table].updateOne(
+			{
+				challenge,
+				userSubmitted: true,
+				"result.status": CaptchaStatus.disapproved,
+				retried: { $ne: true },
+			},
+			{ $set: { retried: true } },
+		);
+		return result.modifiedCount === 1;
+	}
+
 	async updateIconOrderCaptchaRecord(
 		challenge: PoWChallengeId,
 		updates: Partial<IconOrderCaptchaRecord>,

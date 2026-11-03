@@ -141,11 +141,15 @@ export const mountProcaptchaPuzzleWidget = (
 		}
 
 		// Failed — show retry message and fetch a new challenge
+		const failedChallenge = challengeData?.challenge;
 		showRetry = true;
 		puzzlePhase = "dragging";
 		scheduler.schedule();
 
-		await replaceChallenge({ showRetry: true });
+		await replaceChallenge({
+			showRetry: true,
+			...(failedChallenge && { retryOf: failedChallenge }),
+		});
 	};
 
 	const replaceChallenge = async (options: ReloadOptions): Promise<void> => {

@@ -178,6 +178,10 @@ export const mountProcaptchaFrictionless = (
 	let nextRefreshOf: string | undefined;
 	// The challenge type the user asked that replacement to switch to.
 	let nextSwitchTo: RefreshSwitchTarget | undefined;
+	// The puzzle challenge the user answered wrongly, sent with the next
+	// /frictionless request so the provider can judge the replacement on that
+	// solve's device. Kept and cleared alongside `nextRefreshOf`.
+	let nextRetryOf: string | undefined;
 	// Challenges in a row replaced by a wrong answer or a refresh. Lets the
 	// puzzle draw its switch to an image challenge more prominently for a user
 	// who looks to be struggling.
@@ -411,6 +415,7 @@ export const mountProcaptchaFrictionless = (
 			nextMountShowRetry = true === options?.showRetry;
 			nextRefreshOf =
 				true === options?.refresh ? frictionlessState.sessionId : undefined;
+			nextRetryOf = true === options?.refresh ? undefined : options?.retryOf;
 			nextSwitchTo = refreshSwitchTarget(options);
 			replacementCount = nextSwitchTo ? 0 : replacementCount + 1;
 			// A reload mints a genuinely new session, so the invalidation
@@ -569,6 +574,7 @@ export const mountProcaptchaFrictionless = (
 					nextRefreshOf,
 					nextSwitchTo,
 					widgetSlot,
+					nextRetryOf,
 				);
 				if (destroyed) return;
 
@@ -607,6 +613,7 @@ export const mountProcaptchaFrictionless = (
 
 				nextRefreshOf = undefined;
 				nextSwitchTo = undefined;
+				nextRetryOf = undefined;
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,
