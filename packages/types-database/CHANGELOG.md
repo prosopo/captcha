@@ -1,5 +1,25 @@
 # @prosopo/types-database
 
+## 5.16.2
+### Patch Changes
+
+- f679760: Store the TLS handshake round trip on each session as `tlsHandshakeRttUs`.
+  
+  chaddy now sends `X-TLS-Handshake-Rtt-Us`: the time from the server's handshake reply to the client's answer, in microseconds. The provider reads it with the other raw TLS signals, saves it on the session and passes it to decision machines. Until now we only had the TCP round trip (`synackNs` to `ackNs`), which can come from a different machine to the one that does TLS.
+  
+  The old `chelloToHandshakeUs` is not a handshake time. chaddy takes it when each request arrives, so on a reused connection it is really the connection's age (median about 2 seconds). This change leaves it as it is.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/user-access-policy@3.15.16
+  - @prosopo/common@3.3.2
+
 ## 5.16.1
 ### Patch Changes
 

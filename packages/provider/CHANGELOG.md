@@ -1,5 +1,85 @@
 # @prosopo/provider
 
+## 5.26.2
+### Patch Changes
+
+- 91ef450: Decision machines checking a puzzle solve now receive the puzzle's start point (`puzzleOrigin`), target (`puzzleTarget`) and tolerance (`puzzleTolerance`), alongside the drag events they already get. Before, a rule could see the drag but not where it was meant to go.
+- 04b6f70: The provider now decodes sealed detector payloads with
+  `@prosopo/native-bundle-payload`, a compiled Rust module published to npm. It
+  is the same code Prosopo's own servers use to read these payloads, and the
+  provider has stopped carrying its own TypeScript copy. It accepts and rejects
+  exactly the payloads the old decoder did, and a payload it cannot read still
+  counts as "decryption failed".
+  
+  - `decodePayload.js` has been regenerated. It is about half its old size, and a
+    full decode takes about 1.2 ms instead of 3.8 ms.
+  - `@prosopo/provider` depends on `@prosopo/native-bundle-payload` 0.1.0, a
+    prebuilt linux-x64 binary, so you don't need Rust to install it.
+  - The CLI bundle copies the binary beside `decodePayload.js`, as it already
+    does for the other native modules, so the Docker image needs no
+    `node_modules`. `@prosopo/native-*` packages are now hoisted so the CLI build
+    can find them.
+  - Open-format payloads (`open-v1`) are unchanged.
+- 7c58be4: Finish the puzzle refresh and switch-to-image work.
+  
+  - A user who switched their puzzle to an image now keeps the image when they refresh it. Before, a plain refresh handed the puzzle straight back.
+  - That image now has a puzzle-piece button to go back to the puzzle. It is only offered on an image the user chose themselves, and only while going back would not run into the three-refresh limit. Going back only drops the user's choice: if routing would serve an image anyway, they still get the image.
+  - A refresh only extends a chain started by the same user, IP and site, so nobody can borrow someone else's refresh count or switch.
+  - Sites pinned to puzzle now record refreshes too. The three-refresh switch to image applies to them only when the superadmin puzzle-to-image switch is on, since they chose puzzle on purpose.
+  - Routing machines now receive `input.refresh` (`count` and `afterMs`) on a refresh, so rules can act on how often and how fast a user refreshes.
+  - New widget string `WIDGET.SWITCH_TO_PUZZLE`, translated into every locale. The puzzle's switch button is now a shared `mountChallengeSwitchButton` with an image or puzzle icon.
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- f679760: Store the TLS handshake round trip on each session as `tlsHandshakeRttUs`.
+  
+  chaddy now sends `X-TLS-Handshake-Rtt-Us`: the time from the server's handshake reply to the client's answer, in microseconds. The provider reads it with the other raw TLS signals, saves it on the session and passes it to decision machines. Until now we only had the TCP round trip (`synackNs` to `ackNs`), which can come from a different machine to the one that does TLS.
+  
+  The old `chelloToHandshakeUs` is not a handshake time. chaddy takes it when each request arrives, so on a reused connection it is really the connection's age (median about 2 seconds). This change leaves it as it is.
+- cf9a1bb: Add a `pass` action to the traffic filter, so a policy can act on only part of a category.
+  
+  `pass` takes no decision: the IP is treated as if its category had no policy, and the site's own settings decide the captcha. It can be a category's action or an exception's. It's the least harsh action, so any other matching exception wins over it, whatever their order. Like a missing policy, a category on `pass` still owns the IP, so lower categories are not consulted.
+  
+  Two examples:
+  
+  - `proxy: pass` with an exception `inMarket: false → challenge (puzzle)`: proxies outside the market get the puzzle, and the rest are left to the site's settings.
+  - `proxy: block` with an exception `mobile: true → pass`: proxies are blocked except on carrier networks, which are left to the site's settings.
+  
+  Protect's traffic filter gains the same action, so both products take the same inputs.
+  
+  Tests: five new cases in `checkTrafficFilter.unit.test.ts` cover `pass` as a category action, a matching exception winning over it, `pass` as an exception, losing to another matching exception regardless of order, and a lower category not being consulted.
+- Updated dependencies [91ef450]
+- Updated dependencies [f31105a]
+- Updated dependencies [7c58be4]
+- Updated dependencies [c12d199]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/database@4.6.0
+  - @prosopo/api@4.8.7
+  - @prosopo/locale@3.14.0
+  - @prosopo/audio-assets@0.2.5
+  - @prosopo/datasets@3.2.20
+  - @prosopo/ipinfo@0.5.3
+  - @prosopo/logger@2.1.8
+  - @prosopo/puzzle-assets@0.2.6
+  - @prosopo/user-access-policy@3.15.16
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/web-bot-auth@0.1.7
+  - @prosopo/types-database@5.16.2
+  - @prosopo/util@3.5.0
+  - @prosopo/api-express-router@3.3.12
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/fingerprint@2.8.11
+  - @prosopo/keyring@2.10.20
+  - @prosopo/load-balancer@2.11.24
+  - @prosopo/types-env@2.11.35
+  - @prosopo/api-route@2.6.68
+  - @prosopo/redis-client@1.0.45
+  - @prosopo/icon-order-assets@0.2.5
+
 ## 5.26.1
 ### Patch Changes
 
