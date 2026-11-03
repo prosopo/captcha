@@ -3,6 +3,6 @@
 services:
   redis-stack:
     ports:
-      - '8001:8001' # Insight tool
+      - '127.0.0.1:8001:8001' # Insight tool
     environment:
       - REDIS_ARGS=--requirepass root
