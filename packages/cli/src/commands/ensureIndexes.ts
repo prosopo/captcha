@@ -30,14 +30,10 @@ export default (
 		command: "ensure_indexes",
 		describe: "Ensure indexes for internal database",
 		handler: async () => {
-			try {
-				const env = new ProviderEnvironment(config, pair);
-				await env.isReady();
-				const tasks = new Tasks(env);
-				await tasks.db.ensureIndexes();
-			} catch (err) {
-				logger.error(() => ({ err }));
-			}
+			const env = new ProviderEnvironment(config, pair);
+			await env.isReady();
+			await new Tasks(env).db.ensureIndexes();
+			logger.info(() => ({ msg: "Indexes ensured" }));
 		},
 		middlewares: [],
 	};

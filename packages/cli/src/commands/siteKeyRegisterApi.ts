@@ -48,7 +48,7 @@ export default (
 		cmdArgs?.logger || getLogger(LogLevel.enum.info, "cli.dapp_register");
 
 	return {
-		command: "site_key_register_api <sitekey> <url>",
+		command: "site_key_register_api <sitekey> <tier>",
 		describe: "Register a Site Key",
 		builder: (yargs: Argv) =>
 			yargs
@@ -108,62 +108,54 @@ export default (
 					desc: "Min image rounds",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
-			try {
-				const env = new ProviderEnvironment(config, pair, authAccount);
-				await env.isReady();
-				const {
-					sitekey,
-					captcha_type,
-					frictionless_threshold,
-					frictionless_image_threshold,
-					url,
-					domains,
-					pow_difficulty,
-					image_threshold,
-					image_max_rounds,
-					image_min_rounds,
-				} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
-				const api = new ProviderApi(url as string, pair.address);
-				const jwt = pair.jwtIssue();
-				await api.registerSiteKey(
-					sitekey as string,
-					argv.tier as Tier,
-					{
-						captchaType: SelectableCaptchaTypeSpec.parse(captcha_type),
-						frictionlessThreshold: {
-							frictionlessPuzzleThreshold: frictionless_threshold as number,
-							frictionlessImageThreshold:
-								frictionless_image_threshold ??
-								frictionlessImageThresholdDefault,
-						},
-						// Registering a sitekey leaves image and puzzle on; anything
-						// further is a portal-side decision.
-						frictionlessTypes: frictionlessTypesDefault,
-						domains: domains || [],
-						powDifficulty: pow_difficulty as number,
-						imageThreshold: image_threshold as number,
-						imageMaxRounds: image_max_rounds as number,
-						imageMinRounds: image_min_rounds as number,
-						puzzleTolerance: puzzleToleranceDefault,
-						iconOrderTolerance: iconOrderToleranceDefault,
-						puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
-						ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
-						disallowWebView: false,
-						verifiedTimeout: 60000,
-						solutionTimeout: 60000,
+			const {
+				sitekey,
+				captcha_type,
+				frictionless_threshold,
+				frictionless_image_threshold,
+				url,
+				domains,
+				pow_difficulty,
+				image_threshold,
+				image_max_rounds,
+				image_min_rounds,
+			} = SiteKeyRegisterApiCommandArgsSpec.parse(argv);
+			const env = new ProviderEnvironment(config, pair, authAccount);
+			await env.isReady();
+			const api = new ProviderApi(url as string, pair.address);
+			const jwt = pair.jwtIssue();
+			await api.registerSiteKey(
+				sitekey as string,
+				argv.tier as Tier,
+				{
+					captchaType: SelectableCaptchaTypeSpec.parse(captcha_type),
+					frictionlessThreshold: {
+						frictionlessPuzzleThreshold: frictionless_threshold as number,
+						frictionlessImageThreshold:
+							frictionless_image_threshold ?? frictionlessImageThresholdDefault,
 					},
-					jwt,
-				);
-				logger.info(() => ({
-					data: { sitekey },
-					msg: "Site Key registered",
-				}));
-			} catch (err) {
-				logger.error(() => ({
-					err,
-					msg: "Error registering Site Key",
-				}));
-			}
+					// Registering a sitekey leaves image and puzzle on; anything
+					// further is a portal-side decision.
+					frictionlessTypes: frictionlessTypesDefault,
+					domains: domains || [],
+					powDifficulty: pow_difficulty as number,
+					imageThreshold: image_threshold as number,
+					imageMaxRounds: image_max_rounds as number,
+					imageMinRounds: image_min_rounds as number,
+					puzzleTolerance: puzzleToleranceDefault,
+					iconOrderTolerance: iconOrderToleranceDefault,
+					puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+					ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
+					disallowWebView: false,
+					verifiedTimeout: 60000,
+					solutionTimeout: 60000,
+				},
+				jwt,
+			);
+			logger.info(() => ({
+				data: { sitekey },
+				msg: "Site Key registered",
+			}));
 		},
 		middlewares: [validateSiteKey],
 	};

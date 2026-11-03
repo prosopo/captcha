@@ -52,28 +52,20 @@ export default (
 			"Replace the detector pool with one read from stdin. Restart the provider to load it.",
 		builder: (yargs: Argv) => yargs,
 		handler: async () => {
-			try {
-				const body = ReplaceDetectorPoolBody.parse(
-					JSON.parse(await readStdin()),
-				);
-				const bundles = filterPoolBundles(
-					new Map(Object.entries(body.bundles)),
-					{ warn: (msg, data) => logger.warn(() => ({ msg, data })) },
-				);
-				if (bundles.size === 0) {
-					throw new Error("none of the bundles can be loaded on this node");
-				}
-				const dir =
-					process.env.PROSOPO_DETECTOR_POOL_DIR ?? DEFAULT_DETECTOR_POOL_DIR;
-				persistDetectorBundlePool(bundles, dir);
-				logger.info(() => ({
-					data: { count: bundles.size, dir },
-					msg: "Detector pool written. Restart the provider to load it.",
-				}));
-			} catch (err) {
-				logger.error(() => ({ err, msg: "Error writing detector pool" }));
-				process.exitCode = 1;
+			const body = ReplaceDetectorPoolBody.parse(JSON.parse(await readStdin()));
+			const bundles = filterPoolBundles(new Map(Object.entries(body.bundles)), {
+				warn: (msg, data) => logger.warn(() => ({ msg, data })),
+			});
+			if (bundles.size === 0) {
+				throw new Error("none of the bundles can be loaded on this node");
 			}
+			const dir =
+				process.env.PROSOPO_DETECTOR_POOL_DIR ?? DEFAULT_DETECTOR_POOL_DIR;
+			persistDetectorBundlePool(bundles, dir);
+			logger.info(() => ({
+				data: { count: bundles.size, dir },
+				msg: "Detector pool written. Restart the provider to load it.",
+			}));
 		},
 		middlewares: [],
 	};

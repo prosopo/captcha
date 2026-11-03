@@ -40,28 +40,19 @@ export default (
 				desc: "The file path of a JSON dataset file",
 			} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
-			try {
-				const env = new ProviderEnvironment(config, pair);
-				await env.isReady();
-				const tasks = new Tasks(env);
-				const file = z.string().parse(argv.file);
-				const jsonFile = loadJSONFile(file) as JSON;
-				logger.info(() => ({
-					data: { file },
-					msg: "Loading JSON",
-				}));
-				const result =
-					await tasks.datasetManager.providerSetDatasetFromFile(jsonFile);
-				logger.info(() => ({
-					data: { file },
-					msg: "Loaded JSON",
-				}));
-			} catch (err) {
-				logger.error(() => ({
-					err,
-					msg: "Error loading JSON",
-				}));
-			}
+			const file = z.string().parse(argv.file);
+			logger.info(() => ({
+				data: { file },
+				msg: "Loading JSON",
+			}));
+			const jsonFile = loadJSONFile(file) as JSON;
+			const env = new ProviderEnvironment(config, pair);
+			await env.isReady();
+			await new Tasks(env).datasetManager.providerSetDatasetFromFile(jsonFile);
+			logger.info(() => ({
+				data: { file },
+				msg: "Loaded JSON",
+			}));
 		},
 		middlewares: [],
 	};

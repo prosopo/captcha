@@ -31,22 +31,17 @@ export default (
 		command: "ensure_external_indexes",
 		describe: "Ensure indexes for external database",
 		handler: async () => {
-			try {
-				const env = new ProviderEnvironment(config, pair);
-				await env.isReady();
-				const tasks = new Tasks(env);
-				if (!env.config.mongoCaptchaUri) {
-					throw new Error("mongoCaptchaUri not set in config");
-				}
-				await tasks.clientTaskManager
-					.getCaptchaDB(env.config.mongoCaptchaUri)
-					.ensureIndexes()
-					.catch((err) => {
-						env.logger.error(() => ({ err }));
-					});
-			} catch (err) {
-				logger.error(() => ({ err }));
+			if (!config.mongoCaptchaUri) {
+				throw new Error("mongoCaptchaUri not set in config");
 			}
+			const env = new ProviderEnvironment(config, pair);
+			await env.isReady();
+			const captchaDB = new Tasks(env).clientTaskManager.getCaptchaDB(
+				config.mongoCaptchaUri,
+			);
+			await captchaDB.connect();
+			await captchaDB.ensureIndexes();
+			logger.info(() => ({ msg: "External indexes ensured" }));
 		},
 		middlewares: [],
 	};

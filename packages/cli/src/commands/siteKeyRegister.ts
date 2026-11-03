@@ -125,55 +125,48 @@ export default (
 					desc: "Image min rounds for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
-			try {
-				const env = new ProviderEnvironment(config, pair);
-				await env.isReady();
-				const {
-					sitekey,
-					tier,
-					captcha_type,
-					frictionless_threshold,
-					frictionless_image_threshold,
-					pow_difficulty,
-					domains,
-					image_threshold,
-					image_max_rounds,
-					image_min_rounds,
-				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
-				const tasks = new Tasks(env);
-				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
-					captchaType: SelectableCaptchaTypeSpec.parse(captcha_type),
-					frictionlessThreshold: {
-						frictionlessPuzzleThreshold: frictionless_threshold as number,
-						frictionlessImageThreshold:
-							frictionless_image_threshold ?? frictionlessImageThresholdDefault,
-					},
-					// Registering a sitekey leaves image and puzzle on; anything
-					// further is a portal-side decision.
-					frictionlessTypes: frictionlessTypesDefault,
-					domains: domains || [],
-					powDifficulty: pow_difficulty as number,
-					imageThreshold: image_threshold as number,
-					imageMaxRounds: image_max_rounds as number,
-					imageMinRounds: image_min_rounds as number,
-					puzzleTolerance: puzzleToleranceDefault,
-					iconOrderTolerance: iconOrderToleranceDefault,
-					puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
-					ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
-					disallowWebView: false,
-					verifiedTimeout: 60000,
-					solutionTimeout: 60000,
-				});
-				logger.info(() => ({
-					data: { sitekey },
-					msg: "Site Key registered",
-				}));
-			} catch (err) {
-				logger.error(() => ({
-					err,
-					msg: "Error registering Site Key",
-				}));
-			}
+			const {
+				sitekey,
+				tier,
+				captcha_type,
+				frictionless_threshold,
+				frictionless_image_threshold,
+				pow_difficulty,
+				domains,
+				image_threshold,
+				image_max_rounds,
+				image_min_rounds,
+			} = SiteKeyRegisterCommandArgsSpec.parse(argv);
+			const env = new ProviderEnvironment(config, pair);
+			await env.isReady();
+			const tasks = new Tasks(env);
+			await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
+				captchaType: SelectableCaptchaTypeSpec.parse(captcha_type),
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: frictionless_threshold as number,
+					frictionlessImageThreshold:
+						frictionless_image_threshold ?? frictionlessImageThresholdDefault,
+				},
+				// Registering a sitekey leaves image and puzzle on; anything
+				// further is a portal-side decision.
+				frictionlessTypes: frictionlessTypesDefault,
+				domains: domains || [],
+				powDifficulty: pow_difficulty as number,
+				imageThreshold: image_threshold as number,
+				imageMaxRounds: image_max_rounds as number,
+				imageMinRounds: image_min_rounds as number,
+				puzzleTolerance: puzzleToleranceDefault,
+				iconOrderTolerance: iconOrderToleranceDefault,
+				puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+				ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
+				disallowWebView: false,
+				verifiedTimeout: 60000,
+				solutionTimeout: 60000,
+			});
+			logger.info(() => ({
+				data: { sitekey },
+				msg: "Site Key registered",
+			}));
 		},
 		middlewares: [validateSiteKey],
 	};

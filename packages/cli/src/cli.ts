@@ -24,7 +24,7 @@ import ReloadingAPI from "./reloader.js";
 
 const log = getLogger(LogLevel.enum.info, "cli");
 
-async function main() {
+async function main(): Promise<void> {
 	const envPath = loadEnv();
 
 	const config: ProsopoConfigOutput = getConfig();
@@ -46,26 +46,24 @@ async function main() {
 	);
 
 	log.info(() => ({ data: { cliArgs: processedArgs } }));
-	if (processedArgs.api) {
-		await new ReloadingAPI(envPath, config, pair, authAccount, processedArgs)
-			.start()
-			.then(() => {
-				log.info(() => ({ msg: "Reloading API started..." }));
-			});
-	} else {
+	if (!processedArgs.api) {
 		process.exit(0);
 	}
+	await new ReloadingAPI(
+		envPath,
+		config,
+		pair,
+		authAccount,
+		processedArgs,
+	).start();
+	log.info(() => ({ msg: "Reloading API started..." }));
 }
 
-//if main process
 if (isMain(import.meta.url, "provider")) {
-	loadI18next(true).then(() => {
-		main()
-			.then(() => {
-				log.info(() => ({ msg: "Running main process..." }));
-			})
-			.catch((error) => {
-				log.error(() => ({ err: error }));
-			});
-	});
+	loadI18next(true)
+		.then(main)
+		.catch((error: unknown) => {
+			log.error(() => ({ err: error, msg: "Command failed" }));
+			process.exit(1);
+		});
 }
