@@ -1,5 +1,26 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.24.1
+### Patch Changes
+
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/procaptcha-puzzle@2.18.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.12
+  - @prosopo/procaptcha-audio@0.3.1
+  - @prosopo/procaptcha-common@2.23.1
+  - @prosopo/procaptcha-icon-order@0.3.1
+  - @prosopo/procaptcha-pow@2.14.9
+  - @prosopo/procaptcha-react@2.14.20
+
 ## 2.24.0
 ### Minor Changes
 

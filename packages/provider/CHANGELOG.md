@@ -1,5 +1,42 @@
 # @prosopo/provider
 
+## 5.27.0
+### Minor Changes
+
+- b80b627: Decision machines can now act on repeated wild guesses at an interactive captcha.
+  
+  - Usage counters gain a `farMiss` kind. It is written per user account and per address when a puzzle answer lands well away from the slot, as opposed to a near miss.
+  - A decision machine can export `requiredDecideCounters()` (named apart from the routing `requiredCounters()`, since one bundle serves both) and `requiresAccountSighting()`. At verification the provider reads what it asked for into `input.counters` and `input.accountSighting`. Anything that cannot be read is left out rather than passed as zero.
+  - The reputation DB client reads `reputation.shared_reason` onto `IPInfoResult.sharedReason`. `IIpInfoService` gains `accountSighting(siteKey, account)`, which reads `GET /v1/account/{siteKey}/{account}` and has no answer for an unknown account, a 404 or an error.
+
+### Patch Changes
+
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+- ec54f21: The scheduled spam email domain sync now only writes domains that are not already stored. It used to upsert the whole list (about 225k domains) on every run, which rewrote every row and held Mongo write locks for around 8 seconds per batch on every provider at the same time, slowing requests on the hour. It now reads the stored domains with an index-only scan and upserts just the new ones.
+  
+  `bulkUpdateSpamEmailDomains` on the provider database is replaced by `insertMissingSpamEmailDomains(domains)`, which returns how many domains were added. The task records that count as `domainsAdded` alongside `domainsProcessed`. Domains that drop off the source lists are still kept, as before.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/ipinfo@0.6.0
+  - @prosopo/types-env@2.12.0
+  - @prosopo/database@4.6.1
+  - @prosopo/types-database@5.17.0
+  - @prosopo/api@4.9.0
+  - @prosopo/api-express-router@3.3.13
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.21
+  - @prosopo/env@3.6.90
+  - @prosopo/fingerprint@2.8.12
+  - @prosopo/keyring@2.10.21
+  - @prosopo/load-balancer@2.11.25
+  - @prosopo/user-access-policy@3.15.17
+
 ## 5.26.2
 ### Patch Changes
 
