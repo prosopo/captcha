@@ -1822,8 +1822,5 @@ export interface IProviderDatabase extends IDatabase {
 
 	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
 
-	bulkUpdateSpamEmailDomains(
-		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
-		upsert: boolean,
-	): Promise<void>;
+	insertMissingSpamEmailDomains(domains: Iterable<string>): Promise<number>;
 }

@@ -58,21 +58,18 @@ export const updateSpamEmailDomains = async (
 			}
 		}
 
-		const ops = Array.from(domainsSet).map((domain) => ({
-			filter: { domain: domain.trim() },
-			update: { domain: domain.trim() },
-		}));
-		await db.bulkUpdateSpamEmailDomains(ops, true);
+		const domainsAdded = await db.insertMissingSpamEmailDomains(domainsSet);
 
 		await db.updateScheduledTaskStatus(taskID, ScheduledTaskStatus.Completed, {
 			data: {
 				domainsProcessed: domainsSet.size,
+				domainsAdded,
 			},
 		});
 
 		logger.info(() => ({
 			msg: "Successfully updated spam email domains.",
-			data: { domainsProcessed: domainsSet.size },
+			data: { domainsProcessed: domainsSet.size, domainsAdded },
 		}));
 	} catch (error) {
 		logger.error(() => ({
