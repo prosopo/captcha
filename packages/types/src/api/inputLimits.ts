@@ -37,4 +37,6 @@ export const INPUT_LIMITS = {
 	LONG_TEXT: 65536,
 	/** Tokens, signatures, base64 payloads, behavioural/simd readings. */
 	TOKEN: 131072,
+	/** Lists. Far above any real list; stops unbounded arrays. */
+	ARRAY: 1_000_000,
 } as const;

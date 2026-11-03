@@ -19,6 +19,7 @@ import {
 } from "@prosopo/api-route";
 import { executeBatchesSequentially } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
@@ -42,7 +43,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	) {}
 
 	public getRequestArgsSchema(): DeleteRulesSchema {
-		return z.array(accessRulesFilterInput);
+		return z.array(accessRulesFilterInput).max(INPUT_LIMITS.ARRAY);
 	}
 
 	async processRequest(

@@ -19,6 +19,7 @@ import {
 } from "@prosopo/api-route";
 import type { AllKeys } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import { ruleEntryInput } from "#policy/ruleInput/ruleInput.js";
 import type {
@@ -60,7 +61,7 @@ export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
 
 	public getRequestArgsSchema(): FetchRulesSchema {
 		return z.object({
-			ids: z.string().array(),
+			ids: z.string().max(INPUT_LIMITS.ID).array(),
 		} satisfies AllKeys<FetchRulesOptions>);
 	}
 

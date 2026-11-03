@@ -31,10 +31,10 @@ import * as z from "zod";
 import { Generate, ArgsSchema as GenerateArgsSchema } from "./generate.js";
 
 export const ArgsSchema = GenerateArgsSchema.extend({
-	solved: z.number().optional(),
-	unsolved: z.number().optional(),
-	minCorrect: z.number().optional(),
-	maxCorrect: z.number().optional(),
+	solved: z.number().safe().optional(),
+	unsolved: z.number().safe().optional(),
+	minCorrect: z.number().safe().optional(),
+	maxCorrect: z.number().safe().optional(),
 });
 export type ArgsSchemaType = typeof ArgsSchema;
 export type Args = z.infer<ArgsSchemaType>;

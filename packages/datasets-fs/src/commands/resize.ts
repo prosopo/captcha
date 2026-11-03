@@ -27,7 +27,7 @@ import {
 import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = InputOutputArgsSchema.extend({
-	size: z.number(),
+	size: z.number().safe(),
 	square: z.boolean().optional(),
 });
 export type ArgsSchemaType = typeof ArgsSchema;

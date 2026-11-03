@@ -17,6 +17,7 @@ import type { AllKeys } from "@prosopo/common";
 import { stripTrailingSlashes } from "@prosopo/util";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import type { UserAttributes, UserIp, UserScope } from "#policy/rule.js";
 import type { UserAttributesRecord, UserIpRecord } from "#policy/ruleRecord.js";
@@ -98,8 +99,8 @@ const userIpSchema = z.object({
 const userIpInput = z
 	.object({
 		...userIpSchema.shape,
-		ip: z.string().optional(),
-		ipMask: z.string().optional(),
+		ip: z.string().max(INPUT_LIMITS.ID).optional(),
+		ipMask: z.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	} satisfies AllKeys<UserIpInput>)
 	.transform((userIpInput: UserIpInput): UserIp => {
 		// this line creates a new "userScope", without ip and ipMask

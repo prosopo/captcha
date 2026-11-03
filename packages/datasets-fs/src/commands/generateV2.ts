@@ -31,11 +31,11 @@ import * as z from "zod";
 import { Generate, ArgsSchema as GenerateArgsSchema } from "./generate.js";
 
 export const ArgsSchema = GenerateArgsSchema.extend({
-	minCorrect: z.number().optional(),
-	minIncorrect: z.number().optional(),
-	minLabelled: z.number().optional(),
-	maxLabelled: z.number().optional(),
-	count: z.number().optional(),
+	minCorrect: z.number().safe().optional(),
+	minIncorrect: z.number().safe().optional(),
+	minLabelled: z.number().safe().optional(),
+	maxLabelled: z.number().safe().optional(),
+	count: z.number().safe().optional(),
 });
 export type ArgsSchemaType = typeof ArgsSchema;
 export type Args = z.infer<ArgsSchemaType>;

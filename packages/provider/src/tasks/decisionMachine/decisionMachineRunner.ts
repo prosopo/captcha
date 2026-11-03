@@ -33,6 +33,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { parseInteger } from "@prosopo/util";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { z } from "zod";
 import { recordSyncSpan } from "../../api/metrics.js";
 import { isDnsSidecarHealthy } from "../dnsEvent/dnsSidecarHealth.js";
@@ -72,7 +73,9 @@ const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
 };
 
-const RequiredCountersSchema = z.array(CounterSpecSchema);
+const RequiredCountersSchema = z
+	.array(CounterSpecSchema)
+	.max(INPUT_LIMITS.ARRAY);
 
 const NO_REQUIREMENTS: DecisionMachineRequirements = {
 	counters: [],

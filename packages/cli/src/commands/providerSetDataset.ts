@@ -18,6 +18,7 @@ import { Tasks } from "@prosopo/provider";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
+import { INPUT_LIMITS } from "@prosopo/types";
 import * as z from "zod";
 import { loadJSONFile } from "../files.js";
 
@@ -44,7 +45,7 @@ export default (
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
 				const tasks = new Tasks(env);
-				const file = z.string().parse(argv.file);
+				const file = z.string().max(INPUT_LIMITS.LONG_TEXT).parse(argv.file);
 				const jsonFile = loadJSONFile(file) as JSON;
 				logger.info(() => ({
 					data: { file },

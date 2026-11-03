@@ -19,6 +19,7 @@ import {
 } from "@prosopo/api-route";
 import type { AllKeys } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
@@ -31,7 +32,7 @@ export type MissingIdsResponse = {
 };
 
 export const missingIdsResponse = z.object({
-	ids: z.string().array(),
+	ids: z.string().max(INPUT_LIMITS.ID).array(),
 } satisfies AllKeys<MissingIdsResponse>) satisfies ZodType<MissingIdsResponse>;
 
 export type MissingIdsEndpointResponse = ApiEndpointResponse & {
@@ -45,7 +46,7 @@ export class GetMissingIdsEndpoint implements ApiEndpoint<MissingIdsSchema> {
 	) {}
 
 	public getRequestArgsSchema(): MissingIdsSchema {
-		return z.string().array();
+		return z.string().max(INPUT_LIMITS.LONG_TEXT).array();
 	}
 
 	async processRequest(

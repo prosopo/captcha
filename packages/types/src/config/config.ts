@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { LanguageCodes } from "@prosopo/locale";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import type { input } from "zod";
 import { array, literal } from "zod";
 import { number } from "zod";
@@ -115,17 +116,19 @@ export const ProsopoBaseConfigSchema = object({
 	}),
 });
 export const PolkadotSecretJSONSpec = z.object({
-	encoded: z.string(),
+	encoded: z.string().max(INPUT_LIMITS.TOKEN),
 	encoding: z.object({
-		content: z.array(z.string()),
-		type: z.array(z.string()),
-		version: z.string(),
+		content: z
+			.array(z.string().max(INPUT_LIMITS.TOKEN))
+			.max(INPUT_LIMITS.ARRAY),
+		type: z.array(z.string().max(INPUT_LIMITS.NAME)).max(INPUT_LIMITS.ARRAY),
+		version: z.string().max(INPUT_LIMITS.ID),
 	}),
-	address: z.string(),
+	address: z.string().max(INPUT_LIMITS.ID),
 	meta: z.object({
-		genesisHash: z.string(),
-		name: z.string(),
-		whenCreated: z.number(),
+		genesisHash: z.string().max(INPUT_LIMITS.ID),
+		name: z.string().max(INPUT_LIMITS.NAME),
+		whenCreated: z.number().safe(),
 	}),
 });
 
@@ -374,8 +377,8 @@ export type ProcaptchaClientConfigOutput = output<
 >;
 
 export const IpApiServiceSpec = z.object({
-	apiKey: z.string(),
-	baseUrl: z.string().url(),
+	apiKey: z.string().max(INPUT_LIMITS.TOKEN),
+	baseUrl: z.string().max(INPUT_LIMITS.URL).url(),
 });
 export type IpApiService = zInfer<typeof IpApiServiceSpec>;
 
