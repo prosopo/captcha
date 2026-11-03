@@ -23,6 +23,11 @@ mongoose.set("strictQuery", false);
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017";
 
+const redactCredentials = (url: URL): string => {
+	const credentials = url.username || url.password ? "<Credentials>@" : "";
+	return `${url.protocol}//${credentials}${url.host}${url.pathname}${url.search}`;
+};
+
 /**
  * Per-connection timeout overrides for databases that are not local to the
  * process. Omitted fields fall back to the defaults in mongooseOptions.
@@ -67,7 +72,7 @@ export class MongoDatabase implements IDatabase {
 			parsedUrl.searchParams.set("authSource", authSource);
 		}
 		this._url = parsedUrl.toString();
-		this.safeURL = this.url.replace(/\w+:\w+/, "<Credentials>");
+		this.safeURL = redactCredentials(parsedUrl);
 		this.dbname = dbname || parsedUrl.pathname.replace("/", "");
 		this.logger = (logger || getLogger("info", "database:mongo")).with({
 			mongoUrl: this.safeURL,
