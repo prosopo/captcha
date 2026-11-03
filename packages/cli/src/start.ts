@@ -49,12 +49,7 @@ export async function start(
 		}
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
-		env.logger.debug(() => ({
-			msg: "Env already defined",
-			data: {
-				config: env?.config,
-			},
-		}));
+		env.logger.debug(() => ({ msg: "Env already defined" }));
 	}
 
 	await env.isReady();
