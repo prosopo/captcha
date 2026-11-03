@@ -54,6 +54,7 @@ minimumReleaseAge: 10080
 # Our own releases are consumed straight after publishing; the rest are
 # already-locked versions that fall within the window at the time of writing.
 minimumReleaseAgeExclude:
+  - "@prosopo/native-bundle-payload@0.1.0"
   - "@prosopo/result@0.1.0"
   - "undici@6.29.0"
 trustPolicy: no-downgrade
