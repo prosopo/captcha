@@ -38,6 +38,7 @@
 		"@prosopo/load-balancer": "workspace:*",
 		"@prosopo/locale": "workspace:*",
 		"@prosopo/logger": "workspace:*",
+		"@prosopo/native-bundle-payload": "0.1.0",
 		"@prosopo/native-ja4": "workspace:*",
 		"@prosopo/native-merkle": "workspace:*",
 		"@prosopo/native-puzzle": "workspace:*",
