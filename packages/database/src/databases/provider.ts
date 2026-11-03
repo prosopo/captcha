@@ -55,6 +55,7 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
+	type SolveDeviceSignals,
 	type StoredCaptcha,
 	type StoredIconTarget,
 	StoredStatusNames,
@@ -2513,6 +2514,40 @@ export class ProviderDatabase
 				code: "DB_QUERY_FAILED",
 				errorSite: "DBSE-35",
 				message: "Failed to get session",
+				cause: err,
+				context: { userSitekeyIpHash },
+			});
+		}
+	}
+
+	/**
+	 * What the latest solve by this user on this site and IP said about the
+	 * device, if one was submitted since `since`.
+	 * @param userSitekeyIpHash The hash of user, IP and sitekey combination
+	 * @param since Oldest session creation time to consider
+	 */
+	async getRecentSolveDevice(
+		userSitekeyIpHash: string,
+		since: Date,
+	): Promise<SolveDeviceSignals | undefined> {
+		try {
+			const session = await this.tables.session
+				.findOne(
+					{
+						userSitekeyIpHash,
+						createdAt: { $gte: since },
+						solveDevice: { $exists: true },
+					},
+					{ solveDevice: 1 },
+				)
+				.sort({ createdAt: -1 })
+				.lean<Pick<SessionRecord, "solveDevice">>();
+			return session?.solveDevice ?? undefined;
+		} catch (err) {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-52",
+				message: "Failed to get recent solve device",
 				cause: err,
 				context: { userSitekeyIpHash },
 			});

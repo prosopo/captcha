@@ -46,7 +46,10 @@ vi.mock(
 	},
 );
 
-import { issuePuzzleChallenge } from "../../../../api/captcha/getPuzzleCaptchaChallenge.js";
+import {
+	RECENT_SOLVE_DEVICE_WINDOW_MS,
+	issuePuzzleChallenge,
+} from "../../../../api/captcha/getPuzzleCaptchaChallenge.js";
 import type {
 	ChallengeIssueContext,
 	IssuedChallenge,
@@ -63,12 +66,22 @@ const SITE_KEY = "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV";
 
 let getPuzzleCaptchaChallenge: ReturnType<typeof vi.fn>;
 
+let getRecentSolveDevice: ReturnType<
+	typeof vi.fn<
+		(
+			userSitekeyIpHash: string,
+			since: Date,
+		) => Promise<SolveDeviceSignals | undefined>
+	>
+>;
+
 const buildTasks = (): Tasks =>
 	({
 		puzzleCaptchaManager: { getPuzzleCaptchaChallenge },
 		db: {
 			storePuzzleCaptchaRecord: vi.fn().mockResolvedValue(undefined),
 			updatePuzzleCaptchaRecord: vi.fn().mockResolvedValue(undefined),
+			getRecentSolveDevice,
 		},
 		logger: { warn: vi.fn() },
 	}) as unknown as Tasks;
@@ -83,6 +96,7 @@ const buildContext = (overrides: {
 	carrierNetwork?: boolean;
 	sessionFingerprintSummary?: FingerprintSummaryStored;
 	sessionSolveDevice?: SolveDeviceSignals;
+	sessionUserSitekeyIpHash?: string;
 }): ChallengeIssueContext => ({
 	tasks: buildTasks(),
 	user: "user",
@@ -106,6 +120,9 @@ const buildContext = (overrides: {
 		}),
 		...(overrides.sessionSolveDevice && {
 			solveDevice: overrides.sessionSolveDevice,
+		}),
+		...(overrides.sessionUserSitekeyIpHash && {
+			userSitekeyIpHash: overrides.sessionUserSitekeyIpHash,
 		}),
 	} as unknown as ProjectedSession,
 	trafficVerdict: overrides.trafficVerdict ?? { kind: "pass" },
@@ -145,6 +162,10 @@ const servedPieceSize = (): number => {
 const TOUCH_MIN_PIECE_PX = Math.round(
 	DEFAULT_GEOMETRY.width * TOUCH_MIN_PIECE_SCALE,
 );
+
+beforeEach(() => {
+	getRecentSolveDevice = vi.fn().mockResolvedValue(undefined);
+});
 
 describe("per-device puzzle floors at issuance", () => {
 	beforeEach(() => {
@@ -311,6 +332,112 @@ describe("the floors need corroboration", () => {
 		});
 		expect(servedTolerance()).toBe(TOUCH_MIN_TOLERANCE_PX);
 		expect(servedPieceSize()).toBe(TOUCH_MIN_PIECE_PX);
+	});
+});
+
+describe("a retry after a failed solve", () => {
+	const HASH = "user-site-ip-hash";
+	const TOUCH_SOLVE: SolveDeviceSignals = {
+		deviceCapability: "mobile",
+		touchEventCount: 40,
+	};
+	const retry = {
+		userAgent: IPHONE_UA,
+		carrierNetwork: false,
+		sitePuzzleTolerance: 5,
+		sitePuzzle: { pieceScale: { min: 0.1, max: 0.1 } },
+		sessionUserSitekeyIpHash: HASH,
+	};
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		getPuzzleCaptchaChallenge = vi.fn().mockResolvedValue({
+			challenge: "challenge",
+			requestedAtTimestamp: 0,
+			targetX: 10,
+			targetY: 10,
+			originX: 0,
+			originY: 0,
+			tolerance: 5,
+			providerSignature: "sig",
+		});
+		renderPuzzleImagesMock.mockResolvedValue({
+			background: "bg",
+			piece: "piece",
+			pieceSize: 30,
+			backgroundSeed: "seed",
+			renderSeed: "seed",
+		});
+	});
+
+	it("is eased on the touch readings of the solve before it", async () => {
+		getRecentSolveDevice.mockResolvedValue(TOUCH_SOLVE);
+
+		await issue(retry);
+
+		expect(getRecentSolveDevice).toHaveBeenCalledWith(HASH, expect.any(Date));
+		expect(servedTolerance()).toBe(TOUCH_MIN_TOLERANCE_PX);
+		expect(servedPieceSize()).toBe(TOUCH_MIN_PIECE_PX);
+	});
+
+	it("only looks back as far as the window", async () => {
+		const before = Date.now();
+
+		await issue(retry);
+
+		const since = getRecentSolveDevice.mock.calls[0]?.[1];
+		if (!since) throw new Error("no lookup was made");
+		expect(before - since.getTime()).toBeGreaterThanOrEqual(
+			RECENT_SOLVE_DEVICE_WINDOW_MS,
+		);
+		expect(Date.now() - since.getTime()).toBeLessThan(
+			RECENT_SOLVE_DEVICE_WINDOW_MS + 1000,
+		);
+	});
+
+	it("is not eased when there was no earlier solve", async () => {
+		await issue(retry);
+
+		expect(servedTolerance()).toBe(5);
+		expect(servedPieceSize()).toBe(Math.round(DEFAULT_GEOMETRY.width * 0.1));
+	});
+
+	it("is not eased when the earlier solve showed a pointer", async () => {
+		getRecentSolveDevice.mockResolvedValue({
+			deviceCapability: "desktop",
+			touchEventCount: 0,
+		});
+
+		await issue(retry);
+
+		expect(servedTolerance()).toBe(5);
+	});
+
+	it("is served as before when the lookup fails", async () => {
+		getRecentSolveDevice.mockRejectedValue(new Error("db down"));
+
+		await issue(retry);
+
+		expect(servedTolerance()).toBe(5);
+	});
+
+	it("skips the lookup when the session already carries a solve", async () => {
+		await issue({ ...retry, sessionSolveDevice: TOUCH_SOLVE });
+
+		expect(getRecentSolveDevice).not.toHaveBeenCalled();
+		expect(servedTolerance()).toBe(TOUCH_MIN_TOLERANCE_PX);
+	});
+
+	it("skips the lookup when the network already corroborates", async () => {
+		await issue({ ...retry, carrierNetwork: true });
+
+		expect(getRecentSolveDevice).not.toHaveBeenCalled();
+	});
+
+	it("skips the lookup for a pointer device", async () => {
+		await issue({ ...retry, userAgent: WINDOWS_CHROME_UA });
+
+		expect(getRecentSolveDevice).not.toHaveBeenCalled();
 	});
 });
 

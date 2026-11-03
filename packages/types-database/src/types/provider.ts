@@ -38,6 +38,7 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
+	type SolveDeviceSignals,
 	type StoredIconTarget,
 	Tier,
 	type UserCommitment,
@@ -1781,6 +1782,16 @@ export interface IProviderDatabase extends IDatabase {
 	getSessionByuserSitekeyIpHash(
 		userSitekeyIpHash: string,
 	): Promise<SessionRecord | undefined>;
+
+	/**
+	 * What the latest solve by this user on this site and IP said about the
+	 * device, if one was submitted since `since`. Consumed sessions count: a
+	 * solve consumes its session before the user asks for another challenge.
+	 */
+	getRecentSolveDevice(
+		userSitekeyIpHash: string,
+		since: Date,
+	): Promise<SolveDeviceSignals | undefined>;
 
 	/**
 	 * Keyset-paginated sweep of pending session records. See

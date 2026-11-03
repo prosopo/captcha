@@ -614,6 +614,117 @@ describe("PuzzleCaptchaManager", () => {
 			).toBe(true);
 		});
 
+		// A failed solve consumes its session, so the next challenge is issued on
+		// a new one. What the solve said about the device has to be left on the
+		// consumed session for that challenge to find.
+		it("leaves the solve's device readings on the session it consumed", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(false);
+			vi.spyOn(
+				puzzleCaptchaManager,
+				"resolveBundleBySessionId",
+			).mockResolvedValue({
+				key: "test-key",
+				innerConfig: {},
+			} as unknown as Awaited<
+				ReturnType<typeof puzzleCaptchaManager.resolveBundleBySessionId>
+			>);
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockResolvedValue(
+				{
+					collector1: [],
+					collector2: [
+						{ x: 10, y: 20, timestamp: 100 },
+						{ x: 30, y: 20, timestamp: 150 },
+					],
+					collector3: [],
+					collector4: [],
+					deviceCapability: "mobile",
+				} as unknown as Awaited<
+					ReturnType<typeof puzzleCaptchaManager.decryptBehavioralData>
+				>,
+			);
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				300,
+				10,
+				[],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			expect(result).toBe(false);
+			expect(db.updateSessionRecord).toHaveBeenCalledWith(
+				"session-1",
+				expect.objectContaining({
+					solveDevice: { deviceCapability: "mobile", touchEventCount: 2 },
+				}),
+			);
+		});
+
+		it("leaves no device readings when the behavioural payload did not decrypt", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				sessionId: "session-1",
+			};
+
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(validatePuzzleSolution).mockReturnValue(false);
+			vi.spyOn(puzzleCaptchaManager, "decryptBehavioralData").mockResolvedValue(
+				undefined as unknown as Awaited<
+					ReturnType<typeof puzzleCaptchaManager.decryptBehavioralData>
+				>,
+			);
+
+			await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				300,
+				10,
+				[],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+				"encrypted-blob",
+			);
+
+			for (const [, patch] of vi.mocked(db.updateSessionRecord).mock.calls) {
+				expect(patch).not.toHaveProperty("solveDevice");
+			}
+		});
+
 		// Regression: puzzleEvents must persist even when a behavioural payload
 		// was sent but decryption returns null (e.g. resolveBundleBySessionId
 		// can't find the bundleId promoted onto the session record). The old

@@ -20,6 +20,7 @@ import {
 	ApiParams,
 	CaptchaType,
 	type GetPuzzleCaptchaResponse,
+	type SolveDeviceSignals,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -43,6 +44,13 @@ import {
 } from "./interactiveCaptchaChallenge.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
 
+/**
+ * How far back a previous solve by the same user on the same site and IP still
+ * speaks for the device. Long enough to cover a run of retries, short enough
+ * that a different device behind the same address is unlikely.
+ */
+export const RECENT_SOLVE_DEVICE_WINDOW_MS = 10 * 60 * 1000;
+
 /** Exported for unit testing only; the default export is the entry point. */
 export const issuePuzzleChallenge = async ({
 	tasks,
@@ -63,14 +71,42 @@ export const issuePuzzleChallenge = async ({
 	// rather than read off the session, so the UA and the client hints come
 	// from the connection actually being served. An escalated session carries
 	// what the solve before it said about the device.
-	const mobileVerdict = deriveDevice({
-		userAgent: provenance.headers["user-agent"] ?? "",
-		headers: provenance.headers,
-		ipInfo: provenance.ipInfo,
-		tcpMss: sessionRecord?.tcpMss,
-		webView: sessionRecord?.webView,
-		solve: sessionRecord?.solveDevice,
-	}).mobile;
+	const judgeDevice = (solve: SolveDeviceSignals | undefined) =>
+		deriveDevice({
+			userAgent: provenance.headers["user-agent"] ?? "",
+			headers: provenance.headers,
+			ipInfo: provenance.ipInfo,
+			tcpMss: sessionRecord?.tcpMss,
+			webView: sessionRecord?.webView,
+			solve,
+		}).mobile;
+	let mobileVerdict = judgeDevice(sessionRecord?.solveDevice);
+	// A user who failed a puzzle is served the next one on a new session, which
+	// knows nothing of the solve. Their last solve on this site and IP is the
+	// device signal that session lacks. Looked up only when it could change the
+	// outcome.
+	if (
+		mobileVerdict.isMobile &&
+		!mobileVerdict.corroborated &&
+		!sessionRecord?.solveDevice &&
+		sessionRecord?.userSitekeyIpHash
+	) {
+		const recentSolve = await tasks.db
+			.getRecentSolveDevice(
+				sessionRecord.userSitekeyIpHash,
+				new Date(Date.now() - RECENT_SOLVE_DEVICE_WINDOW_MS),
+			)
+			.catch((err: unknown) => {
+				tasks.logger.warn(() => ({
+					err,
+					msg: "Failed to read the recent solve device",
+				}));
+				return undefined;
+			});
+		if (recentSolve) {
+			mobileVerdict = judgeDevice(recentSolve);
+		}
+	}
 	// The ladder ceiling runs off `isMobile`; the floors below want a device
 	// signal behind it. See `corroborated`.
 	const easeForTouch = mobileVerdict.isMobile && mobileVerdict.corroborated;
