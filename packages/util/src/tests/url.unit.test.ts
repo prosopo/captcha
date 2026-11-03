@@ -315,6 +315,13 @@ describe("stripTrailingSlashes", () => {
 	])("%s -> %s", (input: string, expected: string) => {
 		expect(stripTrailingSlashes(input)).toBe(expected);
 	});
+
+	it("handles a long run of slashes in linear time", () => {
+		const input = `a${"/".repeat(100_000)}b${"/".repeat(100_000)}`;
+		const start = performance.now();
+		expect(stripTrailingSlashes(input)).toBe(`a${"/".repeat(100_000)}b`);
+		expect(performance.now() - start).toBeLessThan(100);
+	});
 });
 
 describe("joinUrl", () => {
