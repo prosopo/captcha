@@ -94,6 +94,21 @@ export interface IPApiVPNInfo {
 	longitude: number;
 }
 
+/**
+ * Why the reputation DB holds an address to be shared egress, so that nothing
+ * seen on it can be pinned on one visitor: a carrier network, an iCloud
+ * Private Relay exit, a declared crawler, an address many Procaptcha accounts
+ * use, or one a hardware-attested handset has been seen behind.
+ */
+export const REPUTATION_SHARED_REASONS = [
+	"mobile",
+	"private_relay",
+	"crawler",
+	"many_accounts",
+	"attested_device",
+] as const;
+export type ReputationSharedReason = (typeof REPUTATION_SHARED_REASONS)[number];
+
 export interface IPApiReputationInfo {
 	/**
 	 * Risk in [0,1] from bot-detector fires on this address in recent
@@ -101,6 +116,29 @@ export interface IPApiReputationInfo {
 	 * absent means no evidence, not zero risk.
 	 */
 	detector_risk?: number | null;
+	/** Null or absent when the address is not known to be shared. */
+	shared_reason?: ReputationSharedReason | null;
+}
+
+/**
+ * The reputation DB's record of one Procaptcha user account on one site, built
+ * from the job runner's account sightings. A user account is derived from a
+ * fingerprint, so popular devices pool many people under one; how many user
+ * agents it has carried lately is how shared it is.
+ */
+export interface ReputationAccountResponse {
+	known: boolean;
+	/** Distinct user agents on the account in the last 7 days. */
+	user_agents_7d?: number;
+	device_types?: string[];
+	first_seen?: string;
+	last_seen?: string;
+}
+
+/** {@link ReputationAccountResponse} for an account the DB knows. */
+export interface AccountSighting {
+	userAgents7d: number;
+	deviceTypes: string[];
 }
 
 export interface IPApiResponse {
@@ -194,6 +232,8 @@ export interface IPInfoResult {
 	companyAbuserScore?: number;
 	/** Undefined when the address has no detector evidence. */
 	detectorRisk?: number;
+	/** Set when the reputation DB holds the address to be shared egress. */
+	sharedReason?: ReputationSharedReason;
 
 	// Raw response for debugging
 	rawResponse?: IPApiResponse;

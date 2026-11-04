@@ -241,12 +241,22 @@ const policyForIp = (
 	ipInfo: IPInfoResult,
 	marketCountries: ReadonlyArray<string>,
 ): ITrafficCategoryPolicy => {
-	const exception = harshestPolicy(
-		(policy.exceptions ?? []).filter((candidate) =>
-			exceptionApplies(candidate, ipInfo, marketCountries),
-		),
-		(candidate) => candidate.action === TrafficFilterAction.Block,
+	const applicable = (policy.exceptions ?? []).filter((candidate) =>
+		exceptionApplies(candidate, ipInfo, marketCountries),
 	);
+	// `pass` is the least harsh action, so it is only chosen when no matching
+	// exception does anything. Ranked here rather than in captcha-severity,
+	// whose ranking the access rules share and which has no notion of it.
+	const exception =
+		harshestPolicy(
+			applicable.filter(
+				(candidate) => candidate.action !== TrafficFilterAction.Pass,
+			),
+			(candidate) => candidate.action === TrafficFilterAction.Block,
+		) ??
+		applicable.find(
+			(candidate) => candidate.action === TrafficFilterAction.Pass,
+		);
 	if (!exception) return policy;
 	const { countries, inMarket, minAbuserScore, mobile, ...exceptionPolicy } =
 		exception;
@@ -293,7 +303,11 @@ const evaluateIpInfo = (
 	const policy = trafficFilter[category];
 	if (!policy) return [];
 	const marketCountries = trafficFilter.marketCountries ?? [];
-	return [{ category, policy: policyForIp(policy, ipInfo, marketCountries) }];
+	const resolved = policyForIp(policy, ipInfo, marketCountries);
+	// `pass` decides nothing: the IP is treated as if the owning category had
+	// no policy. Lower flags are still not consulted, exactly as for no policy.
+	if (resolved.action === TrafficFilterAction.Pass) return [];
+	return [{ category, policy: resolved }];
 };
 
 /**

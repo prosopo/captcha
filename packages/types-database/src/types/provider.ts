@@ -498,6 +498,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	originX: { type: Number, required: true },
 	originY: { type: Number, required: true },
 	tolerance: { type: Number, required: true },
+	retried: { type: Boolean, required: false },
 	// Render inputs kept so the portal can replay the exact puzzle a user was
 	// served. Patched on after the imagery is produced, so absent on older
 	// records and on any challenge whose render threw. `backgroundSeed` and
@@ -942,6 +943,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		required: false,
 	},
 	refreshOf: { type: String, required: false },
+	retryOf: { type: String, required: false },
 	refreshCount: { type: Number, required: false },
 	refreshedAfterMs: { type: Number, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
@@ -1052,6 +1054,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// rows hold them and routing rules read them.
 	tcpOptsFlags: { type: Number, required: false },
 	tcpOptsOrder: { type: Number, required: false },
+	tlsHandshakeRttUs: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -1358,6 +1361,7 @@ export const SESSION_PROJECTION = {
 	ipTos: 1,
 	tcpOptsFlags: 1,
 	tcpOptsOrder: 1,
+	tlsHandshakeRttUs: 1,
 	"headers.user-agent": 1,
 	"headers.accept": 1,
 	"headers.accept-language": 1,
@@ -1645,6 +1649,12 @@ export interface IProviderDatabase extends IDatabase {
 		challenge: string,
 	): Promise<PuzzleCaptchaRecord | null>;
 
+	/**
+	 * Take a failed puzzle for one retry. Succeeds once per puzzle, and only
+	 * for a puzzle that was submitted and disapproved.
+	 */
+	claimPuzzleCaptchaRetry(challenge: PoWChallengeId): Promise<boolean>;
+
 	updatePuzzleCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
@@ -1881,8 +1891,5 @@ export interface IProviderDatabase extends IDatabase {
 
 	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
 
-	bulkUpdateSpamEmailDomains(
-		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
-		upsert: boolean,
-	): Promise<void>;
+	insertMissingSpamEmailDomains(domains: Iterable<string>): Promise<number>;
 }

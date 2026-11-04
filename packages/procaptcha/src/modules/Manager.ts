@@ -24,6 +24,7 @@ import {
 	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
+	toCallbackError,
 	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import {
@@ -215,17 +216,15 @@ export function Manager(
 				// wrapper listens for — re-minting a session is the only way
 				// forward, and the doomed round trip only delays it.
 				if (state.sessionId && state.sessionId === spentSessionId) {
-					updateState({
-						loading: false,
-						error: toPublicError(
-							new ProsopoError({
-								code: "NO_SESSION_FOUND",
-								errorSite: "PCAP-18",
-							}),
-							"FRONTEND_ERROR",
-						),
-					});
-					events.onError(new Error("No session found"));
+					const error = toPublicError(
+						new ProsopoError({
+							code: "NO_SESSION_FOUND",
+							errorSite: "PCAP-18",
+						}),
+						"FRONTEND_ERROR",
+					);
+					updateState({ loading: false, error });
+					events.onError(toCallbackError(undefined, error));
 					return;
 				}
 
@@ -253,7 +252,7 @@ export function Manager(
 						loading: false,
 						error: challenge.error,
 					});
-					events.onError(new Error(challenge.error?.message));
+					events.onError(toCallbackError(undefined, challenge.error));
 				} else {
 					if (challenge.captchas.length <= 0) {
 						throw new ProsopoError({

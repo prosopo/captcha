@@ -84,6 +84,15 @@ describe("the base URL", () => {
 		await client().get("");
 		expect(fetchStub.last().url).toBe(BASE_URL);
 	});
+
+	test.each(["/", "///"])(
+		"a base URL ending in %s does not produce a double slash",
+		async (trailing: string) => {
+			fetchStub.respond({});
+			await new TestClient(`${BASE_URL}${trailing}`).get("/status");
+			expect(fetchStub.last().url).toBe(`${BASE_URL}/status`);
+		},
+	);
 });
 
 describe("fetch", () => {
@@ -204,6 +213,15 @@ describe("post", () => {
 	test("a zero-length array body is sent, not dropped", async () => {
 		await client().send("/events", []);
 		expect(fetchStub.last().init?.body).toBe("[]");
+	});
+
+	test("a bigint in the body is sent as a decimal string, not thrown", async () => {
+		await client().send("/solve", { nonce: 12345678901234567890n });
+		expect(fetchStub.last().init?.body).toBe(
+			'{"nonce":"12345678901234567890"}',
+		);
+		await client().sendWithHeaders("/solve", { nonce: 1n });
+		expect(fetchStub.last().init?.body).toBe('{"nonce":"1"}');
 	});
 
 	test("returns the parsed response", async () => {

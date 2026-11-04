@@ -219,6 +219,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		await env.isReady();
 		env.ipInfoService = {
 			initialize: async () => {},
+			accountSighting: async (): Promise<undefined> => undefined,
 			isAvailable: () => true,
 			lookup: async (ip: string) => cleanIpInfo(ip),
 			country: (): string | undefined => undefined,

@@ -20,6 +20,7 @@ declare module "@prosopo/common" {
 		"AUDI-4": true;
 		"AUDI-5": true;
 		"AUDI-6": true;
+		"AUDI-7": true;
 	}
 }
 

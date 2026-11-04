@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ProsopoError, toPublicError } from "@prosopo/common";
-import { loadI18next, localiseError } from "@prosopo/locale";
+import { loadI18next, localiseError, toCallbackError } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -181,6 +181,10 @@ export const mountProcaptchaFrictionless = (
 	let nextRefreshOf: string | undefined;
 	// The challenge type the user asked that replacement to switch to.
 	let nextSwitchTo: RefreshSwitchTarget | undefined;
+	// The puzzle challenge the user answered wrongly, sent with the next
+	// /frictionless request so the provider can judge the replacement on that
+	// solve's device. Kept and cleared alongside `nextRefreshOf`.
+	let nextRetryOf: string | undefined;
 	// Challenges in a row replaced by a wrong answer or a refresh. Lets the
 	// puzzle draw its switch to an image challenge more prominently for a user
 	// who looks to be struggling.
@@ -396,7 +400,7 @@ export const mountProcaptchaFrictionless = (
 			const error = frontendError(
 				new ProsopoError({ code: "NO_SESSION_FOUND", errorSite: "FRIC-3" }),
 			);
-			events.onError(new Error(localiseError(i18n, error)));
+			events.onError(toCallbackError(i18n, error));
 			fallOverWithStyle(error);
 		};
 
@@ -414,6 +418,7 @@ export const mountProcaptchaFrictionless = (
 			nextMountShowRetry = true === options?.showRetry;
 			nextRefreshOf =
 				true === options?.refresh ? frictionlessState.sessionId : undefined;
+			nextRetryOf = true === options?.refresh ? undefined : options?.retryOf;
 			nextSwitchTo = refreshSwitchTarget(options);
 			replacementCount = nextSwitchTo ? 0 : replacementCount + 1;
 			// A reload mints a genuinely new session, so the invalidation
@@ -472,8 +477,17 @@ export const mountProcaptchaFrictionless = (
 			// because there is no captcha module to lazy-import here.
 			if (!frictionlessState.sessionId) {
 				events.onError(
-					new Error(
-						"authenticated captcha response missing sessionId — provider is misbehaving",
+					toCallbackError(
+						i18n,
+						frontendError(
+							new ProsopoError({
+								code: "UNEXPECTED",
+								errorSite: "FRIC-5",
+								message:
+									"authenticated captcha response missing sessionId — provider is misbehaving",
+								public: true,
+							}),
+						),
 					),
 				);
 				fallOverWithStyle();
@@ -542,7 +556,7 @@ export const mountProcaptchaFrictionless = (
 			const error = frontendError(
 				new ProsopoError({ code: "INSECURE_CONTEXT", errorSite: "FRIC-4" }),
 			);
-			events.onError(new Error(localiseError(i18n, error)));
+			events.onError(toCallbackError(i18n, error));
 			fallOverWithStyle(error);
 			return;
 		}
@@ -563,6 +577,7 @@ export const mountProcaptchaFrictionless = (
 					nextRefreshOf,
 					nextSwitchTo,
 					widgetSlot,
+					nextRetryOf,
 				);
 				if (destroyed) return;
 
@@ -581,13 +596,27 @@ export const mountProcaptchaFrictionless = (
 						loading: false,
 						errorMessage: guard.message,
 					};
-					events.onError(new Error(guard.message));
+					events.onError(
+						toCallbackError(
+							i18n,
+							guard.error ??
+								frontendError(
+									new ProsopoError({
+										code: "UNEXPECTED",
+										errorSite: "FRIC-6",
+										message: guard.message,
+										public: true,
+									}),
+								),
+						),
+					);
 					fallOverWithStyle(guard.error);
 					return;
 				}
 
 				nextRefreshOf = undefined;
 				nextSwitchTo = undefined;
+				nextRetryOf = undefined;
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,
@@ -624,7 +653,19 @@ export const mountProcaptchaFrictionless = (
 				// Retries swallow the underlying error, so without this a site's
 				// error callback never fires for a failure that retried — it would
 				// have fired immediately before retrying was introduced.
-				events.onError(new Error("Cannot load CAPTCHA"));
+				events.onError(
+					toCallbackError(
+						i18n,
+						frontendError(
+							new ProsopoError({
+								code: "UNEXPECTED",
+								errorSite: "FRIC-7",
+								message: "Cannot load CAPTCHA",
+								public: true,
+							}),
+						),
+					),
+				);
 				fallOverWithStyle();
 				restartComponentTimeout();
 			}

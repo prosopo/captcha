@@ -1,5 +1,45 @@
 # @prosopo/types-database
 
+## 5.17.0
+### Minor Changes
+
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+
+### Patch Changes
+
+- ec54f21: The scheduled spam email domain sync now only writes domains that are not already stored. It used to upsert the whole list (about 225k domains) on every run, which rewrote every row and held Mongo write locks for around 8 seconds per batch on every provider at the same time, slowing requests on the hour. It now reads the stored domains with an index-only scan and upserts just the new ones.
+  
+  `bulkUpdateSpamEmailDomains` on the provider database is replaced by `insertMissingSpamEmailDomains(domains)`, which returns how many domains were added. The task records that count as `domainsAdded` alongside `domainsProcessed`. Domains that drop off the source lists are still kept, as before.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.17
+
+## 5.16.2
+### Patch Changes
+
+- f679760: Store the TLS handshake round trip on each session as `tlsHandshakeRttUs`.
+  
+  chaddy now sends `X-TLS-Handshake-Rtt-Us`: the time from the server's handshake reply to the client's answer, in microseconds. The provider reads it with the other raw TLS signals, saves it on the session and passes it to decision machines. Until now we only had the TCP round trip (`synackNs` to `ackNs`), which can come from a different machine to the one that does TLS.
+  
+  The old `chelloToHandshakeUs` is not a handshake time. chaddy takes it when each request arrives, so on a reused connection it is really the connection's age (median about 2 seconds). This change leaves it as it is.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/user-access-policy@3.15.16
+  - @prosopo/common@3.3.2
+
 ## 5.16.1
 ### Patch Changes
 

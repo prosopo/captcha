@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { parseBigInt } from "@prosopo/util";
 import {
 	type ZodType,
 	type ZodTypeDef,
@@ -134,9 +135,16 @@ export type MongooseCompositeIpAddress = {
 export const parseMongooseCompositeIpAddress = (
 	ip: MongooseCompositeIpAddress,
 ): CompositeIpAddress => {
+	// A Decimal128 instance has no $numberDecimal but stringifies to its
+	// digits. BigInt() would throw a bare SyntaxError on a form like
+	// "1.5E+3"; name the field instead.
+	const toBigInt = (part: { $numberDecimal: string }, label: string) =>
+		parseBigInt(part.$numberDecimal ?? String(part)).expect(
+			`composite IP address ${label}`,
+		);
 	return {
-		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
-		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
+		lower: toBigInt(ip.lower, "lower"),
+		upper: ip.upper ? toBigInt(ip.upper, "upper") : undefined,
 		type: ip.type,
 	};
 };
@@ -553,6 +561,7 @@ export const SessionSchema = object({
 		touchEventCount: number().optional(),
 	}).optional(),
 	refreshOf: string().optional(),
+	retryOf: string().optional(),
 	refreshCount: number().optional(),
 	refreshedAfterMs: number().optional(),
 	decryptedHeadHash: string(),
@@ -664,6 +673,7 @@ export const SessionSchema = object({
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
+	tlsHandshakeRttUs: number().min(0).max(4_294_967_295).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -726,9 +736,13 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
-	// On an escalation: what the PoW solve it escalated from said about the
-	// input device, so a challenge issued for it judges the same device.
+	// What the solve this session follows said about the input device, so a
+	// challenge issued for it judges the same device: the PoW solve on an
+	// escalation, or the failed puzzle named by `retryOf`.
 	solveDevice?: SolveDeviceSignals;
+	// The challenge of the failed puzzle this session was minted to replace.
+	// Set only when that puzzle passed the checks in `resolveRetrySolveDevice`.
+	retryOf?: string;
 	// Set when this session was minted because the user pressed refresh on
 	// the challenge of `refreshOf`. `refreshCount` is how many refreshes in a
 	// row led here, and `refreshedAfterMs` how long the replaced session had
@@ -847,6 +861,10 @@ export type Session = {
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// Microseconds from the server's TLS handshake flight to the client's
+	// reply, timed by chaddy: a round trip to whatever terminates TLS, where
+	// synackNs → ackNs is a round trip to whatever opened the TCP connection.
+	tlsHandshakeRttUs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -1000,6 +1018,9 @@ export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
 	originY: number;
 	puzzleEvents?: PuzzleEvent[];
 	render?: PuzzleRenderRecord;
+	// Set once a retry session has taken this failed puzzle's device readings.
+	// A failed puzzle vouches for at most one retry.
+	retried?: boolean;
 }
 
 /** `answer` is the spoken transcript: the secret, never sent to a client. */

@@ -3,17 +3,12 @@
 #   ... -f docker-compose.provider.tcp-probe.yml   # optional eBPF sidecar
 # Later files override earlier ones. Relative paths in every overlay resolve
 # against this directory, so keep the overlays beside this file.
-services:
-  provider1:
-    container_name: provider1
-    image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
+x-provider: &provider
     labels:
       - "vector.provider=true" # enable logging as a provider
       - "vector.docker=true" # log docker events
     restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
     pull_policy: always
-    env_file:
-      - ../.env.1.${NODE_ENV}
     # Pins mongo1 to its tailnet address so both the seed host in
     # PROSOPO_MONGO_*_URI and the name mongod advertises for itself
     # (`mongo1.prosopo.io:27018`, because it runs --replSet) resolve inside the
@@ -29,77 +24,70 @@ services:
     # Inert where mongo1 is not used — staging points at a different host.
     extra_hosts:
       - "mongo1.prosopo.io:100.64.0.21"
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+    healthcheck: &provider-healthcheck
+      interval: 5m
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 208.67.222.222
+services:
+  provider1:
+    <<: *provider
+    container_name: provider1
+    image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
+    env_file:
+      - ../.env.1.${NODE_ENV}
     volumes:
       # Detector bundle pool, host-mounted so a pushed pool survives container
       # restarts. Never bake this into the image: prosopo/provider is a public
       # Docker Hub image and every bundle ships with its own RSA private key.
-      # provider1 and provider2 run different image versions, so they each get
-      # their own pool — bundles stamped with another release are skipped at
-      # load (PROSOPO_DETECTOR_POOL_RELEASE).
       - ./data/detector-pool.1:/app/data/detector-pool
     ports:
       - '127.0.0.1:9229:9229'
     networks:
       external:
+      datastore:
       internal:
         ipv4_address: 172.18.0.3
         ipv6_address: fd00:aaaa::3
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '100m'
-        max-file: '1'
     healthcheck:
+      <<: *provider-healthcheck
       # Distroless runtime: no curl. node is the only binary in the image.
       test: [ "CMD", "/nodejs/bin/node", "-e", "fetch('http://localhost:9229/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" ]
-      interval: 5m
-      retries: 3
-      start_period: 30s
-      timeout: 10s
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-      - 208.67.222.222
   provider2:
+    <<: *provider
     container_name: provider2
-    image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
-    labels:
-      - "vector.provider=true" # enable logging as a provider
-      - "vector.docker=true" # log docker events
-    restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
-    pull_policy: build
+    image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
+    # .env.2 differs from .env.1 only by the API port and the scheduled job
+    # settings: scheduled jobs run on provider2 alone because their lock is not
+    # atomic, so running them on both could double-run a job.
     env_file:
       - ../.env.2.${NODE_ENV}
-    # See provider1.
-    extra_hosts:
-      - "mongo1.prosopo.io:100.64.0.21"
     volumes:
-      # See provider1 — separate pool because this container runs the previous
-      # image version.
+      # Detector bundle pool, host-mounted so a pushed pool survives container
+      # restarts. Never bake this into the image: prosopo/provider is a public
+      # Docker Hub image and every bundle ships with its own RSA private key.
       - ./data/detector-pool.2:/app/data/detector-pool
     ports:
       - '127.0.0.1:9339:9339'
     networks:
       external:
+      datastore:
       internal:
         ipv4_address: 172.18.0.7
         ipv6_address: fd00:aaaa::7
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '100m'
-        max-file: '1'
     healthcheck:
+      <<: *provider-healthcheck
       # Distroless runtime: no curl. node is the only binary in the image.
       test: [ "CMD", "/nodejs/bin/node", "-e", "fetch('http://localhost:9339/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" ]
-      interval: 5m
-      retries: 3
-      start_period: 30s
-      timeout: 10s
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-      - 208.67.222.222
   database:
     container_name: database
     image: mongo:6.0.28
@@ -115,15 +103,10 @@ services:
     restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
     volumes:
       - /data/db:/data/db
-    ports:
-      - '127.0.0.1:27017:27017'
     env_file:
       - ../.env.1.${NODE_ENV}
     networks:
-      external:
-      internal:
-        ipv4_address: 172.18.0.5
-        ipv6_address: fd00:aaaa::5
+      - datastore
     logging:
       driver: 'json-file'
       options:
@@ -207,12 +190,8 @@ services:
     volumes:
       - ./data:/data # mount a volume for data persistence
       - ./redis.conf:/redis-stack.conf
-    ports:
-      - '127.0.0.1:6379:6379' # DB
     networks:
-      internal:
-        ipv4_address: 172.18.0.8
-        ipv6_address: fd00:aaaa::8
+      - datastore
     # Cap the json log file so a chatty container can't fill the host disk.
     logging:
       driver: 'json-file'
@@ -243,6 +222,7 @@ services:
     expose:
       - "9121"
     networks:
+      datastore:
       internal:
         ipv4_address: 172.18.0.11
         ipv6_address: fd00:aaaa::b
@@ -446,6 +426,12 @@ services:
         max-size: '100m'
         max-file: '1'
 networks:
+  # Only the services that use mongo or redis join this. No host ports and no
+  # route out: reach the datastores with `docker exec`.
+  datastore:
+    driver: bridge
+    internal: true
+
   internal:
     enable_ipv6: true
     driver: bridge

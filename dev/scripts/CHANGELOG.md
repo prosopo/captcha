@@ -1,5 +1,54 @@
 # @prosopo/scripts
 
+## 3.1.223
+### Patch Changes
+
+- 223ec85: Self-hosting no longer needs a Rust toolchain. The guide used `pnpm run build:all`, which also compiles the provider's Rust addons and fails without `cargo`, even though the provider runs from the prebuilt image and nothing built on the host uses those addons. The new `pnpm run build:self-hosted` builds only what the env script and the widget need. `build:all` is unchanged.
+  
+  `docker-compose.self-hosted.yml` now sets `platform: linux/amd64` on the provider and Caddy, because those images are only published for amd64; the guide says ARM hosts run them under emulation. Its default Caddy image moves from 2.5.9 to 2.5.12: `docker/provider.Caddyfile` uses `crawler_list`, which 2.5.9 does not have, so Caddy would not start.
+  
+  The `@prosopo/datasets-fs` `cli` script pointed at `dist/esm/cli.js`, which the build never writes. It now runs `dist/tsc/cli.js`, the file `build:tsc` writes, and the guide and the package README build and run the CLI that way.
+  
+  Other corrections in the guide: the detector example runs `bundle` (`detector-botd` has no `build` script), and the expected startup log line is `bundle pool loaded {"count":0}`.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/provider@5.27.0
+  - @prosopo/types@5.25.0
+  - @prosopo/types-env@2.12.0
+  - @prosopo/cli@3.10.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.21
+  - @prosopo/env@3.6.90
+  - @prosopo/keyring@2.10.21
+
+## 3.1.222
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [f9a2e30]
+- Updated dependencies [cc3436f]
+- Updated dependencies [04b6f70]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/provider@5.26.2
+  - @prosopo/types@5.24.0
+  - @prosopo/cli@3.10.4
+  - @prosopo/datasets@3.2.20
+  - @prosopo/logger@2.1.8
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/keyring@2.10.20
+  - @prosopo/types-env@2.11.35
+  - @prosopo/dotenv@3.0.65
+
 ## 3.1.221
 ### Patch Changes
 

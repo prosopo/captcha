@@ -16,7 +16,11 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { flatten } from "@prosopo/util";
 import { describe, expect, test } from "vitest";
-import { FALLBACK_ERROR_TEXT, localiseError } from "../errorMessage.js";
+import {
+	FALLBACK_ERROR_TEXT,
+	localiseError,
+	toCallbackError,
+} from "../errorMessage.js";
 import de from "../locales/de/widget.json" with { type: "json" };
 import en from "../locales/en/widget.json" with { type: "json" };
 import type { Ti18n, TranslateOptions } from "../types.js";
@@ -104,5 +108,19 @@ describe("the ERRORS catalogue", () => {
 			);
 			expect(Object.keys(catalogue.ERRORS ?? {}).sort(), locale).toEqual(codes);
 		}
+	});
+});
+
+describe("toCallbackError", () => {
+	test("is a real Error carrying the code and errorId", () => {
+		const error = toCallbackError(undefined, {
+			code: "SITE_KEY_INVALID",
+			errorId: "SITE_KEY_INVALID:PROV-12",
+			message: "Invalid site key",
+		});
+		expect(error).toBeInstanceOf(Error);
+		expect(error.code).toBe("SITE_KEY_INVALID");
+		expect(error.errorId).toBe("SITE_KEY_INVALID:PROV-12");
+		expect(error.message).toBe("Invalid site key (SITE_KEY_INVALID:PROV-12)");
 	});
 });

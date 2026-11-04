@@ -78,6 +78,7 @@ import {
 	isUserImageChoiceActive,
 	resolveRefreshLineage,
 } from "./refreshLineage.js";
+import { resolveRetrySolveDevice } from "./retrySolveDevice.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import {
 	runConfiguredCaptchaTypeShortCircuit,
@@ -117,6 +118,7 @@ export default (
 				iframeUrl: reportedIframeUrl,
 				clientSessionId,
 				refreshOf,
+				retryOf,
 				switchToImage,
 				switchToPuzzle,
 				fingerprintProof,
@@ -631,6 +633,21 @@ export default (
 				userSitekeyIpHash,
 				new Date(),
 			);
+			// A retry that cannot be checked is served as a fresh session.
+			const retry = await resolveRetrySolveDevice(tasks.db, {
+				retryOf,
+				siteKey: dapp,
+				userAccount: user,
+				ipAddress,
+				userAgent: String(req.headers["user-agent"] ?? ""),
+				ja4: req.ja4,
+			}).catch((err: unknown) => {
+				req.logger.warn(() => ({
+					err,
+					msg: "Failed to resolve the puzzle a retry replaces",
+				}));
+				return undefined;
+			});
 			tasks.frictionlessManager.setImageSwitchRequested(
 				isUserImageChoiceActive(
 					{ switchToImage, switchToPuzzle },
@@ -668,6 +685,7 @@ export default (
 				}),
 				...rawTlsSignalsForSession(req),
 				...(refresh && { refresh: refresh.lineage }),
+				...(retry && { retry }),
 			};
 
 			const userScope = getRequestUserScope(
@@ -957,6 +975,7 @@ export default (
 				...(clientSessionId && { clientMetaData: { clientSessionId } }),
 				...(fingerprintSummary && { fingerprintSummary }),
 				...refresh?.lineage,
+				...retry,
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),

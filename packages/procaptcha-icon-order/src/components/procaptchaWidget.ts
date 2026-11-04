@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createTranslator, loadI18next, localiseError } from "@prosopo/locale";
+import { toProsopoError, toPublicError } from "@prosopo/common";
+import {
+	createTranslator,
+	loadI18next,
+	localiseError,
+	toCallbackError,
+} from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type ClickCoords,
@@ -99,7 +105,10 @@ export const mountProcaptchaIconOrderWidget = (
 
 	const reportError = (error: unknown) => {
 		callbacks.onError?.(
-			error instanceof Error ? error : new Error(String(error)),
+			toCallbackError(
+				translator.i18n,
+				toPublicError(toProsopoError(error, "ICON-7"), "FRONTEND_ERROR"),
+			),
 		);
 	};
 

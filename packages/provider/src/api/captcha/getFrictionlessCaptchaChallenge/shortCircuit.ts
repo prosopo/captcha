@@ -31,6 +31,7 @@ import type { Tasks } from "../../../tasks/index.js";
 import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import type { RefreshLineage } from "./refreshLineage.js";
+import type { ResolvedRetry } from "./retrySolveDevice.js";
 
 export type ShortCircuitInput = {
 	tasks: Tasks;
@@ -57,6 +58,9 @@ export type ShortCircuitInput = {
 	// Carried onto the session so a site pinned to a captcha type still
 	// records refreshes, and its refresh limit can still apply.
 	refresh?: RefreshLineage;
+	// Carried onto the session so a puzzle retry on a site pinned to a captcha
+	// type is judged on the failed solve's device, as it is everywhere else.
+	retry?: ResolvedRetry;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -100,6 +104,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		userSitekeyIpHash: input.userSitekeyIpHash,
 		...(bundleId && { bundleId }),
 		...input.refresh,
+		...input.retry,
 		...(input.tcpToChelloUs !== undefined && {
 			tcpToChelloUs: input.tcpToChelloUs,
 		}),

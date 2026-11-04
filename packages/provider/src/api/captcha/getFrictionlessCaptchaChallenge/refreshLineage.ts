@@ -14,6 +14,7 @@
 
 import { CaptchaType, FrictionlessReason, type Session } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import { parseDate } from "@prosopo/util";
 import { PUZZLE_REFRESHES_BEFORE_IMAGE } from "../../../tasks/captchaTypeSelection.js";
 
 export type RefreshLineage = Required<
@@ -30,9 +31,10 @@ export interface ResolvedRefresh {
  *
  * Only a session served to this same user, IP and site can be extended, so
  * the chain's length and timing come from the provider's own records: a
- * client can leave a chain, but cannot borrow someone else's. Anything else
- * is ignored rather than rejected: the request then mints an ordinary
- * session, which is all a client that never sent `refreshOf` would have got.
+ * client can leave a chain, but cannot borrow someone else's. Anything else,
+ * including a session whose createdAt cannot be read, is ignored rather than
+ * rejected: the request then mints an ordinary session, which is all a client
+ * that never sent `refreshOf` would have got.
  */
 export const resolveRefreshLineage = async (
 	db: Pick<IProviderDatabase, "getSessionRecordBySessionId">,
@@ -50,14 +52,16 @@ export const resolveRefreshLineage = async (
 	) {
 		return undefined;
 	}
+	// A missing or unparseable createdAt would make refreshedAfterMs NaN,
+	// which Math.max passes straight through. Such a record is ignored like
+	// an unknown one rather than given a made-up age.
+	const createdAt = parseDate(replaced.createdAt);
+	if (!createdAt.ok) return undefined;
 	return {
 		lineage: {
 			refreshOf,
 			refreshCount: (replaced.refreshCount ?? 0) + 1,
-			refreshedAfterMs: Math.max(
-				0,
-				now.getTime() - new Date(replaced.createdAt).getTime(),
-			),
+			refreshedAfterMs: Math.max(0, now.getTime() - createdAt.value.getTime()),
 		},
 		replaced: { captchaType: replaced.captchaType, reason: replaced.reason },
 	};

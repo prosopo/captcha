@@ -71,7 +71,7 @@ services:
         volumes:
             - /data/client-example-server:/data/db
         ports:
-            - '27018:27017'
+            - '127.0.0.1:27018:27017'
         env_file:
             - ../.env.${NODE_ENV}
         networks:

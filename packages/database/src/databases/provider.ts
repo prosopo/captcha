@@ -90,6 +90,7 @@ import {
 	ScheduledTaskSchema,
 	SessionRecordSchema,
 	SolutionRecordSchema,
+	type SpamEmailDomain,
 	type SpamEmailDomainRecord,
 	SpamEmailDomainRecordSchema,
 	type Tables,
@@ -109,6 +110,7 @@ import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 // structurally matches it (missing _bsontype/toHexString/...).
 import type { Types } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
+import { reconcileIndexes } from "../base/reconcileIndexes.js";
 import type {
 	CentralDbStreamer,
 	MarkStoredCallback,
@@ -376,40 +378,37 @@ export class ProviderDatabase
 	}
 
 	async ensureIndexes(): Promise<void> {
-		const indexPromises: Promise<void>[] = [];
-		if (!this.indexesEnsured) {
-			PROVIDER_TABLES.map(({ collectionName }) => {
-				indexPromises.push(
-					new Promise((resolve) => {
-						if (this.connected) {
-							this.tables[collectionName].collection.dropIndexes().then(() => {
-								this.tables[collectionName]
-									.ensureIndexes()
-									.then(() => {
-										this.logger.info(() => ({
-											msg: `Indexes ensured for collection ${collectionName}`,
-										}));
-										resolve();
-									})
-									.catch((err) => {
-										this.logger.warn(() => ({
-											err,
-											msg: `Error creating indexes for collection ${collectionName}`,
-										}));
-										resolve();
-									});
-							});
+		if (!this.indexesEnsured && this.connected) {
+			await Promise.all(
+				PROVIDER_TABLES.map(async ({ collectionName }) => {
+					try {
+						const result = await reconcileIndexes(this.tables[collectionName], {
+							dropUndeclared: true,
+						});
+						if (result.failed.length > 0) {
+							this.logger.warn(() => ({
+								msg: `Error creating indexes for collection ${collectionName}`,
+								data: result,
+							}));
 						} else {
 							this.logger.info(() => ({
-								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+								msg: `Indexes ensured for collection ${collectionName}`,
+								data: result,
 							}));
-							resolve();
 						}
-					}),
-				);
-			});
+					} catch (err) {
+						this.logger.warn(() => ({
+							err,
+							msg: `Error creating indexes for collection ${collectionName}`,
+						}));
+					}
+				}),
+			);
+		} else if (!this.connected) {
+			this.logger.info(() => ({
+				msg: "Skipping index creation as not connected",
+			}));
 		}
-		await Promise.all(indexPromises);
 		this.indexesEnsured = true;
 	}
 
@@ -1853,6 +1852,26 @@ export class ProviderDatabase
 			challenge,
 			updates,
 		);
+	}
+
+	/**
+	 * Take a failed puzzle for one retry. Succeeds once per puzzle, and only
+	 * for a puzzle that was submitted and disapproved.
+	 * @returns true when this call took it
+	 */
+	async claimPuzzleCaptchaRetry(challenge: PoWChallengeId): Promise<boolean> {
+		const tables = this.getTables();
+		const collection = this.interactiveCollection(CaptchaType.puzzle);
+		const result = await tables[collection.table].updateOne(
+			{
+				challenge,
+				userSubmitted: true,
+				"result.status": CaptchaStatus.disapproved,
+				retried: { $ne: true },
+			},
+			{ $set: { retried: true } },
+		);
+		return result.modifiedCount === 1;
 	}
 
 	async updateIconOrderCaptchaRecord(
@@ -3587,29 +3606,55 @@ export class ProviderDatabase
 			.exec();
 	}
 
-	async bulkUpdateSpamEmailDomains(
-		domains: Array<{ filter: { domain: string }; update: { domain: string } }>,
-		upsert: boolean,
-	): Promise<void> {
+	/**
+	 * Store any of `domains` not already in the collection and return how many
+	 * were added. The source lists hold ~225k domains and barely change between
+	 * runs, so upserting all of them rewrote every row and held write locks for
+	 * ~8s per batch on each provider at the same moment. Reading the existing
+	 * set first is an index-only scan, and only the difference is written.
+	 */
+	async insertMissingSpamEmailDomains(
+		domains: Iterable<string>,
+	): Promise<number> {
 		if (!this.tables?.spamEmailDomain) {
 			throw new ProsopoError({
 				code: "DB_QUERY_FAILED",
 				errorSite: "DBSE-51",
 				message: "Failed to import database engine",
-				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
+				context: { failedFuncName: this.insertMissingSpamEmailDomains.name },
 			});
 		}
 
-		const bulkOps = domains.map((op) => ({
+		const missing = new Set(domains);
+		if (missing.size === 0) {
+			return 0;
+		}
+
+		// Projecting only `domain` and hinting its unique index makes this a
+		// covered query: mongod answers from the index without fetching docs.
+		const existing = this.tables.spamEmailDomain
+			.find({}, { domain: 1, _id: 0 })
+			.hint({ domain: 1 })
+			.lean<SpamEmailDomain>()
+			.cursor();
+		for await (const record of existing) {
+			missing.delete(record.domain);
+		}
+
+		if (missing.size === 0) {
+			return 0;
+		}
+
+		// Still an upsert so a concurrent run cannot fail on the unique index.
+		const bulkOps = Array.from(missing, (domain) => ({
 			updateOne: {
-				filter: op.filter,
-				update: { $set: op.update },
-				upsert,
+				filter: { domain },
+				update: { $set: { domain } },
+				upsert: true,
 			},
 		}));
+		await this.tables.spamEmailDomain.bulkWrite(bulkOps, { ordered: false });
 
-		if (bulkOps.length > 0) {
-			await this.tables.spamEmailDomain.bulkWrite(bulkOps);
-		}
+		return missing.size;
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api",
-	"version": "4.8.6",
+	"version": "4.9.0",
 	"description": "Wrapper for the provider API",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
@@ -37,7 +37,8 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/types": "workspace:*"
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",

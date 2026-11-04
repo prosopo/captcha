@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { z } from "zod";
-import type { IPInfoResponse } from "../api/ipapi.js";
+import type { AccountSighting, IPInfoResponse } from "../api/ipapi.js";
 import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
@@ -197,6 +197,14 @@ export type DecisionMachineInput = {
 	// captured client-side and persisted on the puzzle captcha record.
 	// Always undefined on pow / image / audio / connect inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Puzzle-only: where the piece started and where the notch was cut, in
+	// the 300x200 puzzle frame, and how close a drop must land to pass — the
+	// same values the provider checks the drop against. Machines run on the
+	// provider, so the answer never reaches a client. Undefined on every other
+	// captcha type.
+	puzzleOrigin?: { x: number; y: number };
+	puzzleTarget?: { x: number; y: number };
+	puzzleTolerance?: number;
 	// Audio-only: playback and typing events, persisted on the audio record.
 	audioEvents?: AudioEvent[];
 	// Audio-only: how many times the clip was played before submitting.
@@ -239,6 +247,8 @@ export type DecisionMachineInput = {
 	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// See Session.tlsHandshakeRttUs.
+	tlsHandshakeRttUs?: number;
 	// The site's per-category traffic-filter policies. Gates the
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
@@ -250,7 +260,22 @@ export type DecisionMachineInput = {
 	// Undefined when no frictionless session preceded, or when the detector
 	// reported nothing.
 	d?: DetectorData;
+	// The usage counters the machine declared in `requiredDecideCounters()`, keyed
+	// by `encodeCounterKey`, as routing machines get them. Undefined when the
+	// machine declared none or the counters could not be read, which a rule
+	// must not read as zero.
+	counters?: Record<string, number>;
+	// The reputation DB's sighting of this user account on this site, when the
+	// machine's `requiresAccountSighting()` returns true. Undefined when it did
+	// not ask, or the DB does not know the account or cannot be reached.
+	accountSighting?: AccountSighting;
 };
+
+/** What a decision machine asks the provider to read into its input. */
+export interface DecisionMachineRequirements {
+	counters: CounterSpec[];
+	accountSighting: boolean;
+}
 
 export type DecisionMachineOutput = {
 	decision: DecisionMachineDecision;
@@ -315,7 +340,9 @@ export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
 	"24h": 86400,
 };
 
-export const COUNTER_KINDS = ["served", "solved"] as const;
+// `farMiss` counts wrong answers that land nowhere near the right one, such as
+// a puzzle piece dropped well away from its slot.
+export const COUNTER_KINDS = ["served", "solved", "farMiss"] as const;
 export type CounterKind = (typeof COUNTER_KINDS)[number];
 
 /**
@@ -455,6 +482,8 @@ export interface RoutingMachineRawSignals {
 	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// See Session.tlsHandshakeRttUs.
+	tlsHandshakeRttUs?: number;
 	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
 	// ipapi/isp mirror at request time. Undefined when the lookup failed
 	// or the middleware wasn't reached (dev requests bypassing the

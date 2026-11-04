@@ -616,6 +616,61 @@ describe("DecisionMachineRunner", () => {
 		});
 	});
 
+	describe("getDecisionRequirements", () => {
+		const decideInput: Parameters<
+			DecisionMachineRunner["getDecisionRequirements"]
+		>[0] = {
+			dappAccount: "dapp",
+			userAccount: "user",
+			captchaType: CaptchaType.puzzle,
+		};
+		const useArtifact = (source: string): void => {
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(
+					buildArtifact(source, DecisionMachineScope.Global),
+				);
+		};
+
+		it("reads requiredDecideCounters and requiresAccountSighting", async () => {
+			useArtifact(`module.exports.decide = () => ({ decision: "allow" });
+				module.exports.requiredDecideCounters = () => [
+					{ kind: "farMiss", captchaType: "puzzle", dimension: "userAccount", window: "10m" }
+				];
+				module.exports.requiresAccountSighting = () => true;`);
+
+			const result = await runner.getDecisionRequirements(decideInput);
+			expect(result.accountSighting).toBe(true);
+			expect(result.counters).toEqual([
+				{
+					kind: "farMiss",
+					captchaType: "puzzle",
+					dimension: "userAccount",
+					window: "10m",
+				},
+			]);
+		});
+
+		it("ignores the routing requiredCounters export of the same bundle", async () => {
+			useArtifact(`module.exports.decide = () => ({ decision: "allow" });
+				module.exports.requiredCounters = () => [
+					{ kind: "served", captchaType: "pow", dimension: "ip", window: "10m" }
+				];`);
+
+			const result = await runner.getDecisionRequirements(decideInput);
+			expect(result).toEqual({ counters: [], accountSighting: false });
+		});
+
+		it("asks for nothing when the exports throw", async () => {
+			useArtifact(`module.exports.decide = () => ({ decision: "allow" });
+				module.exports.requiredDecideCounters = () => { throw new Error("nope"); };
+				module.exports.requiresAccountSighting = () => { throw new Error("nope"); };`);
+
+			const result = await runner.getDecisionRequirements(decideInput);
+			expect(result).toEqual({ counters: [], accountSighting: false });
+		});
+	});
+
 	describe("script cache", () => {
 		beforeEach(() => {
 			// Clean slate for cache tests — leftover entries from other tests

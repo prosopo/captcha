@@ -42,3 +42,18 @@ export const localiseError = (
 			: fallback;
 	return `${text} (${error.errorId})`;
 };
+
+/** What a site's error-callback receives. `message` is translated, so branch on `code`. */
+export interface CallbackError extends Error {
+	code: string;
+	errorId: string;
+}
+
+export const toCallbackError = (
+	i18n: Ti18n | undefined,
+	error: DisplayedError,
+): CallbackError =>
+	Object.assign(new Error(localiseError(i18n, error)), {
+		code: error.code,
+		errorId: error.errorId,
+	});
