@@ -1,5 +1,20 @@
 # @prosopo/database
 
+## 4.6.2
+### Patch Changes
+
+- a85559d: Records copied to the central captcha store no longer carry the provider's `storedAtTimestamp`. The central store's `storedAtTimestamp` TTL index is now one year; provider stores keep four weeks.
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types-database@5.18.0
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/user-access-policy@3.15.18
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.9
+  - @prosopo/redis-client@1.0.46
+
 ## 4.6.1
 ### Patch Changes
 
