@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Print contexts
         timeout-minutes: 5
-        uses: prosopo/github_actions/.github/actions/print_contexts@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
+        uses: prosopo/github_actions/.github/actions/print_contexts@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
@@ -88,7 +88,7 @@ jobs:
 
       - name: Setup node and pnpm
         timeout-minutes: 5
-        uses: prosopo/github_actions/.github/actions/setup-pnpm@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
           node-cache: 'pnpm'
@@ -194,7 +194,7 @@ jobs:
 
       - name: Setup node and pnpm
         timeout-minutes: 5
-        uses: prosopo/github_actions/.github/actions/setup-pnpm@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
           node-cache: 'pnpm'

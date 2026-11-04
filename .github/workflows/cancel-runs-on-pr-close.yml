@@ -18,4 +18,4 @@ permissions:
 jobs:
   cancel:
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-    uses: prosopo/github_actions/.github/workflows/cancel-runs-on-pr-close.yml@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
+    uses: prosopo/github_actions/.github/workflows/cancel-runs-on-pr-close.yml@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main

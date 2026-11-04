@@ -38,7 +38,7 @@ jobs:
       - name: Get token for gh app
         timeout-minutes: 5
         id: app_token
-        uses: prosopo/github_actions/.github/actions/app-token@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
+        uses: prosopo/github_actions/.github/actions/app-token@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           application-id: ${{ vars.PROSOPONATOR_APP_ID }}
           application-private-key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
@@ -52,7 +52,7 @@ jobs:
 
       - name: Setup node and pnpm
         timeout-minutes: 15
-        uses: prosopo/github_actions/.github/actions/setup-pnpm@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
           node-cache: 'pnpm'
