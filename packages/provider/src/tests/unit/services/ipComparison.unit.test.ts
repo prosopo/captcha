@@ -472,6 +472,26 @@ describe("compareIPs", () => {
 		}
 	});
 
+	// The IP validation rules read each address's own reputation score from
+	// here, so dropping it would silently disable them, as above.
+	it("should propagate reputationScore onto both IP details", async () => {
+		const ip1Info: IPInfoResponse = createMockIPInfo({
+			ip: "8.8.8.8",
+			reputationScore: 0.12,
+		});
+		const ip2Info: IPInfoResponse = createMockIPInfo({ ip: "1.1.1.1" });
+
+		const service = createMockService([ip1Info, ip2Info]);
+
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
+
+		expect("comparison" in result).toBe(true);
+		if ("comparison" in result) {
+			expect(result.comparison?.ip1Details.reputationScore).toBe(0.12);
+			expect(result.comparison?.ip2Details.reputationScore).toBeUndefined();
+		}
+	});
+
 	it("should leave abuserScore undefined when the feed omits it", async () => {
 		const ip1Info: IPInfoResponse = createMockIPInfo({ ip: "8.8.8.8" });
 		const ip2Info: IPInfoResponse = createMockIPInfo({ ip: "1.1.1.1" });
