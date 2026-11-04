@@ -371,6 +371,59 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		expect(createSessionInput().captchaType).toBe(CaptchaType.image);
 	});
 
+	describe("icon-order", () => {
+		const escalateToIconOrder = async (
+			allowedCaptchaTypes?: ReturnType<typeof resolveAllowedCaptchaTypes>,
+		) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue(
+				makeOriginSession(),
+			);
+			return buildEscalation(
+				env.tasks,
+				{
+					verified: true,
+					routingOutput: { captchaType: CaptchaType.iconOrder },
+				},
+				"challenge",
+				undefined,
+				allowedCaptchaTypes && { allowedCaptchaTypes },
+			);
+		};
+
+		it("escalates to icon-order when the site has it switched on", async () => {
+			const out = await escalateToIconOrder(
+				resolveAllowedCaptchaTypes({
+					captchaTypeFeatureFlags: { iconOrder: true },
+				}),
+			);
+
+			expect(out).toEqual({
+				captchaType: CaptchaType.iconOrder,
+				sessionId: "escalation-id",
+			});
+			const input = createSessionInput();
+			expect(input.captchaType).toBe(CaptchaType.iconOrder);
+			expect(input.originSessionId).toBe("origin-id");
+			expect(input.solvedImagesCount).toBeUndefined();
+			expect(input.puzzle).toBeUndefined();
+			expect(env.spies.cacheSessionEscalation).toHaveBeenCalledWith(
+				"origin-id",
+				"escalation-id",
+			);
+		});
+
+		it("escalates to puzzle instead when the site's icon-order flag is off", async () => {
+			const out = await escalateToIconOrder();
+
+			expect(out?.captchaType).toBe(CaptchaType.puzzle);
+			expect(createSessionInput().captchaType).toBe(CaptchaType.puzzle);
+		});
+	});
+
 	it("carries the origin's simdReadings onto the image escalation at creation time (so the DM verify path doesn't have to lean on chain fallback for the common case)", async () => {
 		const originSimd = {
 			supported: true,
