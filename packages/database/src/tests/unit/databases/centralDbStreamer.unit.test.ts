@@ -127,6 +127,20 @@ describe("CentralDbStreamer", () => {
 			expect(markStored).toHaveBeenCalledWith(record.lastUpdatedTimestamp);
 		});
 
+		it("strips storedAtTimestamp from the record before upserting", async () => {
+			const record = makePowRecord({
+				storedAtTimestamp: new Date("2026-01-01T00:30:00Z"),
+			});
+
+			streamer.streamPowRecord(record);
+			await flush();
+
+			const call = mockPowUpdateOne.mock.calls[0] as unknown[];
+			const setArg = (call[1] as { $set: Record<string, unknown> }).$set;
+			expect(setArg).not.toHaveProperty("storedAtTimestamp");
+			expect(setArg.challenge).toBe(record.challenge);
+		});
+
 		it("strips _id from the record before upserting", async () => {
 			const record = makePowRecord();
 			(record as unknown as Record<string, unknown>)._id = "should-be-removed";

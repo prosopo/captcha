@@ -1,5 +1,24 @@
 # @prosopo/cli
 
+## 3.10.6
+### Patch Changes
+
+- 65d87f2: Provider deployments now define provider1 and provider2 from one shared block, and both always pull their image. Mongo and Redis no longer have host ports and sit on a private network that only their users can join. Development and test compose files bind datastores to localhost only.
+- 65d87f2: The provider now keeps retrying and logging when its database is not reachable at startup, for as long as that takes, instead of crashing. Containers can start in any order.
+- Updated dependencies [65d87f2]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/provider@5.28.0
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/env@3.6.91
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
 ## 3.10.5
 ### Patch Changes
 

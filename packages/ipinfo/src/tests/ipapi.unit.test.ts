@@ -35,6 +35,7 @@ import {
 	parseAbuserScore,
 	parseAccountSighting,
 	parseDetectorRisk,
+	parseReputationScore,
 	parseSharedReason,
 } from "../backends/ipapi.js";
 
@@ -537,6 +538,95 @@ describe("the detector risk", () => {
 			).lookup(IP),
 		);
 		expect(result.detectorRisk).toBeUndefined();
+	});
+});
+
+describe("reputation score", () => {
+	const lookupScore = async (
+		reputation: IPApiResponse["reputation"],
+	): Promise<Pick<IPInfoResult, "reputationScore" | "reputationBand">> => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ reputation }))).lookup(IP),
+		);
+		return {
+			reputationScore: result.reputationScore,
+			reputationBand: result.reputationBand,
+		};
+	};
+
+	it("carries a scored assessment's score and band onto the result", async () => {
+		expect(
+			await lookupScore({
+				assessment: { state: "scored", score: 0.476, band: "elevated" },
+			}),
+		).toEqual({ reputationScore: 0.476, reputationBand: "elevated" });
+	});
+
+	it("keeps both ends of the range", () => {
+		expect(
+			parseReputationScore({ assessment: { state: "scored", score: 0 } }),
+		).toEqual({ score: 0 });
+		expect(
+			parseReputationScore({ assessment: { state: "scored", score: 1 } }),
+		).toEqual({ score: 1 });
+	});
+
+	it("reads an unscored assessment as no score, never as 0", async () => {
+		expect(await lookupScore({ assessment: { state: "no_evidence" } })).toEqual(
+			{ reputationScore: undefined, reputationBand: undefined },
+		);
+		expect(await lookupScore({})).toEqual({
+			reputationScore: undefined,
+			reputationBand: undefined,
+		});
+		expect(await lookupScore(undefined)).toEqual({
+			reputationScore: undefined,
+			reputationBand: undefined,
+		});
+	});
+
+	it("ignores a score that is not under a scored state", () => {
+		expect(
+			parseReputationScore({
+				assessment: { state: "no_evidence", score: 0.9 },
+			}),
+		).toBeUndefined();
+		expect(
+			parseReputationScore({ assessment: { score: 0.9 } }),
+		).toBeUndefined();
+	});
+
+	it("drops a score outside 0..1 or not a finite number", () => {
+		for (const score of [-0.1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+			expect(
+				parseReputationScore({ assessment: { state: "scored", score } }),
+			).toBeUndefined();
+		}
+	});
+
+	it("drops a score sent as a string", async () => {
+		const result: IPInfoResult = expectValid(
+			await backend(
+				respondWith({
+					...baseResponse(),
+					reputation: { assessment: { state: "scored", score: "0.9" } },
+				}),
+			).lookup(IP),
+		);
+		expect(result.reputationScore).toBeUndefined();
+	});
+
+	it("does not read the abuser scores as a reputation score", async () => {
+		const result = expectValid(
+			await backend(
+				respondWith({
+					...baseResponse({ is_abuser: true }),
+					asn: { asn: 1, abuser_score: "0.9 (Very High)" },
+					company: { name: "Example", abuser_score: "0.9 (Very High)" },
+				}),
+			).lookup(IP),
+		);
+		expect(result.reputationScore).toBeUndefined();
 	});
 });
 
