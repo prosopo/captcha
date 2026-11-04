@@ -84,7 +84,7 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 		return basename === "package.json" || basename === "Cargo.toml";
 	});
 	// split into json and toml
-	// biome-ignore lint/complexity/noForEach: TODO fix
+	// biome-ignore lint/complexity/noForEach: legacy code, see https://github.com/prosopo/captcha/issues/3720
 	files
 		.filter((pth) => path.extname(pth) === ".json")
 		.forEach((pth) => {
@@ -118,7 +118,7 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 		});
 
 	// replace version in tomls
-	// biome-ignore lint/complexity/noForEach: TODO fix
+	// biome-ignore lint/complexity/noForEach: legacy code, see https://github.com/prosopo/captcha/issues/3720
 	files
 		.filter((pth) => path.extname(pth) === ".toml")
 		.filter((pth) => {
@@ -147,7 +147,7 @@ export default async function setVersion(versionIn: string, ignore?: string[]) {
 		});
 
 	// go through tomls again now versions have updated and update the version field for dependencies with paths set, as we can follow the path to get the version
-	// biome-ignore lint/complexity/noForEach: TODO fix
+	// biome-ignore lint/complexity/noForEach: legacy code, see https://github.com/prosopo/captcha/issues/3720
 	files
 		.filter((pth) => path.extname(pth) === ".toml")
 		.forEach((pth) => {

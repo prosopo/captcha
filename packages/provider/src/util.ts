@@ -75,7 +75,7 @@ export async function checkIfTaskIsRunning(
 	);
 	const twoMinutesAgo = new Date().getTime() - 1000 * 60 * 2;
 	// If the task is running and the task was started within the last 2 minutes
-	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
+	// Temporary: the 2-minute window stops failed tasks blocking the next run (https://github.com/prosopo/captcha/issues/3715)
 	if (runningTask && runningTask.datetime.getTime() > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
 			// Mongoose 8's Document._id defaults to `unknown`; the schema stores
