@@ -40,7 +40,7 @@ export function consoleTableWithWrapping(
 	maxColWidth = 90,
 ) {
 	const tableItems = data.reduce<{ [key: string]: string }[]>((prev, item) => {
-		// biome-ignore lint/performance/noAccumulatingSpread: TODO fix
+		// biome-ignore lint/performance/noAccumulatingSpread: legacy code, see https://github.com/prosopo/captcha/issues/3720
 		return [...prev, ...wrapItemToMultipleRows(item, maxColWidth)];
 	}, []);
 

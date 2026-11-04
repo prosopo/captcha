@@ -48,7 +48,7 @@ export async function updateDemoHTMLFiles(
 		ignore: ignore,
 	});
 	logger.info(() => ({ data: { files }, msg: "HTML files found" }));
-	// biome-ignore lint/complexity/noForEach: TODO fix
+	// biome-ignore lint/complexity/noForEach: legacy code, see https://github.com/prosopo/captcha/issues/3720
 	files.forEach((file) => {
 		// the following code loads a .env file, searches for the variable and replaces it
 		// then saves the file
@@ -84,7 +84,7 @@ export async function updateEnvFiles(
 ) {
 	const files = await findEnvFiles(logger, cwd);
 	logger.info(() => ({ data: { files }, msg: "Env files found" }));
-	// biome-ignore lint/complexity/noForEach: TODO fix
+	// biome-ignore lint/complexity/noForEach: legacy code, see https://github.com/prosopo/captcha/issues/3720
 	files.forEach((file) => {
 		let write = false;
 		// the following code loads a .env file, searches for the variable and replaces it
