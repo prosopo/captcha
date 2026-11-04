@@ -86,6 +86,8 @@ const getPairAndSecretForSiteKey = (
 		// Not a site type: the seed name of the audio demos' image site.
 		CaptchaType.audio,
 		CaptchaType.iconOrder,
+		// The portal derives a site's secret from its lowercased name.
+		CaptchaType.iconOrder.toLowerCase(),
 	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);

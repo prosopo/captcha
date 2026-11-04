@@ -372,6 +372,27 @@ describe("signup: matching the site key to a keyring pair", () => {
 		expect(body.secret).toBe(`${SECRET}//${CaptchaType.frictionless}`);
 	});
 
+	test("matches a portal site named after icon order, whose secret is lowercased", async () => {
+		mocks.addresses.clear();
+		mocks.addresses.set(`${SECRET}//iconorder`, SITE_KEY);
+		const { connection } = connectionWith(userModel({}));
+		const res = responseStub();
+		await signup(
+			connection,
+			serverConfig(),
+			VERIFY_ENDPOINT,
+			"api",
+			request({ body: signupBody() }),
+			res.response,
+			next,
+		);
+		expect(res.statuses).toEqual([200]);
+		const body: Record<string, string> = JSON.parse(
+			String(fetchMock.mock.calls[0]?.[1]?.body),
+		);
+		expect(body.secret).toBe(`${SECRET}//iconorder`);
+	});
+
 	test("gives up when no captcha type derives the site key", async () => {
 		mocks.addresses.clear();
 		const { connection } = connectionWith(userModel({}));
