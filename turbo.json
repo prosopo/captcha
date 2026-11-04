@@ -112,6 +112,15 @@
 		},
 		"lint": { "dependsOn": ["^lint"] },
 		"lint:docker": { "inputs": ["*.yml", "*Caddyfile", "../lint-bundle.mjs"] },
+		// cargo resolves its own dependencies, so these wait on no TypeScript
+		// build. target/ is not an output: it is too large to cache, so a hit
+		// only replays logs.
+		"lint:rust": {
+			"inputs": ["**/*.rs", "**/Cargo.toml", "Cargo.lock", "rustfmt.toml", "clippy.toml"]
+		},
+		"test:rust": {
+			"inputs": ["**/*.rs", "**/Cargo.toml", "Cargo.lock"]
+		},
 		"clean": {
 			"cache": false
 		},

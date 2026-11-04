@@ -24,7 +24,8 @@
 		"build:debug": "napi build --platform --output-dir dist/native",
 		"build:release": "napi build --platform --release --output-dir dist/native",
 		"bench": "pnpm run build:release && node bench.mjs",
-		"test:cargo": "cargo test",
+		"lint:rust": "cargo fmt --all --check && cargo clippy --all-targets",
+		"test:rust": "cargo test",
 		"test": "node --test tests/dimensions.test.ts",
 		"clean": "cargo clean && rm -rf dist"
 	},
