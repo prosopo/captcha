@@ -29,6 +29,7 @@ import {
 	iconOrderToleranceFieldSchema,
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
+import type { Tier } from "../client/user.js";
 import type { ModeEnum } from "../config/mode.js";
 import type {
 	AudioEvent,
@@ -507,6 +508,9 @@ export interface RoutingMachineInputBase {
 	phase: RoutingMachinePhase;
 	dappAccount: string;
 	userAccount: string;
+	// The tier of the account that owns `dappAccount`. Undefined when the
+	// provider has no client record for it.
+	tier?: Tier;
 	ip: string;
 	countryCode?: string;
 	baseline: RoutingMachineBaseline;

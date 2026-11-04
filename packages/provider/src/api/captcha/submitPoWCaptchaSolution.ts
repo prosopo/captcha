@@ -167,6 +167,7 @@ export default (env: ProviderEnvironment) =>
 			);
 
 			tasks.powCaptchaManager.setPostPowContext({
+				tier: clientRecord.tier,
 				ip: req.ip || "",
 				countryCode,
 				device: {
@@ -252,6 +253,7 @@ export default (env: ProviderEnvironment) =>
 				{
 					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
 						clientRecord.settings,
+						clientRecord.tier,
 					),
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
 					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,

@@ -18,6 +18,7 @@ import {
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
+import { Tier } from "./user.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
@@ -256,13 +257,30 @@ const isFeatureFlaggedCaptchaType = (
 ): captchaType is FeatureFlaggedCaptchaType =>
 	captchaType in captchaTypeFeatureFlagDefaults;
 
+/**
+ * Where a tier's defaults differ from `captchaTypeFeatureFlagDefaults`. Only
+ * an unset flag takes these: a site's own setting always wins.
+ *
+ * Free sites may be served icon order so the routing machine can send them a
+ * share of it. Nothing picks icon order unless asked to, so this changes
+ * nothing for a free site until a routing rule or its owner does.
+ */
+export const captchaTypeFeatureFlagTierDefaults: Readonly<
+	Partial<Record<Tier, ICaptchaTypeFeatureFlags>>
+> = {
+	[Tier.Free]: { [CaptchaType.iconOrder]: true },
+};
+
 /** Types without a feature flag are always enabled. */
 export const isCaptchaTypeFeatureEnabled = (
 	captchaType: CaptchaType,
 	flags: ICaptchaTypeFeatureFlags | undefined | null,
+	tier?: Tier,
 ): boolean =>
 	isFeatureFlaggedCaptchaType(captchaType)
-		? (flags?.[captchaType] ?? captchaTypeFeatureFlagDefaults[captchaType])
+		? (flags?.[captchaType] ??
+			(tier && captchaTypeFeatureFlagTierDefaults[tier]?.[captchaType]) ??
+			captchaTypeFeatureFlagDefaults[captchaType])
 		: true;
 
 /**
@@ -278,6 +296,7 @@ export const resolveAllowedCaptchaTypes = (
 		  }
 		| undefined
 		| null,
+	tier?: Tier,
 ): Required<IFrictionlessTypes> => {
 	const preferred = resolveFrictionlessTypes(settings?.frictionlessTypes);
 	const flags = settings?.captchaTypeFeatureFlags;
@@ -285,10 +304,10 @@ export const resolveAllowedCaptchaTypes = (
 		image: preferred.image,
 		puzzle:
 			preferred.puzzle &&
-			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags),
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags, tier),
 		iconOrder:
 			preferred.iconOrder &&
-			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags),
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags, tier),
 	};
 };
 
