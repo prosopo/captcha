@@ -10,6 +10,7 @@ on:
       # Not a type this workflow wants to run for -- the job below skips it. It
       # exists so the run is created and cancels the in-flight one.
       - converted_to_draft
+      - ready_for_review
     paths:
       - "demos/android-webview/**"
       - ".github/workflows/android-webview.yml"
@@ -29,7 +30,7 @@ concurrency:
 jobs:
   build:
     name: android-webview
-    if: ${{ github.event.action != 'converted_to_draft' }}
+    if: ${{ github.event.pull_request.draft != true }}
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR running on the
     # self-hosted fleet would execute arbitrary code on it.

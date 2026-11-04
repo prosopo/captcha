@@ -25,6 +25,8 @@ on:
       - opened
       - synchronize
       - reopened
+      - ready_for_review
+      - converted_to_draft
   workflow_dispatch:
 
 permissions:
@@ -40,6 +42,7 @@ defaults:
 
 jobs:
   check:
+    if: github.event.pull_request.draft != true
     name: locales
     # Hosted, as in lint.yml: this repository is public, so a fork PR must not
     # run on the self-hosted fleet.
