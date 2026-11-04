@@ -19,6 +19,7 @@ on:
       - synchronize
       - reopened
       - ready_for_review
+      - converted_to_draft
   workflow_dispatch:
 
 permissions:
@@ -42,7 +43,7 @@ jobs:
     name: cargo test (${{ matrix.crate }})
     # Hosted for the same reason as tests.yml: this repository is public.
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft != true }}
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +52,7 @@ jobs:
         crate:
           [packages/native-ja4, packages/native-merkle, packages/native-puzzle]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           submodules: false
 
@@ -69,7 +70,7 @@ jobs:
       # restore-keys from the prefix, so a version left outside it can restore a
       # target/ built by another rustc, which cargo rejects with E0514.
       - name: Cache cargo
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6  # v2.9.2
         with:
           workspaces: ${{ matrix.crate }}
           prefix-key: v0-rust-${{ steps.rustc-version.outputs.version }}

@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.6.0
+### Minor Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+
 ## 3.5.0
 ### Minor Changes
 

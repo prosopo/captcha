@@ -17,6 +17,7 @@ on:
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+      - converted_to_draft
   workflow_dispatch:
 
 permissions:
@@ -44,11 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     # Skip draft PRs, but still allow manual workflow_dispatch runs (where
     # github.event.pull_request is undefined).
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft != true }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: "24.22.1"
 

@@ -124,7 +124,6 @@ export const captchasEq = (
 };
 
 export const REPO_PLACEHOLDER = "${repo}";
-// TODO use getPaths() here to find the repo dir
 export const REPO_DIR = path.resolve(__dirname, "../../../..");
 
 // Fixture JSON refers to images as `${repo}/...`. Writes a copy of the fixture

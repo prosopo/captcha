@@ -35,30 +35,39 @@ export type StoredSession = SessionRecord;
 
 export const StoredSessionRecordSchema: Schema = SessionRecordSchema;
 
+const ONE_YEAR = 60 * 60 * 24 * 365;
+
+const storedAtTimestamp = { type: Date, required: false, expires: ONE_YEAR };
+
 export const StoredUserCommitmentRecordSchema: Schema = new Schema({
 	...UserCommitmentRecordSchema.obj,
 });
 StoredUserCommitmentRecordSchema.index({ sessionId: 1 });
+StoredUserCommitmentRecordSchema.add({ storedAtTimestamp });
 
 export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
 	...PoWCaptchaRecordSchema.obj,
 });
 StoredPoWCaptchaRecordSchema.index({ sessionId: 1 });
+StoredPoWCaptchaRecordSchema.add({ storedAtTimestamp });
 
 export const StoredPuzzleCaptchaRecordSchema: Schema = new Schema({
 	...PuzzleCaptchaRecordSchema.obj,
 });
 StoredPuzzleCaptchaRecordSchema.index({ sessionId: 1 });
+StoredPuzzleCaptchaRecordSchema.add({ storedAtTimestamp });
 
 export const StoredAudioCaptchaRecordSchema: Schema = new Schema({
 	...AudioCaptchaRecordSchema.obj,
 });
 StoredAudioCaptchaRecordSchema.index({ sessionId: 1 });
+StoredAudioCaptchaRecordSchema.add({ storedAtTimestamp });
 
 export const StoredIconOrderCaptchaRecordSchema: Schema = new Schema({
 	...IconOrderCaptchaRecordSchema.obj,
 });
 StoredIconOrderCaptchaRecordSchema.index({ sessionId: 1 });
+StoredIconOrderCaptchaRecordSchema.add({ storedAtTimestamp });
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(

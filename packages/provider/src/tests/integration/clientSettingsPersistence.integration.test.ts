@@ -97,6 +97,7 @@ const FULLY_POPULATED_SETTINGS = {
 		},
 		distanceThresholdKm: 750,
 		abuseScoreThreshold: 0.25,
+		reputationScoreThreshold: 0.31,
 		requireAllConditions: true,
 		forceConsistentIp: true,
 		// Per-country overrides. Stored as a Map in Mongoose; comes back
@@ -113,6 +114,7 @@ const FULLY_POPULATED_SETTINGS = {
 				},
 				distanceThresholdKm: 500,
 				abuseScoreThreshold: 0.4,
+				reputationScoreThreshold: 0.62,
 				requireAllConditions: false,
 			},
 		},
@@ -135,10 +137,20 @@ const FULLY_POPULATED_SETTINGS = {
 			nameAllowlist: ["VPN by Google"],
 			nameDenylist: ["Example VPN"],
 		},
-		proxy: { action: TrafficFilterAction.Block },
+		proxy: {
+			action: TrafficFilterAction.Block,
+			exceptions: [
+				{
+					inMarket: true,
+					minReputationScore: 0.87,
+					action: TrafficFilterAction.Challenge,
+				},
+			],
+		},
 		tor: { action: TrafficFilterAction.Block },
 		abuser: { action: TrafficFilterAction.Block },
 		abuserScoreThreshold: 0.33,
+		reputationScoreThreshold: 0.93,
 		datacenter: {
 			action: TrafficFilterAction.Challenge,
 			captchaType: CaptchaType.image,
