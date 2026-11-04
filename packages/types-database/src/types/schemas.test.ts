@@ -28,6 +28,8 @@ import mongoose, { type IndexDefinition, type Schema } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { BannedDomainRecordSchema } from "./bannedDomain.js";
 import {
+	StoredAudioCaptchaRecordSchema,
+	StoredIconOrderCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	StoredSessionRecordSchema,
@@ -35,9 +37,11 @@ import {
 } from "./captcha.js";
 import { UserDataSchema, UserSettingsSchema } from "./client.js";
 import {
+	AudioCaptchaRecordSchema,
 	CaptchaRecordSchema,
 	ClientRecordSchema,
 	CompositeIpAddressRecordSchemaObj,
+	IconOrderCaptchaRecordSchema,
 	PoWCaptchaRecordSchema,
 	PuzzleCaptchaRecordSchema,
 	ScheduledTaskRecordSchema,
@@ -863,6 +867,29 @@ describe("the stored-event schemas", () => {
 		]) {
 			expect(hasIndexOn(schema, "sessionId")).toBe(true);
 		}
+	});
+
+	const storedAtExpiry = (schema: Schema): unknown =>
+		schema.path("storedAtTimestamp").options.expires;
+
+	it.each<[string, Schema]>([
+		["StoredUserCommitmentRecordSchema", StoredUserCommitmentRecordSchema],
+		["StoredPoWCaptchaRecordSchema", StoredPoWCaptchaRecordSchema],
+		["StoredPuzzleCaptchaRecordSchema", StoredPuzzleCaptchaRecordSchema],
+		["StoredAudioCaptchaRecordSchema", StoredAudioCaptchaRecordSchema],
+		["StoredIconOrderCaptchaRecordSchema", StoredIconOrderCaptchaRecordSchema],
+	])("%s expires storedAtTimestamp after a year", (_name, schema) => {
+		expect(storedAtExpiry(schema)).toBe(60 * 60 * 24 * 365);
+	});
+
+	it.each<[string, Schema]>([
+		["UserCommitmentRecordSchema", UserCommitmentRecordSchema],
+		["PoWCaptchaRecordSchema", PoWCaptchaRecordSchema],
+		["PuzzleCaptchaRecordSchema", PuzzleCaptchaRecordSchema],
+		["AudioCaptchaRecordSchema", AudioCaptchaRecordSchema],
+		["IconOrderCaptchaRecordSchema", IconOrderCaptchaRecordSchema],
+	])("%s still expires storedAtTimestamp after four weeks", (_name, schema) => {
+		expect(storedAtExpiry(schema)).toBe(60 * 60 * 24 * 7 * 4);
 	});
 
 	it("are copies, so indexing them does not touch the provider schemas", () => {
