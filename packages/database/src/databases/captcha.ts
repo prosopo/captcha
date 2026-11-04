@@ -95,6 +95,15 @@ const CAPTCHA_TABLES = [
 	},
 ];
 
+export const toCentralRecord = <
+	T extends { _id?: unknown; storedAtTimestamp?: Date },
+>(
+	record: T,
+): Omit<T, "_id" | "storedAtTimestamp"> => {
+	const { _id, storedAtTimestamp, ...centralRecord } = record;
+	return centralRecord;
+};
+
 export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	tables: Tables<TableNames>;
 	private indexesEnsured = false;
@@ -254,8 +263,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			// and up to 7 have been observed on a single sessionId.
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
-					const { _id, ...safeDoc } = document;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(
+						toCentralRecord(document),
+					);
 					return {
 						updateOne: {
 							filter: { sessionId: normalised.sessionId },
@@ -279,9 +289,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (imageCaptchaEvents.length) {
 			const result = await this.tables.commitment.bulkWrite(
 				imageCaptchaEvents.map((doc) => {
-					// remove the _id field to avoid problems when upserting
-					const { _id, ...safeDoc } = doc;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(
+						toCentralRecord(doc),
+					);
 					return {
 						updateOne: {
 							filter: { id: normalised.id },
@@ -304,9 +314,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (powCaptchaEvents.length) {
 			const result = await this.tables.powcaptcha.bulkWrite(
 				powCaptchaEvents.map((doc) => {
-					// remove the _id field to avoid problems when upserting
-					const { _id, ...safeDoc } = doc;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(
+						toCentralRecord(doc),
+					);
 					return {
 						updateOne: {
 							filter: { challenge: normalised.challenge },
@@ -363,8 +373,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		}
 		const result = await this.tables[table].bulkWrite(
 			records.map((doc) => {
-				const { _id, ...safeDoc } = doc;
-				const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+				const normalised = CaptchaDatabase.normaliseDocCompositeIps(
+					toCentralRecord(doc),
+				);
 				return {
 					updateOne: {
 						filter: { challenge: normalised.challenge },
