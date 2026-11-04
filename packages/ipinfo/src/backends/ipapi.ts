@@ -87,6 +87,28 @@ export const parseDetectorRisk = (
 	return typeof risk === "number" && risk >= 0 && risk <= 1 ? risk : undefined;
 };
 
+/**
+ * The address's reputation score, if the lookup returned one. Undefined
+ * otherwise, never 0.
+ */
+export const parseReputationScore = (
+	reputation: IPApiReputationInfo | undefined,
+): { score: number; band?: string } | undefined => {
+	const assessment = reputation?.assessment;
+	const score = assessment?.score;
+	if (
+		assessment?.state !== "scored" ||
+		typeof score !== "number" ||
+		!Number.isFinite(score) ||
+		score < 0 ||
+		score > 1
+	) {
+		return undefined;
+	}
+	const band = assessment.band;
+	return { score, ...(typeof band === "string" && band && { band }) };
+};
+
 /** The shared-egress reason, when it is one this client knows. */
 export const parseSharedReason = (
 	reputation: IPApiReputationInfo | undefined,
@@ -186,6 +208,7 @@ export class IpapiBackend {
 					};
 				}
 
+				const reputation = parseReputationScore(data.reputation);
 				const result: IPInfoResult = {
 					ip: data.ip,
 					isValid: true,
@@ -218,6 +241,8 @@ export class IpapiBackend {
 
 					abuserScore: parseAbuserScore(data.asn?.abuser_score),
 					companyAbuserScore: parseAbuserScore(data.company?.abuser_score),
+					reputationScore: reputation?.score,
+					reputationBand: reputation?.band,
 					detectorRisk: parseDetectorRisk(data.reputation),
 					sharedReason: parseSharedReason(data.reputation),
 				};

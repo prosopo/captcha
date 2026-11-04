@@ -109,7 +109,19 @@ export const REPUTATION_SHARED_REASONS = [
 ] as const;
 export type ReputationSharedReason = (typeof REPUTATION_SHARED_REASONS)[number];
 
+/**
+ * The reputation assessment for one address. `score` is present only when
+ * `state` is `scored`.
+ */
+export interface IPApiReputationAssessment {
+	state?: "scored" | "no_evidence" | string;
+	/** In [0,1]; present only when `state` is `scored`. */
+	score?: number | null;
+	band?: string | null;
+}
+
 export interface IPApiReputationInfo {
+	assessment?: IPApiReputationAssessment | null;
 	/**
 	 * Risk in [0,1] from bot-detector fires on this address in recent
 	 * sessions, on the same additive scale as a session's bot score. Null or
@@ -228,8 +240,20 @@ export interface IPInfoResult {
 	vpnType?: "exit_node" | "vpn_server";
 
 	// Risk scoring
+	/**
+	 * Abuser score for the IP's ASN. Not used for decisions: see
+	 * `reputationScore`.
+	 */
 	abuserScore?: number;
+	/** As `abuserScore`, for the IP's company. Not used for decisions. */
 	companyAbuserScore?: number;
+	/**
+	 * Reputation score for this address, in [0,1]. Undefined when the lookup
+	 * returned none; an address without a score never meets a threshold.
+	 */
+	reputationScore?: number;
+	/** The band for `reputationScore`, e.g. "high". */
+	reputationBand?: string;
 	/** Undefined when the address has no detector evidence. */
 	detectorRisk?: number;
 	/** Set when the reputation DB holds the address to be shared egress. */
@@ -264,6 +288,7 @@ type IPDetails = {
 	city?: string;
 	coordinates?: { latitude: number; longitude: number };
 	abuserScore?: number;
+	reputationScore?: number;
 };
 
 export type IPComparison = {
