@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
+import { joinUrl, stripTrailingSlashes } from "@prosopo/util";
 import {
 	type HardcodedProvider,
 	type IpMode,
@@ -47,7 +48,7 @@ const applyIpModeToUrl = (url: string, ipMode?: IpMode): string => {
 	try {
 		const parsed = new URL(url);
 		parsed.hostname = withIpModeLabel(parsed.hostname, ipMode);
-		return parsed.toString().replace(/\/$/, "");
+		return stripTrailingSlashes(parsed.toString());
 	} catch {
 		return url;
 	}
@@ -75,7 +76,7 @@ let healthzRetryBaseDelayMs = HEALTHZ_RETRY_BASE_DELAY_MS;
 let healthzRetryMaxDelayMs = HEALTHZ_RETRY_MAX_DELAY_MS;
 
 const fetchPinnedHost = async (baseUrl: string): Promise<string> => {
-	const res = await fetch(`${baseUrl}/healthz`, {
+	const res = await fetch(joinUrl(baseUrl, "healthz"), {
 		method: "GET",
 		cache: "no-store",
 		credentials: "omit",
@@ -138,7 +139,7 @@ const resolvePinnedUrl = async (
 			// Re-apply the ipMode label so the per-pronode URL stays on the same
 			// single-stack sub-zone (`ipv4.pronode4.prosopo.io`).
 			parsed.hostname = withIpModeLabel(host, ipMode);
-			return parsed.toString().replace(/\/$/, "");
+			return stripTrailingSlashes(parsed.toString());
 		} catch (err) {
 			// Healthz is a prerequisite for the rest of the captcha flow — the
 			// token must embed a specific pronodeN URL for verify to accept it.
@@ -253,7 +254,7 @@ export const getRandomActiveProvider = async (
 // Compare two provider URLs ignoring a trailing slash so a stored "failed" URL
 // still matches its list entry regardless of formatting.
 const sameProviderUrl = (a: string, b: string): boolean =>
-	a.replace(/\/$/, "") === b.replace(/\/$/, "");
+	stripTrailingSlashes(a) === stripTrailingSlashes(b);
 
 // Weighted random pick — providers advertise a capacity weight (1-100), so
 // fallback traffic is spread in proportion to capacity rather than uniformly.

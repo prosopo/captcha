@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { joinUrl } from "@prosopo/util";
 
 // Every Signature-Agent URL points to a well-known JWKS directory. Fetch on
 // first use, cache for the duration the origin recommends (or a 1 h default),
@@ -141,7 +142,7 @@ export const resolveJwksFromSignatureAgent = async (
 	if (cached && cached.expiresAt > now) return cached.keys;
 
 	const fetchImpl = options.fetch ?? fetch;
-	const directoryUrl = new URL(DIRECTORY_PATH, `${signerUrl}/`);
+	const directoryUrl = new URL(joinUrl(signerUrl, DIRECTORY_PATH));
 	if (!options.allowLocalSigners) assertFetchableSigner(directoryUrl);
 	const response = await fetchImpl(directoryUrl.toString(), {
 		signal: AbortSignal.timeout(options.timeoutMs ?? DEFAULT_TIMEOUT_MS),

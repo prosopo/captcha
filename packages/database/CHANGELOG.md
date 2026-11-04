@@ -1,5 +1,49 @@
 # @prosopo/database
 
+## 4.6.1
+### Patch Changes
+
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+- ec54f21: The scheduled spam email domain sync now only writes domains that are not already stored. It used to upsert the whole list (about 225k domains) on every run, which rewrote every row and held Mongo write locks for around 8 seconds per batch on every provider at the same time, slowing requests on the hour. It now reads the stored domains with an index-only scan and upserts just the new ones.
+  
+  `bulkUpdateSpamEmailDomains` on the provider database is replaced by `insertMissingSpamEmailDomains(domains)`, which returns how many domains were added. The task records that count as `domainsAdded` alongside `domainsProcessed`. Domains that drop off the source lists are still kept, as before.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/types-database@5.17.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.17
+
+## 4.6.0
+### Minor Changes
+
+- c12d199: Add `reconcileIndexes`, which brings a collection's indexes in line with its schema. Mongoose's own `ensureIndexes`/autoIndex cannot change an existing index: when a declared index's key or options change (for example `pendingStage_partial` gaining `_id`, or a field becoming unique) it logs an error and leaves the old index in place, so the new one never appears. `reconcileIndexes` drops and rebuilds only those clashing indexes, puts the old one back if the rebuild fails (for example a new unique index meeting duplicates), can drop named obsolete indexes, can keep extra indexes declared outside the schema, and has a dry-run mode.
+  
+  The provider's `ensureIndexes` now uses it on its own database (dropping indexes the schema no longer declares). The central captcha database uses it too, but keeps indexes it does not know about, since other services add their own there.
+
+### Patch Changes
+
+- f31105a: Mongo connection URLs in logs now hide the username and password properly. The old redaction replaced the first `word:word` it found, so a password containing a `-` (which every password `generateSelfHostedEnv.ts` creates can) was logged in full or in part, with the host and port hidden instead. URLs without credentials no longer lose their host and port either.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/user-access-policy@3.15.16
+  - @prosopo/types-database@5.16.2
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/redis-client@1.0.45
+
 ## 4.5.1
 ### Patch Changes
 

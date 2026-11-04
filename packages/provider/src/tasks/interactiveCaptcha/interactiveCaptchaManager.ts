@@ -57,6 +57,7 @@ import {
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import {
+	type CounterIncrement,
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
@@ -111,6 +112,11 @@ export interface InteractiveSubmission<TRecord> {
 	simdReadings?: string;
 	clientMetaData?: ClientMetaData;
 	isCorrect: (record: TRecord) => boolean;
+	/**
+	 * Whether a wrong answer landed nowhere near the right one. Types that
+	 * cannot tell leave it out, and their misses are not counted.
+	 */
+	isFarMiss?: (record: TRecord) => boolean;
 	/** Persists the raw interaction trail, whatever the verdict. */
 	persistInteraction: () => Promise<void>;
 }
@@ -278,6 +284,7 @@ export abstract class InteractiveCaptchaManager<
 			return false;
 		}
 
+		const dappAccount = at(challengeSplit, 2);
 		const correct = submission.isCorrect(challengeRecord);
 		const result: CaptchaResult = correct
 			? { status: CaptchaStatus.approved }
@@ -286,18 +293,25 @@ export abstract class InteractiveCaptchaManager<
 					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 				};
 
-		// Solved-counter writes: fire-and-forget, only on a correct solve.
-		// Runs before any decision-machine veto.
-		if (correct && this.usageCounters) {
-			this.usageCounters.incrManyAsync(
-				at(challengeSplit, 2),
-				buildAllWindowIncrements(
-					"solved",
-					this.captchaType,
-					submission.ipAddress.address,
-					userAccount,
-				),
-			);
+		// Counter writes: fire-and-forget. Runs before any decision-machine
+		// veto.
+		if (this.usageCounters) {
+			const kind = correct
+				? "solved"
+				: submission.isFarMiss?.(challengeRecord)
+					? "farMiss"
+					: undefined;
+			if (kind) {
+				this.usageCounters.incrManyAsync(
+					dappAccount,
+					buildAllWindowIncrements(
+						kind,
+						this.captchaType,
+						submission.ipAddress.address,
+						userAccount,
+					),
+				);
+			}
 		}
 
 		// Unconditional, so the trail survives when the behavioural payload is
@@ -318,7 +332,7 @@ export abstract class InteractiveCaptchaManager<
 						msg: "Behavioral analysis completed",
 						data: {
 							userAccount,
-							dappAccount: at(challengeSplit, 2),
+							dappAccount,
 							challenge,
 							mouseEventsCount: decryptedData.collector1?.length || 0,
 							touchEventsCount: decryptedData.collector2?.length || 0,
@@ -377,6 +391,50 @@ export abstract class InteractiveCaptchaManager<
 		}
 
 		return correct;
+	}
+
+	/**
+	 * The counters and account sighting the site's decision machine asked
+	 * for. Each is left out when it cannot be read, so a machine never mistakes
+	 * a Redis or reputation DB failure for a zero count or an unknown account.
+	 */
+	private async readDecisionMachineRequirements(
+		challengeRecord: TRecord,
+		env: ProviderEnvironment,
+		logger: Logger,
+	): Promise<Pick<DecisionMachineInput, "counters" | "accountSighting">> {
+		const { dappAccount, userAccount } = challengeRecord;
+		const requirements =
+			await this.decisionMachineRunner.getDecisionRequirements(
+				{ dappAccount, userAccount, captchaType: this.captchaType },
+				logger,
+			);
+		const out: Pick<DecisionMachineInput, "counters" | "accountSighting"> = {};
+		if (requirements.counters.length > 0 && this.usageCounters) {
+			const ip = getIpAddressFromComposite(challengeRecord.ipAddress).address;
+			const reads: CounterIncrement[] = [];
+			for (const spec of requirements.counters) {
+				// Only the dimensions this record can answer for.
+				if (spec.dimension === "ip") reads.push({ spec, value: ip });
+				if (spec.dimension === "userAccount") {
+					reads.push({ spec, value: userAccount });
+				}
+			}
+			const counters = await this.usageCounters.batchGet(dappAccount, reads);
+			if (counters) {
+				out.counters = counters;
+			}
+		}
+		if (requirements.accountSighting) {
+			const sighting = await env.ipInfoService.accountSighting(
+				dappAccount,
+				userAccount,
+			);
+			if (sighting) {
+				out.accountSighting = sighting;
+			}
+		}
+		return out;
 	}
 
 	/** Invalid salt disapproves the submission rather than being ignored. */
@@ -833,7 +891,14 @@ export abstract class InteractiveCaptchaManager<
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
-				decisionInput,
+				{
+					...decisionInput,
+					...(await this.readDecisionMachineRequirements(
+						challengeRecord,
+						env,
+						logger,
+					)),
+				},
 				logger,
 			);
 

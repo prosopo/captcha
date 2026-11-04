@@ -1864,6 +1864,9 @@ importers:
       '@prosopo/types':
         specifier: workspace:*
         version: link:../types
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -3414,6 +3417,9 @@ importers:
       '@noble/curves':
         specifier: 2.4.0
         version: 2.4.0
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*

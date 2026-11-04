@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/load-balancer",
-	"version": "2.11.23",
+	"version": "2.11.25",
 	"description": "Provider load balancer",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
@@ -36,7 +36,8 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/common": "workspace:*",
-		"@prosopo/types": "workspace:*"
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
