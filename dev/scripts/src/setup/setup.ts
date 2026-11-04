@@ -66,7 +66,6 @@ function getDefaultProvider(): IProviderAccount {
 async function copyEnvFile() {
 	try {
 		const rootDir = getRootDir();
-		// TODO move all env files to a single template location
 		const tplLocation = path.resolve(rootDir, "./dev/scripts");
 		const tplEnvFile = getEnvFile(tplLocation, "env");
 		const envFile = getEnvFile(tplLocation, ".env");
