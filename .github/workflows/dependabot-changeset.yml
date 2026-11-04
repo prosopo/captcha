@@ -37,9 +37,13 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   changeset:
     name: changeset
+    timeout-minutes: 10
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -49,7 +53,7 @@ jobs:
     # runners are billed, so do not "upgrade" a job to one.
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: ${{ (github.actor == 'dependabot[bot]') && github.event.pull_request.head.repo.full_name == github.repository }}
     env:
       BASE_REF: ${{ github.event.pull_request.base.ref }}
       HEAD_REF: ${{ github.event.pull_request.head.ref }}
@@ -57,6 +61,7 @@ jobs:
       PR_TITLE: ${{ github.event.pull_request.title }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 10
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.PROSOPONATOR_PAT }}
@@ -64,7 +69,8 @@ jobs:
           fetch-depth: 0
 
       - name: Setup node and pnpm
-        uses: prosopo/github_actions/.github/actions/setup-pnpm@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
+        timeout-minutes: 10
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
         with:
           node-version: "24.22.1"
           restore-store-cache: 'false'
@@ -76,9 +82,11 @@ jobs:
       # root `prepare` hook (husky) would otherwise fail with "husky: not found"
       # (exit 127) and abort before the lockfile is refreshed.
       - name: Update lockfile
+        timeout-minutes: 5
         run: pnpm install --lockfile-only --ignore-scripts --prefer-offline
 
       - name: Generate changeset
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
         run: |
@@ -90,6 +98,7 @@ jobs:
           node .github/scripts/dependabot-changeset.mjs
 
       - name: Commit and push
+        timeout-minutes: 5
         run: |
           git config user.name "prosoponator[bot]"
           git config user.email "prosoponator[bot]@users.noreply.github.com"

@@ -27,9 +27,13 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   check:
     name: changesets
+    timeout-minutes: 5
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -40,23 +44,26 @@ jobs:
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
     runs-on: ubuntu-latest
     # Skip if PR title starts with "Release v"
-    if: ${{ (!startsWith(github.event.pull_request.title, 'Release v')) && github.event.pull_request.draft != true }}
+    if: ${{ ((!startsWith(github.event.pull_request.title, 'Release v')) && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
+        timeout-minutes: 5
+        uses: prosopo/github_actions/.github/actions/print_contexts@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
           VARS_CONTEXT: ${{ toJson(vars) }}
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: 'recursive'
           fetch-depth: 0 # required for comparing changesets to the base branch
 
       - name: Setup node and pnpm
-        uses: prosopo/github_actions/.github/actions/setup-pnpm@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
+        timeout-minutes: 5
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
         with:
           node-version: '24.22.1'
           node-cache: 'pnpm'
@@ -67,17 +74,20 @@ jobs:
       # Branch names are attacker-chosen: pass them through env, never
       # interpolate them into the script.
       - name: Checkout base ref
+        timeout-minutes: 5
         env:
           BASE_REF: ${{ github.base_ref }}
         run: git fetch origin "$BASE_REF" && git checkout "$BASE_REF"
 
       - name: Checkout head ref
+        timeout-minutes: 5
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
 
       # if this fails, you need to run `pnpm run changesets:add` (preferred!) or `pnpm run changesets:empty` for an empty changeset (avoid if possible)
       - name: check changesets
+        timeout-minutes: 5
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |

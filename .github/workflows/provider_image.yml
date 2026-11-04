@@ -34,9 +34,13 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   check:
     name: provider-image
+    timeout-minutes: 15
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -46,28 +50,32 @@ jobs:
     # runners are billed, so do not "upgrade" a job to one.
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
     runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.draft != true }}
+    if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
+        timeout-minutes: 5
+        uses: prosopo/github_actions/.github/actions/print_contexts@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
           VARS_CONTEXT: ${{ toJson(vars) }}
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
       - name: Setup node and pnpm
-        uses: prosopo/github_actions/.github/actions/setup-pnpm@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
+        timeout-minutes: 5
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
         with:
           node-version: '24.22.1'
           node-cache: 'pnpm'
           store-path: ''
 
       - name: env
+        timeout-minutes: 5
         run: |
           # Copy the .env.production from the dev script to the cli folder and root folder
           cp ./dev/scripts/env.production ./packages/cli/.env.production
@@ -77,9 +85,12 @@ jobs:
           grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
 
       - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#build
+        timeout-minutes: 10
       - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#bundle
+        timeout-minutes: 5
 
       - name: Set up Docker Buildx
+        timeout-minutes: 5
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
 
       # We cannot create the images in a single step because the output of buildx is not compatible with
@@ -87,6 +98,7 @@ jobs:
 
       # create the provider image for AMD64
       - name: Build the Provider Container
+        timeout-minutes: 5
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
         with:
           context: ${{github.workspace}}
@@ -98,15 +110,18 @@ jobs:
 
       # load the AMD64 image
       - name: Load the Provider Container
+        timeout-minutes: 5
         run: docker load -i provider-amd64.tar
 
       # Generate a mnemonic for the provider image
       - name: Generate mnemonic and add to env file
+        timeout-minutes: 5
         run: |
           PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" pnpm exec tsx dev/scripts/src/scripts/generateMnemonic.ts --env
 
       # Check that the version command works when running the bundle in the provider image
       - name: Check provider bundle runs
+        timeout-minutes: 5
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 

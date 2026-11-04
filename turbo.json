@@ -9,7 +9,7 @@
 		"vite.config.*",
 		"vite.*.config.*"
 	],
-	"globalEnv": ["NODE_ENV"],
+	"globalEnv": ["NODE_ENV", "RUNNER_OS", "RUNNER_ARCH"],
 	"ui": "tui",
 	"concurrency": "100%",
 	"daemon": false,

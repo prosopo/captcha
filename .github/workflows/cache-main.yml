@@ -1,0 +1,36 @@
+# Keeps main's pnpm store cache entry restored and rebuilt for PR jobs.
+# What it does and why each entry is restored for real:
+# https://github.com/prosopo/github_actions (.github/workflows/cache-main.yml).
+#
+# Cron at minute 17, every 3 hours: GitHub delays or drops top-of-hour
+# schedules, and 3 hours keeps entries far inside the 7-day eviction window.
+
+name: cache-main
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: cache-main
+  cancel-in-progress: false
+
+jobs:
+  cache:
+    uses: prosopo/github_actions/.github/workflows/cache-main.yml@8ed5b505b700e5bbae188a2327747ad3fb53f7fa  # main
+    with:
+      actions-ref: 8ed5b505b700e5bbae188a2327747ad3fb53f7fa
+      # Public repo, so GitHub-hosted only: fork/untrusted code never reaches
+      # our machines. https://github.com/prosopo/gh-runner
+      runs-on: '"ubuntu-latest"'
+      submodules: recursive
+      node-version: "24.22.1"
+    secrets:
+      checkout-token: ${{ secrets.PROSOPONATOR_PAT }}
