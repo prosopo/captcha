@@ -478,6 +478,7 @@ export class CaptchaManager {
 				: isCaptchaTypeFeatureEnabled(
 						requestedCaptchaType,
 						clientSettings.settings?.captchaTypeFeatureFlags,
+						clientSettings.tier,
 					);
 		if (!typeEnabled) {
 			this.logger.warn(() => ({
