@@ -149,7 +149,7 @@ export function getTsConfigs(
 	includeInitialTsConfig = true,
 ): string[] {
 	let tsConfigs = [...tsConfigPaths];
-	//TODO use dynamic import with JSON assertion (TS complains that resolveJsonModule is not set)
+	// Not a dynamic import with a JSON assertion: TS complains that resolveJsonModule is not set
 	const references = JSON.parse(
 		fs.readFileSync(tsConfigPath).toString(),
 	).references;

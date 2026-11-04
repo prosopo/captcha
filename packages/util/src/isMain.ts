@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// biome-ignore lint/style/useNodejsImportProtocol: TODO Breaks bundling otherwise, should this be pulled into own pkg?
+// biome-ignore lint/style/useNodejsImportProtocol: bundling breaks with the node: prefix, see https://github.com/prosopo/captcha/issues/3717
 import { fileURLToPath } from "url";
 
 // https://stackoverflow.com/a/76582917
