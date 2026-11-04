@@ -369,25 +369,32 @@ describe("the loading placeholder", () => {
 });
 
 describe("escalating from PoW", () => {
-	test("swaps PoW for the escalated solver rather than stacking them", async () => {
-		// Nothing reconciles this for us: without the explicit teardown the page
-		// ends up with two live widgets, two modals and two sets of document
-		// listeners.
-		widget = mountProcaptchaFrictionless(
-			container,
-			props(() => Promise.resolve(detection(CaptchaType.pow))),
-		);
-		await settle();
+	test.each([
+		CaptchaType.image,
+		CaptchaType.puzzle,
+		CaptchaType.iconOrder,
+	] as const)(
+		"swaps PoW for the escalated %s solver rather than stacking them",
+		async (escalatedType) => {
+			// Nothing reconciles this for us: without the explicit teardown the page
+			// ends up with two live widgets, two modals and two sets of document
+			// listeners.
+			widget = mountProcaptchaFrictionless(
+				container,
+				props(() => Promise.resolve(detection(CaptchaType.pow))),
+			);
+			await settle();
 
-		mocks.mounted[0]?.props.onEscalate?.(CaptchaType.image, "session-2", {
-			x: 4,
-			y: 5,
-		});
-		await settle();
+			mocks.mounted[0]?.props.onEscalate?.(escalatedType, "session-2", {
+				x: 4,
+				y: 5,
+			});
+			await settle();
 
-		expect(solvers()).toEqual(["image"]);
-		expect(mocks.destroyed).toContain("pow");
-	});
+			expect(solvers()).toEqual([escalatedType]);
+			expect(mocks.destroyed).toContain("pow");
+		},
+	);
 
 	test("carries the new session and the original click into the escalation", async () => {
 		widget = mountProcaptchaFrictionless(

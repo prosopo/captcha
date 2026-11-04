@@ -34,7 +34,11 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
-import { coerceToEnabledCaptchaType } from "../../tasks/captchaTypeSelection.js";
+import {
+	type EscalationCaptchaType,
+	coerceToEnabledCaptchaType,
+	isEscalationCaptchaType,
+} from "../../tasks/captchaTypeSelection.js";
 import { samplePuzzleDifficulty } from "../../tasks/puzzle/puzzleDifficulty.js";
 import { Tasks } from "../../tasks/tasks.js";
 import {
@@ -258,7 +262,7 @@ export default (env: ProviderEnvironment) =>
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
-				// the follow-up image/puzzle challenge before we hand them a token.
+				// the follow-up interactive challenge before we hand them a token.
 				verified: escalation ? false : result.verified,
 				...(escalation && { escalation }),
 			};
@@ -319,8 +323,7 @@ export const buildEscalation = async (
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
-	const routedType = result.routingOutput.captchaType;
-	if (routedType !== CaptchaType.image && routedType !== CaptchaType.puzzle) {
+	if (!isEscalationCaptchaType(result.routingOutput.captchaType)) {
 		return undefined;
 	}
 
@@ -348,7 +351,7 @@ export const buildEscalation = async (
 		});
 
 	const routed = result.routingOutput as {
-		captchaType: CaptchaType.image | CaptchaType.puzzle;
+		captchaType: EscalationCaptchaType;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
 		reason?: string;
