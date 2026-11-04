@@ -21,6 +21,7 @@ import {
 	CaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
+	isInteractiveCaptchaType,
 } from "@prosopo/types";
 import {
 	ApiParams,
@@ -86,7 +87,6 @@ import {
 	solveDeviceSignals,
 } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
-import { isEscalationCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -578,7 +578,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		// no legitimate widget omits them.
 		if (
 			(escalateForMissingCoords || escalateForIpChange) &&
-			!isEscalationCaptchaType(routingOutput?.captchaType)
+			!isInteractiveCaptchaType(routingOutput?.captchaType)
 		) {
 			routingOutput = {
 				captchaType: CaptchaType.image,

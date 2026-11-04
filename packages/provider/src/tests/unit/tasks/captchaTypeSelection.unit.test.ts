@@ -14,12 +14,12 @@
 
 import {
 	CaptchaType,
+	type ConcreteCaptchaType,
 	type IFrictionlessTypes,
 	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
-	type ConcreteCaptchaType,
 	PUZZLE_REFRESHES_BEFORE_IMAGE,
 	coerceToEnabledCaptchaType,
 	switchTypeAfterRefreshes,

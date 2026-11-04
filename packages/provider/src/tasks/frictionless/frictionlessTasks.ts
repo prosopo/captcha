@@ -23,6 +23,7 @@ import {
 	ApiParams,
 	CaptchaType,
 	type CompositeIpAddress,
+	type ConcreteCaptchaType,
 	DEFAULT_MAX_TIMESTAMP_AGE,
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
@@ -41,6 +42,8 @@ import {
 	type Session,
 	SimdReadingsStage,
 	clampImageRounds,
+	deriveChallengeParams,
+	isConcreteCaptchaType,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -293,6 +296,15 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash = "",
 		} = input;
 
+		const challengeParams = isConcreteCaptchaType(captchaType)
+			? deriveChallengeParams(captchaType, {
+					solvedImagesCount,
+					powDifficulty,
+					puzzleTolerance,
+					iconOrderTolerance,
+				})
+			: undefined;
+
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),
@@ -305,6 +317,7 @@ export class FrictionlessManager extends CaptchaManager {
 			mode,
 			solvedImagesCount,
 			powDifficulty,
+			...(challengeParams && { challengeParams }),
 			...(puzzleTolerance !== undefined && { puzzleTolerance }),
 			...(puzzle && { puzzle }),
 			...(puzzleLevel !== undefined && { puzzleLevel }),
@@ -529,11 +542,7 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	private async sendCaptcha(
-		captchaType:
-			| CaptchaType.image
-			| CaptchaType.pow
-			| CaptchaType.puzzle
-			| CaptchaType.iconOrder,
+		captchaType: ConcreteCaptchaType,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -754,8 +763,13 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
+	/**
+	 * `captchaType` is the challenge the request would have been served, so the
+	 * recorded session agrees with the decision that was logged for it.
+	 */
 	async registerBlockedSession(
-		params?: Partial<ImageCaptchaSessionParams>,
+		captchaType: ConcreteCaptchaType,
+		params?: Partial<Session>,
 	): Promise<void> {
 		const effectiveParams = { ...this.sessionParams, ...params };
 		if (
@@ -779,7 +793,7 @@ export class FrictionlessManager extends CaptchaManager {
 			scoreComponents: effectiveParams.scoreComponents,
 			ipAddress: effectiveParams.ipAddress,
 			siteKey: effectiveParams.siteKey,
-			captchaType: CaptchaType.image,
+			captchaType,
 			powDifficulty: undefined,
 			blocked: true,
 			deleted: true,

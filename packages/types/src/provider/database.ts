@@ -33,7 +33,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
-import { CaptchaType } from "../client/index.js";
+import { CaptchaType, type ChallengeCaptchaType } from "../client/index.js";
 import type {
 	ContextType,
 	IIconOrderSettings,
@@ -64,6 +64,10 @@ import type {
 	PuzzleEvent,
 	RequestHeaders,
 } from "./api.js";
+import {
+	type ChallengeParams,
+	ChallengeParamsSchema,
+} from "./challengeParams.js";
 import type { DetectorData, SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -536,6 +540,7 @@ export const SessionSchema = object({
 	mode: nativeEnum(ModeEnum).optional(),
 	solvedImagesCount: number().optional(),
 	powDifficulty: number().optional(),
+	challengeParams: ChallengeParamsSchema.optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
@@ -705,6 +710,7 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	challengeParams?: ChallengeParams;
 	// Puzzle-only render overrides chosen by the routing machine, persisted
 	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
 	// re-derives its overrides from a live trafficFilter verdict, which a
@@ -1096,12 +1102,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.audio
-		| CaptchaType.iconOrder;
+	captchaType?: ChallengeCaptchaType;
 	createdAt: Date;
 	updatedAt: Date;
 };

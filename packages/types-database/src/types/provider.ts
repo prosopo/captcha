@@ -17,6 +17,7 @@ import { translationKeys } from "@prosopo/locale";
 import {
 	type AudioCaptchaStored,
 	type AudioEvent,
+	CHALLENGE_CAPTCHA_TYPES,
 	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
@@ -881,6 +882,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	mode: { type: String, enum: ModeEnum, required: false },
 	solvedImagesCount: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
+	// Validated by `ChallengeParamsSchema`; its shape depends on `type`.
+	challengeParams: { type: Schema.Types.Mixed, required: false },
 	// Puzzle render overrides chosen by the routing machine. Stored as a
 	// free-form subdocument so the shape stays in step with
 	// PuzzleSettingsSchema without a second place to update — the value is
@@ -1151,13 +1154,7 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [
-				CaptchaType.pow,
-				CaptchaType.image,
-				CaptchaType.puzzle,
-				CaptchaType.iconOrder,
-				CaptchaType.audio,
-			],
+			enum: CHALLENGE_CAPTCHA_TYPES,
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
