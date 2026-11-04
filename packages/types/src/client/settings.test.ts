@@ -63,6 +63,7 @@ import {
 	widgetFeatureFlagDefaults,
 	withMarketCountries,
 } from "./settings.js";
+import { Tier } from "./user.js";
 
 type Settings = output<typeof ClientSettingsSchema>;
 
@@ -1136,6 +1137,28 @@ describe("resolveAllowedCaptchaTypes", () => {
 				captchaTypeFeatureFlags: { iconOrder: true },
 			}).iconOrder,
 		).toBe(false);
+	});
+
+	it("allows icon-order on a free site unless its flag says otherwise", () => {
+		expect(resolveAllowedCaptchaTypes({}, Tier.Free).iconOrder).toBe(true);
+		expect(
+			resolveAllowedCaptchaTypes(
+				{ captchaTypeFeatureFlags: { iconOrder: false } },
+				Tier.Free,
+			).iconOrder,
+		).toBe(false);
+		expect(
+			resolveAllowedCaptchaTypes(
+				{ frictionlessTypes: { image: true, puzzle: true, iconOrder: false } },
+				Tier.Free,
+			).iconOrder,
+		).toBe(false);
+	});
+
+	it("keeps icon-order off by default on paid sites", () => {
+		for (const tier of [Tier.Professional, Tier.Enterprise]) {
+			expect(resolveAllowedCaptchaTypes({}, tier).iconOrder).toBe(false);
+		}
 	});
 
 	it("never lets the feature flag re-enable a type the owner switched off", () => {

@@ -585,9 +585,10 @@ describe("CaptchaManager", () => {
 			describe("icon-order", () => {
 				const iconOrderSite = (
 					captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags,
+					tier: Tier = Tier.Professional,
 				): Pick<ClientRecord, "account" | "tier" | "settings"> => ({
 					account: "account",
-					tier: Tier.Free,
+					tier,
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.iconOrder,
@@ -628,6 +629,33 @@ describe("CaptchaManager", () => {
 						type: CaptchaType.iconOrder,
 					});
 					expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+				});
+
+				it("serves icon-order on a free site with no flag set", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite(undefined, Tier.Free),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: true,
+						type: CaptchaType.iconOrder,
+					});
+				});
+
+				it("refuses icon-order on a free site whose flag is switched off", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite({ iconOrder: false }, Tier.Free),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
 				});
 
 				it("serves icon-order once Prosopo turns the flag on", async () => {

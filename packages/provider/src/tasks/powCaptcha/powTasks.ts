@@ -46,6 +46,7 @@ import {
 	type RoutingMachineRawSignals,
 	type Session,
 	SimdReadingsStage,
+	type Tier,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type {
@@ -116,6 +117,7 @@ import {
  * behavioural payload are in hand.
  */
 export interface PostPowRoutingContext {
+	tier?: Tier;
 	ip: string;
 	countryCode?: string;
 	// The submit request's half of the device inputs. The session supplies
@@ -641,6 +643,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		const ctx: RoutingContext = {
 			dappAccount,
 			userAccount,
+			...(this.postPowContext.tier !== undefined && {
+				tier: this.postPowContext.tier,
+			}),
 			ip: this.postPowContext.ip,
 			countryCode: this.postPowContext.countryCode,
 			score,

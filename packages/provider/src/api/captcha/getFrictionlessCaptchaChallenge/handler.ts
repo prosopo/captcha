@@ -278,6 +278,7 @@ export default (
 			);
 			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
 				clientRecord.settings,
+				clientRecord.tier,
 			);
 			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
 
@@ -987,6 +988,7 @@ export default (
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
+				tier: clientRecord.tier,
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,

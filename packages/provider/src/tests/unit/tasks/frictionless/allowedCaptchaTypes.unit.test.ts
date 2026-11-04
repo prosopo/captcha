@@ -19,6 +19,7 @@ import {
 	type ProsopoConfigOutput,
 	type RoutingMachineOutput,
 	type Session,
+	Tier,
 	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -164,6 +165,20 @@ describe("FrictionlessManager allowed captcha types", () => {
 			await manager.sendPowCaptcha();
 
 			expect(storedCaptchaType()).toBe(CaptchaType.puzzle);
+		});
+
+		it("serves icon-order to a free site when a routing machine picks it", async () => {
+			const routed: RoutingMachineOutput = {
+				captchaType: CaptchaType.iconOrder,
+			};
+			applyRouterMock.mockResolvedValue(routed);
+			const manager = buildManager();
+			manager.setRoutingContext(routingContext);
+			manager.setAllowedCaptchaTypes(resolveAllowedCaptchaTypes({}, Tier.Free));
+
+			await manager.sendPowCaptcha();
+
+			expect(storedCaptchaType()).toBe(CaptchaType.iconOrder);
 		});
 
 		it("serves icon-order once Prosopo turns the flag on", async () => {
