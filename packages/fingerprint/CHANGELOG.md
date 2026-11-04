@@ -1,5 +1,11 @@
 # @prosopo/fingerprint
 
+## 2.8.13
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+  - @prosopo/types@5.26.0
+
 ## 2.8.12
 ### Patch Changes
 

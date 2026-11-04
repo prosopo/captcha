@@ -1,5 +1,42 @@
 # @prosopo/provider
 
+## 5.28.0
+### Minor Changes
+
+- d9520ea: The traffic filter's `abuser` category, its exceptions, the DNS-path signal and the IP validation rules now use the IP lookup's reputation score.
+  
+  - The IP lookup carries `reputationScore` and `reputationBand`. An address without a score never meets a threshold.
+  - New settings: `trafficFilter.reputationScoreThreshold`, exception `minReputationScore`, and `ipValidationRules.reputationScoreThreshold`.
+  - `abuserScoreThreshold`, `minAbuserScore` and `ipValidationRules.abuseScoreThreshold` are deprecated. Stored records still parse, and an exception that has only `minAbuserScore` keeps its current behaviour until it is updated.
+
+### Patch Changes
+
+- 65d87f2: Run decision machines in worker threads. A slow machine no longer holds up other requests, and the time limit now actually stops a machine that overruns.
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/database@4.6.2
+  - @prosopo/types-database@5.18.0
+  - @prosopo/types@5.26.0
+  - @prosopo/ipinfo@0.7.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/load-balancer@2.11.26
+  - @prosopo/user-access-policy@3.15.18
+  - @prosopo/web-bot-auth@0.1.8
+  - @prosopo/env@3.6.91
+  - @prosopo/types-env@2.12.1
+  - @prosopo/api-express-router@3.3.14
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.22
+  - @prosopo/fingerprint@2.8.13
+  - @prosopo/keyring@2.10.22
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+  - @prosopo/api-route@2.6.69
+  - @prosopo/redis-client@1.0.46
+
 ## 5.27.0
 ### Minor Changes
 
