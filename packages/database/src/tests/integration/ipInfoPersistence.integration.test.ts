@@ -21,14 +21,14 @@ import {
 	IpAddressType,
 } from "@prosopo/types";
 import {
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type PuzzleCaptchaRecord,
 	PuzzleCaptchaRecordSchema,
 	type SessionRecord,
 	SessionRecordSchema,
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import type mongoose from "mongoose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -74,7 +74,7 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 	let mongoDb: MongoMemoryDatabase;
 	let PoWModel: mongoose.Model<PoWCaptchaRecord>;
 	let PuzzleModel: mongoose.Model<PuzzleCaptchaRecord>;
-	let CommitmentModel: mongoose.Model<UserCommitmentRecord>;
+	let CommitmentModel: mongoose.Model<ImageCaptchaRecord>;
 	let SessionModel: mongoose.Model<SessionRecord>;
 
 	beforeAll(async () => {
@@ -93,9 +93,9 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 			"PuzzleCaptcha",
 			PuzzleCaptchaRecordSchema,
 		);
-		CommitmentModel = mongoDb.connection.model<UserCommitmentRecord>(
+		CommitmentModel = mongoDb.connection.model<ImageCaptchaRecord>(
 			"Commitment",
-			UserCommitmentRecordSchema,
+			ImageCaptchaRecordSchema,
 		);
 		SessionModel = mongoDb.connection.model<SessionRecord>(
 			"Session",
@@ -192,7 +192,7 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 		expect(got?.ipInfo).toMatchObject(validIpInfo);
 	});
 
-	it("persists the full IPInfoResponse on a UserCommitment record", async () => {
+	it("persists the full IPInfoResponse on a ImageCaptcha record", async () => {
 		await CommitmentModel.create({
 			id: "commitment-valid",
 			userAccount: "user4",
@@ -217,7 +217,7 @@ describe("captcha record ipInfo persistence (MongoMemory roundtrip)", () => {
 
 		const got = await CommitmentModel.findOne({
 			id: "commitment-valid",
-		}).lean<UserCommitmentRecord>();
+		}).lean<ImageCaptchaRecord>();
 		expect(got?.ipInfo).toMatchObject(validIpInfo);
 	});
 

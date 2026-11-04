@@ -23,12 +23,12 @@ import {
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
 	type IUserSettings,
+	type ImageCaptcha,
 	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	type Tier,
-	type UserCommitment,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -151,10 +151,7 @@ export class ClientTaskManager {
 
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
-					await this.providerDB.getUnstoredDappUserCommitments(
-						BATCH_SIZE,
-						afterId,
-					),
+					await this.providerDB.getUnstoredImageCaptchas(BATCH_SIZE, afterId),
 				async (batch) => {
 					const filteredBatch = (
 						lastTask?.updated
@@ -165,14 +162,14 @@ export class ClientTaskManager {
 					// inserts with `id: ""` until the user submits a solution.
 					// Defense in depth: even if a stray placeholder slips into
 					// the partial index, never pass `id: ""` to
-					// markDappUserCommitmentsStored — Mongo collapses
+					// markImageCaptchasStored — Mongo collapses
 					// `{ id: { $in: ["", "", ...] } }` to a single empty-string
 					// bound and the IXSCAN on `id_-1` then walks every
 					// empty-id document on the node (~100K rows).
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
-						await this.providerDB.markDappUserCommitmentsStored(
+						await this.providerDB.markImageCaptchasStored(
 							filteredBatch.map((commitment) => commitment.id),
 							sweepStartedAt,
 						);
@@ -591,7 +588,7 @@ export class ClientTaskManager {
 	}
 
 	private isRecordUpdated(
-		record: UserCommitment | PoWCaptchaStored | SessionRecord,
+		record: ImageCaptcha | PoWCaptchaStored | SessionRecord,
 	): boolean {
 		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (
@@ -604,9 +601,9 @@ export class ClientTaskManager {
 	/**
 	 * Drive a keyset-paginated sweep. Each iteration passes the `_id` of the
 	 * previous batch's last row to `fetchBatch` so the query resumes from
-	 * `_id > afterId` — see `getUnstoredDappUserCommitments` for why we
+	 * `_id > afterId` — see `getUnstoredImageCaptchas` for why we
 	 * moved off `skip(N)`. `getLastId` extracts the resumption cursor from
-	 * a batch row; both `PoWCaptchaRecord` and `UserCommitmentRecord` are
+	 * a batch row; both `PoWCaptchaRecord` and `ImageCaptchaRecord` are
 	 * `mongoose.Document` subtypes so `_id` is always present at runtime
 	 * even though our stored types don't spell it out.
 	 */

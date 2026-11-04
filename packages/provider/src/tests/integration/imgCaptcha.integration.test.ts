@@ -43,7 +43,7 @@ import {
 	type VerifySolutionBodyTypeInput,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
-import type { UserCommitmentRecord } from "@prosopo/types-database";
+import type { ImageCaptchaRecord } from "@prosopo/types-database";
 import { embedData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -229,7 +229,7 @@ describe("Image Captcha Integration Tests", () => {
 			.getDb()
 			.getTables()
 			.commitment.findOne({ id: getCommitmentId(solution) })
-			.lean<UserCommitmentRecord>();
+			.lean<ImageCaptchaRecord>();
 
 	/**
 	 * The commitment ID the provider stored for a solution. The widget derives

@@ -20,12 +20,12 @@ import {
 	type PoWChallengeId,
 } from "@prosopo/types";
 import {
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type PuzzleCaptchaRecord,
 	PuzzleCaptchaRecordSchema,
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import type mongoose from "mongoose";
@@ -55,7 +55,7 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 	let mongoDb: MongoMemoryDatabase;
 	let PoWModel: mongoose.Model<PoWCaptchaRecord>;
 	let PuzzleModel: mongoose.Model<PuzzleCaptchaRecord>;
-	let CommitmentModel: mongoose.Model<UserCommitmentRecord>;
+	let CommitmentModel: mongoose.Model<ImageCaptchaRecord>;
 
 	// Mirrors the filter built inside `countCommitmentsByNormalisedEmail`;
 	// duplicated here so the test proves the exact shape the production
@@ -92,9 +92,9 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 			"PuzzleCaptcha",
 			PuzzleCaptchaRecordSchema,
 		);
-		CommitmentModel = mongoDb.connection.model<UserCommitmentRecord>(
+		CommitmentModel = mongoDb.connection.model<ImageCaptchaRecord>(
 			"Commitment",
-			UserCommitmentRecordSchema,
+			ImageCaptchaRecordSchema,
 		);
 	});
 

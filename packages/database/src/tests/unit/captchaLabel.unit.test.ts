@@ -13,17 +13,17 @@
 // limitations under the License.
 
 import { CaptchaLabel, CaptchaLabelSchema } from "@prosopo/types";
-import { PoWCaptchaStoredSchema, UserCommitmentSchema } from "@prosopo/types";
+import { ImageCaptchaSchema, PoWCaptchaStoredSchema } from "@prosopo/types";
 import {
+	ImageCaptchaRecordSchema,
 	PoWCaptchaRecordSchema,
-	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
 import type { Schema } from "mongoose";
 import { describe, expect, it } from "vitest";
 
 const recordSchemas: Schema[] = [
 	PoWCaptchaRecordSchema,
-	UserCommitmentRecordSchema,
+	ImageCaptchaRecordSchema,
 ];
 
 describe("captcha labelling schema fields", () => {
@@ -42,7 +42,7 @@ describe("captcha labelling schema fields", () => {
 	});
 
 	it("Zod record schemas expose the optional label fields", () => {
-		for (const schema of [PoWCaptchaStoredSchema, UserCommitmentSchema]) {
+		for (const schema of [PoWCaptchaStoredSchema, ImageCaptchaSchema]) {
 			expect(schema.shape.label.isOptional()).toBe(true);
 			expect(schema.shape.labelReason.isOptional()).toBe(true);
 			expect(schema.shape.labelledBy.isOptional()).toBe(true);

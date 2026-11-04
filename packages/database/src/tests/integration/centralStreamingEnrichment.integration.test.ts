@@ -17,31 +17,31 @@ import {
 	CaptchaStatus,
 	type CompositeIpAddress,
 	type IPInfoResponse,
+	type ImageCaptcha,
+	ImageCaptchaSchema,
 	IpAddressType,
 	type UserAgentInfo,
-	type UserCommitment,
-	UserCommitmentSchema,
 } from "@prosopo/types";
 import {
-	type UserCommitmentRecord,
-	UserCommitmentRecordSchema,
+	type ImageCaptchaRecord,
+	ImageCaptchaRecordSchema,
 } from "@prosopo/types-database";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { CentralDbStreamer } from "../../databases/centralDbStreamer.js";
 
-// Regression guard for the bug where `UserCommitmentSchema` (Zod) omitted
-// `ipInfo` and `parsedUserAgentInfo`, so `UserCommitmentSchema.parse()` in
-// `storeUserImageCaptchaSolution` silently stripped them before the record
+// Regression guard for the bug where `ImageCaptchaSchema` (Zod) omitted
+// `ipInfo` and `parsedUserAgentInfo`, so `ImageCaptchaSchema.parse()` in
+// `storeImageCaptchaSolution` silently stripped them before the record
 // was streamed to central. Production effect: 100% of central
 // `usercommitments` documents had `ipInfo: null` / no `parsedUserAgentInfo`.
 //
 // This test reproduces the production path:
-//   1. Build a UserCommitment with enrichment fields populated.
-//   2. Parse it through `UserCommitmentSchema.parse(...)` (the strip point).
+//   1. Build a ImageCaptcha with enrichment fields populated.
+//   2. Parse it through `ImageCaptchaSchema.parse(...)` (the strip point).
 //   3. Stream the parsed record via the real `CentralDbStreamer` against an
 //      in-memory mongod whose `commitment` collection uses the production
-//      `UserCommitmentRecordSchema` mongoose schema.
+//      `ImageCaptchaRecordSchema` mongoose schema.
 //   4. Re-read the doc and assert every non-required mongoose-declared path
 //      we set survives, with explicit focus on `ipInfo` /
 //      `parsedUserAgentInfo`.
@@ -86,7 +86,7 @@ const parsedUserAgentInfo: UserAgentInfo = {
 	os: { name: "Windows", version: "10" },
 };
 
-const buildCommit = (id: string): UserCommitment => ({
+const buildCommit = (id: string): ImageCaptcha => ({
 	id,
 	userAccount: "userTest",
 	dappAccount: "dappTest",
@@ -113,7 +113,7 @@ const buildCommit = (id: string): UserCommitment => ({
 
 // Mongoose-declared paths on the commitment collection that we expect to
 // round-trip through the streamer when set on the input. Sourced from
-// UserCommitmentRecordSchema.paths so the assertion stays in sync if new
+// ImageCaptchaRecordSchema.paths so the assertion stays in sync if new
 // fields are added to the mongoose schema.
 const requiredEnrichmentPaths = [
 	"ipInfo",
@@ -122,7 +122,7 @@ const requiredEnrichmentPaths = [
 	"providedIp",
 ] as const;
 
-describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamImageRecord → central DB", () => {
+describe("CentralDbStreamer end-to-end: ImageCaptchaSchema.parse → streamImageRecord → central DB", () => {
 	let mongod: MongoMemoryServer;
 	let streamer: CentralDbStreamer;
 
@@ -150,9 +150,9 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 		const id = "commitment-enrichment-roundtrip";
 		const commit = buildCommit(id);
 
-		// Replicates provider.ts storeUserImageCaptchaSolution lines 676-686:
-		// fields not declared on UserCommitmentSchema would be stripped here.
-		const commitmentRecord = UserCommitmentSchema.parse({
+		// Replicates provider.ts storeImageCaptchaSolution lines 676-686:
+		// fields not declared on ImageCaptchaSchema would be stripped here.
+		const commitmentRecord = ImageCaptchaSchema.parse({
 			...commit,
 			lastUpdatedTimestamp: new Date("2026-06-10T07:30:05Z"),
 		});
@@ -162,25 +162,25 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 		expect(commitmentRecord.ipInfo).toBeDefined();
 		expect(commitmentRecord.parsedUserAgentInfo).toBeDefined();
 
-		streamer.streamImageRecord(commitmentRecord as UserCommitmentRecord);
+		streamer.streamImageRecord(commitmentRecord as ImageCaptchaRecord);
 
 		// streamImageRecord is fire-and-forget — poll until the upsert lands.
 		const tables = (
 			streamer as unknown as {
 				db: {
 					tables: {
-						commitment: import("mongoose").Model<UserCommitmentRecord>;
+						commitment: import("mongoose").Model<ImageCaptchaRecord>;
 					};
 				};
 			}
 		).db.tables;
 
-		let stored: UserCommitmentRecord | null = null;
+		let stored: ImageCaptchaRecord | null = null;
 		for (let i = 0; i < 50 && stored === null; i++) {
 			await new Promise<void>((r) => setTimeout(r, 20));
 			stored = await tables.commitment
 				.findOne({ id })
-				.lean<UserCommitmentRecord>();
+				.lean<ImageCaptchaRecord>();
 		}
 
 		expect(stored).not.toBeNull();
@@ -195,7 +195,7 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 		// add it here and to buildCommit() so it gets the same guard.
 		for (const path of requiredEnrichmentPaths) {
 			expect(
-				stored[path as keyof UserCommitmentRecord],
+				stored[path as keyof ImageCaptchaRecord],
 				`mongoose path '${path}' was stripped between Zod parse and central DB`,
 			).toBeDefined();
 		}
@@ -208,14 +208,14 @@ describe("CentralDbStreamer end-to-end: UserCommitmentSchema.parse → streamIma
 		expect(stored.result?.status).toBe(CaptchaStatus.approved);
 	});
 
-	it("UserCommitmentSchema.parse does not strip any mongoose-declared optional field listed in requiredEnrichmentPaths", () => {
+	it("ImageCaptchaSchema.parse does not strip any mongoose-declared optional field listed in requiredEnrichmentPaths", () => {
 		// Cross-check the mongoose schema actually declares the paths we
 		// guard above — guards against the inverse regression where someone
 		// removes the field from mongoose but our test still passes vacuously.
 		for (const path of requiredEnrichmentPaths) {
 			expect(
-				UserCommitmentRecordSchema.path(path),
-				`mongoose UserCommitmentRecordSchema is missing declared path '${path}'`,
+				ImageCaptchaRecordSchema.path(path),
+				`mongoose ImageCaptchaRecordSchema is missing declared path '${path}'`,
 			).toBeDefined();
 		}
 	});

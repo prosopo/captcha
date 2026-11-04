@@ -15,6 +15,7 @@ export * from "./accounts.js";
 export * from "./api.js";
 export * from "./scheduler.js";
 export * from "./detection.js";
+export * from "./requestType.js";
 export * from "./database.js";
 export * from "./matchedAccessRule.js";
 export * from "./isBlockingCaptchaResult.js";

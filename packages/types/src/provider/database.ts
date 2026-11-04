@@ -70,6 +70,7 @@ import {
 	MatchedAccessRuleSchema,
 } from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
+import { type RequestType, RequestTypeSchema } from "./requestType.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -274,6 +275,8 @@ export enum CaptchaLabel {
 export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
 
 export interface StoredCaptcha {
+	// Optional because records written before the field existed lack it.
+	requestType?: RequestType;
 	result: {
 		status: CaptchaStatus;
 		reason?: ResultReason;
@@ -339,7 +342,7 @@ export interface StoredCaptcha {
 	fingerprintSummary?: FingerprintSummaryStored;
 }
 
-export interface UserCommitment extends StoredCaptcha {
+export interface ImageCaptcha extends StoredCaptcha {
 	userAccount: string;
 	dappAccount: string;
 	datasetId: string;
@@ -355,6 +358,9 @@ export interface UserCommitment extends StoredCaptcha {
 	// commitments from widgets that do not report it.
 	inputMethods?: InputMethod[][];
 }
+
+/** @deprecated Use {@link ImageCaptcha}. */
+export type UserCommitment = ImageCaptcha;
 
 // Runtime parsing stays permissive (`string().optional()`) because decision
 // machines are operator-authored JS — their `reason` is whatever string the
@@ -389,7 +395,7 @@ export const ClientMetaDataDbSchema = object({
 	clientSessionId: string().optional(),
 }) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
 
-export const UserCommitmentSchema = object({
+export const ImageCaptchaSchema = object({
 	userAccount: string(),
 	dappAccount: string(),
 	datasetId: string(),
@@ -419,6 +425,7 @@ export const UserCommitmentSchema = object({
 	failedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
+	requestType: RequestTypeSchema.optional(),
 	sessionId: string().optional(),
 	coords: array(array(tuple([number(), number()]))).optional(),
 	inputMethods: array(array(InputMethodSchema)).optional(),
@@ -437,7 +444,10 @@ export const UserCommitmentSchema = object({
 	labelledBy: string().optional(),
 	labelledAt: date().optional(),
 	fingerprintSummary: FingerprintSummarySchema.optional(),
-}) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
+}) satisfies ZodType<ImageCaptcha, ZodTypeDef, unknown>;
+
+/** @deprecated Use {@link ImageCaptchaSchema}. */
+export const UserCommitmentSchema = ImageCaptchaSchema;
 
 // Zod schema for ScoreComponents
 export const ScoreComponentsSchema = object({
@@ -539,6 +549,7 @@ export const SessionSchema = object({
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
+	requestType: RequestTypeSchema.optional(),
 	deleted: boolean().optional(),
 	userSitekeyIpHash: string().optional(),
 	webView: boolean(),
@@ -600,7 +611,7 @@ export const SessionSchema = object({
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
 	// they need (countryCode, isVPN, etc.). Mirrors what's stored on
-	// captcha records (PoW / Puzzle / UserCommitment).
+	// captcha records (PoW / Puzzle / ImageCaptcha).
 	ipInfo: any().optional(),
 	headers: object({}).catchall(string()),
 	result: object({
@@ -725,6 +736,7 @@ export type Session = {
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
 	pendingStage?: boolean;
+	requestType?: RequestType;
 	deleted?: boolean;
 	userSitekeyIpHash?: string;
 	webView: boolean;
@@ -932,6 +944,7 @@ export const PoWCaptchaStoredSchema = object({
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
+	requestType: RequestTypeSchema.optional(),
 	sessionId: string().optional(),
 	coords: array(array(tuple([number(), number()]))).optional(),
 	mouseEvents: array(object({}).catchall(any())).optional(),
@@ -1067,13 +1080,20 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 
 export type UserSolution = zInfer<typeof UserSolutionSchema>;
 
-export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
+export const ImageCaptchaWithSolutionsSchema = ImageCaptchaSchema.extend({
 	captchas: array(UserSolutionSchema),
 });
 
-export type UserCommitmentWithSolutions = zInfer<
-	typeof UserCommitmentWithSolutionsSchema
+export type ImageCaptchaWithSolutions = zInfer<
+	typeof ImageCaptchaWithSolutionsSchema
 >;
+
+/** @deprecated Use {@link ImageCaptchaWithSolutionsSchema}. */
+export const UserCommitmentWithSolutionsSchema =
+	ImageCaptchaWithSolutionsSchema;
+
+/** @deprecated Use {@link ImageCaptchaWithSolutions}. */
+export type UserCommitmentWithSolutions = ImageCaptchaWithSolutions;
 
 /**
  * Decision machine artifact stored in the database.
