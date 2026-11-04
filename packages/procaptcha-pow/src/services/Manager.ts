@@ -416,10 +416,11 @@ export const Manager = (
 					if (
 						escalation &&
 						(escalation[ApiParams.captchaType] === CaptchaType.image ||
-							escalation[ApiParams.captchaType] === CaptchaType.puzzle)
+							escalation[ApiParams.captchaType] === CaptchaType.puzzle ||
+							escalation[ApiParams.captchaType] === CaptchaType.iconOrder)
 					) {
 						// Provider accepted the PoW but wants the user to complete a
-						// follow-up image/puzzle challenge. Hand off to the wrapper —
+						// follow-up interactive challenge. Hand off to the wrapper —
 						// don't fire onHuman or onFailed; the wrapper mounts the next
 						// widget and the standard success/failure path resumes there.
 						//

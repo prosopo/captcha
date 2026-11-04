@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
             request: WebResourceRequest?,
             error: WebResourceError?
         ) {
-            // TODO this is triggered whenever a resource can't load, bundle/img/whatever etc. Handle the type and display corresponding error
+            // Fires whenever any resource fails to load (bundle, images, etc.); errors are not yet handled per type
             // handle http + ssl errors here to maintain compatibility with old android versions
             super.onReceivedError(view, request, error)
         }
@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onPermissionRequest(request: PermissionRequest?) {
-            // TODO handle permissions
+            // Permission requests are not handled yet
             super.onPermissionRequest(request)
         }
     }

@@ -10,6 +10,7 @@ on:
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+      - converted_to_draft
   workflow_dispatch:
 
 permissions:
@@ -45,7 +46,7 @@ jobs:
     # runners are billed, so do not "upgrade" a job to one.
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event.pull_request.draft != true }}
     steps:
       - name: Print contexts
         uses: prosopo/github_actions/.github/actions/print_contexts@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
