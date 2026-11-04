@@ -69,25 +69,23 @@ jobs:
     if: github.event.pull_request.draft == false
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        uses: prosopo/github_actions/.github/actions/print_contexts@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
           VARS_CONTEXT: ${{ toJson(vars) }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-
-      - uses: actions/setup-node@v7
+      - name: Setup node and pnpm
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
         with:
           node-version: '24.22.1'
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile --prefer-offline
+          node-cache: 'pnpm'
+          store-path: ''
 
       # setup certs
       - name: Setup certs
@@ -279,7 +277,7 @@ jobs:
           pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others
 
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         # store screenshots only on failures
         if: failure()
         with:
@@ -288,7 +286,7 @@ jobs:
           if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         # store videos only on failures
         if: failure()
         with:
@@ -297,7 +295,7 @@ jobs:
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
       # visual-regression diffs (and the actual frames that produced them) when snapshots don't match
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         if: failure()
         with:
           name: cypress-snapshot-diffs
