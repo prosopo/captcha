@@ -1033,6 +1033,21 @@ export interface AudioCaptchaStored extends InteractiveCaptchaStored {
 }
 
 /**
+ * What the portal needs to redraw the icon order challenge a user was served.
+ * Absent on records written before this field existed.
+ *
+ * `seed` drives the whole render, so it regenerates the answer along with the
+ * imagery: it must never be served to a caller, and never while the
+ * challenge is still live.
+ */
+export interface IconOrderRenderRecord {
+	geometry: { width: number; height: number; iconSize: number };
+	settings: Required<IIconOrderSettings>;
+	/** 128-bit hex. */
+	seed: string;
+}
+
+/**
  * `targets` is the answer. Nothing on this record is ever sent to a client,
  * and decoys are not stored because grading never consults them.
  */
@@ -1042,6 +1057,7 @@ export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
 	tolerance: number;
 	clicks?: IconClick[];
 	iconOrderEvents?: IconOrderEvent[];
+	render?: IconOrderRenderRecord;
 }
 
 /** A target icon as persisted: what grading needs, without render-only fields. */

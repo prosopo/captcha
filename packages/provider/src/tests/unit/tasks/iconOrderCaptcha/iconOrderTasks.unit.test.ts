@@ -75,6 +75,18 @@ const renderedImages = (): RenderedIconOrderImages => ({
 	legend: "data:image/webp;base64,LEGEND",
 	legendIconSize: 26,
 	targets: asPlacements(),
+	render: {
+		geometry: { width: 300, height: 200, iconSize: 38 },
+		settings: {
+			targetCount: 3,
+			decoyCount: 4,
+			strokeWidth: 3,
+			iconOpacity: 0.92,
+			haloOpacity: 0.7,
+			backgroundClutter: 8,
+		},
+		seed: "00112233445566778899aabbccddeeff",
+	},
 });
 
 describe("IconOrderCaptchaManager", () => {
@@ -140,7 +152,7 @@ describe("IconOrderCaptchaManager", () => {
 			}
 		});
 
-		it("keeps the imagery and the answer in separate fields", async () => {
+		it("keeps the imagery apart from the answer and the seed that rebuilds it", async () => {
 			const render = vi.fn().mockResolvedValue(renderedImages());
 			const challenge = await manager.getIconOrderCaptchaChallenge(
 				"user",
@@ -155,6 +167,7 @@ describe("IconOrderCaptchaManager", () => {
 				legendIconSize: 26,
 			});
 			expect(JSON.stringify(challenge.images)).not.toContain("240");
+			expect(challenge.render.seed).toBe("00112233445566778899aabbccddeeff");
 		});
 
 		it("falls back to the default tolerance when none is resolved", async () => {
