@@ -1,3 +1,4 @@
+# Shared actions: https://github.com/prosopo/github_actions. Runners: https://github.com/prosopo/gh-runner.
 name: stale-pr-to-draft
 
 # Converts inactive non-draft PRs back to draft.
@@ -45,6 +46,7 @@ jobs:
       # Deliberately hosted, not the self-hosted fleet: this workflow exists to
       # free fleet capacity, and it does nothing but call the API.
       - name: Convert stale PRs to draft
+        timeout-minutes: 5
         env:
           # Not GITHUB_TOKEN: events it causes start no workflow runs, so the
           # converted_to_draft cancel in the check workflows would never fire.
