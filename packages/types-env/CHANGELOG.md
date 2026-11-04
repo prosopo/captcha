@@ -1,5 +1,100 @@
 # @prosopo/types-env
 
+## 2.12.1
+### Patch Changes
+
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+  - @prosopo/types-database@5.18.0
+  - @prosopo/types@5.26.0
+  - @prosopo/keyring@2.10.22
+  - @prosopo/logger@2.1.9
+
+## 2.12.0
+### Minor Changes
+
+- b80b627: Decision machines can now act on repeated wild guesses at an interactive captcha.
+  
+  - Usage counters gain a `farMiss` kind. It is written per user account and per address when a puzzle answer lands well away from the slot, as opposed to a near miss.
+  - A decision machine can export `requiredDecideCounters()` (named apart from the routing `requiredCounters()`, since one bundle serves both) and `requiresAccountSighting()`. At verification the provider reads what it asked for into `input.counters` and `input.accountSighting`. Anything that cannot be read is left out rather than passed as zero.
+  - The reputation DB client reads `reputation.shared_reason` onto `IPInfoResult.sharedReason`. `IIpInfoService` gains `accountSighting(siteKey, account)`, which reads `GET /v1/account/{siteKey}/{account}` and has no answer for an unknown account, a 404 or an error.
+
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/types-database@5.17.0
+  - @prosopo/keyring@2.10.21
+
+## 2.11.35
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/types-database@5.16.2
+  - @prosopo/keyring@2.10.20
+
+## 2.11.34
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/types-database@5.16.1
+  - @prosopo/keyring@2.10.19
+
+## 2.11.33
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/types-database@5.16.0
+  - @prosopo/keyring@2.10.18
+
+## 2.11.32
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/types-database@5.15.0
+  - @prosopo/keyring@2.10.17
+
+## 2.11.31
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/types-database@5.14.0
+  - @prosopo/keyring@2.10.16
+
+## 2.11.30
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/keyring@2.10.15
+  - @prosopo/types-database@5.13.2
+  - @prosopo/logger@2.1.7
+
+## 2.11.29
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/keyring@2.10.14
+  - @prosopo/types-database@5.13.1
+
 ## 2.11.28
 ### Patch Changes
 

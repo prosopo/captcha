@@ -42,7 +42,6 @@ import {
 	ResultReason,
 	type RoutingMachineBaseline,
 	type RoutingMachineOutput,
-	type RoutingMachinePlatform,
 	type RoutingMachineRawSignals,
 	type Session,
 	SimdReadingsStage,
@@ -61,6 +60,7 @@ import {
 	assertCoordsSafe,
 	at,
 	extractData,
+	parseInteger,
 	verifyRecency,
 } from "@prosopo/util";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
@@ -78,7 +78,13 @@ import {
 	isClientSessionMismatch,
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
-import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
+import {
+	type DeviceInputs,
+	type DeviceVerdict,
+	deriveDevice,
+	deriveTrafficPolicies,
+	solveDeviceSignals,
+} from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -111,13 +117,17 @@ import {
 export interface PostPowRoutingContext {
 	ip: string;
 	countryCode?: string;
-	platform: RoutingMachinePlatform;
+	// The submit request's half of the device inputs. The session supplies
+	// `webView` and the decrypted solve supplies `solve`.
+	device: Omit<DeviceInputs, "webView" | "solve">;
 	raw: Omit<RoutingMachineRawSignals, "behavioralDataPacked">;
 }
 
 export type VerifyPowCaptchaSolutionResult = {
 	verified: boolean;
 	routingOutput?: RoutingMachineOutput;
+	// The verdict routing ran on, for sizing whatever the solve escalates to.
+	device?: DeviceVerdict;
 };
 
 const DEFAULT_POW_DIFFICULTY = 4;
@@ -220,7 +230,22 @@ export class PowCaptchaManager extends CaptchaManager {
 		);
 
 		const challengeSplit = challenge.split(this.POW_SEPARATOR);
-		const timestamp = Number.parseInt(at(challengeSplit, 0));
+		// The challenge is provider-signed, so this only fails if the format
+		// changes; parseInt would turn that into NaN and a confusing signature
+		// error instead.
+		const timestampResult = parseInteger(at(challengeSplit, 0), { min: 0 });
+		if (!timestampResult.ok) {
+			throw new ProsopoError({
+				code: "INVALID_TIMESTAMP",
+				errorSite: "PROV-96",
+				cause: timestampResult.error,
+				context: {
+					failedFuncName: this.verifyPowCaptchaSolution.name,
+					challenge,
+				},
+			});
+		}
+		const timestamp = timestampResult.value;
 		const userAccount = at(challengeSplit, 1);
 
 		checkPowSignature(
@@ -535,7 +560,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		// machine re-examines the (now richer) signals — score from the original
 		// session, decrypted behavioural data, counters — and may escalate the
 		// user to an image/puzzle captcha. Returning baseline (pow) means "done".
-		let routingOutput = this.postPowContext
+		const routed = this.postPowContext
 			? await this.runPostPowRouting({
 					challengeRecord,
 					challengeSplit,
@@ -543,6 +568,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					coords,
 				})
 			: undefined;
+		let routingOutput = routed?.routingOutput;
 
 		// Either signal forces at least an image escalation, unless the routing
 		// machine already escalated to a visual challenge (image/puzzle) that we
@@ -562,7 +588,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		return { verified: correct, routingOutput };
+		return { verified: correct, routingOutput, device: routed?.device };
 	}
 
 	/**
@@ -576,7 +602,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		challengeSplit: string[];
 		behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 		coords?: [number, number][][];
-	}): Promise<RoutingMachineOutput | undefined> {
+	}): Promise<
+		{ routingOutput?: RoutingMachineOutput; device: DeviceVerdict } | undefined
+	> {
 		if (!this.postPowContext) return undefined;
 
 		const { challengeRecord, challengeSplit, behavioralDataPacked, coords } =
@@ -604,13 +632,11 @@ export class PowCaptchaManager extends CaptchaManager {
 		const dappAccount = at(challengeSplit, 2);
 		const userAccount = at(challengeSplit, 1);
 
-		// Enrich platform.isWebView from the session — that flag is only
-		// derivable from the encrypted bot-detection payload at frictionless
-		// time, not from the submit request alone.
-		const platform = {
-			...this.postPowContext.platform,
-			isWebView: sessionRecord.webView,
-		};
+		const device = deriveDevice({
+			...this.postPowContext.device,
+			webView: sessionRecord.webView,
+			solve: solveDeviceSignals(behavioralDataPacked),
+		});
 
 		const ctx: RoutingContext = {
 			dappAccount,
@@ -618,7 +644,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			ip: this.postPowContext.ip,
 			countryCode: this.postPowContext.countryCode,
 			score,
-			platform,
+			platform: device.platform,
 			// Off the originating session — the PoW submit carries no detector
 			// payload of its own.
 			...(sessionRecord.d !== undefined && { d: sessionRecord.d }),
@@ -643,6 +669,12 @@ export class PowCaptchaManager extends CaptchaManager {
 				...(sessionRecord.iframeUrl && {
 					iframeUrl: sessionRecord.iframeUrl,
 				}),
+				...(sessionRecord.scoreComponents?.triggeredDetectors?.length
+					? {
+							triggeredDetectors:
+								sessionRecord.scoreComponents.triggeredDetectors,
+						}
+					: {}),
 			},
 		};
 
@@ -651,7 +683,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			powDifficulty: challengeRecord.difficulty,
 		};
 
-		return applyRouter(
+		const routingOutput = await applyRouter(
 			this.decisionMachineRunner,
 			this.usageCounters,
 			baseline,
@@ -659,6 +691,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			this.logger,
 			"postPow",
 		);
+		return { routingOutput, device };
 	}
 
 	/**

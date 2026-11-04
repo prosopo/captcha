@@ -398,6 +398,8 @@ export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.signature]: {
 		[ApiParams.provider]: RequestHashSignature;
 	};
+	/** Whether the widget may offer to go back to the puzzle this image replaced. */
+	[ApiParams.puzzleSwitchAvailable]?: boolean;
 }
 
 // Widget-controlled metadata sent alongside the captcha solution. `hp` is only
@@ -608,6 +610,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.hp]?: string;
 	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
+	// Second per-session observation URL, requested as an image.
+	dns_asset_url?: string;
 	// Web Bot Auth: canonical Signature-Agent URL of the verified signer.
 	// Only present when captchaType === "authenticated". Rendered by the
 	// widget's badge so the operator can see WHICH agent verified.
@@ -779,14 +783,25 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// it clears the IP-binding check.
 	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	// The sessionId whose challenge the user asked to replace with the
-	// refresh control. Client-reported, so it can only ever make the next
-	// challenge harder (see `switchTypeAfterRefreshes`): a client that omits
-	// it is treated as a fresh visit, exactly as a page reload already is.
+	// refresh control. Only followed when that session belongs to the same
+	// user, IP and site; the chain's length and timing are then read from the
+	// provider's own records (see `resolveRefreshLineage`). A client that
+	// omits it is treated as a fresh visit, exactly as a page reload already is.
 	[ApiParams.refreshOf]: boundedString(INPUT_LIMITS.ID).optional(),
+	// The challenge of the puzzle the user just answered wrongly, when this
+	// session replaces it. Only followed when that puzzle was submitted and
+	// failed, belongs to the same user, site and IP, and was served to the same
+	// client (user agent and TLS fingerprint). Each failed puzzle can be
+	// followed once. See `resolveRetrySolveDevice`.
+	[ApiParams.retryOf]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	// The user pressed the puzzle's switch-to-image control rather than plain
 	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
-	// on a site with the switch enabled, and only ever moves puzzle to image.
+	// on a site with the switch enabled.
 	[ApiParams.switchToImage]: boolean().optional(),
+	// The user pressed the switch-back control on an image they had switched
+	// to. Drops their image choice, so the routing decides as it would for
+	// any refresh; it never overrides an image the routing chose itself.
+	[ApiParams.switchToPuzzle]: boolean().optional(),
 	// Encoded proof of fingerprint. Sent here so every session carries the
 	// device bucket whichever captcha type it is served, not only PoW.
 	[ApiParams.fingerprintProof]: boundedString(INPUT_LIMITS.TOKEN).optional(),

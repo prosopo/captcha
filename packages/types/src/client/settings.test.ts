@@ -49,6 +49,8 @@ import {
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	imageThresholdDefault,
+	ipDetectorRiskWeightDefault,
+	ipValidationReputationScoreThresholdDefault,
 	isCaptchaTypeFeatureEnabled,
 	isWidgetFeatureEnabled,
 	powDifficultyDefault,
@@ -57,6 +59,7 @@ import {
 	resolveFrictionlessTypes,
 	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
+	trafficFilterReputationScoreThresholdDefault,
 	widgetFeatureFlagDefaults,
 	withMarketCountries,
 } from "./settings.js";
@@ -370,6 +373,32 @@ describe("ClientSettingsSchema", () => {
 		).toBe(false);
 	});
 
+	it("leaves the IP detector risk weight unset when absent, which the provider reads as 0", () => {
+		expect(ipDetectorRiskWeightDefault).toBe(0);
+		expect(parse(minimal).ipDetectorRiskWeight).toBeUndefined();
+	});
+
+	it("accepts an IP detector risk weight from 0 to 1", () => {
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 0 }).ipDetectorRiskWeight,
+		).toBe(0);
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 0.5 }).ipDetectorRiskWeight,
+		).toBe(0.5);
+		expect(
+			parse({ ...minimal, ipDetectorRiskWeight: 1 }).ipDetectorRiskWeight,
+		).toBe(1);
+	});
+
+	it("rejects an IP detector risk weight outside 0 to 1", () => {
+		for (const ipDetectorRiskWeight of [-0.1, 1.1]) {
+			expect(
+				ClientSettingsSchema.safeParse({ ...minimal, ipDetectorRiskWeight })
+					.success,
+			).toBe(false);
+		}
+	});
+
 	it("accepts many domains and does not deduplicate them", () => {
 		expect(parse({ domains: ["a.com", "a.com", "b.com"] }).domains).toEqual([
 			"a.com",
@@ -400,8 +429,27 @@ describe("IPValidationRulesSchema", () => {
 		const rules = IPValidationRulesSchema.parse({ actions: {} });
 		expect(rules.distanceThresholdKm).toBe(distanceThresholdKmDefault);
 		expect(rules.abuseScoreThreshold).toBe(abuseScoreThresholdDefault);
+		expect(rules.reputationScoreThreshold).toBe(
+			ipValidationReputationScoreThresholdDefault,
+		);
+		expect(ipValidationReputationScoreThresholdDefault).toBe(0.26);
 		expect(rules.requireAllConditions).toBe(false);
 		expect(rules.forceConsistentIp).toBe(false);
+	});
+
+	it("bounds the reputation score threshold to a probability", () => {
+		expect(
+			IPValidationRulesSchema.safeParse({
+				actions: {},
+				reputationScoreThreshold: 1.2,
+			}).success,
+		).toBe(false);
+		expect(
+			IPValidationRulesSchema.safeParse({
+				actions: {},
+				reputationScoreThreshold: 0,
+			}).success,
+		).toBe(true);
 	});
 
 	it("requires the actions object, even when empty", () => {
@@ -647,6 +695,50 @@ describe("TrafficFilterSchema", () => {
 		).toBe(false);
 	});
 
+	it("defaults the reputation score threshold to 0.98", () => {
+		expect(trafficFilterReputationScoreThresholdDefault).toBe(0.98);
+		expect(TrafficFilterSchema.parse({}).reputationScoreThreshold).toBe(
+			trafficFilterReputationScoreThresholdDefault,
+		);
+	});
+
+	it("bounds the reputation score threshold to a probability", () => {
+		for (const [reputationScoreThreshold, ok] of [
+			[0, true],
+			[1, true],
+			[1.01, false],
+			[-0.01, false],
+		] as const) {
+			expect(
+				TrafficFilterSchema.safeParse({ reputationScoreThreshold }).success,
+			).toBe(ok);
+		}
+	});
+
+	it("accepts an exception conditioned only on a minimum reputation score", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [
+					{ minReputationScore: 0.9, action: TrafficFilterAction.Block },
+				],
+			},
+		});
+		expect(filter.proxy?.exceptions?.[0]?.minReputationScore).toBe(0.9);
+	});
+
+	it("still parses a stored exception carrying only minAbuserScore", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [
+					{ minAbuserScore: 0.1, action: TrafficFilterAction.Block },
+				],
+			},
+		});
+		expect(filter.proxy?.exceptions?.[0]?.minAbuserScore).toBe(0.1);
+	});
+
 	it("upper-cases exception country codes", () => {
 		const filter = TrafficFilterSchema.parse({
 			proxy: {
@@ -657,6 +749,16 @@ describe("TrafficFilterSchema", () => {
 			},
 		});
 		expect(filter.proxy?.exceptions?.[0]?.countries).toEqual(["GB"]);
+	});
+
+	it("accepts an exception conditioned only on mobile", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [{ mobile: true, action: TrafficFilterAction.Challenge }],
+			},
+		});
+		expect(filter.proxy?.exceptions?.[0]?.mobile).toBe(true);
 	});
 
 	it("accepts an exception conditioned only on the market", () => {
@@ -678,6 +780,7 @@ describe("TrafficFilterSchema", () => {
 		[{ countries: [], action: TrafficFilterAction.Challenge }],
 		[{ countries: ["GBR"], action: TrafficFilterAction.Challenge }],
 		[{ minAbuserScore: 1.5, action: TrafficFilterAction.Block }],
+		[{ minReputationScore: 1.5, action: TrafficFilterAction.Block }],
 	])("rejects an invalid exception %o", (exception: object) => {
 		expect(
 			TrafficFilterSchema.safeParse({
@@ -691,6 +794,32 @@ describe("TrafficFilterSchema", () => {
 		expect(filter.datacenterNameAllowlist).toBeUndefined();
 		expect(filter.datacenterNameDenylist).toBeUndefined();
 	});
+
+	it.each(["nameAllowlist", "nameDenylist"])(
+		"accepts %s on every category and rejects an empty or overlong entry",
+		(key: string) => {
+			for (const category of [
+				"vpn",
+				"proxy",
+				"tor",
+				"abuser",
+				"datacenter",
+				"mobile",
+				"satellite",
+				"crawler",
+			]) {
+				const withList = (list: string[]): boolean =>
+					TrafficFilterSchema.safeParse({
+						[category]: { action: TrafficFilterAction.Block, [key]: list },
+					}).success;
+				expect(withList(["VPN by Google"])).toBe(true);
+				expect(withList([])).toBe(true);
+				expect(withList([""])).toBe(false);
+				expect(withList(["a".repeat(129)])).toBe(false);
+				expect(withList(new Array(51).fill("a"))).toBe(false);
+			}
+		},
+	);
 
 	it.each(["datacenterNameAllowlist", "datacenterNameDenylist"])(
 		"rejects an empty or overlong entry in %s",

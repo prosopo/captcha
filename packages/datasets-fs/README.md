@@ -6,15 +6,15 @@ You need this only if you want image CAPTCHAs. `pow` needs no imagery, and `puzz
 procedurally at request time. See the [self-hosting guide](https://docs.prosopo.io/en/self-hosting/) for the wider
 context.
 
-Build the CLI once, then run it from this package directory:
+After `pnpm run build:self-hosted` in the repository root, build the CLI once, then run it from this package directory:
 
 ```bash
-pnpm --filter @prosopo/datasets-fs run build
-node dist/cli.js --help
+pnpm --filter @prosopo/datasets-fs run build:tsc
+node dist/tsc/cli.js --help
 ```
 
 Commands: `flatten`, `labels`, `resize`, `relocate`, `get`, `generate-v1`, `generate-v2`. Every command takes
-`--input`/`--in`, `--output`/`--out` and `--overwrite`; run `node dist/cli.js <command> --help` for the rest.
+`--input`/`--in`, `--output`/`--out` and `--overwrite`; run `node dist/tsc/cli.js <command> --help` for the rest.
 
 ## The images must be publicly reachable
 
@@ -42,7 +42,7 @@ Collapses the tree into a single image directory plus a `data.json` mapping each
 renamed to their content hash.
 
 ```bash
-node dist/cli.js flatten --in ./data --out ./flat --overwrite
+node dist/tsc/cli.js flatten --in ./data --out ./flat --overwrite
 ```
 
 `./flat/data.json` looks like this — note the `items` wrapper, and that `data` is still a local path at this stage:
@@ -63,7 +63,7 @@ node dist/cli.js flatten --in ./data --out ./flat --overwrite
 ### 2. Extract the labels
 
 ```bash
-node dist/cli.js labels --in ./flat/data.json --out ./labels.json --overwrite
+node dist/tsc/cli.js labels --in ./flat/data.json --out ./labels.json --overwrite
 ```
 
 ```json
@@ -73,7 +73,7 @@ node dist/cli.js labels --in ./flat/data.json --out ./labels.json --overwrite
 ### 3. Resize (optional)
 
 ```bash
-node dist/cli.js resize --in ./flat/data.json --out ./resized --size 128 --square --overwrite
+node dist/tsc/cli.js resize --in ./flat/data.json --out ./resized --size 128 --square --overwrite
 ```
 
 ### 4. Point the entries at your host
@@ -81,18 +81,19 @@ node dist/cli.js resize --in ./flat/data.json --out ./resized --size 128 --squar
 Upload the images, then rewrite the local paths to the URLs they now live at:
 
 ```bash
-node dist/cli.js relocate \
+node dist/tsc/cli.js relocate \
   --in ./flat/data.json \
   --out ./data-hosted.json \
-  --from /abs/path/flat/images \
+  --from "$PWD/flat/images" \
   --to https://img.example.com \
   --overwrite
 ```
 
-Check every URL actually resolves before going further — `get` reports anything that 404s:
+Check every URL actually loads before going further. `get` logs `failed` for each one that doesn't, but still exits 0,
+so read its output:
 
 ```bash
-node dist/cli.js get --in ./data-hosted.json
+node dist/tsc/cli.js get --in ./data-hosted.json
 ```
 
 ### 5. Generate the captchas
@@ -100,7 +101,7 @@ node dist/cli.js get --in ./data-hosted.json
 `generate-v2` mixes labelled and unlabelled images into a single round:
 
 ```bash
-node dist/cli.js generate-v2 \
+node dist/tsc/cli.js generate-v2 \
   --out ./captchas.json \
   --labelled ./data-hosted.json \
   --unlabelled ./data-hosted.json \
@@ -147,8 +148,8 @@ docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.j
 The fixtures under `src/tests/data` were produced with:
 
 ```bash
-node dist/cli.js flatten --in ./src/tests/data/hierarchical --out ./src/tests/data/flat --overwrite
-node dist/cli.js resize --square --size 128 --in ./src/tests/data/flat/data.json --out ./src/tests/data/flat_resized --overwrite
-node dist/cli.js labels --in ./src/tests/data/flat_resized/data.json --out ./src/tests/data/flat_resized/labels.json --overwrite
-node dist/cli.js relocate --from '${repo}' --to newwebsite.com --in ./src/tests/data/flat_resized/data.json --out ./src/tests/data/flat_resized/relocated_data.json --overwrite
+node dist/tsc/cli.js flatten --in ./src/tests/data/hierarchical --out ./src/tests/data/flat --overwrite
+node dist/tsc/cli.js resize --square --size 128 --in ./src/tests/data/flat/data.json --out ./src/tests/data/flat_resized --overwrite
+node dist/tsc/cli.js labels --in ./src/tests/data/flat_resized/data.json --out ./src/tests/data/flat_resized/labels.json --overwrite
+node dist/tsc/cli.js relocate --from '${repo}' --to newwebsite.com --in ./src/tests/data/flat_resized/data.json --out ./src/tests/data/flat_resized/relocated_data.json --overwrite
 ```

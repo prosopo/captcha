@@ -18,6 +18,7 @@ import { parse, stringify } from "@iarna/toml";
 import { loadEnv } from "@prosopo/dotenv";
 import { getLogger, parseLogLevel } from "@prosopo/logger";
 import { getRootDir } from "@prosopo/workspace";
+import { parseVersion } from "./parseVersion.js";
 
 // We have to load env here if we're importing this file from cli/index.ts, otherwise, the env is loaded after the
 // logger is created
@@ -25,25 +26,6 @@ loadEnv();
 const logLevel = parseLogLevel(process.env.PROSOPO_LOG_LEVEL);
 const log = getLogger(logLevel, "setVersion");
 log.info(() => ({ data: { logLevel } }));
-
-const parseVersion = (version: string) => {
-	try {
-		const parts = version.split(".");
-		if (parts.length !== 3) {
-			throw new Error();
-		}
-		let [major, minor, patch] = parts;
-		major = Number.parseInt(major ?? "").toString();
-		minor = Number.parseInt(minor ?? "").toString();
-		patch = Number.parseInt(patch ?? "").toString();
-		if (major === "NaN" || minor === "NaN" || patch === "NaN") {
-			throw new Error();
-		}
-		return `${major}.${minor}.${patch}`;
-	} catch (e) {
-		throw new Error("Version must be in the format of x.y.z");
-	}
-};
 
 const find = (pth: string, filter: (pth: string) => boolean): string[] => {
 	const files = fs.readdirSync(pth);

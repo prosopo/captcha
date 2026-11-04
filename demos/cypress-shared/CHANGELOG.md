@@ -1,5 +1,74 @@
 # @prosopo/cypress-shared
 
+## 2.8.171
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+
+## 2.8.170
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+
+## 2.8.169
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/util@3.5.0
+
+## 2.8.168
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+
+## 2.8.167
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+
+## 2.8.166
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+
+## 2.8.165
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+
+## 2.8.164
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/util@3.4.0
+
+## 2.8.163
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+
 ## 2.8.162
 ### Patch Changes
 

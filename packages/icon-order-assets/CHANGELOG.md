@@ -1,5 +1,11 @@
 # @prosopo/icon-order-assets
 
+## 0.2.5
+### Patch Changes
+
+- Updated dependencies [cdea91f]
+  - @prosopo/puzzle-assets@0.2.6
+
 ## 0.2.4
 ### Patch Changes
 

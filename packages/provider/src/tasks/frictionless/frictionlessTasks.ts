@@ -46,7 +46,7 @@ import {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
-import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
+import { dnsBeaconUrls } from "../../api/dnsEventUrl.js";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
@@ -112,6 +112,7 @@ export class FrictionlessManager extends CaptchaManager {
 	private audioAlternativeEnabled = false;
 	private allowedCaptchaTypes?: IFrictionlessTypes;
 	private imageSwitchRequested = false;
+	private refreshLimitSwitchEnabled = true;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -156,12 +157,17 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	/**
-	 * Record that the user asked to swap their puzzle for an image challenge.
-	 * Only call this once the request has been checked as a refresh of a
-	 * puzzle on a site with the switch enabled.
+	 * Record that the user chose an image challenge over their puzzle. Only
+	 * call this once `isUserImageChoiceActive` has checked the request against
+	 * the refresh chain and the site's switch.
 	 */
 	setImageSwitchRequested(requested: boolean): void {
 		this.imageSwitchRequested = requested;
+	}
+
+	/** Whether the refresh limit may turn a puzzle into an image challenge. */
+	setRefreshLimitSwitchEnabled(enabled: boolean): void {
+		this.refreshLimitSwitchEnabled = enabled;
 	}
 
 	/**
@@ -211,6 +217,8 @@ export class FrictionlessManager extends CaptchaManager {
 			refreshOf: params.refreshOf,
 			refreshCount: params.refreshCount,
 			refreshedAfterMs: params.refreshedAfterMs,
+			retryOf: params.retryOf,
+			solveDevice: params.solveDevice,
 			fingerprintSummary: params.fingerprintSummary,
 		};
 	}
@@ -274,6 +282,8 @@ export class FrictionlessManager extends CaptchaManager {
 			refreshOf,
 			refreshCount,
 			refreshedAfterMs,
+			retryOf,
+			solveDevice,
 			isProtect,
 			matchedRule,
 			clientMetaData,
@@ -308,6 +318,10 @@ export class FrictionlessManager extends CaptchaManager {
 			...(refreshOf && { refreshOf }),
 			...(refreshCount !== undefined && { refreshCount }),
 			...(refreshedAfterMs !== undefined && { refreshedAfterMs }),
+			...(retryOf && { retryOf }),
+			// Not in this list before, so the escalation's solve readings were
+			// dropped here and its challenge was never sized for touch.
+			...(solveDevice && { solveDevice }),
 			decryptedHeadHash,
 			bundleId,
 			reason,
@@ -572,11 +586,13 @@ export class FrictionlessManager extends CaptchaManager {
 			this.allowedCaptchaTypes,
 		);
 		const switchedByUser = userSwitchedCaptchaType !== enabledCaptchaType;
-		const finalCaptchaType = switchTypeAfterRefreshes(
-			userSwitchedCaptchaType,
-			effectiveParams.refreshCount,
-			this.allowedCaptchaTypes,
-		);
+		const finalCaptchaType = this.refreshLimitSwitchEnabled
+			? switchTypeAfterRefreshes(
+					userSwitchedCaptchaType,
+					effectiveParams.refreshCount,
+					this.allowedCaptchaTypes,
+				)
+			: userSwitchedCaptchaType;
 		const switchedByRefreshes = finalCaptchaType !== userSwitchedCaptchaType;
 		// The routing-machine output schema only bounds the count as a positive
 		// int, so clamp it to the sitekey's rounds here as every other sizing
@@ -730,7 +746,7 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.captchaType]: finalCaptchaType,
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
-			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
+			...dnsBeaconUrls(sessionRecord.sessionId),
 			...(offersAudioAlternative(
 				finalCaptchaType,
 				this.audioAlternativeEnabled,

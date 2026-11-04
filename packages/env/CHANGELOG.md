@@ -1,5 +1,124 @@
 # @prosopo/env
 
+## 3.6.91
+### Patch Changes
+
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+  - @prosopo/database@4.6.2
+  - @prosopo/types@5.26.0
+  - @prosopo/ipinfo@0.7.0
+  - @prosopo/types-env@2.12.1
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/logger@2.1.9
+
+## 3.6.90
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/ipinfo@0.6.0
+  - @prosopo/types-env@2.12.0
+  - @prosopo/database@4.6.1
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.21
+
+## 3.6.89
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [f31105a]
+- Updated dependencies [7c58be4]
+- Updated dependencies [c12d199]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/database@4.6.0
+  - @prosopo/ipinfo@0.5.3
+  - @prosopo/logger@2.1.8
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.20
+  - @prosopo/types-env@2.11.35
+
+## 3.6.88
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.5.1
+  - @prosopo/ipinfo@0.5.2
+  - @prosopo/keyring@2.10.19
+  - @prosopo/types-env@2.11.34
+
+## 3.6.87
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/database@4.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/ipinfo@0.5.1
+  - @prosopo/keyring@2.10.18
+  - @prosopo/types-env@2.11.33
+
+## 3.6.86
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+- Updated dependencies [11a38cc]
+  - @prosopo/types@5.22.0
+  - @prosopo/ipinfo@0.5.0
+  - @prosopo/database@4.4.4
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.17
+  - @prosopo/types-env@2.11.32
+
+## 3.6.85
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.3
+  - @prosopo/ipinfo@0.4.29
+  - @prosopo/keyring@2.10.16
+  - @prosopo/types-env@2.11.31
+
+## 3.6.84
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.2
+  - @prosopo/ipinfo@0.4.28
+  - @prosopo/keyring@2.10.15
+  - @prosopo/types-env@2.11.30
+  - @prosopo/logger@2.1.7
+  - @prosopo/util-crypto@13.6.3
+
+## 3.6.83
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.1
+  - @prosopo/ipinfo@0.4.27
+  - @prosopo/keyring@2.10.14
+  - @prosopo/types-env@2.11.29
+
 ## 3.6.82
 ### Patch Changes
 

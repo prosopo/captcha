@@ -1,5 +1,142 @@
 # @prosopo/procaptcha
 
+## 2.12.2
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/load-balancer@2.11.26
+  - @prosopo/procaptcha-common@2.23.2
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.22
+
+## 2.12.1
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.21
+  - @prosopo/load-balancer@2.11.25
+  - @prosopo/procaptcha-common@2.23.1
+
+## 2.12.0
+### Minor Changes
+
+- ec4ed10: A site's error-callback now gets an Error that also has `code` and `errorId`, so sites can branch on the code and log the id. `message` still works as before.
+
+### Patch Changes
+
+- 7c58be4: Finish the puzzle refresh and switch-to-image work.
+  
+  - A user who switched their puzzle to an image now keeps the image when they refresh it. Before, a plain refresh handed the puzzle straight back.
+  - That image now has a puzzle-piece button to go back to the puzzle. It is only offered on an image the user chose themselves, and only while going back would not run into the three-refresh limit. Going back only drops the user's choice: if routing would serve an image anyway, they still get the image.
+  - A refresh only extends a chain started by the same user, IP and site, so nobody can borrow someone else's refresh count or switch.
+  - Sites pinned to puzzle now record refreshes too. The three-refresh switch to image applies to them only when the superadmin puzzle-to-image switch is on, since they chose puzzle on purpose.
+  - Routing machines now receive `input.refresh` (`count` and `afterMs`) on a refresh, so rules can act on how often and how fast a user refreshes.
+  - New widget string `WIDGET.SWITCH_TO_PUZZLE`, translated into every locale. The puzzle's switch button is now a shared `mountChallengeSwitchButton` with an image or puzzle icon.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/api@4.8.7
+  - @prosopo/procaptcha-common@2.23.0
+  - @prosopo/datasets@3.2.20
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/load-balancer@2.11.24
+
+## 2.11.44
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.19
+  - @prosopo/load-balancer@2.11.23
+  - @prosopo/procaptcha-common@2.22.5
+
+## 2.11.43
+### Patch Changes
+
+- Updated dependencies [186debd]
+  - @prosopo/procaptcha-common@2.22.4
+
+## 2.11.42
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/api@4.8.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.18
+  - @prosopo/load-balancer@2.11.22
+  - @prosopo/procaptcha-common@2.22.3
+
+## 2.11.41
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.17
+  - @prosopo/load-balancer@2.11.21
+  - @prosopo/procaptcha-common@2.22.2
+
+## 2.11.40
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/api@4.8.3
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.16
+  - @prosopo/load-balancer@2.11.20
+  - @prosopo/procaptcha-common@2.22.1
+
+## 2.11.39
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+- Updated dependencies [f53d027]
+  - @prosopo/types@5.20.2
+  - @prosopo/procaptcha-common@2.22.0
+  - @prosopo/api@4.8.2
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.15
+  - @prosopo/load-balancer@2.11.19
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
+## 2.11.38
+### Patch Changes
+
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+- Updated dependencies [6fa6155]
+- Updated dependencies [f019ec4]
+  - @prosopo/procaptcha-common@2.21.11
+  - @prosopo/types@5.20.1
+  - @prosopo/api@4.8.1
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.14
+  - @prosopo/load-balancer@2.11.18
+
 ## 2.11.37
 ### Patch Changes
 

@@ -17,6 +17,7 @@ import * as path from "node:path";
 import { ViteFrontendConfig, VitePluginCopy } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { type Plugin, type UserConfig, defineConfig } from "vite";
+import { version } from "./package.json" with { type: "json" };
 
 // IIFE / classic-script build of the procaptcha bundle.
 // Used as a `<script nomodule>` fallback so crawlers and runtimes that do not
@@ -127,6 +128,7 @@ export default defineConfig(async ({ command, mode }) => {
 		define: {
 			...frontendConfig.define,
 			__PROSOPO_ALLOW_UNTRUSTED_EVENTS__: JSON.stringify(allowUntrustedEvents),
+			__PROSOPO_BUNDLE_VERSION__: JSON.stringify(version),
 		},
 		worker: {
 			format: "es",

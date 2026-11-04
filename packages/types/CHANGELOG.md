@@ -1,5 +1,130 @@
 # @prosopo/types
 
+## 5.26.0
+### Minor Changes
+
+- d9520ea: The traffic filter's `abuser` category, its exceptions, the DNS-path signal and the IP validation rules now use the IP lookup's reputation score.
+  
+  - The IP lookup carries `reputationScore` and `reputationBand`. An address without a score never meets a threshold.
+  - New settings: `trafficFilter.reputationScoreThreshold`, exception `minReputationScore`, and `ipValidationRules.reputationScoreThreshold`.
+  - `abuserScoreThreshold`, `minAbuserScore` and `ipValidationRules.abuseScoreThreshold` are deprecated. Stored records still parse, and an exception that has only `minAbuserScore` keeps its current behaviour until it is updated.
+
+### Patch Changes
+
+- Updated dependencies [1ba238e]
+  - @prosopo/util@3.6.0
+  - @prosopo/locale@3.14.1
+
+## 5.25.0
+### Minor Changes
+
+- b80b627: Decision machines can now act on repeated wild guesses at an interactive captcha.
+  
+  - Usage counters gain a `farMiss` kind. It is written per user account and per address when a puzzle answer lands well away from the slot, as opposed to a near miss.
+  - A decision machine can export `requiredDecideCounters()` (named apart from the routing `requiredCounters()`, since one bundle serves both) and `requiresAccountSighting()`. At verification the provider reads what it asked for into `input.counters` and `input.accountSighting`. Anything that cannot be read is left out rather than passed as zero.
+  - The reputation DB client reads `reputation.shared_reason` onto `IPInfoResult.sharedReason`. `IIpInfoService` gains `accountSighting(siteKey, account)`, which reads `GET /v1/account/{siteKey}/{account}` and has no answer for an unknown account, a 404 or an error.
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+
+## 5.24.0
+### Minor Changes
+
+- ec4ed10: A site's error-callback now gets an Error that also has `code` and `errorId`, so sites can branch on the code and log the id. `message` still works as before.
+
+### Patch Changes
+
+- 91ef450: Decision machines checking a puzzle solve now receive the puzzle's start point (`puzzleOrigin`), target (`puzzleTarget`) and tolerance (`puzzleTolerance`), alongside the drag events they already get. Before, a rule could see the drag but not where it was meant to go.
+- 7c58be4: Finish the puzzle refresh and switch-to-image work.
+  
+  - A user who switched their puzzle to an image now keeps the image when they refresh it. Before, a plain refresh handed the puzzle straight back.
+  - That image now has a puzzle-piece button to go back to the puzzle. It is only offered on an image the user chose themselves, and only while going back would not run into the three-refresh limit. Going back only drops the user's choice: if routing would serve an image anyway, they still get the image.
+  - A refresh only extends a chain started by the same user, IP and site, so nobody can borrow someone else's refresh count or switch.
+  - Sites pinned to puzzle now record refreshes too. The three-refresh switch to image applies to them only when the superadmin puzzle-to-image switch is on, since they chose puzzle on purpose.
+  - Routing machines now receive `input.refresh` (`count` and `afterMs`) on a refresh, so rules can act on how often and how fast a user refreshes.
+  - New widget string `WIDGET.SWITCH_TO_PUZZLE`, translated into every locale. The puzzle's switch button is now a shared `mountChallengeSwitchButton` with an image or puzzle icon.
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- f679760: Store the TLS handshake round trip on each session as `tlsHandshakeRttUs`.
+  
+  chaddy now sends `X-TLS-Handshake-Rtt-Us`: the time from the server's handshake reply to the client's answer, in microseconds. The provider reads it with the other raw TLS signals, saves it on the session and passes it to decision machines. Until now we only had the TCP round trip (`synackNs` to `ackNs`), which can come from a different machine to the one that does TLS.
+  
+  The old `chelloToHandshakeUs` is not a handshake time. chaddy takes it when each request arrives, so on a reused connection it is really the connection's age (median about 2 seconds). This change leaves it as it is.
+- cf9a1bb: Add a `pass` action to the traffic filter, so a policy can act on only part of a category.
+  
+  `pass` takes no decision: the IP is treated as if its category had no policy, and the site's own settings decide the captcha. It can be a category's action or an exception's. It's the least harsh action, so any other matching exception wins over it, whatever their order. Like a missing policy, a category on `pass` still owns the IP, so lower categories are not consulted.
+  
+  Two examples:
+  
+  - `proxy: pass` with an exception `inMarket: false → challenge (puzzle)`: proxies outside the market get the puzzle, and the rest are left to the site's settings.
+  - `proxy: block` with an exception `mobile: true → pass`: proxies are blocked except on carrier networks, which are left to the site's settings.
+  
+  Protect's traffic filter gains the same action, so both products take the same inputs.
+  
+  Tests: five new cases in `checkTrafficFilter.unit.test.ts` cover `pass` as a category action, a matching exception winning over it, `pass` as an exception, losing to another matching exception regardless of order, and a lower category not being consulted.
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/locale@3.14.0
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+
+## 5.23.1
+### Patch Changes
+
+- bea67d6: Decide whether a visitor is on a phone in one place, from the same inputs, wherever the provider needs to know.
+  
+  Frictionless routing, post-PoW routing, the decision machines, puzzle sizing on escalation and puzzle issuance each built that verdict themselves, and fed it different evidence. Post-PoW routing judged the device before the solve was decrypted, so the touch readings the solve carried never counted, while the escalation that followed judged it again with them included. They now share `deriveDevice`, which takes the user agent, client hints, IP lookup, packet size, in-app flag and, wherever a solve exists, what that solve said about the input device. Post-PoW routing computes it once and the escalation reuses it. An escalated session keeps the solve's two device readings, so a puzzle issued for it judges the same device.
+  
+  An iPad that sends a Mac user agent but taps with a finger can now be recognised from its taps after a solve. The weighing itself is unchanged: a touchscreen laptop, or a phone browser asking for the desktop site, still counts as a desktop.
+
+## 5.23.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- 77fdb57: Make the `ipDetectorRiskWeight` site setting optional instead of filling in 0 when it is parsed.
+  
+  With a parse default the field became required on the parsed settings type, so every caller that builds a full settings object had to set it. The portal doesn't, which broke the captcha-private release build for v3.10.0. The provider already reads a missing weight as 0, so behaviour is unchanged.
+
+## 5.22.0
+### Minor Changes
+
+- 8bf0957: The IP lookup now reads a detector risk for the address (a number from 0 to 1, or nothing when there is no evidence) and keeps it on the lookup result, so it is saved with the session's IP info and written to the frictionless decision log next to the session's own bot score.
+  
+  Sites get a new setting, `ipDetectorRiskWeight` (0 to 1, default 0). When it is above 0, the frictionless flow adds weight × risk to the bot score, capped at 1, before comparing it with the site's thresholds. It can only change which challenge is served; it never blocks. The amount added is recorded in the session's score components, and the log shows the score before and after. At the default of 0 nothing changes.
+
+## 5.21.0
+### Minor Changes
+
+- b18a733: Routing machines now see which detectors fired, as `raw.triggeredDetectors`.
+  
+  The provider already stored the triggered detectors on the session but never passed them to the routing machine, so a routing rule could not act on a single detector. They are now passed on the first request, on the post-PoW route and on the dedup replay. On the last two they come from the stored session.
+- fb7e3ec: A traffic-filter exception can now be conditioned on whether the IP is on a mobile network (`mobile: true` or `mobile: false`). This lets a site block high-scoring proxies everywhere except on carrier networks, where one shared address carries real phones alongside the rented SIMs that put it on proxy lists.
+- 25a151e: Every traffic-filter category (VPN, proxy, Tor, abuser, datacenter, mobile, satellite, crawler) now has the same two name lists. `nameAllowlist` takes a matching network out of that category, for example letting "VPN by Google" past a VPN block. `nameDenylist` keeps a matching network in that category even when it would otherwise be let out. Until now only the datacenter category had these lists. The old top-level `datacenterNameAllowlist` and `datacenterNameDenylist` still work and count as the datacenter category's lists. iCloud Private Relay is let through by every category except Tor unless a site denylists it.
+
+## 5.20.2
+### Patch Changes
+
+- 23ef59a: Add a `solver` captcha label, alongside `human`, `bot`, `suspicious` and `unknown`. It marks captchas solved by paid captcha-solving services (2captcha, anti-captcha, CapMonster), whose workers are often real people paid to solve, so neither `bot` nor `human` fits. Stored records accept the new value; existing labels are unchanged.
+- b52263f: The provider's request logs now include `bundleVersion` and `bundleOrigin`, the widget's `x-prosopo-bundle-version` and `x-prosopo-bundle-origin` headers, next to `integration`. Values that don't look like a release number (or `dev`), or an http(s) origin, are left out.
+  - @prosopo/locale@3.13.2
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
+## 5.20.1
+### Patch Changes
+
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+
 ## 5.20.0
 ### Minor Changes
 

@@ -131,6 +131,12 @@ CADDY_DOMAIN=${host}
 # JSON, if you run more than one node.
 PROSOPO_PROVIDER_LIST=https://${host}
 
+# The widget sends Prosopo a usage beacon (page hostname, site key and bundle
+# version) on about one render in a thousand, so we can tell you about new
+# releases and critical fixes. Set to false before building the widget to turn
+# it off. See SELF_HOSTING.md.
+PROSOPO_USAGE_BEACON=true
+
 # The shipped Caddyfile lists two upstreams so Prosopo can run two provider
 # versions side by side. A self-hosted node points both at its one provider.
 CADDY_PROVIDER_CONTAINER_NAME=provider

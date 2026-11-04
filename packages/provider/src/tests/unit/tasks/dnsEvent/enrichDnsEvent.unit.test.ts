@@ -169,11 +169,14 @@ describe("computeDnsAsymmetry", () => {
 	});
 
 	describe("legacy path (no trafficFilter)", () => {
-		it("counts every datacenter and abuser flag on resolver + peer", () => {
+		it("counts every datacenter flag and high reputation score on resolver + peer", () => {
 			const score = computeDnsAsymmetry(
 				enrichedWith({
-					resolverIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
-					peerIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						reputationScore: 0.99,
+					}),
+					peerIpInfo: baseInfo({ isDatacenter: true, reputationScore: 0.99 }),
 				}),
 				undefined,
 			);
@@ -197,8 +200,11 @@ describe("computeDnsAsymmetry", () => {
 			const score = computeDnsAsymmetry(
 				enrichedWith({
 					pathValid: false,
-					resolverIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
-					peerIpInfo: baseInfo({ isDatacenter: true, isAbuser: true }),
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						reputationScore: 0.99,
+					}),
+					peerIpInfo: baseInfo({ isDatacenter: true, reputationScore: 0.99 }),
 				}),
 				baseInfo({ providerType: "isp" }),
 			);
@@ -375,14 +381,71 @@ describe("computeDnsAsymmetry", () => {
 			);
 			expect(score).toBeGreaterThan(0);
 		});
+
+		it("follows the datacenter category's own name lists", () => {
+			const resolver = enrichedWith({
+				resolverIpInfo: baseInfo({
+					isDatacenter: true,
+					providerName: "Example DNS",
+				}),
+			});
+			expect(
+				computeDnsAsymmetry(resolver, undefined, {
+					...filterAllowingVpn,
+					datacenter: {
+						action: TrafficFilterAction.Block,
+						nameAllowlist: ["Example DNS"],
+					},
+				}),
+			).toBe(0);
+			expect(
+				computeDnsAsymmetry(
+					enrichedWith({
+						resolverIpInfo: baseInfo({
+							isDatacenter: true,
+							providerType: "isp",
+							providerName: "Example DNS",
+						}),
+					}),
+					undefined,
+					{
+						...filterAllowingVpn,
+						datacenter: {
+							action: TrafficFilterAction.Block,
+							nameDenylist: ["Example DNS"],
+						},
+					},
+				),
+			).toBeGreaterThan(0);
+		});
 	});
 
 	describe("abuser gating", () => {
+		it("does not count an abuser the abuser category allowlists", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						reputationScore: 1,
+						providerName: "Example DNS",
+					}),
+				}),
+				undefined,
+				{
+					...filterAllowingVpn,
+					abuser: {
+						action: TrafficFilterAction.Block,
+						nameAllowlist: ["Example DNS"],
+					},
+				},
+			);
+			expect(score).toBe(0);
+		});
+
 		it("does not count abuser when blockAbuser is false", () => {
 			const score = computeDnsAsymmetry(
 				enrichedWith({
-					resolverIpInfo: baseInfo({ isAbuser: true, abuserScore: 1 }),
-					peerIpInfo: baseInfo({ isAbuser: true, abuserScore: 1 }),
+					resolverIpInfo: baseInfo({ reputationScore: 1 }),
+					peerIpInfo: baseInfo({ reputationScore: 1 }),
 				}),
 				undefined,
 				{ ...filterAllowingVpn, abuser: undefined },
@@ -394,13 +457,26 @@ describe("computeDnsAsymmetry", () => {
 			const score = computeDnsAsymmetry(
 				enrichedWith({
 					resolverIpInfo: baseInfo({
-						isAbuser: true,
-						abuserScore: 0.02,
-						companyAbuserScore: 0.01,
+						reputationScore: 0.02,
 					}),
 				}),
 				undefined,
-				{ ...filterAllowingVpn, abuserScoreThreshold: 0.5 },
+				{ ...filterAllowingVpn, reputationScoreThreshold: 0.5 },
+			);
+			expect(score).toBe(0);
+		});
+
+		it("does not count an address without a reputation score, whatever its abuser flags", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isAbuser: true,
+						abuserScore: 1,
+						companyAbuserScore: 1,
+					}),
+				}),
+				undefined,
+				{ ...filterAllowingVpn, reputationScoreThreshold: 0 },
 			);
 			expect(score).toBe(0);
 		});
@@ -409,12 +485,11 @@ describe("computeDnsAsymmetry", () => {
 			const score = computeDnsAsymmetry(
 				enrichedWith({
 					resolverIpInfo: baseInfo({
-						isAbuser: true,
-						abuserScore: 0.6,
+						reputationScore: 0.6,
 					}),
 				}),
 				undefined,
-				{ ...filterAllowingVpn, abuserScoreThreshold: 0.5 },
+				{ ...filterAllowingVpn, reputationScoreThreshold: 0.5 },
 			);
 			expect(score).toBeCloseTo(0.2);
 		});

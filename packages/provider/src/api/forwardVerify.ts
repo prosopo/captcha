@@ -17,6 +17,7 @@ import { getProviders } from "@prosopo/load-balancer";
 import type { Logger } from "@prosopo/logger";
 import type { ClientApiPaths, VerificationResponse } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { stripTrailingSlashes } from "@prosopo/util";
 
 /**
  * A client can send a verify request to *any* pronode, not necessarily the
@@ -45,9 +46,9 @@ function normalizeProviderUrl(url: string): string {
 	try {
 		const parsed = new URL(url);
 		parsed.hostname = parsed.hostname.replace(/^(ipv4|ipv6)\./, "");
-		return parsed.toString().replace(/\/$/, "");
+		return stripTrailingSlashes(parsed.toString());
 	} catch {
-		return url.replace(/\/$/, "");
+		return stripTrailingSlashes(url);
 	}
 }
 

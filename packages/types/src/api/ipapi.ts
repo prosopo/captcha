@@ -94,6 +94,65 @@ export interface IPApiVPNInfo {
 	longitude: number;
 }
 
+/**
+ * Why the reputation DB holds an address to be shared egress, so that nothing
+ * seen on it can be pinned on one visitor: a carrier network, an iCloud
+ * Private Relay exit, a declared crawler, an address many Procaptcha accounts
+ * use, or one a hardware-attested handset has been seen behind.
+ */
+export const REPUTATION_SHARED_REASONS = [
+	"mobile",
+	"private_relay",
+	"crawler",
+	"many_accounts",
+	"attested_device",
+] as const;
+export type ReputationSharedReason = (typeof REPUTATION_SHARED_REASONS)[number];
+
+/**
+ * The reputation assessment for one address. `score` is present only when
+ * `state` is `scored`.
+ */
+export interface IPApiReputationAssessment {
+	state?: "scored" | "no_evidence" | string;
+	/** In [0,1]; present only when `state` is `scored`. */
+	score?: number | null;
+	band?: string | null;
+}
+
+export interface IPApiReputationInfo {
+	assessment?: IPApiReputationAssessment | null;
+	/**
+	 * Risk in [0,1] from bot-detector fires on this address in recent
+	 * sessions, on the same additive scale as a session's bot score. Null or
+	 * absent means no evidence, not zero risk.
+	 */
+	detector_risk?: number | null;
+	/** Null or absent when the address is not known to be shared. */
+	shared_reason?: ReputationSharedReason | null;
+}
+
+/**
+ * The reputation DB's record of one Procaptcha user account on one site, built
+ * from the job runner's account sightings. A user account is derived from a
+ * fingerprint, so popular devices pool many people under one; how many user
+ * agents it has carried lately is how shared it is.
+ */
+export interface ReputationAccountResponse {
+	known: boolean;
+	/** Distinct user agents on the account in the last 7 days. */
+	user_agents_7d?: number;
+	device_types?: string[];
+	first_seen?: string;
+	last_seen?: string;
+}
+
+/** {@link ReputationAccountResponse} for an account the DB knows. */
+export interface AccountSighting {
+	userAgents7d: number;
+	deviceTypes: string[];
+}
+
 export interface IPApiResponse {
 	ip: string;
 	rir: "ARIN" | "RIPE" | "APNIC" | "LACNIC" | "AFRINIC";
@@ -120,6 +179,7 @@ export interface IPApiResponse {
 	asn?: IPApiASNInfo;
 	location?: IPApiLocationInfo;
 	vpn?: IPApiVPNInfo;
+	reputation?: IPApiReputationInfo;
 	elapsed_ms: number;
 }
 
@@ -180,8 +240,24 @@ export interface IPInfoResult {
 	vpnType?: "exit_node" | "vpn_server";
 
 	// Risk scoring
+	/**
+	 * Abuser score for the IP's ASN. Not used for decisions: see
+	 * `reputationScore`.
+	 */
 	abuserScore?: number;
+	/** As `abuserScore`, for the IP's company. Not used for decisions. */
 	companyAbuserScore?: number;
+	/**
+	 * Reputation score for this address, in [0,1]. Undefined when the lookup
+	 * returned none; an address without a score never meets a threshold.
+	 */
+	reputationScore?: number;
+	/** The band for `reputationScore`, e.g. "high". */
+	reputationBand?: string;
+	/** Undefined when the address has no detector evidence. */
+	detectorRisk?: number;
+	/** Set when the reputation DB holds the address to be shared egress. */
+	sharedReason?: ReputationSharedReason;
 
 	// Raw response for debugging
 	rawResponse?: IPApiResponse;
@@ -212,6 +288,7 @@ type IPDetails = {
 	city?: string;
 	coordinates?: { latitude: number; longitude: number };
 	abuserScore?: number;
+	reputationScore?: number;
 };
 
 export type IPComparison = {

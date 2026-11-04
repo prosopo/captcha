@@ -229,6 +229,19 @@ http://:9090 {
 			X-Robots-Tag "none"
 		}
 
+		# Crawlers can never pass a captcha, so turn them away before they cost the
+		# provider any work. Some send a Content-Length and never the body, so each
+		# request holds a connection for the full read_body timeout. Answer before
+		# reading the body. The list is deployed into ./caddy.d; without it nothing
+		# matches. Signed agents (Web Bot Auth) are never matched (chaddy crawler_list).
+		@crawler_client_api {
+			path /v1/prosopo/provider/client/*
+			crawler_list /etc/caddy/conf.d/crawler-user-agents.txt
+		}
+		respond @crawler_client_api 403 {
+			close
+		}
+
 		# The detector-pool push (`@prosopo/catcher`'s `pool:add`) carries
 		# the whole pool in one body — a 100-bundle pool is ~86 MB of JSON,
 		# ~27 MB gzipped on the wire. The global `timeouts` block caps a

@@ -14,6 +14,7 @@
 
 import { at } from "./at.js";
 import { isArray } from "./checks.js";
+import { parseInteger } from "./parse.js";
 
 type Hash = string | number[];
 
@@ -130,30 +131,33 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 	return `0x${hex.join("")}`;
 };
 
-/** Throws if `n` isn't a safe non-negative integer. */
-const assertExtracted = (n: number, label: string): void => {
-	if (!Number.isSafeInteger(n) || n < 0) {
+/**
+ * Reads hex digits as a safe non-negative integer, or throws. Strict, unlike
+ * parseInt: a truncated string makes `hex[i]` undefined, and parseInt would
+ * read "a" + undefined as 0xa rather than failing.
+ */
+const readHex = (digits: string, label: string): number => {
+	const parsed = parseInteger(digits, { radix: 16, min: 0 });
+	if (!parsed.ok) {
 		throw new Error(
-			`extractData: ${label} parsed to invalid value ${String(n)}`,
+			`extractData: ${label} parsed to invalid value ${digits}: ${parsed.error.message}`,
 		);
 	}
+	return parsed.value;
 };
 
 export const extractData = (hexString: string): number[] => {
 	const hex = hexString.replace(/^0x/, "").split("");
 	let cursor = 0;
 
-	const count = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
-	assertExtracted(count, "count");
+	const count = readHex(at(hex, cursor) + hex[cursor + 1], "count");
 	cursor += 2;
 
 	const positions: number[] = [];
 	const lengths: number[] = [];
 	for (let i = 0; i < count; i++) {
-		const pos = Number.parseInt(at(hex, cursor) + hex[cursor + 1], 16);
-		const len = Number.parseInt(at(hex, cursor + 2) + hex[cursor + 3], 16);
-		assertExtracted(pos, `positions[${i}]`);
-		assertExtracted(len, `lengths[${i}]`);
+		const pos = readHex(at(hex, cursor) + hex[cursor + 1], `positions[${i}]`);
+		const len = readHex(at(hex, cursor + 2) + hex[cursor + 3], `lengths[${i}]`);
 		positions.push(pos);
 		lengths.push(len);
 		cursor += 4;
@@ -164,9 +168,7 @@ export const extractData = (hexString: string): number[] => {
 		const startPos = at(positions, i);
 		const len = at(lengths, i);
 		const valueHex = hex.slice(startPos, startPos + len).join("");
-		const value = Number.parseInt(valueHex, 16);
-		assertExtracted(value, `values[${i}]`);
-		results.push(value);
+		results.push(readHex(valueHex, `values[${i}]`));
 	}
 
 	return results;

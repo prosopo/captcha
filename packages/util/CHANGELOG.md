@@ -1,5 +1,15 @@
 # @prosopo/util
 
+## 3.6.0
+### Minor Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+
+## 3.5.0
+### Minor Changes
+
+- cdea91f: Add `parseJson`, `stringifyJson`, `parseInteger`, `parseNumber`, `parseBigInt` and `parseDate`. Each returns a `@prosopo/result` `Result` instead of throwing or quietly producing `NaN`, an Invalid Date or a rounded number. `parseJson` keeps integers past 2^53 exact as `bigint`, and `stringifyJson` writes bigints as strings instead of throwing.
+
 ## 3.4.0
 ### Minor Changes
 

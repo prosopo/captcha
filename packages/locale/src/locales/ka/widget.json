@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "სურათების დავალება",
 		"CANNOT_LOAD": "CAPTCHA-ს ჩატვირთვა ვერ მოხერხდა",
 		"RELOAD": "ხელახლა ჩატვირთვა",
+		"SWITCH_TO_PUZZLE": "თავსატეხის დავალებაზე გადასვლა",
 		"VERIFIED_AGENT": "დადასტურებული აგენტი",
 		"TRUSTED_REQUEST": "სანდო მოთხოვნა",
 		"LOADING": "იტვირთება",

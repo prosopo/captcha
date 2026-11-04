@@ -1,5 +1,122 @@
 # @prosopo/client-example-server
 
+## 2.7.195
+### Patch Changes
+
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/database@4.6.2
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/server@2.14.11
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 2.7.194
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/database@4.6.1
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.21
+  - @prosopo/server@2.14.10
+
+## 2.7.193
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [f31105a]
+- Updated dependencies [7c58be4]
+- Updated dependencies [c12d199]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/database@4.6.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/server@2.14.9
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.20
+  - @prosopo/dotenv@3.0.65
+
+## 2.7.192
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.5.1
+  - @prosopo/keyring@2.10.19
+  - @prosopo/server@2.14.8
+
+## 2.7.191
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/database@4.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.18
+  - @prosopo/server@2.14.7
+
+## 2.7.190
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+- Updated dependencies [11a38cc]
+  - @prosopo/types@5.22.0
+  - @prosopo/database@4.4.4
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.17
+  - @prosopo/server@2.14.6
+
+## 2.7.189
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.3
+  - @prosopo/keyring@2.10.16
+  - @prosopo/server@2.14.5
+
+## 2.7.188
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.2
+  - @prosopo/keyring@2.10.15
+  - @prosopo/server@2.14.4
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+
+## 2.7.187
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.4.1
+  - @prosopo/keyring@2.10.14
+  - @prosopo/server@2.14.3
+
 ## 2.7.186
 ### Patch Changes
 

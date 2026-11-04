@@ -1,5 +1,170 @@
 # @prosopo/cli
 
+## 3.10.6
+### Patch Changes
+
+- 65d87f2: Provider deployments now define provider1 and provider2 from one shared block, and both always pull their image. Mongo and Redis no longer have host ports and sit on a private network that only their users can join. Development and test compose files bind datastores to localhost only.
+- 65d87f2: The provider now keeps retrying and logging when its database is not reachable at startup, for as long as that takes, instead of crashing. Containers can start in any order.
+- Updated dependencies [65d87f2]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/provider@5.28.0
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/env@3.6.91
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 3.10.5
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/provider@5.27.0
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.90
+  - @prosopo/keyring@2.10.21
+
+## 3.10.4
+### Patch Changes
+
+- f9a2e30: Stop logging the provider's whole config at debug level on start. It included database URIs, the Redis password, API keys and account secrets in plain text.
+- cc3436f: `ensure_indexes` now builds the provider's indexes instead of stopping with `mongoCaptchaUri not set in config`. That check belongs to `ensure_external_indexes`, which writes to the separate captcha store; `ensure_indexes` only touches the provider's own database, so a node without a captcha store, such as every self-hosted one, could never run it.
+- 04b6f70: The provider now decodes sealed detector payloads with
+  `@prosopo/native-bundle-payload`, a compiled Rust module published to npm. It
+  is the same code Prosopo's own servers use to read these payloads, and the
+  provider has stopped carrying its own TypeScript copy. It accepts and rejects
+  exactly the payloads the old decoder did, and a payload it cannot read still
+  counts as "decryption failed".
+  
+  - `decodePayload.js` has been regenerated. It is about half its old size, and a
+    full decode takes about 1.2 ms instead of 3.8 ms.
+  - `@prosopo/provider` depends on `@prosopo/native-bundle-payload` 0.1.0, a
+    prebuilt linux-x64 binary, so you don't need Rust to install it.
+  - The CLI bundle copies the binary beside `decodePayload.js`, as it already
+    does for the other native modules, so the Docker image needs no
+    `node_modules`. `@prosopo/native-*` packages are now hoisted so the CLI build
+    can find them.
+  - Open-format payloads (`open-v1`) are unchanged.
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [04b6f70]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/provider@5.26.2
+  - @prosopo/types@5.24.0
+  - @prosopo/api@4.8.7
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/keyring@2.10.20
+  - @prosopo/dotenv@3.0.65
+
+## 3.10.3
+### Patch Changes
+
+- bea67d6: Decide whether a visitor is on a phone in one place, from the same inputs, wherever the provider needs to know.
+  
+  Frictionless routing, post-PoW routing, the decision machines, puzzle sizing on escalation and puzzle issuance each built that verdict themselves, and fed it different evidence. Post-PoW routing judged the device before the solve was decrypted, so the touch readings the solve carried never counted, while the escalation that followed judged it again with them included. They now share `deriveDevice`, which takes the user agent, client hints, IP lookup, packet size, in-app flag and, wherever a solve exists, what that solve said about the input device. Post-PoW routing computes it once and the escalation reuses it. An escalated session keeps the solve's two device readings, so a puzzle issued for it judges the same device.
+  
+  An iPad that sends a Mac user agent but taps with a finger can now be recognised from its taps after a solve. The weighing itself is unchanged: a touchscreen laptop, or a phone browser asking for the desktop site, still counts as a desktop.
+- Updated dependencies [bea67d6]
+  - @prosopo/provider@5.26.1
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.88
+  - @prosopo/keyring@2.10.19
+
+## 3.10.2
+### Patch Changes
+
+- 20c1b77: Release the widget changes that record visitor behaviour from the moment the script loads. The release version follows `@prosopo/cli`, so it needs its own bump to cut a new release.
+
+## 3.10.1
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/provider@5.26.0
+  - @prosopo/api@4.8.5
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.87
+  - @prosopo/keyring@2.10.18
+
+## 3.10.0
+### Minor Changes
+
+- 8bf0957: The IP lookup now reads a detector risk for the address (a number from 0 to 1, or nothing when there is no evidence) and keeps it on the lookup result, so it is saved with the session's IP info and written to the frictionless decision log next to the session's own bot score.
+  
+  Sites get a new setting, `ipDetectorRiskWeight` (0 to 1, default 0). When it is above 0, the frictionless flow adds weight × risk to the bot score, capped at 1, before comparing it with the site's thresholds. It can only change which challenge is served; it never blocks. The amount added is recorded in the session's score components, and the log shows the score before and after. At the default of 0 nothing changes.
+
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/provider@5.25.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.86
+  - @prosopo/keyring@2.10.17
+
+## 3.9.8
+### Patch Changes
+
+- Updated dependencies [3815778]
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/provider@5.24.0
+  - @prosopo/types@5.21.0
+  - @prosopo/api@4.8.3
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.85
+  - @prosopo/keyring@2.10.16
+
+## 3.9.7
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/api@4.8.2
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.84
+  - @prosopo/keyring@2.10.15
+  - @prosopo/provider@5.23.2
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+
+## 3.9.6
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/api@4.8.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.83
+  - @prosopo/keyring@2.10.14
+  - @prosopo/provider@5.23.1
+
 ## 3.9.5
 ### Patch Changes
 

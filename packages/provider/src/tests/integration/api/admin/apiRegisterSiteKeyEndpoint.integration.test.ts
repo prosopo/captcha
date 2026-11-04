@@ -19,6 +19,7 @@ import {
 	type ProsopoConfigOutput,
 	Tier,
 	iconOrderToleranceDefault,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
@@ -79,6 +80,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				puzzleTolerance: 15,
 				iconOrderTolerance: iconOrderToleranceDefault,
 				puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+				ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 			},
@@ -118,6 +120,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				puzzleTolerance: 15,
 				iconOrderTolerance: iconOrderToleranceDefault,
 				puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+				ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 			},

@@ -1,5 +1,144 @@
 # @prosopo/types-database
 
+## 5.18.0
+### Minor Changes
+
+- d9520ea: The traffic filter's `abuser` category, its exceptions, the DNS-path signal and the IP validation rules now use the IP lookup's reputation score.
+  
+  - The IP lookup carries `reputationScore` and `reputationBand`. An address without a score never meets a threshold.
+  - New settings: `trafficFilter.reputationScoreThreshold`, exception `minReputationScore`, and `ipValidationRules.reputationScoreThreshold`.
+  - `abuserScoreThreshold`, `minAbuserScore` and `ipValidationRules.abuseScoreThreshold` are deprecated. Stored records still parse, and an exception that has only `minAbuserScore` keeps its current behaviour until it is updated.
+
+### Patch Changes
+
+- a85559d: Records copied to the central captcha store no longer carry the provider's `storedAtTimestamp`. The central store's `storedAtTimestamp` TTL index is now one year; provider stores keep four weeks.
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/user-access-policy@3.15.18
+  - @prosopo/common@3.3.2
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+
+## 5.17.0
+### Minor Changes
+
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+
+### Patch Changes
+
+- ec54f21: The scheduled spam email domain sync now only writes domains that are not already stored. It used to upsert the whole list (about 225k domains) on every run, which rewrote every row and held Mongo write locks for around 8 seconds per batch on every provider at the same time, slowing requests on the hour. It now reads the stored domains with an index-only scan and upserts just the new ones.
+  
+  `bulkUpdateSpamEmailDomains` on the provider database is replaced by `insertMissingSpamEmailDomains(domains)`, which returns how many domains were added. The task records that count as `domainsAdded` alongside `domainsProcessed`. Domains that drop off the source lists are still kept, as before.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.17
+
+## 5.16.2
+### Patch Changes
+
+- f679760: Store the TLS handshake round trip on each session as `tlsHandshakeRttUs`.
+  
+  chaddy now sends `X-TLS-Handshake-Rtt-Us`: the time from the server's handshake reply to the client's answer, in microseconds. The provider reads it with the other raw TLS signals, saves it on the session and passes it to decision machines. Until now we only had the TCP round trip (`synackNs` to `ackNs`), which can come from a different machine to the one that does TLS.
+  
+  The old `chelloToHandshakeUs` is not a handshake time. chaddy takes it when each request arrives, so on a reused connection it is really the connection's age (median about 2 seconds). This change leaves it as it is.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/user-access-policy@3.15.16
+  - @prosopo/common@3.3.2
+
+## 5.16.1
+### Patch Changes
+
+- bea67d6: Decide whether a visitor is on a phone in one place, from the same inputs, wherever the provider needs to know.
+  
+  Frictionless routing, post-PoW routing, the decision machines, puzzle sizing on escalation and puzzle issuance each built that verdict themselves, and fed it different evidence. Post-PoW routing judged the device before the solve was decrypted, so the touch readings the solve carried never counted, while the escalation that followed judged it again with them included. They now share `deriveDevice`, which takes the user agent, client hints, IP lookup, packet size, in-app flag and, wherever a solve exists, what that solve said about the input device. Post-PoW routing computes it once and the escalation reuses it. An escalated session keeps the solve's two device readings, so a puzzle issued for it judges the same device.
+  
+  An iPad that sends a Mac user agent but taps with a finger can now be recognised from its taps after a solve. The weighing itself is unchanged: a touchscreen laptop, or a phone browser asking for the desktop site, still counts as a desktop.
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.15
+
+## 5.16.0
+### Minor Changes
+
+- ae0fc8d: The frictionless response carries a second observation URL, `dns_asset_url`, on the same per-session host as `dns_url`. The widget loads it as an image after sending the existing `dns_url` request.
+  
+  The DNS sidecar reports the hit like any other. The provider recognises the asset URL's path and records `dnsEvent.assetSeen: true` on the session, leaving the main beacon's `peerIp` and `pathValid` untouched. The sidecar needs no change.
+  
+  The two beacon requests now go through one function in the widget, instead of the same `fetch` being copied in two places.
+
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.14
+
+## 5.15.0
+### Minor Changes
+
+- 8bf0957: The IP lookup now reads a detector risk for the address (a number from 0 to 1, or nothing when there is no evidence) and keeps it on the lookup result, so it is saved with the session's IP info and written to the frictionless decision log next to the session's own bot score.
+  
+  Sites get a new setting, `ipDetectorRiskWeight` (0 to 1, default 0). When it is above 0, the frictionless flow adds weight × risk to the bot score, capped at 1, before comparing it with the site's thresholds. It can only change which challenge is served; it never blocks. The amount added is recorded in the session's score components, and the log shows the score before and after. At the default of 0 nothing changes.
+
+### Patch Changes
+
+- Updated dependencies [e6b2206]
+- Updated dependencies [8bf0957]
+  - @prosopo/user-access-policy@3.15.13
+  - @prosopo/types@5.22.0
+  - @prosopo/common@3.3.2
+
+## 5.14.0
+### Minor Changes
+
+- fb7e3ec: A traffic-filter exception can now be conditioned on whether the IP is on a mobile network (`mobile: true` or `mobile: false`). This lets a site block high-scoring proxies everywhere except on carrier networks, where one shared address carries real phones alongside the rented SIMs that put it on proxy lists.
+- 25a151e: Every traffic-filter category (VPN, proxy, Tor, abuser, datacenter, mobile, satellite, crawler) now has the same two name lists. `nameAllowlist` takes a matching network out of that category, for example letting "VPN by Google" past a VPN block. `nameDenylist` keeps a matching network in that category even when it would otherwise be let out. Until now only the datacenter category had these lists. The old top-level `datacenterNameAllowlist` and `datacenterNameDenylist` still work and count as the datacenter category's lists. iCloud Private Relay is let through by every category except Tor unless a site denylists it.
+
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.12
+
+## 5.13.2
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.11
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+
+## 5.13.1
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.10
+
 ## 5.13.0
 ### Minor Changes
 

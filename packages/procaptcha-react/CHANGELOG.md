@@ -1,5 +1,122 @@
 # @prosopo/procaptcha-react
 
+## 2.14.21
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/procaptcha-common@2.23.2
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.12.2
+  - @prosopo/locale@3.14.1
+
+## 2.14.20
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.12.1
+  - @prosopo/procaptcha-common@2.23.1
+
+## 2.14.19
+### Patch Changes
+
+- 7c58be4: Finish the puzzle refresh and switch-to-image work.
+  
+  - A user who switched their puzzle to an image now keeps the image when they refresh it. Before, a plain refresh handed the puzzle straight back.
+  - That image now has a puzzle-piece button to go back to the puzzle. It is only offered on an image the user chose themselves, and only while going back would not run into the three-refresh limit. Going back only drops the user's choice: if routing would serve an image anyway, they still get the image.
+  - A refresh only extends a chain started by the same user, IP and site, so nobody can borrow someone else's refresh count or switch.
+  - Sites pinned to puzzle now record refreshes too. The three-refresh switch to image applies to them only when the superadmin puzzle-to-image switch is on, since they chose puzzle on purpose.
+  - Routing machines now receive `input.refresh` (`count` and `afterMs`) on a refresh, so rules can act on how often and how fast a user refreshes.
+  - New widget string `WIDGET.SWITCH_TO_PUZZLE`, translated into every locale. The puzzle's switch button is now a shared `mountChallengeSwitchButton` with an image or puzzle icon.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/procaptcha@2.12.0
+  - @prosopo/procaptcha-common@2.23.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+
+## 2.14.18
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.11.44
+  - @prosopo/procaptcha-common@2.22.5
+
+## 2.14.17
+### Patch Changes
+
+- Updated dependencies [186debd]
+  - @prosopo/procaptcha-common@2.22.4
+  - @prosopo/procaptcha@2.11.43
+
+## 2.14.16
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.11.42
+  - @prosopo/procaptcha-common@2.22.3
+
+## 2.14.15
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.11.41
+  - @prosopo/procaptcha-common@2.22.2
+
+## 2.14.14
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.11.40
+  - @prosopo/procaptcha-common@2.22.1
+
+## 2.14.13
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+- Updated dependencies [f53d027]
+  - @prosopo/types@5.20.2
+  - @prosopo/procaptcha-common@2.22.0
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.11.39
+  - @prosopo/locale@3.13.2
+  - @prosopo/util@3.4.0
+  - @prosopo/widget-skeleton@2.10.5
+
+## 2.14.12
+### Patch Changes
+
+- Updated dependencies [6fa6155]
+- Updated dependencies [f019ec4]
+  - @prosopo/procaptcha-common@2.21.11
+  - @prosopo/types@5.20.1
+  - @prosopo/procaptcha@2.11.38
+  - @prosopo/common@3.3.2
+
 ## 2.14.11
 ### Patch Changes
 

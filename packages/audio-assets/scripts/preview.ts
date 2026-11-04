@@ -41,13 +41,22 @@ interface Args {
 	clean: boolean;
 }
 
+/** `--count` must be a whole number of at least 1; parseInt would read "12abc" as 12 and "abc" as NaN. */
+const parseCount = (value: string): number => {
+	const count = Number(value);
+	if (value.trim() === "" || !Number.isSafeInteger(count) || count < 1) {
+		throw new Error(`--count must be a positive integer, got "${value}"`);
+	}
+	return count;
+};
+
 const parseArgs = (argv: readonly string[]): Args => {
 	const args: Args = { count: 12, out: "./preview", clean: false };
 	for (let i = 0; i < argv.length; i++) {
 		const flag = argv[i];
 		if (flag === "--count") {
 			const value = argv[++i];
-			if (value) args.count = Number.parseInt(value, 10);
+			if (value !== undefined) args.count = parseCount(value);
 		} else if (flag === "--out") {
 			const value = argv[++i];
 			if (value) args.out = value;

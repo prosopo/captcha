@@ -24,6 +24,7 @@ import {
 	getSimdReadingsForSubmit,
 	pickIpMode,
 	providerRetry,
+	toCallbackError,
 	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import {
@@ -40,6 +41,7 @@ import {
 	ProcaptchaConfigSchema,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
+	type ReloadOptions,
 	type TCaptchaSubmitResult,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
@@ -80,7 +82,11 @@ export function Manager(
 	// sessionId this challenge was issued against has already been consumed
 	// provider-side, so only the wrapper (which can run /frictionless again)
 	// can produce a fresh one. When absent the manager reloads itself.
-	onReloadRequest?: (x?: number, y?: number) => void,
+	onReloadRequest?: (
+		x?: number,
+		y?: number,
+		options?: Pick<ReloadOptions, "switchToPuzzle">,
+	) => void,
 ) {
 	const events = getDefaultEvents(callbacks);
 
@@ -210,17 +216,15 @@ export function Manager(
 				// wrapper listens for — re-minting a session is the only way
 				// forward, and the doomed round trip only delays it.
 				if (state.sessionId && state.sessionId === spentSessionId) {
-					updateState({
-						loading: false,
-						error: toPublicError(
-							new ProsopoError({
-								code: "NO_SESSION_FOUND",
-								errorSite: "PCAP-18",
-							}),
-							"FRONTEND_ERROR",
-						),
-					});
-					events.onError(new Error("No session found"));
+					const error = toPublicError(
+						new ProsopoError({
+							code: "NO_SESSION_FOUND",
+							errorSite: "PCAP-18",
+						}),
+						"FRONTEND_ERROR",
+					);
+					updateState({ loading: false, error });
+					events.onError(toCallbackError(undefined, error));
 					return;
 				}
 
@@ -248,7 +252,7 @@ export function Manager(
 						loading: false,
 						error: challenge.error,
 					});
-					events.onError(new Error(challenge.error?.message));
+					events.onError(toCallbackError(undefined, challenge.error));
 				} else {
 					if (challenge.captchas.length <= 0) {
 						throw new ProsopoError({
@@ -499,7 +503,7 @@ export function Manager(
 		events.onClose();
 	};
 
-	const reload = async () => {
+	const reload = async (options?: Pick<ReloadOptions, "switchToPuzzle">) => {
 		// disable the time limit
 		clearTimeout();
 		// trigger the onReload event
@@ -511,7 +515,7 @@ export function Manager(
 			// back down to an unticked checkbox, which is what made reload
 			// look like it merely closed the modal.
 			resetState();
-			onReloadRequest(checkboxClickX, checkboxClickY);
+			onReloadRequest(checkboxClickX, checkboxClickY, options);
 			return;
 		}
 		// abandon the captcha process and restart frictionless, if it exists

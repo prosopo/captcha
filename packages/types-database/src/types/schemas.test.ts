@@ -28,6 +28,8 @@ import mongoose, { type IndexDefinition, type Schema } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { BannedDomainRecordSchema } from "./bannedDomain.js";
 import {
+	StoredAudioCaptchaRecordSchema,
+	StoredIconOrderCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	StoredSessionRecordSchema,
@@ -35,9 +37,11 @@ import {
 } from "./captcha.js";
 import { UserDataSchema, UserSettingsSchema } from "./client.js";
 import {
+	AudioCaptchaRecordSchema,
 	CaptchaRecordSchema,
 	ClientRecordSchema,
 	CompositeIpAddressRecordSchemaObj,
+	IconOrderCaptchaRecordSchema,
 	PoWCaptchaRecordSchema,
 	PuzzleCaptchaRecordSchema,
 	ScheduledTaskRecordSchema,
@@ -689,6 +693,41 @@ describe("UserSettingsSchema", () => {
 		expect(doc.trafficFilter.vpn.puzzle.pieceScale.max).toBe(0.2);
 	});
 
+	it.each([
+		"vpn",
+		"proxy",
+		"tor",
+		"abuser",
+		"datacenter",
+		"mobile",
+		"satellite",
+		"crawler",
+	])("persists the name lists on the %s category", (category: string) => {
+		const doc = settings({
+			trafficFilter: {
+				[category]: {
+					action: TrafficFilterAction.Block,
+					nameAllowlist: ["VPN by Google"],
+					nameDenylist: ["Proxy Lease Ltd"],
+				},
+			},
+		});
+		expect([...doc.trafficFilter[category].nameAllowlist]).toEqual([
+			"VPN by Google",
+		]);
+		expect([...doc.trafficFilter[category].nameDenylist]).toEqual([
+			"Proxy Lease Ltd",
+		]);
+	});
+
+	it("leaves the name lists absent when a category sets none", () => {
+		const doc = settings({
+			trafficFilter: { vpn: { action: TrafficFilterAction.Block } },
+		});
+		expect(doc.trafficFilter.vpn.nameAllowlist).toBeUndefined();
+		expect(doc.trafficFilter.vpn.nameDenylist).toBeUndefined();
+	});
+
 	it("persists exceptions on a traffic filter category", () => {
 		const doc = settings({
 			trafficFilter: {
@@ -708,6 +747,25 @@ describe("UserSettingsSchema", () => {
 		expect([...exception.countries]).toEqual(["GB"]);
 		expect(exception.minAbuserScore).toBe(0.5);
 		expect(exception.action).toBe(TrafficFilterAction.Block);
+	});
+
+	it("persists an exception's mobile condition", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [
+						{
+							inMarket: true,
+							minAbuserScore: 0.1,
+							mobile: false,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+			},
+		});
+		expect(doc.trafficFilter.proxy.exceptions[0].mobile).toBe(false);
 	});
 
 	it("leaves exceptions absent when none are configured", () => {
@@ -809,6 +867,29 @@ describe("the stored-event schemas", () => {
 		]) {
 			expect(hasIndexOn(schema, "sessionId")).toBe(true);
 		}
+	});
+
+	const storedAtExpiry = (schema: Schema): unknown =>
+		schema.path("storedAtTimestamp").options.expires;
+
+	it.each<[string, Schema]>([
+		["StoredUserCommitmentRecordSchema", StoredUserCommitmentRecordSchema],
+		["StoredPoWCaptchaRecordSchema", StoredPoWCaptchaRecordSchema],
+		["StoredPuzzleCaptchaRecordSchema", StoredPuzzleCaptchaRecordSchema],
+		["StoredAudioCaptchaRecordSchema", StoredAudioCaptchaRecordSchema],
+		["StoredIconOrderCaptchaRecordSchema", StoredIconOrderCaptchaRecordSchema],
+	])("%s expires storedAtTimestamp after a year", (_name, schema) => {
+		expect(storedAtExpiry(schema)).toBe(60 * 60 * 24 * 365);
+	});
+
+	it.each<[string, Schema]>([
+		["UserCommitmentRecordSchema", UserCommitmentRecordSchema],
+		["PoWCaptchaRecordSchema", PoWCaptchaRecordSchema],
+		["PuzzleCaptchaRecordSchema", PuzzleCaptchaRecordSchema],
+		["AudioCaptchaRecordSchema", AudioCaptchaRecordSchema],
+		["IconOrderCaptchaRecordSchema", IconOrderCaptchaRecordSchema],
+	])("%s still expires storedAtTimestamp after four weeks", (_name, schema) => {
+		expect(storedAtExpiry(schema)).toBe(60 * 60 * 24 * 7 * 4);
 	});
 
 	it("are copies, so indexing them does not touch the provider schemas", () => {

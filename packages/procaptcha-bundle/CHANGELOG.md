@@ -1,5 +1,124 @@
 # @prosopo/procaptcha-bundle
 
+## 4.6.8
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/procaptcha-common@2.23.2
+  - @prosopo/procaptcha-frictionless@2.24.2
+  - @prosopo/locale@3.14.1
+  - @prosopo/dotenv@3.0.66
+
+## 4.6.7
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/procaptcha-frictionless@2.24.1
+  - @prosopo/procaptcha-common@2.23.1
+
+## 4.6.6
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/procaptcha-common@2.23.0
+  - @prosopo/procaptcha-frictionless@2.24.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/util@3.5.0
+  - @prosopo/dotenv@3.0.65
+
+## 4.6.5
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/procaptcha-common@2.22.5
+  - @prosopo/procaptcha-frictionless@2.23.2
+
+## 4.6.4
+### Patch Changes
+
+- 186debd: Record what the visitor does on the page from the moment the procaptcha script loads, and add it to the behavioural data sent with each solve.
+  
+  The detector's trackers only start once a widget renders. On sites that render it late, everything before that was missing. A checkout that mounts the widget when Buy is pressed, for example, loses the visitor's scroll down the page and the tap on Buy. A quick tap on the checkbox before detection finished was lost too. Those visitors were then judged on one or two stray events, or none at all, and sent to an image or puzzle challenge. The script now records mouse, touch, press and scroll events until detection finishes, then puts them in front of the detector's own data, dropping any event both recorded.
+- Updated dependencies [186debd]
+  - @prosopo/procaptcha-common@2.22.4
+  - @prosopo/procaptcha-frictionless@2.23.1
+
+## 4.6.3
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/procaptcha-frictionless@2.23.0
+  - @prosopo/procaptcha-common@2.22.3
+
+## 4.6.2
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/procaptcha-common@2.22.2
+  - @prosopo/procaptcha-frictionless@2.22.4
+
+## 4.6.1
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/procaptcha-common@2.22.1
+  - @prosopo/procaptcha-frictionless@2.22.3
+
+## 4.6.0
+### Minor Changes
+
+- f53d027: A self-hosted widget (one built with `PROSOPO_PROVIDER_LIST`) now sends Prosopo a usage beacon on about one render in a thousand: a single `GET https://beacon.prosopo.io/v1/b.gif` carrying the page hostname, site key, bundle version and sample rate, with no referrer, cookies or visitor data. It lets us count self-hosted installs and the versions they run, so we can tell self-hosters about new releases and critical fixes. Hosted widgets never send it.
+  
+  Build the bundle with `PROSOPO_USAGE_BEACON=false` to turn it off. The generated self-hosted `.env` now includes the setting, and `SELF_HOSTING.md` documents exactly what is sent.
+
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+- Updated dependencies [f53d027]
+  - @prosopo/types@5.20.2
+  - @prosopo/procaptcha-common@2.22.0
+  - @prosopo/procaptcha-frictionless@2.22.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/util@3.4.0
+  - @prosopo/widget-skeleton@2.10.5
+
+## 4.5.21
+### Patch Changes
+
+- 4976eb9: Fix the classic-script bundle (`procaptcha.bundle.iife.js`), which threw `i18next_http_middleware is not defined` on load and never drew the widget.
+  
+  The browser build leaves a few server-only modules out (the i18next Express middleware and file backend, `node:path`, `node:url`). An ES module build simply drops an unused import, but an IIFE passes every left-out module into its wrapper as a global variable, and no page defines those. The IIFE build now swaps them for small stubs with the same exports, which throw a clear error only if called.
+  
+  `bundle:iife` now fails if the built bundle reads any outside global, so this can't ship again unnoticed.
+- f019ec4: The widget now tells the provider which platform embedded it, in an `x-prosopo-integration` header. It reports `mc4wp` for Mailchimp for WordPress and `procaptcha-wordpress` for the Procaptcha WordPress plugin, recognised from the markup each one renders the widget into, so existing installs report without an update. Other sites can name themselves with the `integration` render option or a `data-integration` attribute.
+- Updated dependencies [6fa6155]
+- Updated dependencies [f019ec4]
+  - @prosopo/procaptcha-common@2.21.11
+  - @prosopo/types@5.20.1
+  - @prosopo/procaptcha-frictionless@2.22.1
+
 ## 4.5.20
 ### Patch Changes
 

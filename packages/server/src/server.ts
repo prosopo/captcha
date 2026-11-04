@@ -27,7 +27,7 @@ import {
 	type VerificationResponse,
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
+import { parseInteger, u8aToHex } from "@prosopo/util";
 import { translate } from "./translate.js";
 
 // Detect which section of the provider list the token's `providerUrl`
@@ -370,11 +370,21 @@ export class ProsopoServer {
 					status: translate("API.USER_NOT_VERIFIED"),
 				};
 			}
+			// Number() would sign "" as 0 and "abc" as NaN; a token whose
+			// timestamp isn't an integer is malformed.
+			const parsedTimestamp = parseInteger(timestamp, { min: 0 });
+			if (!parsedTimestamp.ok) {
+				throw new ProsopoError({
+					code: "INVALID_TIMESTAMP",
+					errorSite: "SRVR-2",
+					cause: parsedTimestamp.error,
+				});
+			}
 			const verificationResponse = await this.verifyProvider(
 				token,
 				this.config.timeouts,
 				provider.url,
-				Number(timestamp),
+				parsedTimestamp.value,
 				user,
 				challenge,
 				ip,

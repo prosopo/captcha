@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Предизвик со слики",
 		"CANNOT_LOAD": "Не може да се вчита CAPTCHA",
 		"RELOAD": "Вчитај повторно",
+		"SWITCH_TO_PUZZLE": "Префрли се на предизвик со сложувалка",
 		"VERIFIED_AGENT": "Потврден агент",
 		"TRUSTED_REQUEST": "Доверливо барање",
 		"LOADING": "Се вчитува",

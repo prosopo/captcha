@@ -53,6 +53,25 @@ describe("resolveJwksFromSignatureAgent", () => {
 		]);
 	});
 
+	it.each(["/", "///"])(
+		"fetches the directory once for a signer ending in %s",
+		async (trailing: string) => {
+			const seen: string[] = [];
+			await resolveJwksFromSignatureAgent(
+				`https://signer.example.com${trailing}`,
+				{
+					fetch: async (url: string, init?: RequestInit) => {
+						seen.push(url);
+						return okFetch()(url, init);
+					},
+				},
+			);
+			expect(seen).toEqual([
+				"https://signer.example.com/.well-known/http-message-signatures-directory",
+			]);
+		},
+	);
+
 	// The signer URL comes straight from a request header, so it must not be
 	// usable to make the provider issue requests into its own network.
 	it.each([
@@ -98,6 +117,25 @@ describe("resolveJwksFromSignatureAgent", () => {
 			}),
 		).rejects.toThrow();
 	});
+
+	it("reports a directory body that is not JSON", async () => {
+		await expect(
+			resolveJwksFromSignatureAgent("https://signer.example.com", {
+				fetch: async () => new Response("<html>", { status: 200 }),
+			}),
+		).rejects.toThrow(/is not JSON/);
+	});
+
+	it.each(["null", "42", '"keys"', '{"keys":null}'])(
+		"treats a JSON body %s without a keys array as no keys",
+		async (body) => {
+			const keys = await resolveJwksFromSignatureAgent(
+				"https://signer.example.com",
+				{ fetch: async () => new Response(body, { status: 200 }) },
+			);
+			expect(keys).toEqual([]);
+		},
+	);
 
 	it("refuses an oversized directory body", async () => {
 		const huge = JSON.stringify({ keys: [], pad: "x".repeat(200_000) });

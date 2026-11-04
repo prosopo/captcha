@@ -25,6 +25,7 @@ import type { Account } from "../procaptcha/manager.js";
 import type {
 	FrictionlessRestart,
 	ProcaptchaProps,
+	RefreshSwitchTarget,
 } from "../procaptcha/props.js";
 import type {
 	GetFrictionlessCaptchaResponse,
@@ -77,10 +78,13 @@ export type BotDetectionFunction = (
 	// The sessionId the user refreshed away from, when this run replaces a
 	// challenge they asked to swap. Forwarded to the provider as `refreshOf`.
 	refreshOf?: string,
-	// The user asked for the replacement to be an image challenge.
-	switchToImage?: boolean,
+	// The challenge type the user asked the replacement to switch to.
+	switchTo?: RefreshSwitchTarget,
 	// This widget's slot among the page's widgets for the same site key.
 	widgetSlot?: number,
+	// The puzzle challenge the user just answered wrongly, when this run mints
+	// its replacement. Forwarded to the provider as `retryOf`.
+	retryOf?: string,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**

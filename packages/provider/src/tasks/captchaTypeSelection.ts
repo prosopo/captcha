@@ -122,10 +122,11 @@ export const PUZZLE_REFRESHES_BEFORE_IMAGE = 3;
  * A user who keeps refreshing either cannot solve this kind of puzzle or is a
  * solver shopping for an easy instance. The image challenge answers both.
  *
- * The refresh count is client-reported, so this only moves one way: from
- * puzzle to image, never back. Lying about it can only earn a harder
- * challenge. Leaving it out looks like a fresh visit, which is what a page
- * reload already gets.
+ * The count comes from the provider's own records of this user's chain, but
+ * a client can always start a new chain by not naming the session it
+ * replaced, which looks like the fresh visit a page reload already gets. So
+ * this only ever moves from puzzle to image: a client can avoid the count,
+ * never use it to earn an easier challenge.
  *
  * A site that has not enabled image keeps its puzzle. Serving a type the site
  * turned off is exactly what `coerceToEnabledCaptchaType` exists to stop.
@@ -144,10 +145,12 @@ export const switchTypeAfterRefreshes = (
 /**
  * Swap a puzzle for an image challenge because the user asked for one.
  *
- * Same one-way rule as `switchTypeAfterRefreshes`: the request is
- * client-reported, so it may only ever earn a harder challenge. Whatever the
+ * Same one-way rule as `switchTypeAfterRefreshes`: the request comes from
+ * the client, so it may only ever earn a harder challenge. Whatever the
  * routing settled on other than a puzzle stands, and so does a site that may
- * not be served image challenges.
+ * not be served image challenges. Switching back is not the reverse of this:
+ * it only stops applying the user's choice, and leaves the routing's own
+ * decision in place.
  */
 export const switchTypeOnUserRequest = (
 	resolved: ConcreteCaptchaType,

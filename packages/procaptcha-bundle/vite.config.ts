@@ -99,6 +99,7 @@ export default defineConfig(async ({ command, mode }) => {
 		define: {
 			...frontendConfig.define,
 			__PROSOPO_ALLOW_UNTRUSTED_EVENTS__: JSON.stringify(allowUntrustedEvents),
+			__PROSOPO_BUNDLE_VERSION__: JSON.stringify(version),
 		},
 		worker: {
 			format: "es",

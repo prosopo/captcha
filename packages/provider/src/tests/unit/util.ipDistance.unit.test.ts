@@ -40,6 +40,9 @@ describe("deepValidateIpAddress", () => {
 		} as unknown as Logger;
 		mockIpInfoService = {
 			initialize: vi.fn(),
+			accountSighting: vi
+				.fn<IIpInfoService["accountSighting"]>()
+				.mockResolvedValue(undefined),
 			lookup: vi.fn(),
 			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),

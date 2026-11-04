@@ -43,6 +43,7 @@ import {
 } from "#policy/redis/redisRulesWriter.js";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
 import {
+	type AccessRulesFilter,
 	type AccessRulesReader,
 	type AccessRulesWriter,
 	FilterScopeMatch,
@@ -1852,6 +1853,42 @@ describe("redisAccessRulesStorage", () => {
 				found.find((rule) => rule.description === "excluding")
 					?.excludedClientIds,
 			).toEqual(excludingGlobalRule.excludedClientIds);
+		});
+
+		test("finds rule ids by a hyphenated group id", async () => {
+			const groupedRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				asn: 64512,
+				groupId: "example-rule-group",
+			};
+			const otherGroupRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				asn: 64512,
+				groupId: "other-rule-group",
+			};
+
+			await insertRules([groupedRule, otherGroupRule]);
+
+			const ruleIds = await accessRulesReader.findRuleIds({
+				groupId: "example-rule-group",
+				userScope: { asn: 64512 },
+				userScopeMatch: FilterScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			expect(ruleIds).toEqual([
+				getAccessRuleRedisKey(groupedRule).slice(
+					ACCESS_RULE_REDIS_KEY_PREFIX.length,
+				),
+			]);
+		});
+
+		test("rejects rather than finding no rule ids when the search fails", async () => {
+			const filter: AccessRulesFilter = {
+				userScope: { ja4Hash: "unbalanced}brace" },
+			};
+
+			await expect(accessRulesReader.findRuleIds(filter)).rejects.toThrow();
 		});
 	});
 

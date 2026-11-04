@@ -34,11 +34,13 @@ import {
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	imageThresholdDefault,
+	ipValidationReputationScoreThresholdDefault,
 	ispChangeActionDefault,
 	powDifficultyDefault,
 	puzzleMaxDifficultyMax,
 	requireAllConditionsDefault,
 	trafficFilterAbuserScoreThresholdDefault,
+	trafficFilterReputationScoreThresholdDefault,
 } from "@prosopo/types";
 import type mongoose from "mongoose";
 import { Schema as MongooseSchema, Schema } from "mongoose";
@@ -82,10 +84,18 @@ export const IPValidationRulesSchema = new Schema({
 		default: distanceThresholdKmDefault,
 	},
 
+	// Deprecated: no longer read for decisions; see reputationScoreThreshold.
 	abuseScoreThreshold: {
 		type: Number,
 		min: 0,
 		default: abuseScoreThresholdDefault,
+	},
+
+	reputationScoreThreshold: {
+		type: Number,
+		min: 0,
+		max: 1,
+		default: ipValidationReputationScoreThresholdDefault,
 	},
 
 	requireAllConditions: {
@@ -110,6 +120,7 @@ export const IPValidationRulesSchema = new Schema({
 			},
 			distanceThresholdKm: { type: Number, min: 0 },
 			abuseScoreThreshold: { type: Number, min: 0 },
+			reputationScoreThreshold: { type: Number, min: 0, max: 1 },
 			requireAllConditions: { type: Boolean },
 		}),
 		default: undefined,
@@ -203,7 +214,10 @@ const TrafficCategoryActionSchema = new Schema(
 const TrafficCategoryExceptionSchema = TrafficCategoryActionSchema.clone().add({
 	countries: { type: [String], default: undefined, required: false },
 	inMarket: { type: Boolean, required: false },
+	// Deprecated: see minReputationScore.
 	minAbuserScore: { type: Number, min: 0, max: 1, required: false },
+	minReputationScore: { type: Number, min: 0, max: 1, required: false },
+	mobile: { type: Boolean, required: false },
 });
 
 export const TrafficCategoryPolicySchema =
@@ -213,6 +227,8 @@ export const TrafficCategoryPolicySchema =
 			default: undefined,
 			required: false,
 		},
+		nameAllowlist: { type: [String], default: undefined, required: false },
+		nameDenylist: { type: [String], default: undefined, required: false },
 	});
 
 export const UserSettingsSchema = new Schema({
@@ -350,6 +366,12 @@ export const UserSettingsSchema = new Schema({
 		min: 0,
 		required: false,
 	},
+	ipDetectorRiskWeight: {
+		type: Number,
+		min: 0,
+		max: 1,
+		required: false,
+	},
 	spamFilter: {
 		enabled: { type: Boolean, default: false },
 		emailRules: {
@@ -366,11 +388,18 @@ export const UserSettingsSchema = new Schema({
 		proxy: { type: TrafficCategoryPolicySchema, required: false },
 		tor: { type: TrafficCategoryPolicySchema, required: false },
 		abuser: { type: TrafficCategoryPolicySchema, required: false },
+		// Deprecated: no longer read for decisions; see reputationScoreThreshold.
 		abuserScoreThreshold: {
 			type: Number,
 			min: 0,
 			max: 1,
 			default: trafficFilterAbuserScoreThresholdDefault,
+		},
+		reputationScoreThreshold: {
+			type: Number,
+			min: 0,
+			max: 1,
+			default: trafficFilterReputationScoreThresholdDefault,
 		},
 		datacenter: { type: TrafficCategoryPolicySchema, required: false },
 		datacenterNameAllowlist: { type: [String], required: false },

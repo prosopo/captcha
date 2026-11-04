@@ -377,4 +377,16 @@ describe("applyRouter", () => {
 		const result = await run();
 		expect(result.captchaType).toBe(CaptchaType.image);
 	});
+
+	it("forwards the refresh chain to the machine", async () => {
+		await run(buildCtx({ refresh: { count: 2, afterMs: 1800 } }));
+		expect(runner.route.mock.calls[0]?.[0]).toMatchObject({
+			refresh: { count: 2, afterMs: 1800 },
+		});
+	});
+
+	it("leaves refresh out on a request that is not a refresh", async () => {
+		await run();
+		expect(runner.route.mock.calls[0]?.[0]).not.toHaveProperty("refresh");
+	});
 });

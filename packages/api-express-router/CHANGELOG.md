@@ -1,5 +1,104 @@
 # @prosopo/api-express-router
 
+## 3.3.14
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/env@3.6.91
+  - @prosopo/common@3.3.2
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+  - @prosopo/api-route@2.6.69
+
+## 3.3.13
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.90
+
+## 3.3.12
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/api-route@2.6.68
+
+## 3.3.11
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.88
+
+## 3.3.10
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.87
+
+## 3.3.9
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.86
+
+## 3.3.8
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.85
+
+## 3.3.7
+### Patch Changes
+
+- b52263f: The provider's request logs now include `bundleVersion` and `bundleOrigin`, the widget's `x-prosopo-bundle-version` and `x-prosopo-bundle-origin` headers, next to `integration`. Values that don't look like a release number (or `dev`), or an http(s) origin, are left out.
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.84
+  - @prosopo/api-route@2.6.67
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
+## 3.3.6
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.83
+
 ## 3.3.5
 ### Patch Changes
 

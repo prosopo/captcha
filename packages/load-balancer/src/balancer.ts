@@ -13,6 +13,7 @@
 // limitations under the License.
 import { ProsopoError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
+import { stripTrailingSlashes } from "@prosopo/util";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
 import { readProviderListOverride } from "./providerUrlOverride.js";
 
@@ -100,12 +101,10 @@ export const getProviderHostname = (provider: HardcodedProvider): string =>
 const SELF_HOSTED_ADDRESS = "self-hosted";
 const SELF_HOSTED_DATASET_ID = "";
 
-const stripTrailingSlash = (url: string): string => url.replace(/\/$/, "");
-
 const providersFromUrlList = (raw: string): HardcodedProvider[] =>
 	raw
 		.split(",")
-		.map((url) => stripTrailingSlash(url.trim()))
+		.map((url) => stripTrailingSlashes(url.trim()))
 		.filter((url) => url.length > 0)
 		.map((url) => ({
 			address: SELF_HOSTED_ADDRESS,
@@ -146,7 +145,7 @@ export const getProviderListOverride = (
 		return convertHostedProvider(JSON.parse(trimmed), ipMode).map(
 			(provider) => ({
 				...provider,
-				url: stripTrailingSlash(provider.url),
+				url: stripTrailingSlashes(provider.url),
 			}),
 		);
 	} catch {

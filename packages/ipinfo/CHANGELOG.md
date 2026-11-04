@@ -1,5 +1,95 @@
 # @prosopo/ipinfo
 
+## 0.7.0
+### Minor Changes
+
+- d9520ea: The traffic filter's `abuser` category, its exceptions, the DNS-path signal and the IP validation rules now use the IP lookup's reputation score.
+  
+  - The IP lookup carries `reputationScore` and `reputationBand`. An address without a score never meets a threshold.
+  - New settings: `trafficFilter.reputationScoreThreshold`, exception `minReputationScore`, and `ipValidationRules.reputationScoreThreshold`.
+  - `abuserScoreThreshold`, `minAbuserScore` and `ipValidationRules.abuseScoreThreshold` are deprecated. Stored records still parse, and an exception that has only `minAbuserScore` keeps its current behaviour until it is updated.
+
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+  - @prosopo/types@5.26.0
+  - @prosopo/logger@2.1.9
+
+## 0.6.0
+### Minor Changes
+
+- b80b627: Decision machines can now act on repeated wild guesses at an interactive captcha.
+  
+  - Usage counters gain a `farMiss` kind. It is written per user account and per address when a puzzle answer lands well away from the slot, as opposed to a near miss.
+  - A decision machine can export `requiredDecideCounters()` (named apart from the routing `requiredCounters()`, since one bundle serves both) and `requiresAccountSighting()`. At verification the provider reads what it asked for into `input.counters` and `input.accountSighting`. Anything that cannot be read is left out rather than passed as zero.
+  - The reputation DB client reads `reputation.shared_reason` onto `IPInfoResult.sharedReason`. `IIpInfoService` gains `accountSighting(siteKey, account)`, which reads `GET /v1/account/{siteKey}/{account}` and has no answer for an unknown account, a 404 or an error.
+
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+
+## 0.5.3
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/logger@2.1.8
+
+## 0.5.2
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+
+## 0.5.1
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+
+## 0.5.0
+### Minor Changes
+
+- 8bf0957: The IP lookup now reads a detector risk for the address (a number from 0 to 1, or nothing when there is no evidence) and keeps it on the lookup result, so it is saved with the session's IP info and written to the frictionless decision log next to the session's own bot score.
+  
+  Sites get a new setting, `ipDetectorRiskWeight` (0 to 1, default 0). When it is above 0, the frictionless flow adds weight × risk to the bot score, capped at 1, before comparing it with the site's thresholds. It can only change which challenge is served; it never blocks. The amount added is recorded in the session's score components, and the log shows the score before and after. At the default of 0 nothing changes.
+
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+
+## 0.4.29
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+
+## 0.4.28
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/logger@2.1.7
+
+## 0.4.27
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+
 ## 0.4.26
 ### Patch Changes
 

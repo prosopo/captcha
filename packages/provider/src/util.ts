@@ -25,6 +25,7 @@ import {
 	IPValidationAction,
 	type ScheduledTaskNames,
 	ScheduledTaskStatus,
+	ipValidationReputationScoreThresholdDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { IIpInfoService } from "@prosopo/types-env";
@@ -218,6 +219,9 @@ export const evaluateIpValidationRules = (
 				countryOverride.distanceThresholdKm ?? rules.distanceThresholdKm,
 			abuseScoreThreshold:
 				countryOverride.abuseScoreThreshold ?? rules.abuseScoreThreshold,
+			reputationScoreThreshold:
+				countryOverride.reputationScoreThreshold ??
+				rules.reputationScoreThreshold,
 			requireAllConditions:
 				countryOverride.requireAllConditions ?? rules.requireAllConditions,
 		};
@@ -298,20 +302,25 @@ export const evaluateIpValidationRules = (
 	// Both IPs count, but they are ONE rule and must contribute at most ONE
 	// condition — a condition per IP double-counts against `rejectActions.length`
 	// in the requireAllConditions branch below.
-	const abuseScores = [
-		comparison.comparison.ip2Details?.abuserScore,
-		comparison.comparison.ip1Details?.abuserScore,
+	// The address's reputation score. An address without a score is never
+	// counted.
+	const reputationScores = [
+		comparison.comparison.ip2Details?.reputationScore,
+		comparison.comparison.ip1Details?.reputationScore,
 	].filter((score): score is number => score !== undefined);
-	const worstAbuseScore =
-		abuseScores.length > 0 ? Math.max(...abuseScores) : undefined;
+	const worstReputationScore =
+		reputationScores.length > 0 ? Math.max(...reputationScores) : undefined;
+	const reputationScoreThreshold =
+		effectiveRules.reputationScoreThreshold ??
+		ipValidationReputationScoreThresholdDefault;
 	if (
-		worstAbuseScore !== undefined &&
-		worstAbuseScore > effectiveRules.abuseScoreThreshold
+		worstReputationScore !== undefined &&
+		worstReputationScore >= reputationScoreThreshold
 	) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.abuseScoreExceedAction,
-			message: `Abuse score ${worstAbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
+			message: `Reputation score ${worstReputationScore.toFixed(4)} is at or above threshold ${reputationScoreThreshold}`,
 		});
 	}
 

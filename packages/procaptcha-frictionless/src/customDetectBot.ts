@@ -21,15 +21,21 @@ import {
 } from "@prosopo/fingerprint";
 import {
 	ExtensionLoader,
+	PAGE_BEHAVIOUR_LIMITS,
+	getPageBehaviour,
 	getProcaptchaRandomActiveProvider,
+	mergeBehaviourPoints,
 	pickIpMode,
 	resolveClientSessionId,
+	stopPageBehaviourCapture,
 	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
+	GetFrictionlessCaptchaResponse,
 	ProcaptchaClientConfigOutput,
 	ProviderSelectRetryContext,
+	RefreshSwitchTarget,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import {
@@ -120,6 +126,30 @@ const getCurrentPageUrls = (): PageUrls => {
 	return { currentUrl: local, iframeUrl: local };
 };
 
+// Fire-and-forget DNS observation beacons. Failures swallowed — observation
+// must never break the captcha flow.
+export const sendDnsBeacons = ({
+	dns_url,
+	dns_asset_url,
+}: Pick<GetFrictionlessCaptchaResponse, "dns_url" | "dns_asset_url">): void => {
+	try {
+		if (dns_url) {
+			void fetch(dns_url, {
+				method: "GET",
+				mode: "no-cors",
+				credentials: "omit",
+				keepalive: true,
+				cache: "no-store",
+			}).catch(() => undefined);
+		}
+		if (dns_asset_url && typeof Image === "function") {
+			new Image().src = dns_asset_url;
+		}
+	} catch {
+		/* swallow */
+	}
+};
+
 export const withTimeout = async <T>(
 	promise: Promise<T>,
 	ms: number,
@@ -169,14 +199,34 @@ const fingerprintProofIfReady = async (): Promise<string | undefined> => {
 	}
 };
 
+type BehaviourCollector<T> = {
+	start: () => void;
+	stop: () => void;
+	getData: () => T[];
+	clear: () => void;
+};
+
+const withPageBehaviour = <
+	T extends { x: number; y: number; timestamp: number; eventType?: string },
+>(
+	collector: BehaviourCollector<T> | undefined,
+	early: readonly T[],
+	limit: number,
+): BehaviourCollector<T> | undefined =>
+	collector && {
+		...collector,
+		getData: () => mergeBehaviourPoints(early, collector.getData(), limit),
+	};
+
 const customDetectBot: BotDetectionFunction = async (
 	config: ProcaptchaClientConfigOutput,
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
 	refreshOf?: string,
-	switchToImage?: boolean,
+	switchTo?: RefreshSwitchTarget,
 	widgetSlot?: number,
+	retryOf?: string,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
 		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
@@ -324,25 +374,14 @@ const customDetectBot: BotDetectionFunction = async (
 				fallbackIframeUrl,
 				clientSessionId,
 				refreshOf,
-				switchToImage,
+				switchTo,
 				fallbackFingerprintProof,
 				widgetSlot,
+				retryOf,
 			),
 			10000,
 		);
-		if (captcha.dns_url) {
-			try {
-				void fetch(captcha.dns_url, {
-					method: "GET",
-					mode: "no-cors",
-					credentials: "omit",
-					keepalive: true,
-					cache: "no-store",
-				}).catch(() => undefined);
-			} catch {
-				/* swallow */
-			}
-		}
+		sendDnsBeacons(captcha);
 		return {
 			captchaType: captcha.captchaType,
 			sessionId: captcha.sessionId,
@@ -366,6 +405,10 @@ const customDetectBot: BotDetectionFunction = async (
 	);
 
 	const userAccount = detectionResult.userAccount;
+	// The detector's trackers are running now, so the page-level capture has
+	// done its job; what it recorded is merged into every solve below.
+	stopPageBehaviourCapture();
+	const pageBehaviour = getPageBehaviour();
 
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
@@ -387,9 +430,10 @@ const customDetectBot: BotDetectionFunction = async (
 		iframeUrl,
 		clientSessionId,
 		refreshOf,
-		switchToImage,
+		switchTo,
 		fingerprintProof,
 		widgetSlot,
+		retryOf,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher
@@ -398,21 +442,7 @@ const customDetectBot: BotDetectionFunction = async (
 	}
 	const captcha = await withTimeout(captchaPromise, 10000);
 
-	// Fire-and-forget DNS observation beacon. Failures swallowed —
-	// observation must never break the captcha flow.
-	if (captcha.dns_url) {
-		try {
-			void fetch(captcha.dns_url, {
-				method: "GET",
-				mode: "no-cors",
-				credentials: "omit",
-				keepalive: true,
-				cache: "no-store",
-			}).catch(() => undefined);
-		} catch {
-			/* swallow */
-		}
-	}
+	sendDnsBeacons(captcha);
 
 	return {
 		captchaType: captcha.captchaType,
@@ -425,10 +455,26 @@ const customDetectBot: BotDetectionFunction = async (
 		agent: captcha.agent,
 		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		// Map specific trackers to generic behavioral collectors
-		behaviorCollector1: detectionResult.mouseTracker,
-		behaviorCollector2: detectionResult.touchTracker,
-		behaviorCollector3: detectionResult.clickTracker,
-		behaviorCollector4: detectionResult.scrollTracker,
+		behaviorCollector1: withPageBehaviour(
+			detectionResult.mouseTracker,
+			pageBehaviour?.mouse ?? [],
+			PAGE_BEHAVIOUR_LIMITS.mouse,
+		),
+		behaviorCollector2: withPageBehaviour(
+			detectionResult.touchTracker,
+			pageBehaviour?.touch ?? [],
+			PAGE_BEHAVIOUR_LIMITS.touch,
+		),
+		behaviorCollector3: withPageBehaviour(
+			detectionResult.clickTracker,
+			pageBehaviour?.press ?? [],
+			PAGE_BEHAVIOUR_LIMITS.press,
+		),
+		behaviorCollector4: withPageBehaviour(
+			detectionResult.scrollTracker,
+			pageBehaviour?.scroll ?? [],
+			PAGE_BEHAVIOUR_LIMITS.scroll,
+		),
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,

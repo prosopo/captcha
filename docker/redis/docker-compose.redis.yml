@@ -8,7 +8,7 @@ services:
     volumes:
       - ./redis.conf:/redis-stack.conf
     ports:
-      - '6379:6379' # DB
+      - '127.0.0.1:6379:6379' # DB
     # Cap the json log file so a chatty container can't fill the host disk.
     logging:
       driver: 'json-file'

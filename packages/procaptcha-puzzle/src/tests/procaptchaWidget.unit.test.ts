@@ -521,10 +521,12 @@ describe("finishing the drag", () => {
 		);
 		await complete();
 		expect(onReload).toHaveBeenCalledTimes(1);
+		// Names the failed challenge, so the provider can judge the next puzzle
+		// on the device this solve showed.
 		expect(onReload).toHaveBeenCalledWith(
 			expect.any(Number),
 			expect.any(Number),
-			{ showRetry: true },
+			{ showRetry: true, retryOf: challengeResponse().challenge },
 		);
 		// One call to open the puzzle, and none to replace it.
 		expect(mocks.start).toHaveBeenCalledTimes(1);

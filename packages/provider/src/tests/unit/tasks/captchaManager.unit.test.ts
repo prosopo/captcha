@@ -28,6 +28,7 @@ import {
 	ResultReason,
 	Tier,
 	TrafficFilterAction,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
@@ -65,6 +66,7 @@ const defaultUserSettings: IUserSettings = {
 	puzzleTolerance: 15,
 	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+	ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 	disallowWebView: false,
 };
 
@@ -2535,6 +2537,7 @@ describe("CaptchaManager", () => {
 				isAbuser: boolean;
 				abuserScore: number;
 				companyAbuserScore: number;
+				reputationScore: number;
 				providerType: "isp" | "hosting" | undefined;
 				datacenterName: string | undefined;
 				providerName: string | undefined;
@@ -2592,16 +2595,26 @@ describe("CaptchaManager", () => {
 			const check = await captchaManager.resolveTrafficFilterCheck(
 				undefined,
 				{},
-				ipInfoResponse({
-					isAbuser: true,
-					abuserScore: 0.9,
-					companyAbuserScore: 0.9,
-				}),
+				ipInfoResponse({ reputationScore: 0.99 }),
 			);
 			expect(check.isBlocked).toBe(true);
 			if (check.isBlocked) {
 				expect(check.reason).toBe(ResultReason.ABUSER_BLOCKED);
 			}
+		});
+
+		it("does not apply the abuser default below the default reputation threshold, whatever the abuser scores", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				undefined,
+				{},
+				ipInfoResponse({
+					reputationScore: 0.97,
+					isAbuser: true,
+					abuserScore: 0.9,
+					companyAbuserScore: 0.9,
+				}),
+			);
+			expect(check.isBlocked).toBe(false);
 		});
 
 		it("passes when no category is active and the abuser default doesn't match (clean IP)", async () => {

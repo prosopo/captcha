@@ -77,6 +77,16 @@ describe("getHandshakeTiming", () => {
 		expect(result.chelloToHandshakeUs).toBe(137);
 	});
 
+	it("rejects values with trailing junk or a fraction", () => {
+		const headers: IncomingHttpHeaders = {
+			"x-tls-tcp-to-chello-us": "12abc",
+			"x-tls-chello-to-handshake-us": "1.5",
+		};
+		const result = getHandshakeTiming(headers, mockLogger());
+		expect(result.tcpToChelloUs).toBeUndefined();
+		expect(result.chelloToHandshakeUs).toBeUndefined();
+	});
+
 	it("rejects negative values", () => {
 		const headers: IncomingHttpHeaders = {
 			"x-tls-tcp-to-chello-us": "-3",

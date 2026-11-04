@@ -397,6 +397,29 @@ describe("PowCaptchaManager", () => {
 			).toBe(false);
 		});
 
+		it.each(["12abc", "", "-1", "1.5"])(
+			"rejects a challenge whose timestamp is %j instead of verifying against NaN",
+			async (timestamp) => {
+				const challenge =
+					`${timestamp}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount` as PoWChallengeId;
+				await expect(
+					powCaptchaManager.verifyPowCaptchaSolution(
+						challenge,
+						"testSignature",
+						12345,
+						1000,
+						"testTimestampSignature",
+						getIPAddress("1.1.1.1"),
+						{},
+					),
+				).rejects.toMatchObject({
+					code: "INVALID_TIMESTAMP",
+					errorSite: "PROV-96",
+				});
+				expect(db.getPowCaptchaRecordByChallenge).not.toHaveBeenCalled();
+			},
+		);
+
 		it("auto-fails with CAPTCHA_INVALID_SALT when salt decodes to invalid coords", async () => {
 			const challenge: PoWChallengeId = `${12345}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount`;
 			const difficulty = 4;

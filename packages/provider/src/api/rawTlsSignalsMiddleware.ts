@@ -16,6 +16,7 @@ import type { IncomingHttpHeaders } from "node:http";
 import { handleErrors } from "@prosopo/api-express-router";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { parseInteger } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 
 // Raw TCP-handshake signals forwarded by the chaddy Caddy plugin. The plugin
@@ -50,6 +51,10 @@ const HEADER_IP_IDENT = "x-tls-ip-ident";
 const HEADER_IP_TOTAL_LEN = "x-tls-ip-total-len";
 const HEADER_IP_FRAG_FLAGS = "x-tls-ip-frag-flags";
 const HEADER_IP_TOS = "x-tls-ip-tos";
+
+// Timed by chaddy itself rather than read from the probe, but it exists to
+// be compared with synackNs → ackNs on the same connection.
+const HEADER_TLS_HANDSHAKE_RTT_US = "x-tls-handshake-rtt-us";
 
 // Superseded by HEADER_TCP_OPTS_KINDS and HEADER_TCP_OPTS_PRESENT, and
 // still read because a pronode running a chaddy older than
@@ -145,6 +150,11 @@ export interface RawTlsSignals {
 	// all. Superseded by `tcpOptsKinds`. Only present on sessions served
 	// by a chaddy older than prosopo/chaddy#16.
 	tcpOptsOrder?: number;
+	// Microseconds from the server's TLS handshake flight to the client's
+	// reply: a round trip to whatever terminates TLS, where synackNs → ackNs
+	// is a round trip to whatever opened the TCP connection. Includes the
+	// client's handshake crypto.
+	tlsHandshakeRttUs?: number;
 }
 
 // Every field of RawTlsSignals, in one place. The session-write path and the
@@ -175,6 +185,7 @@ const RAW_TLS_SIGNAL_KEYS = [
 	"ipTos",
 	"tcpOptsFlags",
 	"tcpOptsOrder",
+	"tlsHandshakeRttUs",
 ] as const satisfies readonly (keyof RawTlsSignals)[];
 
 // Fails to compile if a field is added to RawTlsSignals and not to the list
@@ -199,15 +210,17 @@ const parseIntHeader = (
 	if (value === undefined) {
 		return undefined;
 	}
-	const parsed = Number.parseInt(value, 10);
-	if (Number.isNaN(parsed) || parsed < 0 || parsed > max) {
+	// parseInt would read "12abc" as 12; a header that isn't wholly a number
+	// is malformed.
+	const parsed = parseInteger(value, { min: 0, max });
+	if (!parsed.ok) {
 		logger.debug(() => ({
 			msg: "Ignoring malformed raw TLS signal header",
 			data: { header: headerName, raw: value },
 		}));
 		return undefined;
 	}
-	return parsed;
+	return parsed.value;
 };
 
 // Kernel monotonic ns bumps into Number.MAX_SAFE_INTEGER (2^53) territory
@@ -391,6 +404,12 @@ export const getRawTlsSignals = (
 			headers[HEADER_TCP_OPTS_ORDER],
 			log,
 			HEADER_TCP_OPTS_ORDER,
+			MAX_U32,
+		),
+		tlsHandshakeRttUs: parseIntHeader(
+			headers[HEADER_TLS_HANDSHAKE_RTT_US],
+			log,
+			HEADER_TLS_HANDSHAKE_RTT_US,
 			MAX_U32,
 		),
 	};

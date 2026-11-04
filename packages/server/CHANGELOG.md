@@ -1,5 +1,117 @@
 # @prosopo/server
 
+## 2.14.11
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/load-balancer@2.11.26
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+
+## 2.14.10
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.21
+  - @prosopo/load-balancer@2.11.25
+
+## 2.14.9
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/api@4.8.7
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.20
+  - @prosopo/load-balancer@2.11.24
+
+## 2.14.8
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.19
+  - @prosopo/load-balancer@2.11.23
+
+## 2.14.7
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/api@4.8.5
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.18
+  - @prosopo/load-balancer@2.11.22
+
+## 2.14.6
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.17
+  - @prosopo/load-balancer@2.11.21
+
+## 2.14.5
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/api@4.8.3
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.16
+  - @prosopo/load-balancer@2.11.20
+
+## 2.14.4
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/api@4.8.2
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.15
+  - @prosopo/load-balancer@2.11.19
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+
+## 2.14.3
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/api@4.8.1
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.14
+  - @prosopo/load-balancer@2.11.18
+
 ## 2.14.2
 ### Patch Changes
 

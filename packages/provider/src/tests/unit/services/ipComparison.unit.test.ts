@@ -46,6 +46,9 @@ const createMockService = (responses: IPInfoResponse[]): IIpInfoService => {
 	let callIndex = 0;
 	return {
 		initialize: vi.fn(),
+		accountSighting: vi
+			.fn<IIpInfoService["accountSighting"]>()
+			.mockResolvedValue(undefined),
 		lookup: vi.fn().mockImplementation(async () => {
 			const response = responses[callIndex];
 			callIndex++;
@@ -416,6 +419,9 @@ describe("compareIPs", () => {
 	it("should handle exceptions gracefully", async () => {
 		const service: IIpInfoService = {
 			initialize: vi.fn(),
+			accountSighting: vi
+				.fn<IIpInfoService["accountSighting"]>()
+				.mockResolvedValue(undefined),
 			lookup: vi.fn().mockRejectedValue(new Error("Network error")),
 			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),
@@ -463,6 +469,26 @@ describe("compareIPs", () => {
 		if ("comparison" in result) {
 			expect(result.comparison?.ip1Details.abuserScore).toBe(0.0115);
 			expect(result.comparison?.ip2Details.abuserScore).toBe(0.42);
+		}
+	});
+
+	// The IP validation rules read each address's own reputation score from
+	// here, so dropping it would silently disable them, as above.
+	it("should propagate reputationScore onto both IP details", async () => {
+		const ip1Info: IPInfoResponse = createMockIPInfo({
+			ip: "8.8.8.8",
+			reputationScore: 0.12,
+		});
+		const ip2Info: IPInfoResponse = createMockIPInfo({ ip: "1.1.1.1" });
+
+		const service = createMockService([ip1Info, ip2Info]);
+
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
+
+		expect("comparison" in result).toBe(true);
+		if ("comparison" in result) {
+			expect(result.comparison?.ip1Details.reputationScore).toBe(0.12);
+			expect(result.comparison?.ip2Details.reputationScore).toBeUndefined();
 		}
 	});
 

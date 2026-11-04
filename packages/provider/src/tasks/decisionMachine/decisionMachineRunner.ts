@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createHash } from "node:crypto";
-import vm from "node:vm";
 import type { Logger } from "@prosopo/logger";
 import {
 	type CounterSpec,
@@ -25,6 +23,7 @@ import {
 	DecisionMachineKind,
 	type DecisionMachineOutput,
 	DecisionMachineOutputSchema,
+	type DecisionMachineRequirements,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 	type RoutingMachineInput,
@@ -33,93 +32,41 @@ import {
 	RoutingMachineOutputSchema,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
+import { parseInteger } from "@prosopo/util";
 import { z } from "zod";
-import { measureSync } from "../../api/metrics.js";
+import { recordSyncSpan } from "../../api/metrics.js";
 import { isDnsSidecarHealthy } from "../dnsEvent/dnsSidecarHealth.js";
+import {
+	clearDecisionMachineWorkers,
+	runDecisionMachine,
+} from "./decisionMachinePool.js";
 
-const LOAD_TIMEOUT_MS =
-	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
-	1000;
-const EXEC_TIMEOUT_MS =
-	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) ||
-	2000;
-
-/**
- * Module-level cache of loaded machine sandboxes, keyed by SHA-256 of
- * `artifact.source`. Each entry holds the extracted `module.exports` for a
- * given source blob so subsequent invocations skip both `new vm.Script(...)`
- * (JIT compilation) and `script.runInContext(...)` (top-level execution).
- *
- * Shared across every `DecisionMachineRunner` instance in the process —
- * multiple task classes (pow / img / puzzle / frictionless) each construct
- * their own runner, and there's no reason to compile the same source once
- * per runner. The exported functions are treated as stateless: they run
- * against the caller's `input` and don't mutate module-local state.
- *
- * Invalidation is triggered externally via {@link invalidateDecisionMachineScriptCache}
- * — call after any `upsertDecisionMachineArtifact` so a new artifact takes
- * effect immediately rather than waiting for the artifact TTL to expire.
- * Absent an explicit invalidate the cache is content-addressed: a new source
- * gets a new key, the old entry just sits until process restart.
- */
-interface CachedMachine {
-	exports: Record<string, unknown>;
-}
-
-const machineCache = new Map<string, CachedMachine>();
-
-const hashSource = (source: string): string =>
-	createHash("sha256").update(source).digest("hex");
+// Unset, malformed or non-positive values fall back to the default; a
+// negative timeout would make vm abort every run.
+const LOAD_TIMEOUT_MS = parseInteger(
+	process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS,
+	{ min: 1 },
+).unwrapOr(1000);
+const EXEC_TIMEOUT_MS = parseInteger(
+	process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS,
+	{ min: 1 },
+).unwrapOr(2000);
 
 /**
- * Compile + execute the artifact source in a fresh vm sandbox on first use,
- * then reuse the resulting `module.exports` for every subsequent invocation
- * of the same source. See {@link machineCache}.
- */
-const loadMachine = (source: string): CachedMachine => {
-	const key = hashSource(source);
-	const cached = machineCache.get(key);
-	if (cached) return cached;
-
-	const sandbox = {
-		module: { exports: {} as unknown },
-		exports: {} as Record<string, unknown>,
-	};
-	const context = vm.createContext(sandbox);
-	const script = new vm.Script(source, {
-		filename: "decision-machine.js",
-	});
-	script.runInContext(context, { timeout: LOAD_TIMEOUT_MS });
-
-	const exported = (sandbox.module as { exports: unknown }).exports;
-	const exportsObj: Record<string, unknown> =
-		typeof exported === "function"
-			? { default: exported }
-			: exported && typeof exported === "object"
-				? (exported as Record<string, unknown>)
-				: {};
-
-	const entry: CachedMachine = { exports: exportsObj };
-	machineCache.set(key, entry);
-	return entry;
-};
-
-/**
- * Clear the module-level script cache. Call after any decision-machine
+ * Clear the workers' compiled machines. Call after any decision-machine
  * artifact upload so the new source is executed on the next request instead
  * of waiting for the artifact TTL. Also clear every `DecisionMachineRunner`
  * instance's artifact cache — see {@link DecisionMachineRunner.invalidateAllArtifactCaches}.
  */
 export const invalidateDecisionMachineScriptCache = (): void => {
-	machineCache.clear();
+	clearDecisionMachineWorkers();
 };
 
 /** How long cached artifacts are considered fresh (ms). */
-const ARTIFACT_CACHE_TTL_MS =
-	Number.parseInt(
-		process.env.DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS ?? "",
-		10,
-	) || 5 * 60 * 1000; // 5 minutes
+const ARTIFACT_CACHE_TTL_MS = parseInteger(
+	process.env.DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS,
+	{ min: 1 },
+).unwrapOr(5 * 60 * 1000); // 5 minutes
 
 const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
@@ -127,14 +74,14 @@ const DEFAULT_DECISION: DecisionMachineOutput = {
 
 const RequiredCountersSchema = z.array(CounterSpecSchema);
 
+const NO_REQUIREMENTS: DecisionMachineRequirements = {
+	counters: [],
+	accountSighting: false,
+};
+
 interface CachedArtifact {
 	artifact: DecisionMachineArtifact | undefined;
 	cachedAt: number;
-}
-
-interface NamedExport {
-	name: string;
-	fn: (...args: unknown[]) => unknown;
 }
 
 /**
@@ -283,6 +230,59 @@ export class DecisionMachineRunner {
 				data: { dappAccount: input.dappAccount },
 			}));
 			return DEFAULT_DECISION;
+		}
+	}
+
+	/**
+	 * Pre-fetch hook for decision machines, the counterpart of
+	 * {@link getRequiredCounters}: which counters the machine wants read into
+	 * its input (`requiredDecideCounters()`), and whether it wants the account
+	 * sighting (`requiresAccountSighting()`). Both exports are optional; a
+	 * machine that has neither, or none at all, asks for nothing.
+	 *
+	 * The counter export is not `requiredCounters()` because one bundle is
+	 * published as both the decision and the routing machine, and that name
+	 * already belongs to routing.
+	 */
+	async getDecisionRequirements(
+		input: Pick<
+			DecisionMachineInput,
+			"dappAccount" | "userAccount" | "captchaType"
+		>,
+		logger?: Logger,
+	): Promise<DecisionMachineRequirements> {
+		try {
+			const artifact = await this.selectArtifact(
+				input.dappAccount,
+				DecisionMachineKind.Decision,
+				input.captchaType,
+			);
+			if (!artifact || artifact.runtime !== DecisionMachineRuntime.Node) {
+				return NO_REQUIREMENTS;
+			}
+			const counters = await this.runArtifactExport(
+				artifact,
+				["requiredDecideCounters"],
+				{ input, optional: true },
+				RequiredCountersSchema,
+			);
+			const accountSighting = await this.runArtifactExport(
+				artifact,
+				["requiresAccountSighting"],
+				{ input, optional: true },
+				z.boolean(),
+			);
+			return {
+				counters: counters ?? [],
+				accountSighting: accountSighting ?? false,
+			};
+		} catch (error) {
+			logger?.warn?.(() => ({
+				msg: "Decision machine requirements failed, proceeding with none",
+				err: error,
+				data: { dappAccount: input.dappAccount },
+			}));
+			return NO_REQUIREMENTS;
 		}
 	}
 
@@ -481,8 +481,7 @@ export class DecisionMachineRunner {
 	 * {options.optional} is true and no matching export exists. Otherwise
 	 * throws on missing export, invalid output, or sandbox failure.
 	 *
-	 * The vm.Script compilation + top-level `runInContext` runs at most
-	 * once per source blob (see {@link loadMachine} / {@link machineCache}).
+	 * Compilation runs at most once per source blob, inside each worker.
 	 */
 	private async runArtifactExport<T>(
 		artifact: DecisionMachineArtifact,
@@ -496,72 +495,26 @@ export class DecisionMachineRunner {
 		// produces T from unknown input", which is what the caller wants.
 		schema: z.ZodType<T, z.ZodTypeDef, unknown>,
 	): Promise<T | undefined> {
-		const { exports } = loadMachine(artifact.source);
-		const named = this.findExport(exports, exportNames);
-		if (!named) {
+		const run = await runDecisionMachine({
+			source: artifact.source,
+			exportNames,
+			input: options.input,
+			timeoutMs: EXEC_TIMEOUT_MS,
+			loadTimeoutMs: LOAD_TIMEOUT_MS,
+		});
+		if (!run.found) {
 			if (options.optional) return undefined;
 			throw new Error(
 				`Decision machine must export one of: ${exportNames.join(", ")}`,
 			);
 		}
-
-		const result = await this.withTimeout(
-			Promise.resolve(
-				measureSync("decision_machine_decide", () => named.fn(options.input)),
-			),
-			EXEC_TIMEOUT_MS,
-		);
-		const parsed = schema.safeParse(result);
+		recordSyncSpan("decision_machine_decide", run.runMs / 1000);
+		const parsed = schema.safeParse(run.result);
 		if (!parsed.success) {
 			throw new Error(
-				`Decision machine '${named.name}' output failed validation`,
+				`Decision machine '${run.name}' output failed validation`,
 			);
 		}
 		return parsed.data;
-	}
-
-	private findExport(
-		exported: unknown,
-		exportNames: string[],
-	): NamedExport | undefined {
-		// Treat the entire module.exports as the default function only when
-		// "default" is acceptable.
-		if (
-			typeof exported === "function" &&
-			(exportNames.includes("default") || exportNames.includes("decide"))
-		) {
-			return {
-				name: "default",
-				fn: exported as (...args: unknown[]) => unknown,
-			};
-		}
-		for (const name of exportNames) {
-			const candidate = (exported as Record<string, unknown> | null)?.[name];
-			if (typeof candidate === "function") {
-				return { name, fn: candidate as (...args: unknown[]) => unknown };
-			}
-		}
-		return undefined;
-	}
-
-	private async withTimeout<T>(
-		promise: Promise<T>,
-		timeoutMs: number,
-	): Promise<T> {
-		let timeoutId: NodeJS.Timeout | undefined;
-		const timeoutPromise = new Promise<never>((_, reject) => {
-			timeoutId = setTimeout(
-				() => reject(new Error("Decision machine timeout")),
-				timeoutMs,
-			);
-		});
-
-		try {
-			return await Promise.race([promise, timeoutPromise]);
-		} finally {
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-			}
-		}
 	}
 }

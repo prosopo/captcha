@@ -33,7 +33,7 @@ import {
 	type InteractiveCaptchaRecordUpdate,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
-import { validatePuzzleSolution } from "./puzzleTasksUtils.js";
+import { isFarPuzzleMiss, validatePuzzleSolution } from "./puzzleTasksUtils.js";
 
 interface PuzzleCaptchaChallenge extends MintedChallenge {
 	targetX: number;
@@ -89,7 +89,12 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 	protected decisionMachineEventFields(
 		record: PuzzleCaptchaRecord,
 	): Partial<DecisionMachineInput> {
-		return { puzzleEvents: record.puzzleEvents };
+		return {
+			puzzleEvents: record.puzzleEvents,
+			puzzleOrigin: { x: record.originX, y: record.originY },
+			puzzleTarget: { x: record.targetX, y: record.targetY },
+			puzzleTolerance: record.tolerance,
+		};
 	}
 
 	/**
@@ -176,6 +181,8 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 					record.targetY,
 					record.tolerance,
 				),
+			isFarMiss: (record) =>
+				isFarPuzzleMiss(finalX, finalY, record.targetX, record.targetY),
 			persistInteraction: () =>
 				this.db.updatePuzzleCaptchaRecord(challenge, { puzzleEvents }),
 		});

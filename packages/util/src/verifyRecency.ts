@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import { parseInteger } from "./parse.js";
+
 /**
  * Verify the time since the blockNumber is equal to or less than the maxVerifiedTime.
  * @param challenge
@@ -24,7 +27,10 @@ export const verifyRecency = (challenge: string, maxVerifiedTime: number) => {
 		return false;
 	}
 
-	const currentTimestamp = Date.now();
-	const challengeTimestamp = Number.parseInt(timestamp, 10);
-	return currentTimestamp - challengeTimestamp <= maxVerifiedTime;
+	// A malformed timestamp is never recent. parseInt would read "12abc" as 12.
+	const challengeTimestamp = parseInteger(timestamp, { min: 0 });
+	if (!challengeTimestamp.ok) {
+		return false;
+	}
+	return Date.now() - challengeTimestamp.value <= maxVerifiedTime;
 };

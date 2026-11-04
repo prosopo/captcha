@@ -1,5 +1,17 @@
 # @prosopo/web-bot-auth
 
+## 0.1.8
+### Patch Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+- Updated dependencies [1ba238e]
+  - @prosopo/util@3.6.0
+
+## 0.1.7
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+
 ## 0.1.6
 ### Patch Changes
 

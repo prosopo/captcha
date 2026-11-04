@@ -14,34 +14,81 @@
 
 import type {
 	ITrafficFilter,
+	RequestHeaders,
 	RoutingMachinePlatform,
+	SolveDeviceSignals,
 	TrafficCategoryPolicies,
 } from "@prosopo/types";
-import { type MobileSignals, deriveMobileVerdict } from "./mobileSignals.js";
+import { type MobileVerdict, deriveMobileVerdict } from "./mobileSignals.js";
 
 // NB: `isApple` covers desktop macOS as well as iOS. A rule that needs
 // "iPhone / iPad specifically" must test the UA itself — see the iOS UA
 // gate in the decision machines' route checks.
 const APPLE_UA_REGEX = /iPhone|iPad|iPod|Macintosh|Mac OS X/i;
 
-/** Everything `derivePlatform` can weigh beyond its positional arguments. */
-export type PlatformSignals = Omit<MobileSignals, "userAgent" | "webView">;
+/**
+ * Everything the device verdict is drawn from. Every caller supplies the same
+ * set; `solve` is the only part that can be missing, because nothing has been
+ * solved before the frictionless entry.
+ */
+export interface DeviceInputs {
+	userAgent: string;
+	headers?: RequestHeaders;
+	/** The IP lookup for the connection being judged. */
+	ipInfo?: { isValid?: boolean; isMobile?: boolean };
+	tcpMss?: number;
+	/** Only the encrypted bot-detection payload says this, so it rides on the session. */
+	webView?: boolean;
+	solve?: SolveDeviceSignals;
+}
+
+export interface DeviceVerdict {
+	platform: RoutingMachinePlatform;
+	mobile: MobileVerdict;
+}
+
+export const solveDeviceSignals = (
+	behaviouralData: { d?: string; c2?: unknown[] } | undefined,
+): SolveDeviceSignals | undefined =>
+	behaviouralData && {
+		...(behaviouralData.d !== undefined && {
+			deviceCapability: behaviouralData.d,
+		}),
+		...(behaviouralData.c2 !== undefined && {
+			touchEventCount: behaviouralData.c2.length,
+		}),
+	};
 
 /**
- * Derive platform flags from server-visible signals. `isWebView` is supplied
- * by the caller because that bit only comes from the encrypted bot-detection
- * payload, not request headers. `isMobile` is a weighed verdict over whatever
- * signals the caller can supply — see `deriveMobileVerdict`.
+ * The one place the provider decides what device a visitor is on. Routing,
+ * decision machines and challenge sizing all read `platform.isMobile` or
+ * `mobile` from here, so they cannot disagree about the same visitor.
  */
-export const derivePlatform = (
-	userAgent: string,
-	webView: boolean,
-	signals: PlatformSignals = {},
-): RoutingMachinePlatform => ({
-	isApple: APPLE_UA_REGEX.test(userAgent),
-	isWebView: webView,
-	isMobile: deriveMobileVerdict({ ...signals, userAgent, webView }).isMobile,
-});
+export const deriveDevice = ({
+	userAgent,
+	headers,
+	ipInfo,
+	tcpMss,
+	webView = false,
+	solve,
+}: DeviceInputs): DeviceVerdict => {
+	const mobile = deriveMobileVerdict({
+		userAgent,
+		...(headers && { headers }),
+		...(ipInfo?.isValid && { carrierNetwork: ipInfo.isMobile }),
+		...(tcpMss !== undefined && { tcpMss }),
+		webView,
+		...solve,
+	});
+	return {
+		platform: {
+			isApple: APPLE_UA_REGEX.test(userAgent),
+			isWebView: webView,
+			isMobile: mobile.isMobile,
+		},
+		mobile,
+	};
+};
 
 // Categories on TrafficFilterSchema that carry a TrafficCategoryPolicy. The
 // schema's other keys (thresholds, allow/deny name lists, skipExtras…) are

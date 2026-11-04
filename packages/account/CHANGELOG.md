@@ -1,5 +1,103 @@
 # @prosopo/account
 
+## 2.8.125
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.13
+  - @prosopo/keyring@2.10.22
+
+## 2.8.124
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.12
+  - @prosopo/keyring@2.10.21
+
+## 2.8.123
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.11
+  - @prosopo/keyring@2.10.20
+
+## 2.8.122
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.10
+  - @prosopo/keyring@2.10.19
+
+## 2.8.121
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.9
+  - @prosopo/keyring@2.10.18
+
+## 2.8.120
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.8
+  - @prosopo/keyring@2.10.17
+
+## 2.8.119
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.7
+  - @prosopo/keyring@2.10.16
+
+## 2.8.118
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.6
+  - @prosopo/keyring@2.10.15
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
+## 2.8.117
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.5
+  - @prosopo/keyring@2.10.14
+
 ## 2.8.116
 ### Patch Changes
 

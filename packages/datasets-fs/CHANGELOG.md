@@ -1,5 +1,96 @@
 # @prosopo/datasets-fs
 
+## 3.0.164
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.9
+
+## 3.0.163
+### Patch Changes
+
+- 223ec85: Self-hosting no longer needs a Rust toolchain. The guide used `pnpm run build:all`, which also compiles the provider's Rust addons and fails without `cargo`, even though the provider runs from the prebuilt image and nothing built on the host uses those addons. The new `pnpm run build:self-hosted` builds only what the env script and the widget need. `build:all` is unchanged.
+  
+  `docker-compose.self-hosted.yml` now sets `platform: linux/amd64` on the provider and Caddy, because those images are only published for amd64; the guide says ARM hosts run them under emulation. Its default Caddy image moves from 2.5.9 to 2.5.12: `docker/provider.Caddyfile` uses `crawler_list`, which 2.5.9 does not have, so Caddy would not start.
+  
+  The `@prosopo/datasets-fs` `cli` script pointed at `dist/esm/cli.js`, which the build never writes. It now runs `dist/tsc/cli.js`, the file `build:tsc` writes, and the guide and the package README build and run the CLI that way.
+  
+  Other corrections in the guide: the detector example runs `bundle` (`detector-botd` has no `build` script), and the expected startup log line is `bundle pool loaded {"count":0}`.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+
+## 3.0.162
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+
+## 3.0.161
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+
+## 3.0.160
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/common@3.3.2
+
+## 3.0.159
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/common@3.3.2
+
+## 3.0.158
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+
+## 3.0.157
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
+## 3.0.156
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+
 ## 3.0.155
 ### Patch Changes
 

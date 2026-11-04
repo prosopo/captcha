@@ -16,6 +16,7 @@ import { getLanguageDirection, loadI18next } from "@prosopo/locale";
 import type { Ti18n } from "@prosopo/locale";
 import {
 	getDefaultCallbacks,
+	sendUsageBeacon,
 	setUserCallbacks,
 } from "@prosopo/procaptcha-common";
 import type { Callbacks, ProcaptchaRenderOptions } from "@prosopo/types";
@@ -145,6 +146,8 @@ class WidgetFactory {
 			widgetContainer,
 			container,
 		);
+
+		sendUsageBeacon(renderOptions.siteKey);
 
 		const handle: BundleCaptchaHandle = {
 			destroy: () => {
