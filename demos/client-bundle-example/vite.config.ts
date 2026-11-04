@@ -37,6 +37,7 @@ const DEMO_SITE_KEY_VARS = [
 	"PROSOPO_SITE_KEY_POW",
 	"PROSOPO_SITE_KEY_IMAGE",
 	"PROSOPO_SITE_KEY_PUZZLE",
+	"PROSOPO_SITE_KEY_ICONORDER",
 ] as const;
 
 const assertDemoSiteKeysSet = (mode: string) => {
