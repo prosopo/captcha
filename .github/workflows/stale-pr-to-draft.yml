@@ -38,6 +38,10 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   draft-stale:
     runs-on: ubuntu-latest
