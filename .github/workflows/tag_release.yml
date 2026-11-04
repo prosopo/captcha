@@ -31,19 +31,19 @@ jobs:
     steps:
       - name: Get token for gh app
         id: app_token
-        uses: peter-murray/workflow-application-token-action@dad2b81e50ce3edeb5f3b7ffbd79f731368bd668 # v5
+        uses: prosopo/github_actions/.github/actions/app-token@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
         with:
-          application_id: ${{ vars.PROSOPONATOR_APP_ID }}
-          application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+          application-id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application-private-key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           submodules: 'recursive'
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
           ref: main
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: '24.22.1'
 

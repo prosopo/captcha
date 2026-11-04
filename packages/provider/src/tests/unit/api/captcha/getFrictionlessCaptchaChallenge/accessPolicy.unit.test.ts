@@ -32,6 +32,7 @@ const buildInput = () => {
 			sendImageCaptcha: vi.fn().mockResolvedValue({ kind: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ kind: "pow" }),
 			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ kind: "puzzle" }),
+			sendIconOrderCaptcha: vi.fn().mockResolvedValue({ kind: "iconOrder" }),
 		},
 	};
 	return {
@@ -127,6 +128,18 @@ describe("handleAccessPolicy", () => {
 		const r = await handleAccessPolicy(input as never, res as never);
 		expect(r.handled).toBe(true);
 		expect(tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+	});
+
+	it("dispatches to sendIconOrderCaptcha for icon-order-typed policies", async () => {
+		const { tasks, input } = buildInput();
+		input.userAccessPolicy = {
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.iconOrder,
+		};
+		const res = buildRes();
+		const r = await handleAccessPolicy(input as never, res as never);
+		expect(r.handled).toBe(true);
+		expect(tasks.frictionlessManager.sendIconOrderCaptcha).toHaveBeenCalled();
 	});
 
 	it("dispatches to sendPuzzleCaptcha for puzzle-typed policies", async () => {
@@ -295,6 +308,7 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.image,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
@@ -309,6 +323,7 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.pow,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
@@ -323,6 +338,7 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.puzzle,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
