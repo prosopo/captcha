@@ -3,6 +3,9 @@
 # Rust failure is reported on its own and does not wait for the full JS build,
 # and so it runs only when a crate can have changed.
 
+# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
+# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
+# copying steps between workflows or repos, and add new shared actions there.
 name: cargo-test
 
 on:

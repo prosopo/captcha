@@ -25,6 +25,9 @@
 # restores it. Treat this workflow as an optimisation, never a correctness
 # guarantee: when it does not fire, runs simply continue as they would have.
 
+# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
+# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
+# copying steps between workflows or repos, and add new shared actions there.
 name: cancel-runs-on-pr-close
 
 on:

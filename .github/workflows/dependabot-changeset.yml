@@ -16,6 +16,9 @@
 # `pnpm run changesets:add` is intentionally NOT used: it is interactive (prompts for
 # packages + bump type) and cannot run unattended, so the changeset file is written directly.
 
+# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
+# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
+# copying steps between workflows or repos, and add new shared actions there.
 name: dependabot-changeset
 
 on:

@@ -4,6 +4,9 @@
 # main cypress workflow, but invokes cypress with `visualRegressionType=base`
 # so the plugin writes baselines instead of comparing.
 
+# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
+# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
+# copying steps between workflows or repos, and add new shared actions there.
 name: cypress-baselines
 
 on:
