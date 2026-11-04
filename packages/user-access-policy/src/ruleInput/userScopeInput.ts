@@ -14,6 +14,7 @@
 
 import crypto from "node:crypto";
 import type { AllKeys } from "@prosopo/common";
+import { stripTrailingSlashes } from "@prosopo/util";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 import { type ZodType, z } from "zod";
@@ -31,7 +32,7 @@ function normaliseSignatureAgentUrl(raw: string): string {
 	url.hostname = url.hostname.toLowerCase();
 	url.protocol = url.protocol.toLowerCase();
 	if (url.pathname === "/") url.pathname = "";
-	return url.toString().replace(/\/$/, "");
+	return stripTrailingSlashes(url.toString());
 }
 
 const userAttributesSchema = z.object({

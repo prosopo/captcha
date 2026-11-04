@@ -1,5 +1,57 @@
 # @prosopo/provider-mock
 
+## 2.8.218
+### Patch Changes
+
+- Updated dependencies [a85559d]
+- Updated dependencies [65d87f2]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/database@4.6.2
+  - @prosopo/types-database@5.18.0
+  - @prosopo/provider@5.28.0
+  - @prosopo/types@5.26.0
+  - @prosopo/api-express-router@3.3.14
+  - @prosopo/common@3.3.2
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 2.8.217
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/provider@5.27.0
+  - @prosopo/types@5.25.0
+  - @prosopo/database@4.6.1
+  - @prosopo/types-database@5.17.0
+  - @prosopo/api-express-router@3.3.13
+  - @prosopo/common@3.3.2
+
+## 2.8.216
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [f31105a]
+- Updated dependencies [04b6f70]
+- Updated dependencies [7c58be4]
+- Updated dependencies [c12d199]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/provider@5.26.2
+  - @prosopo/types@5.24.0
+  - @prosopo/database@4.6.0
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/types-database@5.16.2
+  - @prosopo/api-express-router@3.3.12
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.65
+
 ## 2.8.215
 ### Patch Changes
 

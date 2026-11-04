@@ -34,9 +34,6 @@ export default (
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
 				const tasks = new Tasks(env);
-				if (!env.config.mongoCaptchaUri) {
-					throw new Error("mongoCaptchaUri not set in config");
-				}
 				await tasks.db.ensureIndexes();
 			} catch (err) {
 				logger.error(() => ({ err }));

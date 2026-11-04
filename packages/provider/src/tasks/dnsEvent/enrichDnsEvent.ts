@@ -19,12 +19,13 @@ import type {
 	ITrafficFilter,
 	Session,
 } from "@prosopo/types";
-import { trafficFilterAbuserScoreThresholdDefault } from "@prosopo/types";
+import { trafficFilterReputationScoreThresholdDefault } from "@prosopo/types";
 import {
 	categoryApplies,
 	isEffectivelyDatacenter,
 	isNameDenylisted,
 	isPrivateRelay,
+	meetsReputationThreshold,
 } from "../spam/checkTrafficFilter.js";
 
 export type { EnrichedDnsEvent };
@@ -148,15 +149,17 @@ export const computeDnsAsymmetry = (
 		return isEffectivelyDatacenter(ip, trafficFilter);
 	};
 
+	// Same reputation-score test as the traffic filter's `abuser` category.
+	// An address without a score is never counted.
 	const countAbuser = (ip: IPInfoResponse | undefined): boolean => {
-		if (!ip?.isValid || !ip.isAbuser) return false;
-		if (!trafficFilter) return true;
-		if (trafficFilter.abuser === undefined) return false;
+		if (!ip?.isValid || ip.reputationScore === undefined) return false;
 		const threshold =
-			trafficFilter.abuserScoreThreshold ??
-			trafficFilterAbuserScoreThresholdDefault;
-		const maxScore = Math.max(ip.abuserScore ?? 0, ip.companyAbuserScore ?? 0);
-		return categoryApplies(ip, trafficFilter, "abuser", maxScore >= threshold);
+			trafficFilter?.reputationScoreThreshold ??
+			trafficFilterReputationScoreThresholdDefault;
+		const meets = meetsReputationThreshold(ip, threshold);
+		if (!trafficFilter) return meets;
+		if (trafficFilter.abuser === undefined) return false;
+		return categoryApplies(ip, trafficFilter, "abuser", meets);
 	};
 
 	if (countDc(enriched.resolverIpInfo)) score += 0.3;

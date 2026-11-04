@@ -181,6 +181,7 @@ export async function compareIPs(
 					city: ip1Info.city,
 					coordinates: ip1Coordinates,
 					abuserScore: ip1Info.abuserScore,
+					reputationScore: ip1Info.reputationScore,
 				},
 				ip2Details: {
 					provider: ip2Provider,
@@ -191,6 +192,7 @@ export async function compareIPs(
 					city: ip2Info.city,
 					coordinates: ip2Coordinates,
 					abuserScore: ip2Info.abuserScore,
+					reputationScore: ip2Info.reputationScore,
 				},
 			},
 		};

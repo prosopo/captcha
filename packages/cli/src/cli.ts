@@ -66,6 +66,7 @@ if (isMain(import.meta.url, "provider")) {
 			})
 			.catch((error) => {
 				log.error(() => ({ err: error }));
+				process.exitCode = 1;
 			});
 	});
 }

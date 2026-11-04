@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { stringifyJson } from "@prosopo/util";
+import { stringifyJson, stripTrailingSlashes } from "@prosopo/util";
 import { HttpError } from "./HttpError.js";
 
 // JSON.stringify throws on a bigint; send it as a decimal string instead.
@@ -34,7 +34,7 @@ export class HttpClientBase {
 		timeoutMs?: number,
 		defaultHeaders: Readonly<Record<string, string>> = {},
 	) {
-		this.baseURL = baseURL + prefix;
+		this.baseURL = stripTrailingSlashes(baseURL + prefix);
 		this.timeoutMs = timeoutMs;
 		this.defaultHeaders = defaultHeaders;
 	}

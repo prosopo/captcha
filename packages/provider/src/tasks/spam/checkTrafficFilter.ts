@@ -28,7 +28,7 @@ import {
 	type ITrafficFilter,
 	ResultReason,
 	TrafficFilterAction,
-	trafficFilterAbuserScoreThresholdDefault,
+	trafficFilterReputationScoreThresholdDefault,
 } from "@prosopo/types";
 
 export type TrafficBlockReason =
@@ -202,8 +202,35 @@ export const isEffectivelyDatacenter = (
 		ipInfo.providerType !== "isp",
 	);
 
+// Read only by an exception that carries the deprecated `minAbuserScore`
+// without `minReputationScore`.
 const maxAbuserScore = (ipInfo: IPInfoResult): number =>
 	Math.max(ipInfo.abuserScore ?? 0, ipInfo.companyAbuserScore ?? 0);
+
+/**
+ * Whether the address's reputation score is at or above `threshold`. An
+ * address without a score never meets a threshold.
+ */
+export const meetsReputationThreshold = (
+	ipInfo: Pick<IPInfoResult, "reputationScore">,
+	threshold: number,
+): boolean =>
+	ipInfo.reputationScore !== undefined && ipInfo.reputationScore >= threshold;
+
+const exceptionScoreApplies = (
+	exception: ITrafficCategoryException,
+	ipInfo: IPInfoResult,
+): boolean => {
+	if (exception.minReputationScore !== undefined) {
+		return meetsReputationThreshold(ipInfo, exception.minReputationScore);
+	}
+	// Deprecated field: kept working until stored exceptions are updated, so
+	// the exception never loses its score condition.
+	if (exception.minAbuserScore !== undefined) {
+		return maxAbuserScore(ipInfo) >= exception.minAbuserScore;
+	}
+	return true;
+};
 
 const exceptionApplies = (
 	exception: ITrafficCategoryException,
@@ -229,10 +256,7 @@ const exceptionApplies = (
 	) {
 		return false;
 	}
-	return (
-		exception.minAbuserScore === undefined ||
-		maxAbuserScore(ipInfo) >= exception.minAbuserScore
-	);
+	return exceptionScoreApplies(exception, ipInfo);
 };
 
 const policyForIp = (
@@ -240,15 +264,31 @@ const policyForIp = (
 	ipInfo: IPInfoResult,
 	marketCountries: ReadonlyArray<string>,
 ): ITrafficCategoryPolicy => {
-	const exception = harshestPolicy(
-		(policy.exceptions ?? []).filter((candidate) =>
-			exceptionApplies(candidate, ipInfo, marketCountries),
-		),
-		(candidate) => candidate.action === TrafficFilterAction.Block,
+	const applicable = (policy.exceptions ?? []).filter((candidate) =>
+		exceptionApplies(candidate, ipInfo, marketCountries),
 	);
+	// `pass` is the least harsh action, so it is only chosen when no matching
+	// exception does anything. Ranked here rather than in captcha-severity,
+	// whose ranking the access rules share and which has no notion of it.
+	const exception =
+		harshestPolicy(
+			applicable.filter(
+				(candidate) => candidate.action !== TrafficFilterAction.Pass,
+			),
+			(candidate) => candidate.action === TrafficFilterAction.Block,
+		) ??
+		applicable.find(
+			(candidate) => candidate.action === TrafficFilterAction.Pass,
+		);
 	if (!exception) return policy;
-	const { countries, inMarket, minAbuserScore, mobile, ...exceptionPolicy } =
-		exception;
+	const {
+		countries,
+		inMarket,
+		minAbuserScore,
+		minReputationScore,
+		mobile,
+		...exceptionPolicy
+	} = exception;
 	return exceptionPolicy;
 };
 
@@ -268,15 +308,19 @@ const evaluateIpInfo = (
 ): TrafficFilterMatch[] => {
 	if (!ipInfo || !ipInfo.isValid) return [];
 
-	const abuserScoreThreshold =
-		trafficFilter.abuserScoreThreshold ??
-		trafficFilterAbuserScoreThresholdDefault;
+	const reputationScoreThreshold =
+		trafficFilter.reputationScoreThreshold ??
+		trafficFilterReputationScoreThresholdDefault;
 	const flags: ReadonlyArray<[TrafficCategory, boolean, boolean]> = [
 		["tor", ipInfo.isTor, true],
 		["vpn", ipInfo.isVPN, true],
 		["proxy", ipInfo.isProxy, true],
 		["datacenter", ipInfo.isDatacenter, ipInfo.providerType !== "isp"],
-		["abuser", ipInfo.isAbuser, maxAbuserScore(ipInfo) >= abuserScoreThreshold],
+		[
+			"abuser",
+			ipInfo.reputationScore !== undefined,
+			meetsReputationThreshold(ipInfo, reputationScoreThreshold),
+		],
 		// Public DNS resolvers share IP space with search crawlers.
 		["crawler", ipInfo.isCrawler, !isDnsExtra],
 		["satellite", ipInfo.isSatellite, true],
@@ -292,7 +336,11 @@ const evaluateIpInfo = (
 	const policy = trafficFilter[category];
 	if (!policy) return [];
 	const marketCountries = trafficFilter.marketCountries ?? [];
-	return [{ category, policy: policyForIp(policy, ipInfo, marketCountries) }];
+	const resolved = policyForIp(policy, ipInfo, marketCountries);
+	// `pass` decides nothing: the IP is treated as if the owning category had
+	// no policy. Lower flags are still not consulted, exactly as for no policy.
+	if (resolved.action === TrafficFilterAction.Pass) return [];
+	return [{ category, policy: resolved }];
 };
 
 /**
@@ -309,16 +357,16 @@ const evaluateIpInfo = (
  * as both VPN and proxy is only acted on if the operator has a VPN policy.
  *
  * Exceptions: once a category owns the IP, its `exceptions` whose conditions
- * (country, in or out of the account's market, minimum abuser score) the IP
+ * (country, in or out of the account's market, minimum reputation score) the IP
  * meets replace the category's policy. When several match, the harshest wins
  * by the same ranking the access rules use, so their order does not matter:
- * e.g. proxies blocked, but challenged in the market unless their abuser
+ * e.g. proxies blocked, but challenged in the market unless their reputation
  * score is high.
  *
  * Whether a flagged category applies is decided the same way for every
  * category. Its `nameDenylist` keeps the IP in. Otherwise the category's
- * qualifier must hold — datacenter needs a non-ISP provider, abuser needs
- * `abuserScore` (or `companyAbuserScore`) at or above `abuserScoreThreshold`,
+ * qualifier must hold — datacenter needs a non-ISP provider, abuser needs the
+ * address's `reputationScore` at or above `reputationScoreThreshold`,
  * crawler is skipped on DNS extras because public DNS resolvers share IP
  * space with search crawlers — and the IP must be neither on the category's
  * `nameAllowlist` nor iCloud Private Relay egress (exempt from every

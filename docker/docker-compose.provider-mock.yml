@@ -12,7 +12,7 @@ services:
         env_file:
             - ../.env.${NODE_ENV}
         ports:
-            - '9229:9229'
+            - '127.0.0.1:9229:9229'
         networks:
             external:
             internal:
@@ -38,7 +38,7 @@ services:
         volumes:
             - /data/db:/data/db
         ports:
-            - '27017:27017'
+            - '127.0.0.1:27017:27017'
         env_file:
             - ../.env.${NODE_ENV}
         networks:

@@ -307,6 +307,73 @@ describe("Frictionless Task Manager", () => {
 			);
 		});
 
+		// The record is built from a fixed list of fields, and `solveDevice` was
+		// missing from it: every escalation dropped its solve readings here, so
+		// its challenge was never sized for touch.
+		it("records the solve readings an escalation passes in", async () => {
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+			const solveDevice = { deviceCapability: "mobile", touchEventCount: 12 };
+
+			const session = await frictionlessTaskManager.createSession({
+				token: "tok-solve",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				siteKey: "siteKey-solve",
+				captchaType: CaptchaType.puzzle,
+				isEscalation: true,
+				solveDevice,
+			});
+
+			expect(session.solveDevice).toEqual(solveDevice);
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ solveDevice }),
+			);
+		});
+
+		it("records a retry's failed puzzle and its readings at issuance", async () => {
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+			const solveDevice = { deviceCapability: "mobile", touchEventCount: 3 };
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-retry",
+				score: 0,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-retry",
+				retryOf: "failed-challenge",
+				solveDevice,
+			});
+
+			await frictionlessTaskManager.sendPuzzleCaptcha();
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ retryOf: "failed-challenge", solveDevice }),
+			);
+		});
+
+		it("leaves retry fields off a session that is not a retry", async () => {
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+
+			const session = await frictionlessTaskManager.createSession({
+				token: "tok-no-retry",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				siteKey: "siteKey-no-retry",
+				captchaType: CaptchaType.puzzle,
+			});
+
+			expect(session).not.toHaveProperty("retryOf");
+			expect(session).not.toHaveProperty("solveDevice");
+		});
+
 		it("leaves the fingerprint summary off a session that sent no proof", async () => {
 			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
 

@@ -58,6 +58,14 @@ const nativeBinaryPaths = [
 		),
 		dest: "prosopo-native-puzzle.node",
 	},
+	// Published from Protect rather than built here. The obfuscated
+	// decodePayload.js loads it from beside itself under this name.
+	{
+		src: nativeRequire.resolve(
+			"@prosopo/native-bundle-payload/dist/native/prosopo-native-bundle-payload.linux-x64-gnu.node",
+		),
+		dest: "prosopo-native-bundle-payload.node",
+	},
 ];
 // The obfuscated decoders are loaded by URL at runtime, not by import, so a
 // decoder worker can load the same file the main thread would — a bundled

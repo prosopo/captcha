@@ -21,7 +21,7 @@ import type {
 	StoredSession,
 	UserCommitmentRecord,
 } from "@prosopo/types-database";
-import { CaptchaDatabase } from "./captcha.js";
+import { CaptchaDatabase, toCentralRecord } from "./captcha.js";
 
 /**
  * Callback invoked after a successful central DB write to mark the local
@@ -131,7 +131,7 @@ export class CentralDbStreamer {
 		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
 			.then(() => {
-				const { _id, ...safeDoc } = record;
+				const safeDoc = toCentralRecord(record);
 				return this.db.tables.powcaptcha.updateOne(
 					{ challenge: safeDoc.challenge },
 					{ $set: safeDoc },
@@ -179,7 +179,7 @@ export class CentralDbStreamer {
 		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
 			.then(() => {
-				const { _id, ...safeDoc } = record;
+				const safeDoc = toCentralRecord(record);
 				return this.db.tables.commitment.updateOne(
 					{ id: safeDoc.id },
 					{ $set: safeDoc },
@@ -291,7 +291,7 @@ export class CentralDbStreamer {
 		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
 			.then(() => {
-				const { _id, ...safeDoc } = record;
+				const safeDoc = toCentralRecord(record);
 				return this.db.tables[table].updateOne(
 					{ challenge: safeDoc.challenge },
 					{ $set: safeDoc },
@@ -337,7 +337,7 @@ export class CentralDbStreamer {
 		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
 			.then(() => {
-				const { _id, ...safeDoc } = record;
+				const safeDoc = toCentralRecord(record);
 				return this.db.tables.session.updateOne(
 					{ sessionId: safeDoc.sessionId },
 					{ $set: safeDoc },

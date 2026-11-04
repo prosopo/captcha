@@ -7,7 +7,7 @@ services:
         env_file:
             - ../.env.rococo
         ports:
-            - '9229:9229'
+            - '127.0.0.1:9229:9229'
         tty: true
         networks:
             - internal
