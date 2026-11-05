@@ -33,7 +33,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
-import { CaptchaType } from "../client/index.js";
+import { CaptchaType, type ChallengeCaptchaType } from "../client/index.js";
 import type {
 	ContextType,
 	IIconOrderSettings,
@@ -64,6 +64,10 @@ import type {
 	PuzzleEvent,
 	RequestHeaders,
 } from "./api.js";
+import {
+	type ChallengeParams,
+	ChallengeParamsSchema,
+} from "./challengeParams.js";
 import type { DetectorData, SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -536,6 +540,7 @@ export const SessionSchema = object({
 	mode: nativeEnum(ModeEnum).optional(),
 	solvedImagesCount: number().optional(),
 	powDifficulty: number().optional(),
+	challengeParams: ChallengeParamsSchema.optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
@@ -705,6 +710,7 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	challengeParams?: ChallengeParams;
 	// Puzzle-only render overrides chosen by the routing machine, persisted
 	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
 	// re-derives its overrides from a live trafficFilter verdict, which a
@@ -1033,6 +1039,21 @@ export interface AudioCaptchaStored extends InteractiveCaptchaStored {
 }
 
 /**
+ * What the portal needs to redraw the icon order challenge a user was served.
+ * Absent on records written before this field existed.
+ *
+ * `seed` drives the whole render, so it regenerates the answer along with the
+ * imagery: it must never be served to a caller, and never while the
+ * challenge is still live.
+ */
+export interface IconOrderRenderRecord {
+	geometry: { width: number; height: number; iconSize: number };
+	settings: Required<IIconOrderSettings>;
+	/** 128-bit hex. */
+	seed: string;
+}
+
+/**
  * `targets` is the answer. Nothing on this record is ever sent to a client,
  * and decoys are not stored because grading never consults them.
  */
@@ -1042,6 +1063,7 @@ export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
 	tolerance: number;
 	clicks?: IconClick[];
 	iconOrderEvents?: IconOrderEvent[];
+	render?: IconOrderRenderRecord;
 }
 
 /** A target icon as persisted: what grading needs, without render-only fields. */
@@ -1096,12 +1118,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.audio
-		| CaptchaType.iconOrder;
+	captchaType?: ChallengeCaptchaType;
 	createdAt: Date;
 	updatedAt: Date;
 };

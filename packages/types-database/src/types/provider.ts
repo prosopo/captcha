@@ -17,6 +17,7 @@ import { translationKeys } from "@prosopo/locale";
 import {
 	type AudioCaptchaStored,
 	type AudioEvent,
+	CHALLENGE_CAPTCHA_TYPES,
 	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
@@ -55,6 +56,7 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IUserData,
+	type IconOrderRenderRecord,
 	InputMethod,
 	type Item,
 	type PoWChallengeComponents,
@@ -564,6 +566,31 @@ export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
 		type: [pointerEventSchema()],
 		required: false,
 	},
+	// Render inputs kept so the portal can redraw the exact challenge a user
+	// was served. `seed` regenerates the answer too, so it must never be served
+	// to a caller — see IconOrderRenderRecord.
+	render: {
+		type: new Schema<IconOrderRenderRecord>(
+			{
+				geometry: {
+					width: { type: Number, required: true },
+					height: { type: Number, required: true },
+					iconSize: { type: Number, required: true },
+				},
+				settings: {
+					targetCount: { type: Number, required: true },
+					decoyCount: { type: Number, required: true },
+					strokeWidth: { type: Number, required: true },
+					iconOpacity: { type: Number, required: true },
+					haloOpacity: { type: Number, required: true },
+					backgroundClutter: { type: Number, required: true },
+				},
+				seed: { type: String, required: true },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 });
 
 const indexInteractiveCaptchaRecord = <T>(schema: Schema<T>): void => {
@@ -881,6 +908,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	mode: { type: String, enum: ModeEnum, required: false },
 	solvedImagesCount: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
+	// Validated by `ChallengeParamsSchema`; its shape depends on `type`.
+	challengeParams: { type: Schema.Types.Mixed, required: false },
 	// Puzzle render overrides chosen by the routing machine. Stored as a
 	// free-form subdocument so the shape stays in step with
 	// PuzzleSettingsSchema without a second place to update — the value is
@@ -1151,13 +1180,7 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [
-				CaptchaType.pow,
-				CaptchaType.image,
-				CaptchaType.puzzle,
-				CaptchaType.iconOrder,
-				CaptchaType.audio,
-			],
+			enum: CHALLENGE_CAPTCHA_TYPES,
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
@@ -1667,6 +1690,7 @@ export interface IProviderDatabase extends IDatabase {
 		ja4: string,
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
+		render?: IconOrderRenderRecord,
 	): Promise<void>;
 
 	getAudioCaptchaRecordByChallenge(

@@ -23,11 +23,13 @@ import {
 	type FrictionlessReason,
 	type IFrictionlessTypes,
 	type IPuzzleSettings,
+	type InteractiveCaptchaType,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	imageMaxRoundsDefault,
+	isInteractiveCaptchaType,
 	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -165,6 +167,7 @@ export default (env: ProviderEnvironment) =>
 			);
 
 			tasks.powCaptchaManager.setPostPowContext({
+				tier: clientRecord.tier,
 				ip: req.ip || "",
 				countryCode,
 				device: {
@@ -250,6 +253,7 @@ export default (env: ProviderEnvironment) =>
 				{
 					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
 						clientRecord.settings,
+						clientRecord.tier,
 					),
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
 					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
@@ -258,7 +262,7 @@ export default (env: ProviderEnvironment) =>
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
-				// the follow-up image/puzzle challenge before we hand them a token.
+				// the follow-up interactive challenge before we hand them a token.
 				verified: escalation ? false : result.verified,
 				...(escalation && { escalation }),
 			};
@@ -319,8 +323,7 @@ export const buildEscalation = async (
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
-	const routedType = result.routingOutput.captchaType;
-	if (routedType !== CaptchaType.image && routedType !== CaptchaType.puzzle) {
+	if (!isInteractiveCaptchaType(result.routingOutput.captchaType)) {
 		return undefined;
 	}
 
@@ -348,7 +351,7 @@ export const buildEscalation = async (
 		});
 
 	const routed = result.routingOutput as {
-		captchaType: CaptchaType.image | CaptchaType.puzzle;
+		captchaType: InteractiveCaptchaType;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
 		reason?: string;

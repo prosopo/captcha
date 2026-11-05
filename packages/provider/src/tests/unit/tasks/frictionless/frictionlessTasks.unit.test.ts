@@ -499,12 +499,43 @@ describe("Frictionless Task Manager", () => {
 				ipInfo: stubIpInfo,
 			});
 
-			await frictionlessTaskManager.registerBlockedSession({});
+			await frictionlessTaskManager.registerBlockedSession(
+				CaptchaType.image,
+				{},
+			);
 
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(
 				expect.objectContaining({
 					ipInfo: stubIpInfo,
 					blocked: true,
+				}),
+			);
+		});
+
+		it("records a blocked session against the type it would have served", async () => {
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-blocked-pow",
+				score: 0.9,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.9 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-blocked",
+			});
+
+			await frictionlessTaskManager.registerBlockedSession(CaptchaType.pow, {
+				solvedImagesCount: 6,
+			});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({
+					captchaType: CaptchaType.pow,
+					blocked: true,
+					challengeParams: { type: CaptchaType.pow },
 				}),
 			);
 		});
@@ -537,6 +568,13 @@ describe("Frictionless Task Manager", () => {
 			});
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.image);
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({
+					challengeParams: expect.objectContaining({
+						type: CaptchaType.image,
+					}),
+				}),
+			);
 			expect(response).toHaveProperty("sessionId");
 			expect(response).toHaveProperty("status", "ok");
 		});

@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import type { Ti18n } from "@prosopo/locale";
-import type { CaptchaType } from "../client/captchaType/captchaType.js";
+import type {
+	CaptchaType,
+	InteractiveCaptchaType,
+} from "../client/captchaType/captchaType.js";
 import type { ProcaptchaClientConfigInput } from "../config/index.js";
 import type { RandomProvider } from "../provider/api.js";
 import type {
@@ -39,7 +42,7 @@ import type { Account, Callbacks } from "./manager.js";
  * telemetry the direct image/puzzle path preserves.
  */
 export type ProcaptchaEscalationHandler = (
-	captchaType: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
+	captchaType: InteractiveCaptchaType,
 	sessionId: string,
 	coords?: { x: number; y: number },
 ) => void;

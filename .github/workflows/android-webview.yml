@@ -1,6 +1,5 @@
-# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
-# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
-# copying steps between workflows or repos, and add new shared actions there.
+# Builds and tests the Android WebView integration on PRs, since the widget behaves differently inside WebViews.
+# Shared actions: https://github.com/prosopo/github_actions. Runners: https://github.com/prosopo/gh-runner.
 name: android-webview
 
 on:
@@ -13,6 +12,7 @@ on:
       # Not a type this workflow wants to run for -- the job below skips it. It
       # exists so the run is created and cancels the in-flight one.
       - converted_to_draft
+      - ready_for_review
     paths:
       - "demos/android-webview/**"
       - ".github/workflows/android-webview.yml"
@@ -29,10 +29,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   build:
     name: android-webview
-    if: ${{ github.event.action != 'converted_to_draft' }}
+    timeout-minutes: 10
+    if: ${{ (github.event.pull_request.draft != true) && github.event.pull_request.head.repo.full_name == github.repository }}
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR running on the
     # self-hosted fleet would execute arbitrary code on it.
@@ -41,18 +45,21 @@ jobs:
       run:
         working-directory: demos/android-webview
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
 
       # 17, not the app's own jvmTarget: that is the bytecode level the app
       # compiles *to*, while the Android Gradle Plugin itself needs a JDK 17.
       - name: Set up JDK 17
-        uses: actions/setup-java@v6
+        timeout-minutes: 5
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad  # v6.1.0
         with:
           distribution: temurin
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        timeout-minutes: 5
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd  # v4.0.4
         with:
           # Drop the action's default `tools platform-tools`. `tools` is an
           # obsolete SDK package that Google has removed from the repository,
@@ -67,4 +74,5 @@ jobs:
           packages: platform-tools
 
       - name: Gradle build + unit tests
+        timeout-minutes: 10
         run: ./gradlew --no-daemon --stacktrace testReleaseUnitTest assembleRelease

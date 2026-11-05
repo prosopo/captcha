@@ -1,6 +1,5 @@
-# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
-# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
-# copying steps between workflows or repos, and add new shared actions there.
+# Builds and tests the iOS WebView integration on PRs, since the widget behaves differently inside WebViews.
+# Shared actions: https://github.com/prosopo/github_actions. Runners: https://github.com/prosopo/gh-runner.
 name: ios-webview
 
 on:
@@ -13,6 +12,7 @@ on:
       # Not a type this workflow wants to run for -- the job below skips it. It
       # exists so the run is created and cancels the in-flight one.
       - converted_to_draft
+      - ready_for_review
     paths:
       - "demos/ios-webview/**"
       - ".github/workflows/ios-webview.yml"
@@ -29,10 +29,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   build:
     name: ios-webview
-    if: ${{ github.event.action != 'converted_to_draft' }}
+    timeout-minutes: 5
+    if: ${{ (github.event.pull_request.draft != true) && github.event.pull_request.head.repo.full_name == github.repository }}
     # Hosted, deliberately: this repository is public, so a fork PR running on
     # the self-hosted macOS runner would execute arbitrary code on it.
     # macos-15 (Xcode 16) is enough here -- the app targets iOS 16.4.
@@ -41,9 +45,11 @@ jobs:
       run:
         working-directory: demos/ios-webview
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
 
       - name: Toolchain versions
+        timeout-minutes: 5
         run: xcodebuild -version
 
       # `-target`, not `-scheme`: the project ships no shared scheme
@@ -55,6 +61,7 @@ jobs:
       # so it would otherwise fail looking for a signing identity and a
       # provisioning profile that CI has no business holding.
       - name: Build (iOS Simulator)
+        timeout-minutes: 5
         run: |
           xcodebuild build \
             -project procaptcha.xcodeproj \

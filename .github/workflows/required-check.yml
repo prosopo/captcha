@@ -1,6 +1,4 @@
-# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
-# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
-# copying steps between workflows or repos, and add new shared actions there.
+# Shared actions: https://github.com/prosopo/github_actions. Runners: https://github.com/prosopo/gh-runner.
 name: required-check
 
 # The single required status context for main, and the only job in the repo
@@ -61,8 +59,12 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   check:
+    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     name: check
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # private repos: this repository is public, so a fork PR would run on the
@@ -73,12 +75,14 @@ jobs:
     timeout-minutes: 90
     steps:
       - name: Refuse to pass a draft
+        timeout-minutes: 5
         if: github.event.pull_request.draft == true
         run: |
           echo "::error::draft PR: no checks run on drafts, so this cannot pass. Mark it ready for review to run them."
           exit 1
 
       - name: Wait for every other check on this commit
+        timeout-minutes: 60
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}

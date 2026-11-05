@@ -17,6 +17,7 @@ import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import {
 	ApiParams,
 	CaptchaType,
+	type ConcreteCaptchaType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 	ModeEnum,
 	type ScoreComponents,
@@ -25,6 +26,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
+	hashBypassKey,
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
 import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
@@ -123,7 +125,9 @@ export default (
 				switchToPuzzle,
 				fingerprintProof,
 				widgetSlot,
+				bypassKey,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			const bypassKeyHash = bypassKey ? hashBypassKey(bypassKey) : undefined;
 
 			// Recorded on the session and copied onto whichever captcha record it
 			// leads to, so the device bucket exists for image and puzzle solves
@@ -277,6 +281,7 @@ export default (
 			);
 			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
 				clientRecord.settings,
+				clientRecord.tier,
 			);
 			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
 
@@ -352,6 +357,7 @@ export default (
 					dedupCountryCode,
 					dedupAsn,
 					verifiedSignerUrl,
+					bypassKeyHash,
 				);
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
@@ -386,11 +392,7 @@ export default (
 				// behave identically. One that mixes per-request signals with
 				// session-derived ones gets the request-time view of every
 				// input that's available without re-decrypting the payload.
-				const cachedCaptchaType = dedup.captchaType as
-					| CaptchaType.image
-					| CaptchaType.pow
-					| CaptchaType.puzzle
-					| CaptchaType.iconOrder;
+				const cachedCaptchaType = dedup.captchaType as ConcreteCaptchaType;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -595,11 +597,7 @@ export default (
 					recordFrictionlessDecision("reuse_session");
 					attachHoneypot(res, clientRecord);
 					return res.json({
-						[ApiParams.captchaType]: dedup.captchaType as
-							| CaptchaType.image
-							| CaptchaType.pow
-							| CaptchaType.puzzle
-							| CaptchaType.iconOrder,
+						[ApiParams.captchaType]: dedup.captchaType as ConcreteCaptchaType,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						...dnsBeaconUrls(dedup.sessionId),
@@ -696,6 +694,7 @@ export default (
 				countryCode,
 				asn,
 				verifiedSignerUrl,
+				bypassKeyHash,
 			);
 			const lookupAccessPolicies = () =>
 				tasks.frictionlessManager.getPrioritisedAccessPolicies(
@@ -708,8 +707,9 @@ export default (
 			// Authenticated fast-path. Fires when any non-deferToVerify Allow
 			// rule matches the userScope — the qualifier can be a verified
 			// Web Bot Auth agent, an IP CIDR, a JA4 fingerprint, a UA
-			// substring, an ASN, a country, or any combination. Web Bot Auth
-			// is one of the ways to qualify, not the only one.
+			// substring, an ASN, a country, a site bypass key, or any
+			// combination. Web Bot Auth is one of the ways to qualify, not the
+			// only one.
 			//
 			// Skips decrypt/detect/decision-machine entirely, mints an
 			// authenticated session with `serverChecked: false`, and the
@@ -994,6 +994,7 @@ export default (
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
+				tier: clientRecord.tier,
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,

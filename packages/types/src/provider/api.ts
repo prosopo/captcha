@@ -45,7 +45,9 @@ import {
 } from "../api/sanitise.js";
 import {
 	type CaptchaType,
-	DecisionMachineCaptchaTypeSchema,
+	ChallengeCaptchaTypeSchema,
+	type ConcreteCaptchaType,
+	type InteractiveCaptchaType,
 } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import { ModeEnum } from "../config/mode.js";
@@ -595,12 +597,7 @@ export type AudioCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.iconOrder
-		| CaptchaType.authenticated;
+	[ApiParams.captchaType]: ConcreteCaptchaType | CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -622,10 +619,7 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]:
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.iconOrder;
+	[ApiParams.captchaType]: InteractiveCaptchaType;
 	[ApiParams.sessionId]: string;
 }
 
@@ -808,6 +802,9 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// Which of the page's widgets for this site key is asking, so each one is
 	// deduplicated onto its own session instead of all sharing the first.
 	[ApiParams.widgetSlot]: number().int().min(0).max(MAX_WIDGET_SLOT).optional(),
+	// A site bypass key read from the page's cookie. Never stored: the provider
+	// hashes it and only the hash is compared with the site's Allow rules.
+	[ApiParams.bypassKey]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -1102,8 +1099,7 @@ export const UpdateDecisionMachineBody = object({
 	).optional(),
 	[ApiParams.decisionMachineName]: safeLine(INPUT_LIMITS.NAME).optional(),
 	[ApiParams.decisionMachineVersion]: boundedString(INPUT_LIMITS.ID).optional(),
-	[ApiParams.decisionMachineCaptchaType]:
-		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineCaptchaType]: ChallengeCaptchaTypeSchema.optional(),
 	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID).optional(),
 });
@@ -1145,7 +1141,7 @@ export const DecisionMachineSummarySchema = object({
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),
 	version: string().nullish(),
-	captchaType: DecisionMachineCaptchaTypeSchema.nullish(),
+	captchaType: ChallengeCaptchaTypeSchema.nullish(),
 	createdAt: string(),
 	updatedAt: string(),
 });

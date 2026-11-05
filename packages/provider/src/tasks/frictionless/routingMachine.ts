@@ -25,6 +25,7 @@ import type {
 	RoutingMachinePlatform,
 	RoutingMachineRawSignals,
 	RoutingMachineRefresh,
+	Tier,
 } from "@prosopo/types";
 import type {
 	CounterIncrement,
@@ -35,6 +36,7 @@ import type { DecisionMachineRunner } from "../decisionMachine/decisionMachineRu
 export interface RoutingContext {
 	dappAccount: string;
 	userAccount: string;
+	tier?: Tier;
 	ip: string;
 	countryCode?: string;
 	score: number;
@@ -84,6 +86,7 @@ export const applyRouter = async (
 			phase,
 			dappAccount: ctx.dappAccount,
 			userAccount: ctx.userAccount,
+			...(ctx.tier !== undefined && { tier: ctx.tier }),
 			ip: ctx.ip,
 			countryCode: ctx.countryCode,
 			baseline,

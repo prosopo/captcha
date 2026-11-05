@@ -19,7 +19,7 @@ export function scryptFromU8a(data: Uint8Array): Result {
 	const p = u8aToBn(data.subarray(32 + 4, 32 + 8), BN_LE_OPTS).toNumber();
 	const r = u8aToBn(data.subarray(32 + 8, 32 + 12), BN_LE_OPTS).toNumber();
 
-	// FIXME At this moment we assume these to be fixed params, this is not a great idea
+	// At this moment we assume these to be fixed params, this is not a great idea
 	// since we lose flexibility and updates for greater security. However we need some
 	// protection against carefully-crafted params that can eat up CPU since these are user
 	// inputs. So we need to get very clever here, but atm we only allow the defaults

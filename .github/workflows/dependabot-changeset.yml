@@ -16,9 +16,6 @@
 # `pnpm run changesets:add` is intentionally NOT used: it is interactive (prompts for
 # packages + bump type) and cannot run unattended, so the changeset file is written directly.
 
-# Reusable steps belong in https://github.com/prosopo/github_actions (.github/actions/<name>),
-# used here as `prosopo/github_actions/.github/actions/<name>@<sha>`. Check there before
-# copying steps between workflows or repos, and add new shared actions there.
 name: dependabot-changeset
 
 on:
@@ -40,9 +37,13 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   changeset:
     name: changeset
+    timeout-minutes: 10
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -52,36 +53,40 @@ jobs:
     # runners are billed, so do not "upgrade" a job to one.
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
     runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: ${{ (github.actor == 'dependabot[bot]') && github.event.pull_request.head.repo.full_name == github.repository }}
     env:
       BASE_REF: ${{ github.event.pull_request.base.ref }}
       HEAD_REF: ${{ github.event.pull_request.head.ref }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
       PR_TITLE: ${{ github.event.pull_request.title }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 10
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-
-      - uses: actions/setup-node@v7
+      - name: Setup node and pnpm
+        timeout-minutes: 10
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          # Match `engines` (node ^24 / pnpm ^11) and the tests.yml jobs so the
-          # regenerated lockfile is identical to what the rest of CI produces.
           node-version: "24.22.1"
+          restore-store-cache: 'false'
+          store-path: ''
+          run-install: 'false'
 
       # Refresh the lockfile against the bumped package.json files.
       # --ignore-scripts: --lockfile-only does not install node_modules, so the
       # root `prepare` hook (husky) would otherwise fail with "husky: not found"
       # (exit 127) and abort before the lockfile is refreshed.
       - name: Update lockfile
+        timeout-minutes: 5
         run: pnpm install --lockfile-only --ignore-scripts --prefer-offline
 
       - name: Generate changeset
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ secrets.PROSOPONATOR_PAT }}
         run: |
@@ -93,6 +98,7 @@ jobs:
           node .github/scripts/dependabot-changeset.mjs
 
       - name: Commit and push
+        timeout-minutes: 5
         run: |
           git config user.name "prosoponator[bot]"
           git config user.email "prosoponator[bot]@users.noreply.github.com"

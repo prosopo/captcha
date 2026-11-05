@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	type CounterSpec,
 	type RoutingMachineBaseline,
+	Tier,
 } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { DecisionMachineRunner } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
@@ -388,5 +389,13 @@ describe("applyRouter", () => {
 	it("leaves refresh out on a request that is not a refresh", async () => {
 		await run();
 		expect(runner.route.mock.calls[0]?.[0]).not.toHaveProperty("refresh");
+	});
+
+	it("tells the machine the site's tier", async () => {
+		await run(buildCtx({ tier: Tier.Free }));
+		expect(runner.route.mock.calls[0]?.[0]).toMatchObject({ tier: Tier.Free });
+		expect(runner.getRequiredCounters.mock.calls[0]?.[0]).toMatchObject({
+			tier: Tier.Free,
+		});
 	});
 });

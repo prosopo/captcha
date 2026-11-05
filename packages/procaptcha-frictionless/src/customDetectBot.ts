@@ -38,6 +38,7 @@ import type {
 	RefreshSwitchTarget,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
+import { readBypassKeyCookie } from "./bypassKeyCookie.js";
 import {
 	DetectorLoaderFromScript,
 	type DetectorOptions,
@@ -378,6 +379,7 @@ const customDetectBot: BotDetectionFunction = async (
 				fallbackFingerprintProof,
 				widgetSlot,
 				retryOf,
+				readBypassKeyCookie(),
 			),
 			10000,
 		);
@@ -434,6 +436,7 @@ const customDetectBot: BotDetectionFunction = async (
 		fingerprintProof,
 		widgetSlot,
 		retryOf,
+		readBypassKeyCookie(),
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

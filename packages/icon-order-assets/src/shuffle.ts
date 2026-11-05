@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Prng } from "@prosopo/puzzle-assets";
+import type { Prng } from "@prosopo/puzzle-assets/browser";
 
 /** Fisher-Yates, so every ordering is equally likely. */
 export const shuffle = <T>(prng: Prng, items: readonly T[]): T[] => {
