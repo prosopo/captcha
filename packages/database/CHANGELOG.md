@@ -1,5 +1,61 @@
 # @prosopo/database
 
+## 4.6.3
+### Patch Changes
+
+- e1cb7f4: Icon order challenges can now be redrawn exactly, the way puzzle challenges already can.
+  
+  - The provider saves what it needs to redraw each icon order challenge on its record: the render seed, the frame geometry and the render settings (`render`).
+  - `@prosopo/icon-order-assets/browser` is a new entry that rebuilds a challenge from those inputs without `sharp`, so the portal can show the image a visitor was served. It returns the frame and the target strip as SVG plus the grain to lay over the frame. Rasterised the same way, the frame matches the served one byte for byte.
+  - `@prosopo/puzzle-assets/browser` also exports `hslToRgb` and the `Prng` type, which the new entry uses.
+  
+  The seed regenerates the answer too, so like the puzzle seeds it is never sent to a client.
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/types-database@5.18.1
+  - @prosopo/util@3.6.1
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.19
+  - @prosopo/logger@2.1.10
+  - @prosopo/redis-client@1.0.47
+
+## 4.6.2
+### Patch Changes
+
+- a85559d: Records copied to the central captcha store no longer carry the provider's `storedAtTimestamp`. The central store's `storedAtTimestamp` TTL index is now one year; provider stores keep four weeks.
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types-database@5.18.0
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/user-access-policy@3.15.18
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.9
+  - @prosopo/redis-client@1.0.46
+
+## 4.6.1
+### Patch Changes
+
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+- ec54f21: The scheduled spam email domain sync now only writes domains that are not already stored. It used to upsert the whole list (about 225k domains) on every run, which rewrote every row and held Mongo write locks for around 8 seconds per batch on every provider at the same time, slowing requests on the hour. It now reads the stored domains with an index-only scan and upserts just the new ones.
+  
+  `bulkUpdateSpamEmailDomains` on the provider database is replaced by `insertMissingSpamEmailDomains(domains)`, which returns how many domains were added. The task records that count as `domainsAdded` alongside `domainsProcessed`. Domains that drop off the source lists are still kept, as before.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/types-database@5.17.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.15.17
+
 ## 4.6.0
 ### Minor Changes
 

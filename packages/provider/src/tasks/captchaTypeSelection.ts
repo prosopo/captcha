@@ -15,18 +15,12 @@
 import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
+	type ConcreteCaptchaType,
 	type IFrictionlessTypes,
 	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
-
-/** The concrete types a session can actually be minted as. */
-export type ConcreteCaptchaType =
-	| CaptchaType.pow
-	| CaptchaType.image
-	| CaptchaType.puzzle
-	| CaptchaType.iconOrder;
 
 /**
  * Resolve a requested captcha type against what the site permits and what

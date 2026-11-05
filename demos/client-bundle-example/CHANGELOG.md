@@ -1,5 +1,11 @@
 # @prosopo/client-bundle-example
 
+## 2.11.10
+### Patch Changes
+
+- 769a882: The icon-order demo pages get a production and staging site key, so demo.prosopo.io can serve them. Production and staging demo builds now also refuse to run without `PROSOPO_SITE_KEY_ICONORDER`, like the other four demo keys, so those pages can't ship with `data-sitekey="undefined"`.
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+
 ## 2.11.9
 ### Patch Changes
 

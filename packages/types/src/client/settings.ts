@@ -18,6 +18,7 @@ import {
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
+import { Tier } from "./user.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
@@ -256,13 +257,30 @@ const isFeatureFlaggedCaptchaType = (
 ): captchaType is FeatureFlaggedCaptchaType =>
 	captchaType in captchaTypeFeatureFlagDefaults;
 
+/**
+ * Where a tier's defaults differ from `captchaTypeFeatureFlagDefaults`. Only
+ * an unset flag takes these: a site's own setting always wins.
+ *
+ * Free sites may be served icon order so the routing machine can send them a
+ * share of it. Nothing picks icon order unless asked to, so this changes
+ * nothing for a free site until a routing rule or its owner does.
+ */
+export const captchaTypeFeatureFlagTierDefaults: Readonly<
+	Partial<Record<Tier, ICaptchaTypeFeatureFlags>>
+> = {
+	[Tier.Free]: { [CaptchaType.iconOrder]: true },
+};
+
 /** Types without a feature flag are always enabled. */
 export const isCaptchaTypeFeatureEnabled = (
 	captchaType: CaptchaType,
 	flags: ICaptchaTypeFeatureFlags | undefined | null,
+	tier?: Tier,
 ): boolean =>
 	isFeatureFlaggedCaptchaType(captchaType)
-		? (flags?.[captchaType] ?? captchaTypeFeatureFlagDefaults[captchaType])
+		? (flags?.[captchaType] ??
+			(tier && captchaTypeFeatureFlagTierDefaults[tier]?.[captchaType]) ??
+			captchaTypeFeatureFlagDefaults[captchaType])
 		: true;
 
 /**
@@ -278,6 +296,7 @@ export const resolveAllowedCaptchaTypes = (
 		  }
 		| undefined
 		| null,
+	tier?: Tier,
 ): Required<IFrictionlessTypes> => {
 	const preferred = resolveFrictionlessTypes(settings?.frictionlessTypes);
 	const flags = settings?.captchaTypeFeatureFlags;
@@ -285,10 +304,10 @@ export const resolveAllowedCaptchaTypes = (
 		image: preferred.image,
 		puzzle:
 			preferred.puzzle &&
-			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags),
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags, tier),
 		iconOrder:
 			preferred.iconOrder &&
-			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags),
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags, tier),
 	};
 };
 
@@ -479,7 +498,11 @@ export const countryChangeActionDefault = IPValidationAction.Allow;
 export const cityChangeActionDefault = IPValidationAction.Allow;
 export const ispChangeActionDefault = IPValidationAction.Allow;
 export const distanceThresholdKmDefault = 1000;
+/** @deprecated Read only for stored records; decisions use `ipValidationReputationScoreThresholdDefault`. */
 export const abuseScoreThresholdDefault = 0.005;
+// Reputation score (0..1) at or above which the IP validation rules treat a
+// changed address as abusive.
+export const ipValidationReputationScoreThresholdDefault = 0.26;
 export const distanceExceedActionDefault = IPValidationAction.Reject;
 export const abuseScoreThresholdExceedActionDefault = IPValidationAction.Reject;
 export const requireAllConditionsDefault = false;
@@ -494,7 +517,9 @@ const IPValidationSchema = object({
 	}).partial(), // all optional, so you can just override what you need
 
 	distanceThresholdKm: number().positive().optional(),
+	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
 	abuseScoreThreshold: number().positive().optional(),
+	reputationScoreThreshold: number().min(0).max(1).optional(),
 	requireAllConditions: boolean().optional(),
 });
 
@@ -521,10 +546,18 @@ export const IPValidationRulesSchema = object({
 		.positive()
 		.optional()
 		.default(distanceThresholdKmDefault),
+	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
 	abuseScoreThreshold: number()
 		.positive()
 		.optional()
 		.default(abuseScoreThresholdDefault),
+	// Compared with the changed address's reputation score. An address
+	// without a score never meets it.
+	reputationScoreThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(ipValidationReputationScoreThresholdDefault),
 	requireAllConditions: z
 		.boolean()
 		.optional()
@@ -701,9 +734,15 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
-// Abuser score at or above which the `abuser` category applies. The scale is
-// 0..1 with 0 meaning "clean", so 0 would act on any non-zero score.
+/**
+ * @deprecated No longer read for decisions; see
+ * `trafficFilterReputationScoreThresholdDefault`. Kept so stored records parse.
+ */
 export const trafficFilterAbuserScoreThresholdDefault = 0.2;
+
+// Reputation score (0..1) at or above which the `abuser` category applies.
+// An address without a score never meets it.
+export const trafficFilterReputationScoreThresholdDefault = 0.98;
 
 // Entries match case-insensitively against `datacenterName`, `providerName`
 // or `asnOrganization`. Upstream populates `datacenter.datacenter` only for
@@ -765,26 +804,31 @@ const countryCodesSchema = array(
 // Replaces the category's action (and captcha overrides) for IPs meeting
 // every condition set on it. `inMarket` tests the IP's country against the
 // filter's `marketCountries`: true matches inside the market, false outside
-// it, and neither matches while the market is unknown. `minAbuserScore`
-// compares against the higher of the IP's own and its company's abuser
-// score, inclusive. `mobile` tests the IP's `isMobile`: `mobile: false` keeps
+// it, and neither matches while the market is unknown. `minReputationScore`
+// compares against the IP's reputation score, inclusive; an IP without a
+// score never matches it. `minAbuserScore` is deprecated and only read when an
+// exception carries it without `minReputationScore`.
+// `mobile` tests the IP's `isMobile`: `mobile: false` keeps
 // a block off carrier networks, whose shared addresses carry real phones
 // alongside the rented SIMs that put them on proxy lists.
 export const TrafficCategoryExceptionSchema =
 	TrafficCategoryActionSchema.extend({
 		countries: countryCodesSchema.min(1).optional(),
 		inMarket: boolean().optional(),
+		/** @deprecated See `minReputationScore`. */
 		minAbuserScore: number().min(0).max(1).optional(),
+		minReputationScore: number().min(0).max(1).optional(),
 		mobile: boolean().optional(),
 	}).refine(
 		(exception) =>
 			exception.countries !== undefined ||
 			exception.inMarket !== undefined ||
 			exception.minAbuserScore !== undefined ||
+			exception.minReputationScore !== undefined ||
 			exception.mobile !== undefined,
 		{
 			message:
-				"An exception needs countries, inMarket, minAbuserScore or mobile",
+				"An exception needs countries, inMarket, minReputationScore or mobile",
 		},
 	);
 
@@ -816,11 +860,17 @@ export const TrafficFilterSchema = object({
 	proxy: TrafficCategoryPolicySchema.optional(),
 	tor: TrafficCategoryPolicySchema.optional(),
 	abuser: TrafficCategoryPolicySchema.optional(),
+	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
 	abuserScoreThreshold: number()
 		.min(0)
 		.max(1)
 		.optional()
 		.default(trafficFilterAbuserScoreThresholdDefault),
+	reputationScoreThreshold: number()
+		.min(0)
+		.max(1)
+		.optional()
+		.default(trafficFilterReputationScoreThresholdDefault),
 	datacenter: TrafficCategoryPolicySchema.optional(),
 	// Superseded by `datacenter.nameAllowlist` / `datacenter.nameDenylist`.
 	// Still read, and merged into the datacenter lists, for sites saved before

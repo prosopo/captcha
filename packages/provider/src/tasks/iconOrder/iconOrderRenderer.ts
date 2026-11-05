@@ -23,6 +23,7 @@ import { toDataUri } from "@prosopo/puzzle-assets";
 import {
 	ICON_ORDER_GLYPH_VOCABULARY,
 	type IIconOrderSettings,
+	type IconOrderRenderRecord,
 	type StoredIconTarget,
 } from "@prosopo/types";
 
@@ -32,6 +33,8 @@ export interface RenderedIconOrderImages {
 	legendIconSize: number;
 	/** The answer. Persist it; never serialise it. */
 	targets: IconPlacement[];
+	/** Regenerates the answer too. Persist it; never serialise it. */
+	render: IconOrderRenderRecord;
 }
 
 /** Layers partial overrides onto the asset defaults; later sources win. */
@@ -80,5 +83,10 @@ export const renderIconOrderImages = async (
 		legend: toDataUri(rendered.legend),
 		legendIconSize: rendered.legendIconSize,
 		targets: rendered.targets,
+		render: {
+			geometry: { ...ICON_ORDER_GEOMETRY },
+			settings: { ...settings },
+			seed: rendered.seed,
+		},
 	};
 };

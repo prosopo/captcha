@@ -1,5 +1,18 @@
 # @prosopo/web-bot-auth
 
+## 0.1.9
+### Patch Changes
+
+- Updated dependencies [a191c21]
+  - @prosopo/util@3.6.1
+
+## 0.1.8
+### Patch Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+- Updated dependencies [1ba238e]
+  - @prosopo/util@3.6.0
+
 ## 0.1.7
 ### Patch Changes
 

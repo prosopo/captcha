@@ -1077,6 +1077,26 @@ describe("start: what the provider decides", () => {
 		expect(harness.events.onFailed).not.toHaveBeenCalled();
 	});
 
+	test("an icon-order escalation is handed over the same way", async () => {
+		const harness = build();
+		mocks.submitPowCaptchaSolution.mockResolvedValue(
+			solutionResponse({
+				verified: false,
+				escalation: {
+					[ApiParams.captchaType]: CaptchaType.iconOrder,
+					[ApiParams.sessionId]: "escalated-session",
+				},
+			}),
+		);
+		await harness.manager.start(3, 9);
+		expect(harness.onEscalate).toHaveBeenCalledWith(
+			CaptchaType.iconOrder,
+			"escalated-session",
+			{ x: 3, y: 9 },
+		);
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
 	test("an escalation with no real click forwards no coordinates", async () => {
 		// (0, 0) is what an autoStart or an untrusted event produces; passing it
 		// on would seed the next widget's salt with a click that never happened.

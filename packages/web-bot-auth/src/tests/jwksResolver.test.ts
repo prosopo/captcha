@@ -53,6 +53,25 @@ describe("resolveJwksFromSignatureAgent", () => {
 		]);
 	});
 
+	it.each(["/", "///"])(
+		"fetches the directory once for a signer ending in %s",
+		async (trailing: string) => {
+			const seen: string[] = [];
+			await resolveJwksFromSignatureAgent(
+				`https://signer.example.com${trailing}`,
+				{
+					fetch: async (url: string, init?: RequestInit) => {
+						seen.push(url);
+						return okFetch()(url, init);
+					},
+				},
+			);
+			expect(seen).toEqual([
+				"https://signer.example.com/.well-known/http-message-signatures-directory",
+			]);
+		},
+	);
+
 	// The signer URL comes straight from a request header, so it must not be
 	// usable to make the provider issue requests into its own network.
 	it.each([

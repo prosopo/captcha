@@ -17,6 +17,7 @@ on:
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+      - converted_to_draft
   workflow_dispatch:
 
 permissions:
@@ -30,9 +31,13 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   check:
     name: pinned-versions
+    timeout-minutes: 5
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -44,15 +49,18 @@ jobs:
     runs-on: ubuntu-latest
     # Skip draft PRs, but still allow manual workflow_dispatch runs (where
     # github.event.pull_request is undefined).
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        timeout-minutes: 5
         with:
           node-version: "24.22.1"
 
       # No `pnpm install` needed — the check only reads package.json files and
       # pnpm-lock.yaml.
       - name: Check dependencies are pinned to exact versions
+        timeout-minutes: 5
         run: node .github/scripts/check-pinned-versions.mjs

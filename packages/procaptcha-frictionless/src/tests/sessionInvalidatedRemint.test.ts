@@ -308,6 +308,42 @@ describe("refreshing the challenge", () => {
 	});
 });
 
+describe("retrying after a wrong answer", () => {
+	const retryOfOnCall = (call: number): string | undefined =>
+		detectBot.mock.calls[call]?.[7];
+
+	it("tells the next /frictionless run which puzzle the user answered wrongly", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			showRetry: true,
+			retryOf: "failed-challenge",
+		});
+		await settle();
+
+		expect(retryOfOnCall(1)).toBe("failed-challenge");
+	});
+
+	it("does not send a retry with a refresh, which is not a wrong answer", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			retryOf: "failed-challenge",
+		});
+		await settle();
+
+		expect(retryOfOnCall(1)).toBeUndefined();
+	});
+
+	it("does not carry the retry onto a later, unrelated re-mint", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			showRetry: true,
+			retryOf: "failed-challenge",
+		});
+		await settle();
+		await reportSessionInvalidated();
+
+		expect(retryOfOnCall(2)).toBeUndefined();
+	});
+});
+
 describe("switching between the puzzle and an image challenge", () => {
 	const refreshOfOnCall = (call: number): string | undefined =>
 		detectBot.mock.calls[call]?.[4];

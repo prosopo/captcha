@@ -1,5 +1,43 @@
 # @prosopo/user-access-policy
 
+## 3.15.19
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util@3.6.1
+  - @prosopo/api@4.9.2
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.10
+  - @prosopo/api-route@2.6.70
+  - @prosopo/redis-client@1.0.47
+
+## 3.15.18
+### Patch Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.9
+  - @prosopo/api-route@2.6.69
+  - @prosopo/redis-client@1.0.46
+
+## 3.15.17
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/common@3.3.2
+
 ## 3.15.16
 ### Patch Changes
 

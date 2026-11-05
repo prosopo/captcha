@@ -13,10 +13,12 @@
 // limitations under the License.
 
 import { z } from "zod";
-import type { IPInfoResponse } from "../api/ipapi.js";
+import type { AccountSighting, IPInfoResponse } from "../api/ipapi.js";
 import {
-	CaptchaType,
-	DecisionMachineCaptchaTypeSchema,
+	type ChallengeCaptchaType,
+	ChallengeCaptchaTypeSchema,
+	type ConcreteCaptchaType,
+	ConcreteCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import {
 	type IIconOrderSettings,
@@ -27,6 +29,7 @@ import {
 	iconOrderToleranceFieldSchema,
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
+import type { Tier } from "../client/user.js";
 import type { ModeEnum } from "../config/mode.js";
 import type {
 	AudioEvent,
@@ -138,12 +141,7 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.audio
-		| CaptchaType.iconOrder;
+	captchaType?: ChallengeCaptchaType;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
@@ -255,7 +253,22 @@ export type DecisionMachineInput = {
 	// Undefined when no frictionless session preceded, or when the detector
 	// reported nothing.
 	d?: DetectorData;
+	// The usage counters the machine declared in `requiredDecideCounters()`, keyed
+	// by `encodeCounterKey`, as routing machines get them. Undefined when the
+	// machine declared none or the counters could not be read, which a rule
+	// must not read as zero.
+	counters?: Record<string, number>;
+	// The reputation DB's sighting of this user account on this site, when the
+	// machine's `requiresAccountSighting()` returns true. Undefined when it did
+	// not ask, or the DB does not know the account or cannot be reached.
+	accountSighting?: AccountSighting;
 };
+
+/** What a decision machine asks the provider to read into its input. */
+export interface DecisionMachineRequirements {
+	counters: CounterSpec[];
+	accountSighting: boolean;
+}
 
 export type DecisionMachineOutput = {
 	decision: DecisionMachineDecision;
@@ -264,12 +277,8 @@ export type DecisionMachineOutput = {
 	tags?: string[];
 };
 
-export type DecisionMachineCaptchaType =
-	| CaptchaType.pow
-	| CaptchaType.image
-	| CaptchaType.puzzle
-	| CaptchaType.audio
-	| CaptchaType.iconOrder;
+/** @deprecated Use `ChallengeCaptchaType`. */
+export type DecisionMachineCaptchaType = ChallengeCaptchaType;
 
 // This is the API configuration type (used for uploads/API calls)
 // The database storage type is DecisionMachineArtifact in provider/database.ts
@@ -297,7 +306,7 @@ export const DecisionMachineConfigSchema = z.object({
 	name: z.string().optional(),
 	version: z.string().optional(),
 	createdAt: z.string(),
-	captchaType: DecisionMachineCaptchaTypeSchema.optional(),
+	captchaType: ChallengeCaptchaTypeSchema.optional(),
 });
 
 /**
@@ -319,7 +328,9 @@ export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
 	"24h": 86400,
 };
 
-export const COUNTER_KINDS = ["served", "solved"] as const;
+// `farMiss` counts wrong answers that land nowhere near the right one, such as
+// a puzzle piece dropped well away from its slot.
+export const COUNTER_KINDS = ["served", "solved", "farMiss"] as const;
 export type CounterKind = (typeof COUNTER_KINDS)[number];
 
 /**
@@ -343,11 +354,7 @@ export type CounterDimension = (typeof COUNTER_DIMENSIONS)[number];
 
 export const COUNTER_CAPTCHA_ANY = "any" as const;
 export type CounterCaptchaType =
-	| CaptchaType.pow
-	| CaptchaType.image
-	| CaptchaType.puzzle
-	| CaptchaType.audio
-	| CaptchaType.iconOrder
+	| ChallengeCaptchaType
 	| typeof COUNTER_CAPTCHA_ANY;
 
 export interface CounterSpec {
@@ -360,11 +367,7 @@ export interface CounterSpec {
 export const CounterSpecSchema = z.object({
 	kind: z.enum(COUNTER_KINDS),
 	captchaType: z.union([
-		z.literal(CaptchaType.pow),
-		z.literal(CaptchaType.image),
-		z.literal(CaptchaType.puzzle),
-		z.literal(CaptchaType.audio),
-		z.literal(CaptchaType.iconOrder),
+		ChallengeCaptchaTypeSchema,
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
 	dimension: z.enum(COUNTER_DIMENSIONS),
@@ -379,11 +382,7 @@ export const encodeCounterKey = (
 	`cnt:${dappAccount}:${spec.kind}:${spec.captchaType}:${spec.dimension}:${value}:${spec.window}`;
 
 export interface RoutingMachineBaseline {
-	captchaType:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.iconOrder;
+	captchaType: ConcreteCaptchaType;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 }
@@ -509,6 +508,9 @@ export interface RoutingMachineInputBase {
 	phase: RoutingMachinePhase;
 	dappAccount: string;
 	userAccount: string;
+	// The tier of the account that owns `dappAccount`. Undefined when the
+	// provider has no client record for it.
+	tier?: Tier;
 	ip: string;
 	countryCode?: string;
 	baseline: RoutingMachineBaseline;
@@ -540,11 +542,7 @@ export interface RoutingMachineInput extends RoutingMachineInputBase {
 }
 
 export interface RoutingMachineOutput {
-	captchaType:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.iconOrder;
+	captchaType: ConcreteCaptchaType;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 	// Optional selection reason the machine can attach to explain an escalation
@@ -567,13 +565,7 @@ export interface RoutingMachineOutput {
 }
 
 export const RoutingMachineOutputSchema = z.object({
-	// No `audio`: it is only reachable as the accessibility alternative.
-	captchaType: z.union([
-		z.literal(CaptchaType.pow),
-		z.literal(CaptchaType.image),
-		z.literal(CaptchaType.puzzle),
-		z.literal(CaptchaType.iconOrder),
-	]),
+	captchaType: ConcreteCaptchaTypeSchema,
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
 	reason: z.string().optional(),

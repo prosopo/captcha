@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/web-bot-auth",
-	"version": "0.1.7",
+	"version": "0.1.9",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
 	"exports": {
@@ -26,7 +26,8 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@noble/curves": "2.4.0"
+		"@noble/curves": "2.4.0",
+		"@prosopo/util": "workspace:*"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",

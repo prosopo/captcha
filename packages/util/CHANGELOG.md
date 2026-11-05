@@ -1,5 +1,15 @@
 # @prosopo/util
 
+## 3.6.1
+### Patch Changes
+
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+
+## 3.6.0
+### Minor Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+
 ## 3.5.0
 ### Minor Changes
 

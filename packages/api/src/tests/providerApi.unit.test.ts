@@ -565,6 +565,7 @@ describe("getFrictionlessCaptcha", () => {
 			undefined, // switchTo
 			undefined, // fingerprintProof
 			undefined, // widgetSlot
+			undefined, // retryOf
 			"pbk_example",
 		);
 		expect(body()).toMatchObject({
@@ -618,6 +619,35 @@ describe("getFrictionlessCaptcha", () => {
 		await frictionlessRefresh();
 		expect(body()).not.toHaveProperty(ApiParams.switchToImage);
 		expect(body()).not.toHaveProperty(ApiParams.switchToPuzzle);
+	});
+
+	test("names the failed puzzle on a retry", async () => {
+		fetchStub.respond(frictionlessBody);
+		await api().getFrictionlessCaptcha(
+			"token",
+			"0xhead",
+			SITE_KEY,
+			USER,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			"failed-challenge",
+		);
+		expect(body()).toMatchObject({ [ApiParams.retryOf]: "failed-challenge" });
+		expect(body()).not.toHaveProperty(ApiParams.refreshOf);
+	});
+
+	test("sends no retry when the widget has none to report", async () => {
+		fetchStub.respond(frictionlessBody);
+		await api().getFrictionlessCaptcha("token", "0xhead", SITE_KEY, USER);
+		expect(body()).not.toHaveProperty(ApiParams.retryOf);
 	});
 
 	test("omits the session id when the widget has none to report", async () => {

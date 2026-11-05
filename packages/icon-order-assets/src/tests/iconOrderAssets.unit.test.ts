@@ -15,6 +15,7 @@
 import { type RgbaImage, createPrng } from "@prosopo/puzzle-assets";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
+import { redrawIconOrder } from "../browser.js";
 import { compositeIcons } from "../compose.js";
 import { GLYPH_KINDS, GlyphKind, glyphPath } from "../glyphs.js";
 import {
@@ -313,5 +314,65 @@ describe("renderIconOrder", () => {
 		expect(challenge.targets).toHaveLength(4);
 		const legend = await sharp(challenge.legend).metadata();
 		expect(legend.width).toBe(4 * (LEGEND_ICON_SIZE + 6) - 6);
+	});
+});
+
+describe("redrawIconOrder", () => {
+	const rasterise = async (svg: string): Promise<RgbaImage> => {
+		const { data, info } = await sharp(Buffer.from(svg))
+			.ensureAlpha()
+			.raw()
+			.toBuffer({ resolveWithObject: true });
+		return { data, width: info.width, height: info.height };
+	};
+
+	it("returns the seed that rebuilds the render", async () => {
+		const challenge = await renderIconOrder(
+			DEFAULT_GEOMETRY,
+			DEFAULT_RENDER_SETTINGS,
+			seed(7),
+		);
+		expect(challenge.seed).toBe(seed(7).toString("hex"));
+	});
+
+	it("places the same targets as the render it rebuilds", async () => {
+		const challenge = await renderIconOrder(
+			DEFAULT_GEOMETRY,
+			DEFAULT_RENDER_SETTINGS,
+			seed(7),
+		);
+		const redrawn = redrawIconOrder(
+			challenge.seed,
+			DEFAULT_GEOMETRY,
+			DEFAULT_RENDER_SETTINGS,
+		);
+		expect(redrawn.targets).toEqual(challenge.targets);
+	});
+
+	it("rebuilds the served frame exactly when rasterised the same way", async () => {
+		const prng = createPrng(seed(9));
+		const { targets, decoys } = placeIcons(
+			prng,
+			DEFAULT_GEOMETRY,
+			DEFAULT_RENDER_SETTINGS.targetCount,
+			DEFAULT_RENDER_SETTINGS.decoyCount,
+		);
+		const served = await compositeIcons(
+			prng,
+			[...targets, ...decoys],
+			DEFAULT_GEOMETRY,
+			DEFAULT_RENDER_SETTINGS,
+		);
+
+		const redrawn = redrawIconOrder(
+			seed(9).toString("hex"),
+			DEFAULT_GEOMETRY,
+			DEFAULT_RENDER_SETTINGS,
+		);
+		const frame = redrawn.addGrain(await rasterise(redrawn.frame));
+
+		expect(frame.width).toBe(served.width);
+		expect(frame.height).toBe(served.height);
+		expect(frame.data.equals(served.data)).toBe(true);
 	});
 });

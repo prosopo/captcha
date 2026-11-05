@@ -21,6 +21,7 @@ import {
 	CaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
+	isInteractiveCaptchaType,
 } from "@prosopo/types";
 import {
 	ApiParams,
@@ -45,6 +46,7 @@ import {
 	type RoutingMachineRawSignals,
 	type Session,
 	SimdReadingsStage,
+	type Tier,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type {
@@ -115,6 +117,7 @@ import {
  * behavioural payload are in hand.
  */
 export interface PostPowRoutingContext {
+	tier?: Tier;
 	ip: string;
 	countryCode?: string;
 	// The submit request's half of the device inputs. The session supplies
@@ -571,14 +574,13 @@ export class PowCaptchaManager extends CaptchaManager {
 		let routingOutput = routed?.routingOutput;
 
 		// Either signal forces at least an image escalation, unless the routing
-		// machine already escalated to a visual challenge (image/puzzle) that we
-		// would keep anyway. Missing coords is reported in preference to a
+		// machine already escalated to an interactive challenge that we would
+		// keep anyway. Missing coords is reported in preference to a
 		// changed address when both fire: it is the stronger statement, since
 		// no legitimate widget omits them.
 		if (
 			(escalateForMissingCoords || escalateForIpChange) &&
-			routingOutput?.captchaType !== CaptchaType.image &&
-			routingOutput?.captchaType !== CaptchaType.puzzle
+			!isInteractiveCaptchaType(routingOutput?.captchaType)
 		) {
 			routingOutput = {
 				captchaType: CaptchaType.image,
@@ -641,6 +643,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		const ctx: RoutingContext = {
 			dappAccount,
 			userAccount,
+			...(this.postPowContext.tier !== undefined && {
+				tier: this.postPowContext.tier,
+			}),
 			ip: this.postPowContext.ip,
 			countryCode: this.postPowContext.countryCode,
 			score,

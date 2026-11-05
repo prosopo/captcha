@@ -1,5 +1,40 @@
 # @prosopo/procaptcha-common
 
+## 2.23.3
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util@3.6.1
+  - @prosopo/account@2.8.126
+  - @prosopo/load-balancer@2.11.27
+  - @prosopo/locale@3.14.2
+  - @prosopo/widget-skeleton@2.10.5
+
+## 2.23.2
+### Patch Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/load-balancer@2.11.26
+  - @prosopo/account@2.8.125
+  - @prosopo/locale@3.14.1
+
+## 2.23.1
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/account@2.8.124
+  - @prosopo/load-balancer@2.11.25
+
 ## 2.23.0
 ### Minor Changes
 

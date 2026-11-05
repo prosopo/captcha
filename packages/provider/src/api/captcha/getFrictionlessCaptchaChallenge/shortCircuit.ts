@@ -20,6 +20,7 @@ import {
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
+	isConcreteCaptchaType,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -27,10 +28,12 @@ import type { Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
+import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import type { RefreshLineage } from "./refreshLineage.js";
+import type { ResolvedRetry } from "./retrySolveDevice.js";
 
 export type ShortCircuitInput = {
 	tasks: Tasks;
@@ -57,6 +60,9 @@ export type ShortCircuitInput = {
 	// Carried onto the session so a site pinned to a captcha type still
 	// records refreshes, and its refresh limit can still apply.
 	refresh?: RefreshLineage;
+	// Carried onto the session so a puzzle retry on a site pinned to a captcha
+	// type is judged on the failed solve's device, as it is everywhere else.
+	retry?: ResolvedRetry;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -100,6 +106,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		userSitekeyIpHash: input.userSitekeyIpHash,
 		...(bundleId && { bundleId }),
 		...input.refresh,
+		...input.retry,
 		...(input.tcpToChelloUs !== undefined && {
 			tcpToChelloUs: input.tcpToChelloUs,
 		}),
@@ -155,6 +162,11 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	if (!configuredType || configuredType === CaptchaType.frictionless) {
 		return null;
 	}
+	if (!isConcreteCaptchaType(configuredType)) {
+		throw new Error(
+			`Unhandled configured captchaType in /frictionless short-circuit: ${configuredType}`,
+		);
+	}
 
 	const sessionParams = await buildBypassSessionParams(input);
 
@@ -167,34 +179,15 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	}));
 
 	attachHoneypot(res, input.clientRecord);
-	switch (configuredType) {
-		case CaptchaType.image:
-			return res.json(
-				await input.tasks.frictionlessManager.sendImageCaptcha({
-					...sessionParams,
-					solvedImagesCount: clampImageRounds(
-						input.env.config.captchas.solved.count,
-						input.clientRecord.settings,
-					),
-				}),
-			);
-		case CaptchaType.pow:
-			return res.json(
-				await input.tasks.frictionlessManager.sendPowCaptcha(sessionParams),
-			);
-		case CaptchaType.puzzle:
-			return res.json(
-				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
-			);
-		case CaptchaType.iconOrder:
-			return res.json(
-				await input.tasks.frictionlessManager.sendIconOrderCaptcha(
-					sessionParams,
+	return res.json(
+		await sendChallenge(input.tasks.frictionlessManager, configuredType, {
+			...sessionParams,
+			...(configuredType === CaptchaType.image && {
+				solvedImagesCount: clampImageRounds(
+					input.env.config.captchas.solved.count,
+					input.clientRecord.settings,
 				),
-			);
-		default:
-			throw new Error(
-				`Unhandled configured captchaType in /frictionless short-circuit: ${configuredType}`,
-			);
-	}
+			}),
+		}),
+	);
 };

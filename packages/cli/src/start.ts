@@ -24,6 +24,7 @@ import {
 import type { KeyringPair } from "@prosopo/types";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+import { waitForEnvironment } from "./retryWithBackoff.js";
 
 export async function start(
 	env?: ProviderEnvironment,
@@ -52,7 +53,7 @@ export async function start(
 		env.logger.debug(() => ({ msg: "Env already defined" }));
 	}
 
-	await env.isReady();
+	await waitForEnvironment(env);
 
 	// Get rid of any scheduled task records from previous runs
 	env.cleanup();

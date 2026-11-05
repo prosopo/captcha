@@ -33,7 +33,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
-import { CaptchaType } from "../client/index.js";
+import { CaptchaType, type ChallengeCaptchaType } from "../client/index.js";
 import type {
 	ContextType,
 	IIconOrderSettings,
@@ -64,6 +64,10 @@ import type {
 	PuzzleEvent,
 	RequestHeaders,
 } from "./api.js";
+import {
+	type ChallengeParams,
+	ChallengeParamsSchema,
+} from "./challengeParams.js";
 import type { DetectorData, SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -536,6 +540,7 @@ export const SessionSchema = object({
 	mode: nativeEnum(ModeEnum).optional(),
 	solvedImagesCount: number().optional(),
 	powDifficulty: number().optional(),
+	challengeParams: ChallengeParamsSchema.optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
@@ -560,6 +565,7 @@ export const SessionSchema = object({
 		touchEventCount: number().optional(),
 	}).optional(),
 	refreshOf: string().optional(),
+	retryOf: string().optional(),
 	refreshCount: number().optional(),
 	refreshedAfterMs: number().optional(),
 	decryptedHeadHash: string(),
@@ -704,6 +710,7 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	challengeParams?: ChallengeParams;
 	// Puzzle-only render overrides chosen by the routing machine, persisted
 	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
 	// re-derives its overrides from a live trafficFilter verdict, which a
@@ -734,9 +741,13 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
-	// On an escalation: what the PoW solve it escalated from said about the
-	// input device, so a challenge issued for it judges the same device.
+	// What the solve this session follows said about the input device, so a
+	// challenge issued for it judges the same device: the PoW solve on an
+	// escalation, or the failed puzzle named by `retryOf`.
 	solveDevice?: SolveDeviceSignals;
+	// The challenge of the failed puzzle this session was minted to replace.
+	// Set only when that puzzle passed the checks in `resolveRetrySolveDevice`.
+	retryOf?: string;
 	// Set when this session was minted because the user pressed refresh on
 	// the challenge of `refreshOf`. `refreshCount` is how many refreshes in a
 	// row led here, and `refreshedAfterMs` how long the replaced session had
@@ -1012,6 +1023,9 @@ export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
 	originY: number;
 	puzzleEvents?: PuzzleEvent[];
 	render?: PuzzleRenderRecord;
+	// Set once a retry session has taken this failed puzzle's device readings.
+	// A failed puzzle vouches for at most one retry.
+	retried?: boolean;
 }
 
 /** `answer` is the spoken transcript: the secret, never sent to a client. */
@@ -1025,6 +1039,21 @@ export interface AudioCaptchaStored extends InteractiveCaptchaStored {
 }
 
 /**
+ * What the portal needs to redraw the icon order challenge a user was served.
+ * Absent on records written before this field existed.
+ *
+ * `seed` drives the whole render, so it regenerates the answer along with the
+ * imagery: it must never be served to a caller, and never while the
+ * challenge is still live.
+ */
+export interface IconOrderRenderRecord {
+	geometry: { width: number; height: number; iconSize: number };
+	settings: Required<IIconOrderSettings>;
+	/** 128-bit hex. */
+	seed: string;
+}
+
+/**
  * `targets` is the answer. Nothing on this record is ever sent to a client,
  * and decoys are not stored because grading never consults them.
  */
@@ -1034,6 +1063,7 @@ export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
 	tolerance: number;
 	clicks?: IconClick[];
 	iconOrderEvents?: IconOrderEvent[];
+	render?: IconOrderRenderRecord;
 }
 
 /** A target icon as persisted: what grading needs, without render-only fields. */
@@ -1088,12 +1118,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.audio
-		| CaptchaType.iconOrder;
+	captchaType?: ChallengeCaptchaType;
 	createdAt: Date;
 	updatedAt: Date;
 };

@@ -50,6 +50,7 @@ import {
 	imageMinRoundsDefault,
 	imageThresholdDefault,
 	ipDetectorRiskWeightDefault,
+	ipValidationReputationScoreThresholdDefault,
 	isCaptchaTypeFeatureEnabled,
 	isWidgetFeatureEnabled,
 	powDifficultyDefault,
@@ -58,9 +59,11 @@ import {
 	resolveFrictionlessTypes,
 	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
+	trafficFilterReputationScoreThresholdDefault,
 	widgetFeatureFlagDefaults,
 	withMarketCountries,
 } from "./settings.js";
+import { Tier } from "./user.js";
 
 type Settings = output<typeof ClientSettingsSchema>;
 
@@ -427,8 +430,27 @@ describe("IPValidationRulesSchema", () => {
 		const rules = IPValidationRulesSchema.parse({ actions: {} });
 		expect(rules.distanceThresholdKm).toBe(distanceThresholdKmDefault);
 		expect(rules.abuseScoreThreshold).toBe(abuseScoreThresholdDefault);
+		expect(rules.reputationScoreThreshold).toBe(
+			ipValidationReputationScoreThresholdDefault,
+		);
+		expect(ipValidationReputationScoreThresholdDefault).toBe(0.26);
 		expect(rules.requireAllConditions).toBe(false);
 		expect(rules.forceConsistentIp).toBe(false);
+	});
+
+	it("bounds the reputation score threshold to a probability", () => {
+		expect(
+			IPValidationRulesSchema.safeParse({
+				actions: {},
+				reputationScoreThreshold: 1.2,
+			}).success,
+		).toBe(false);
+		expect(
+			IPValidationRulesSchema.safeParse({
+				actions: {},
+				reputationScoreThreshold: 0,
+			}).success,
+		).toBe(true);
 	});
 
 	it("requires the actions object, even when empty", () => {
@@ -674,6 +696,50 @@ describe("TrafficFilterSchema", () => {
 		).toBe(false);
 	});
 
+	it("defaults the reputation score threshold to 0.98", () => {
+		expect(trafficFilterReputationScoreThresholdDefault).toBe(0.98);
+		expect(TrafficFilterSchema.parse({}).reputationScoreThreshold).toBe(
+			trafficFilterReputationScoreThresholdDefault,
+		);
+	});
+
+	it("bounds the reputation score threshold to a probability", () => {
+		for (const [reputationScoreThreshold, ok] of [
+			[0, true],
+			[1, true],
+			[1.01, false],
+			[-0.01, false],
+		] as const) {
+			expect(
+				TrafficFilterSchema.safeParse({ reputationScoreThreshold }).success,
+			).toBe(ok);
+		}
+	});
+
+	it("accepts an exception conditioned only on a minimum reputation score", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [
+					{ minReputationScore: 0.9, action: TrafficFilterAction.Block },
+				],
+			},
+		});
+		expect(filter.proxy?.exceptions?.[0]?.minReputationScore).toBe(0.9);
+	});
+
+	it("still parses a stored exception carrying only minAbuserScore", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [
+					{ minAbuserScore: 0.1, action: TrafficFilterAction.Block },
+				],
+			},
+		});
+		expect(filter.proxy?.exceptions?.[0]?.minAbuserScore).toBe(0.1);
+	});
+
 	it("upper-cases exception country codes", () => {
 		const filter = TrafficFilterSchema.parse({
 			proxy: {
@@ -715,6 +781,7 @@ describe("TrafficFilterSchema", () => {
 		[{ countries: [], action: TrafficFilterAction.Challenge }],
 		[{ countries: ["GBR"], action: TrafficFilterAction.Challenge }],
 		[{ minAbuserScore: 1.5, action: TrafficFilterAction.Block }],
+		[{ minReputationScore: 1.5, action: TrafficFilterAction.Block }],
 	])("rejects an invalid exception %o", (exception: object) => {
 		expect(
 			TrafficFilterSchema.safeParse({
@@ -1070,6 +1137,28 @@ describe("resolveAllowedCaptchaTypes", () => {
 				captchaTypeFeatureFlags: { iconOrder: true },
 			}).iconOrder,
 		).toBe(false);
+	});
+
+	it("allows icon-order on a free site unless its flag says otherwise", () => {
+		expect(resolveAllowedCaptchaTypes({}, Tier.Free).iconOrder).toBe(true);
+		expect(
+			resolveAllowedCaptchaTypes(
+				{ captchaTypeFeatureFlags: { iconOrder: false } },
+				Tier.Free,
+			).iconOrder,
+		).toBe(false);
+		expect(
+			resolveAllowedCaptchaTypes(
+				{ frictionlessTypes: { image: true, puzzle: true, iconOrder: false } },
+				Tier.Free,
+			).iconOrder,
+		).toBe(false);
+	});
+
+	it("keeps icon-order off by default on paid sites", () => {
+		for (const tier of [Tier.Professional, Tier.Enterprise]) {
+			expect(resolveAllowedCaptchaTypes({}, tier).iconOrder).toBe(false);
+		}
 	});
 
 	it("never lets the feature flag re-enable a type the owner switched off", () => {

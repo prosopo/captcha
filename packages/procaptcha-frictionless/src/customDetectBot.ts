@@ -227,6 +227,7 @@ const customDetectBot: BotDetectionFunction = async (
 	refreshOf?: string,
 	switchTo?: RefreshSwitchTarget,
 	widgetSlot?: number,
+	retryOf?: string,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
 		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
@@ -377,6 +378,7 @@ const customDetectBot: BotDetectionFunction = async (
 				switchTo,
 				fallbackFingerprintProof,
 				widgetSlot,
+				retryOf,
 				readBypassKeyCookie(),
 			),
 			10000,
@@ -433,6 +435,7 @@ const customDetectBot: BotDetectionFunction = async (
 		switchTo,
 		fingerprintProof,
 		widgetSlot,
+		retryOf,
 		readBypassKeyCookie(),
 	);
 	if (detectionResult.getSimdReadings) {

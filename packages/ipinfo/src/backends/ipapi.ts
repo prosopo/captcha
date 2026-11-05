@@ -13,11 +13,15 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import type {
-	IPApiReputationInfo,
-	IPApiResponse,
-	IPInfoResponse,
-	IPInfoResult,
+import {
+	type AccountSighting,
+	type IPApiReputationInfo,
+	type IPApiResponse,
+	type IPInfoResponse,
+	type IPInfoResult,
+	REPUTATION_SHARED_REASONS,
+	type ReputationAccountResponse,
+	type ReputationSharedReason,
 } from "@prosopo/types";
 
 /**
@@ -81,6 +85,62 @@ export const parseDetectorRisk = (
 ): number | undefined => {
 	const risk = reputation?.detector_risk;
 	return typeof risk === "number" && risk >= 0 && risk <= 1 ? risk : undefined;
+};
+
+/**
+ * The address's reputation score, if the lookup returned one. Undefined
+ * otherwise, never 0.
+ */
+export const parseReputationScore = (
+	reputation: IPApiReputationInfo | undefined,
+): { score: number; band?: string } | undefined => {
+	const assessment = reputation?.assessment;
+	const score = assessment?.score;
+	if (
+		assessment?.state !== "scored" ||
+		typeof score !== "number" ||
+		!Number.isFinite(score) ||
+		score < 0 ||
+		score > 1
+	) {
+		return undefined;
+	}
+	const band = assessment.band;
+	return { score, ...(typeof band === "string" && band && { band }) };
+};
+
+/** The shared-egress reason, when it is one this client knows. */
+export const parseSharedReason = (
+	reputation: IPApiReputationInfo | undefined,
+): ReputationSharedReason | undefined => {
+	const reason = reputation?.shared_reason;
+	return REPUTATION_SHARED_REASONS.find((known) => known === reason);
+};
+
+/**
+ * An account the reputation DB knows, read defensively: the body is cast from
+ * `response.json()`, not validated.
+ */
+export const parseAccountSighting = (
+	body: ReputationAccountResponse | undefined,
+): AccountSighting | undefined => {
+	const userAgents = body?.user_agents_7d;
+	if (
+		body?.known !== true ||
+		typeof userAgents !== "number" ||
+		!Number.isInteger(userAgents) ||
+		userAgents < 0
+	) {
+		return undefined;
+	}
+	return {
+		userAgents7d: userAgents,
+		deviceTypes: Array.isArray(body.device_types)
+			? body.device_types.filter(
+					(type): type is string => typeof type === "string",
+				)
+			: [],
+	};
 };
 
 export class IpapiBackend {
@@ -148,6 +208,7 @@ export class IpapiBackend {
 					};
 				}
 
+				const reputation = parseReputationScore(data.reputation);
 				const result: IPInfoResult = {
 					ip: data.ip,
 					isValid: true,
@@ -180,7 +241,10 @@ export class IpapiBackend {
 
 					abuserScore: parseAbuserScore(data.asn?.abuser_score),
 					companyAbuserScore: parseAbuserScore(data.company?.abuser_score),
+					reputationScore: reputation?.score,
+					reputationBand: reputation?.band,
 					detectorRisk: parseDetectorRisk(data.reputation),
+					sharedReason: parseSharedReason(data.reputation),
 				};
 
 				return result;
@@ -203,6 +267,49 @@ export class IpapiBackend {
 				error: `Network or parsing error: ${error instanceof Error ? error.message : String(error)}`,
 				ip,
 			};
+		}
+	}
+
+	/**
+	 * The reputation DB's sighting of `account` on `siteKey`, from
+	 * `GET /v1/account/{siteKey}/{account}`. Undefined for an unknown account
+	 * and for every failure: a DB without account data answers 404.
+	 */
+	async accountSighting(
+		siteKey: string,
+		account: string,
+	): Promise<AccountSighting | undefined> {
+		if (!siteKey || !account) {
+			return undefined;
+		}
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), this.timeoutMs);
+		try {
+			const url = new URL(
+				`/v1/account/${encodeURIComponent(siteKey)}/${encodeURIComponent(account)}`,
+				this.config.baseUrl,
+			);
+			const doFetch: FetchFn = this.config.fetch ?? globalThis.fetch;
+			const response = await doFetch(url.toString(), {
+				method: "GET",
+				headers: { Accept: "application/json" },
+				signal: controller.signal,
+			});
+			if (!response.ok) {
+				return undefined;
+			}
+			return parseAccountSighting(
+				(await response.json()) as ReputationAccountResponse,
+			);
+		} catch (error) {
+			this.config.logger?.debug(() => ({
+				msg: "Account sighting lookup failed",
+				err: error,
+				data: { siteKey },
+			}));
+			return undefined;
+		} finally {
+			clearTimeout(timeoutId);
 		}
 	}
 }
