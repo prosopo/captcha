@@ -41,6 +41,7 @@
 		"serve:bundle": "pnpm --filter @prosopo/procaptcha-bundle run serve",
 		"populate-data": "pnpm --filter @prosopo/provider run populate-data",
 		"test:all": "turbo run test --concurrency=1",
+		"test:scripts": "node --test .github/scripts/*.test.mjs",
 		"typecheck": "turbo run typecheck",
 		"lint:license": "pnpm --filter @prosopo/lint run start license --pkg $(pwd) --ignore @prosopo/fingerprintjs",
 		"lint-fix:license": "pnpm run --silent lint:license --fix",
