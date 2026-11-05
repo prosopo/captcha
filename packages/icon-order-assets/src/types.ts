@@ -45,6 +45,11 @@ export interface RenderedIconOrder {
 	legendIconSize: number;
 	/** The answer, in click order. Must never reach a response body. */
 	targets: IconPlacement[];
+	/**
+	 * 128-bit hex. Regenerates the whole render, answer included, so it must
+	 * never reach a response body either, nor anyone while the challenge is live.
+	 */
+	seed: string;
 }
 
 /** Per-render tunables; the provider layers operator overrides onto the defaults. */

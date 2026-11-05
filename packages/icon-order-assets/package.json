@@ -13,6 +13,11 @@
 			"types": "./dist/types/index.d.ts",
 			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./browser": {
+			"types": "./dist/types/browser.d.ts",
+			"import": "./dist/esm/browser.js",
+			"require": "./dist/cjs/browser.cjs"
 		}
 	},
 	"scripts": {
