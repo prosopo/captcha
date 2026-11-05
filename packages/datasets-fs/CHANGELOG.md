@@ -1,5 +1,19 @@
 # @prosopo/datasets-fs
 
+## 3.0.165
+### Patch Changes
+
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util@3.6.1
+  - @prosopo/util-crypto@13.6.5
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.10
+
 ## 3.0.164
 ### Patch Changes
 

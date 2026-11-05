@@ -108,6 +108,7 @@ export enum ApiParams {
 	widgetSlot = "widgetSlot",
 	imageSwitchAvailable = "imageSwitchAvailable",
 	puzzleSwitchAvailable = "puzzleSwitchAvailable",
+	bypassKey = "bypassKey",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
 	clip = "clip",

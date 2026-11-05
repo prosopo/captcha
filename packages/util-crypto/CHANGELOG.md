@@ -1,5 +1,10 @@
 # @prosopo/util-crypto
 
+## 13.6.5
+### Patch Changes
+
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+
 ## 13.6.4
 ### Patch Changes
 

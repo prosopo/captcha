@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/logger",
-	"version": "2.1.9",
+	"version": "2.1.10",
 	"description": "Prosopo logger library",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",

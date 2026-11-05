@@ -561,6 +561,12 @@ describe("getFrictionlessCaptcha", () => {
 			"https://site.example/page",
 			"https://iframe.example",
 			"bumblebee-abc",
+			undefined, // refreshOf
+			undefined, // switchTo
+			undefined, // fingerprintProof
+			undefined, // widgetSlot
+			undefined, // retryOf
+			"pbk_example",
 		);
 		expect(body()).toMatchObject({
 			[ApiParams.mode]: ModeEnum.invisible,
@@ -568,6 +574,7 @@ describe("getFrictionlessCaptcha", () => {
 			[ApiParams.currentUrl]: "https://site.example/page",
 			[ApiParams.iframeUrl]: "https://iframe.example",
 			[ApiParams.clientSessionId]: "bumblebee-abc",
+			[ApiParams.bypassKey]: "pbk_example",
 		});
 	});
 

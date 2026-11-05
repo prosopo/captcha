@@ -1,5 +1,63 @@
 # @prosopo/types
 
+## 5.27.0
+### Minor Changes
+
+- 6b96e77: Name the captcha-type sets, and serve or verify each type from one table.
+  
+  `@prosopo/types` now exports three named sets in place of the unions that were
+  spelled out by hand across the codebase:
+  
+  - `ChallengeCaptchaType`: pow, image, puzzle, icon-order and audio. Anything a
+    user can be asked to solve.
+  - `ConcreteCaptchaType`: the same minus audio. What a session can be minted
+    as (moved here from the provider).
+  - `InteractiveCaptchaType`: image, puzzle and icon-order. What a PoW solve can
+    escalate into.
+  
+  Each has a constant array, a schema and an `is…` guard.
+  `DecisionMachineCaptchaTypeSchema` and `DecisionMachineCaptchaType` stay as
+  aliases.
+  
+  The provider serves a chosen type through one `sendChallenge` table, used by
+  the configured-type short-circuit and the access-policy handler. The server
+  verifies through one table keyed on `ChallengeCaptchaType`. A new type that is
+  missing from either table is a compile error.
+  
+  Behaviour changes:
+  
+  - An access rule that pins icon-order now serves icon-order. Before, the
+    access-policy handler only knew image, pow and puzzle, so the rule was
+    ignored and the request fell through to the decision machine.
+  - A blocked session is recorded against the type the request would have been
+    served instead of always `image`. Per-type session counts already exclude
+    blocked sessions, so traffic figures do not move.
+  
+  Sessions also store `challengeParams`, the type-specific knobs grouped under
+  the type the session was minted as. It is written alongside the existing flat
+  fields, which stay the source of truth, so no reader or backfill changes are
+  needed.
+
+### Patch Changes
+
+- e1cb7f4: Icon order challenges can now be redrawn exactly, the way puzzle challenges already can.
+  
+  - The provider saves what it needs to redraw each icon order challenge on its record: the render seed, the frame geometry and the render settings (`render`).
+  - `@prosopo/icon-order-assets/browser` is a new entry that rebuilds a challenge from those inputs without `sharp`, so the portal can show the image a visitor was served. It returns the frame and the target strip as SVG plus the grain to lay over the frame. Rasterised the same way, the frame matches the served one byte for byte.
+  - `@prosopo/puzzle-assets/browser` also exports `hslToRgb` and the `Prng` type, which the new entry uses.
+  
+  The seed regenerates the answer too, so like the puzzle seeds it is never sent to a client.
+- 7caad4c: Routing machines can now see which tier a site is on, and free-tier sites can be served icon order.
+  
+  - `RoutingMachineInput` has a `tier` field: the tier of the account that owns the site key. Machines get it on both the first request and after a PoW solve.
+  - On free-tier sites, icon order counts as allowed unless the site's `captchaTypeFeatureFlags.iconOrder` is explicitly off. Paid sites keep it off unless the flag is on. Nothing serves icon order unless something asks for it, such as a routing rule or the site owner choosing it, so this changes nothing for a free site on its own.
+  
+  Together these let a routing rule send a share of free-tier traffic to icon order without turning the flag on for each site.
+- Updated dependencies [a191c21]
+  - @prosopo/util@3.6.1
+  - @prosopo/util-crypto@13.6.5
+  - @prosopo/locale@3.14.2
+
 ## 5.26.0
 ### Minor Changes
 

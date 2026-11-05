@@ -630,6 +630,7 @@ export default class ProviderApi
 		fingerprintProof?: string,
 		widgetSlot?: number,
 		retryOf?: string,
+		bypassKey?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
@@ -658,6 +659,7 @@ export default class ProviderApi
 			}),
 			...(widgetSlot !== undefined && { [ApiParams.widgetSlot]: widgetSlot }),
 			...(retryOf && { [ApiParams.retryOf]: retryOf }),
+			...(bypassKey && { [ApiParams.bypassKey]: bypassKey }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,
