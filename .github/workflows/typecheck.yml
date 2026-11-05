@@ -93,6 +93,6 @@ jobs:
           node-cache: 'pnpm'
           store-path: ''
 
-      - run: pnpm exec turbo run typecheck
+      - run: timeout 4m pnpm exec turbo run typecheck
         timeout-minutes: 5
 

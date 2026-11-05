@@ -84,7 +84,7 @@ jobs:
 
       - name: Every job and step has a timeout
         timeout-minutes: 5
-        uses: prosopo/github_actions/.github/actions/check-timeouts@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
+        uses: prosopo/github_actions/.github/actions/check-timeouts@7a52d4663836059f0c6cf1c7a29186cd4d8b49a4  # main
 
       - name: Setup node and pnpm
         timeout-minutes: 30
@@ -94,9 +94,9 @@ jobs:
           node-cache: 'pnpm'
           store-path: ''
 
-      - run: pnpm exec turbo run @prosopo/lint#build
+      - run: timeout 29m pnpm exec turbo run @prosopo/lint#build
         timeout-minutes: 30
 
-      - run: pnpm run lint
+      - run: timeout 4m pnpm run lint
         timeout-minutes: 5
 

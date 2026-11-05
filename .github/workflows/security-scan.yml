@@ -71,7 +71,7 @@ jobs:
         timeout-minutes: 30
         run: |
           version=8.28.0
-          curl -sSfL -o /tmp/gitleaks.tar.gz \
+          timeout 5m curl -sSfL -o /tmp/gitleaks.tar.gz \
             "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
           sudo install /tmp/gitleaks /usr/local/bin/gitleaks
@@ -212,12 +212,12 @@ jobs:
       # the advisory database over the network.
       - name: pnpm audit (critical - gating)
         timeout-minutes: 30
-        run: pnpm audit --audit-level=critical
+        run: timeout 29m pnpm audit --audit-level=critical
 
       - name: pnpm audit (high - report only)
         timeout-minutes: 30
         continue-on-error: true
-        run: pnpm audit --audit-level=high
+        run: timeout 29m pnpm audit --audit-level=high
 
   cargo:
     name: cargo audit
@@ -250,4 +250,4 @@ jobs:
       - name: cargo audit
         timeout-minutes: 30
         working-directory: ${{ matrix.crate }}
-        run: cargo audit
+        run: timeout 29m cargo audit

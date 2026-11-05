@@ -127,30 +127,30 @@ jobs:
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace
-      - run: pnpm exec turbo run build
+      - run: timeout 29m pnpm exec turbo run build
         timeout-minutes: 30
 
       - name: Start the docker images
         timeout-minutes: 30
         run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
-          docker container ls
+          timeout 29m docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+          timeout 5m docker container ls
           sleep 10s
 
       # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-      - run: NODE_ENV="test" pnpm run setup
+      - run: NODE_ENV="test" timeout 29m pnpm run setup
         timeout-minutes: 30
 
       # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
       # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
       # by the cypress tests to find the elements they need to interact with
-      - run: NODE_ENV="development" pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
+      - run: NODE_ENV="development" timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
         timeout-minutes: 30
 
       - name: Run the cypress tests on client-bundle-example
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
         timeout-minutes: 30
@@ -160,32 +160,32 @@ jobs:
           # detection instead of the empty-pool PoW fallback.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with pow captcha
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with puzzle captcha
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:puzzle" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:puzzle" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with audio captcha
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:audio" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:audio" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with icon-order captcha
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:iconOrder" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:iconOrder" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with invisible captcha
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the post-PoW route() escalation flow
         timeout-minutes: 30
@@ -197,7 +197,7 @@ jobs:
           # set it by accident.
           PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:escalation" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:escalation" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless-phase routing machine
         timeout-minutes: 30
@@ -214,49 +214,49 @@ jobs:
           # fixture pool keeps that fallback declined.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the post-PoW route() escalation to puzzle
         timeout-minutes: 30
         env:
           PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for decide() decision machine deny at verify — image
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for decide() decision machine deny at verify — pow
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for decide() decision machine deny at verify — puzzle
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the client session id correlation
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:clientSessionId" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:clientSessionId" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for user access policy blocks (request-time + defer-to-verify)
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for user access policy Restrict rules
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for user access policy conflict resolution (specificity + harshness)
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless score ladder (pow / puzzle / image bands)
         timeout-minutes: 30
@@ -281,7 +281,7 @@ jobs:
           # LANG_PUZZLE_BAND / LANG_IMAGE_BAND in frictionlessLadder.cy.ts.
           L_RULES: '{"zz-puzzleband":0.8,"zz-imageband":1.5}'
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless challenge-type toggles (image / puzzle on / off)
         timeout-minutes: 30
@@ -303,12 +303,12 @@ jobs:
           # in frictionlessTypes.cy.ts, which mirror frictionlessLadder.cy.ts.
           L_RULES: '{"zz-puzzleband":0.8,"zz-imageband":1.5}'
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessTypes" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessTypes" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless no-captchaType widget-cascade guard
         timeout-minutes: 30
         run: |
-          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       # after the test run completes store videos and any screenshots
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
@@ -341,5 +341,5 @@ jobs:
             ./demos/cypress-shared/cypress/snapshots/actual
           if-no-files-found: ignore
 
-      - run: docker compose --file ./docker/docker-compose.test.yml down
+      - run: timeout 4m docker compose --file ./docker/docker-compose.test.yml down
         timeout-minutes: 5

@@ -70,7 +70,7 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+      - run: timeout 29m pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
         timeout-minutes: 30
 
       - name: Detect changesets
@@ -96,9 +96,9 @@ jobs:
         timeout-minutes: 30
         if: steps.detect.outputs.has_changesets == 'true'
         run: |
-          pnpm exec changeset version --verbose
+          timeout 29m pnpm exec changeset version --verbose
 
-          pnpm install --lockfile-only --ignore-scripts
+          timeout 29m pnpm install --lockfile-only --ignore-scripts
           
           # Set the root package.json version to match @prosopo/cli. The provider
           # image tag now comes from packages/cli's own version, so there is no
@@ -107,23 +107,23 @@ jobs:
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting versions to $root_version"
           
-          pnpm pkg set version="$root_version"
+          timeout 29m pnpm pkg set version="$root_version"
           
           git add -u .
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+      - run: timeout 29m pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
         timeout-minutes: 30
 
       - name: Build packages
         timeout-minutes: 30
         run: |
           echo "Building all packages"
-          pnpm run build:all
+          timeout 29m pnpm run build:all
 
       - name: lint-fix
         timeout-minutes: 5
         run: |
-          pnpm run lint-fix
+          timeout 4m pnpm run lint-fix
           git add -u .
 
       - name: Create release branch and PR
@@ -136,9 +136,9 @@ jobs:
           
           git checkout -b "$branch_name"
           git commit -m "chore: version bump v${{ env.root_version }}"
-          git push --set-upstream origin "$branch_name"
+          timeout 4m git push --set-upstream origin "$branch_name"
           
-          gh pr create \
+          timeout 4m gh pr create \
             --title "Release v${{ env.root_version }}" \
             --body "Automated release PR for version ${{ env.root_version }}" \
             --base main \

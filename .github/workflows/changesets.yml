@@ -77,13 +77,13 @@ jobs:
         timeout-minutes: 5
         env:
           BASE_REF: ${{ github.base_ref }}
-        run: git fetch origin "$BASE_REF" && git checkout "$BASE_REF"
+        run: timeout 4m git fetch origin "$BASE_REF" && git checkout "$BASE_REF"
 
       - name: Checkout head ref
         timeout-minutes: 5
         env:
           HEAD_REF: ${{ github.head_ref }}
-        run: git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
+        run: timeout 4m git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
 
       # if this fails, you need to run `pnpm run changesets:add` (preferred!) or `pnpm run changesets:empty` for an empty changeset (avoid if possible)
       - name: check changesets
@@ -93,4 +93,4 @@ jobs:
         run: |
 
           # check that the changesets are present for each package which has been modified
-          pnpm run changesets --since "$BASE_REF"
+          timeout 4m pnpm run changesets --since "$BASE_REF"

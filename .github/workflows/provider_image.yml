@@ -84,9 +84,9 @@ jobs:
           # Append the development PROVIDER_MNEMONIC from env.development to the .env.production file
           grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
 
-      - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#build
+      - run: NODE_ENV="production" timeout 29m pnpm exec turbo run @prosopo/cli#build
         timeout-minutes: 30
-      - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#bundle
+      - run: NODE_ENV="production" timeout 29m pnpm exec turbo run @prosopo/cli#bundle
         timeout-minutes: 30
 
       - name: Set up Docker Buildx
@@ -111,7 +111,7 @@ jobs:
       # load the AMD64 image
       - name: Load the Provider Container
         timeout-minutes: 30
-        run: docker load -i provider-amd64.tar
+        run: timeout 29m docker load -i provider-amd64.tar
 
       # Generate a mnemonic for the provider image
       - name: Generate mnemonic and add to env file
@@ -129,16 +129,16 @@ jobs:
           # The runtime image is distroless: no shell, no npx. ENTRYPOINT is
           # node, so the bundle path and its args are passed as argv, and
           # NODE_ENV comes in as a real env var rather than a shell prefix.
-          CONTAINER="$(docker run -d -e NODE_ENV=production -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /usr/src/app/provider.cli.bundle.js version)"
+          CONTAINER="$(timeout 29m docker run -d -e NODE_ENV=production -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /usr/src/app/provider.cli.bundle.js version)"
           
           # Wait for container to complete
           sleep 20s
           
           # Get container exit code
-          EXIT_CODE="$(docker wait "$CONTAINER" || echo "timeout")"
+          EXIT_CODE="$(timeout 5m docker wait "$CONTAINER" || echo "timeout")"
           
           # Capture logs
-          docker logs "$CONTAINER" > provider.log 2>&1
+          timeout 5m docker logs "$CONTAINER" > provider.log 2>&1
           cat provider.log
           
           # Check if container exited successfully

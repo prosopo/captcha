@@ -102,22 +102,22 @@ jobs:
           cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
       # build all packages in workspace
-      - run: pnpm exec turbo run build
+      - run: timeout 29m pnpm exec turbo run build
         timeout-minutes: 30
-      - run: pnpm exec turbo run build:cjs
+      - run: timeout 29m pnpm exec turbo run build:cjs
         timeout-minutes: 30
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         timeout-minutes: 30
         run: |
-          NODE_ENV="development" pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
+          NODE_ENV="development" timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
 
       - name: Start the docker images
         timeout-minutes: 30
         run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
-          docker container ls
+          timeout 29m docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+          timeout 5m docker container ls
           sleep 10s
 
       # setup certs
@@ -147,7 +147,7 @@ jobs:
           sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
           sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
 
-          NODE_ENV="test" pnpm run setup
+          NODE_ENV="test" timeout 4m pnpm run setup
 
           echo NODE_ENV: "$NODE_ENV"
 
@@ -161,12 +161,12 @@ jobs:
           # the real decrypt path.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          pnpm exec concurrently \
+          timeout 44m pnpm exec concurrently \
             "NODE_ENV=test pnpm run start:provider" \
             "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test pnpm run test:all" \
             --success "first" --kill-others
 
-      - run: docker compose --file ./docker/docker-compose.test.yml down
+      - run: timeout 4m docker compose --file ./docker/docker-compose.test.yml down
         timeout-minutes: 5
 
   # The widget decides its own width through CSS intrinsic sizing, container
@@ -203,7 +203,7 @@ jobs:
 
       - name: Install the browser vitest drives
         timeout-minutes: 30
-        run: pnpm --filter @prosopo/widget-skeleton exec playwright install --with-deps chromium
+        run: timeout 29m pnpm --filter @prosopo/widget-skeleton exec playwright install --with-deps chromium
 
-      - run: pnpm --filter @prosopo/widget-skeleton run test:browser
+      - run: timeout 29m pnpm --filter @prosopo/widget-skeleton run test:browser
         timeout-minutes: 30

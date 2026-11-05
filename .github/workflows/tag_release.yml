@@ -78,5 +78,5 @@ jobs:
           root_version="${{ steps.version.outputs.root_version }}"
           echo "Tagging v$root_version"
           git tag "v$root_version" || echo "Tag already exists, skipping"
-          git push origin --tags
+          timeout 4m git push origin --tags
 

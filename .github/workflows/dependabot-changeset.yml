@@ -83,7 +83,7 @@ jobs:
       # (exit 127) and abort before the lockfile is refreshed.
       - name: Update lockfile
         timeout-minutes: 30
-        run: pnpm install --lockfile-only --ignore-scripts --prefer-offline
+        run: timeout 29m pnpm install --lockfile-only --ignore-scripts --prefer-offline
 
       - name: Generate changeset
         timeout-minutes: 5
@@ -94,7 +94,7 @@ jobs:
           # base advanced after this PR branch was created/rebased, `git diff
           # origin/$BASE_REF...HEAD` in the script fails with "no merge base".
           # checkout above already ran with fetch-depth: 0, so this fetch is cheap.
-          git fetch origin "$BASE_REF"
+          timeout 4m git fetch origin "$BASE_REF"
           node .github/scripts/dependabot-changeset.mjs
 
       - name: Commit and push
@@ -108,4 +108,4 @@ jobs:
             exit 0
           fi
           git commit -m "chore(deps): add changeset and refresh lockfile [dependabot-skip]"
-          git push origin "HEAD:$HEAD_REF"
+          timeout 4m git push origin "HEAD:$HEAD_REF"

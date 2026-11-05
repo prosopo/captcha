@@ -110,7 +110,7 @@ jobs:
           # silently dropped here. `build` was shared by android-webview and
           # ios-webview and both are renamed.
           latest_runs() {
-            gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/check-runs?per_page=100" --paginate \
+            timeout 5m gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/check-runs?per_page=100" --paginate \
               --jq '.check_runs[] | [.id, .status, (.conclusion // "-"), .name] | @tsv' 2>/dev/null \
             | awk -F'\t' '
                 NF>=4 && $4!="check" {

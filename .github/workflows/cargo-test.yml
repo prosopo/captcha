@@ -88,4 +88,4 @@ jobs:
       - name: cargo test
         timeout-minutes: 60
         working-directory: ${{ matrix.crate }}
-        run: cargo test --locked
+        run: timeout 30m cargo test --locked
