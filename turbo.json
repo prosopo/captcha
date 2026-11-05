@@ -111,6 +111,7 @@
 			"dependsOn": ["@prosopo/config#build", "^build", "build:native"]
 		},
 		"lint": { "dependsOn": ["^lint"] },
+		"lint:docker": { "inputs": ["*.yml", "*Caddyfile", "../lint-bundle.mjs"] },
 		"clean": {
 			"cache": false
 		},

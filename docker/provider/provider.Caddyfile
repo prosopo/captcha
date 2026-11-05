@@ -1,4 +1,4 @@
-# usage: `caddy run --config ./docker/provider.Caddyfile --envfile docker/env.development`
+# usage: `caddy run --config ./docker/provider/provider.Caddyfile --envfile docker/env.development`
 {
 	# debug
 	http_port {$CADDY_HTTP_PORT:80}

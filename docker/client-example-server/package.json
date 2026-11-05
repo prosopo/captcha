@@ -1,0 +1,24 @@
+{
+	"name": "@prosopo/client-example-server-compose",
+	"version": "1.0.0",
+	"description": "Compose stack for the client example server",
+	"engines": {
+		"node": "^24",
+		"npm": "^11"
+	},
+	"type": "module",
+	"scripts": {
+		"lint:docker": "node ../lint-bundle.mjs"
+	},
+	"prosopo": {
+		"publish": [
+			"gh-release:client-example-server.Caddyfile,docker-compose.client-example-server.production.yml,docker-compose.client-example-server.staging.yml,docker-compose.client-example-server.yml"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "docker/client-example-server"
+	},
+	"private": true
+}
