@@ -1,5 +1,16 @@
 # @prosopo/fingerprint
 
+## 2.8.14
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util-crypto@13.6.5
+  - @prosopo/fingerprintjs@5.2.0
+
 ## 2.8.13
 ### Patch Changes
 

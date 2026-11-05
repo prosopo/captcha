@@ -21,6 +21,7 @@ import {
 	type IPAddress,
 	type IconClick,
 	type IconOrderEvent,
+	type IconOrderRenderRecord,
 	type PoWChallengeId,
 	type StoredIconTarget,
 	iconOrderToleranceDefault,
@@ -40,7 +41,8 @@ import {
 export interface IconOrderCaptchaChallenge extends MintedChallenge {
 	targets: StoredIconTarget[];
 	tolerance: number;
-	images: Omit<RenderedIconOrderImages, "targets">;
+	render: IconOrderRenderRecord;
+	images: Omit<RenderedIconOrderImages, "targets" | "render">;
 }
 
 export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrderCaptchaRecord> {
@@ -106,11 +108,12 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 		renderImages: () => Promise<RenderedIconOrderImages>,
 	): Promise<IconOrderCaptchaChallenge> {
 		const minted = this.mintChallenge(userAccount, dappAccount);
-		const { targets, ...images } = await renderImages();
+		const { targets, render, ...images } = await renderImages();
 		return {
 			...minted,
 			targets: toStoredTargets(targets),
 			tolerance: tolerance ?? iconOrderToleranceDefault,
+			render,
 			images,
 		};
 	}

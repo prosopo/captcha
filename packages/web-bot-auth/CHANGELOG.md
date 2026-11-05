@@ -1,5 +1,11 @@
 # @prosopo/web-bot-auth
 
+## 0.1.9
+### Patch Changes
+
+- Updated dependencies [a191c21]
+  - @prosopo/util@3.6.1
+
 ## 0.1.8
 ### Patch Changes
 
