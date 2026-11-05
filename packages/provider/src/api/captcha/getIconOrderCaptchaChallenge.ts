@@ -78,6 +78,7 @@ const issueIconOrderChallenge = async ({
 		provenance.ja4,
 		provenance.sessionId,
 		provenance.ipInfo,
+		challenge.render,
 	);
 
 	return {

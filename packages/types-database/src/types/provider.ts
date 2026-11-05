@@ -56,6 +56,7 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IUserData,
+	type IconOrderRenderRecord,
 	InputMethod,
 	type Item,
 	type PoWChallengeComponents,
@@ -563,6 +564,31 @@ export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
 	},
 	iconOrderEvents: {
 		type: [pointerEventSchema()],
+		required: false,
+	},
+	// Render inputs kept so the portal can redraw the exact challenge a user
+	// was served. `seed` regenerates the answer too, so it must never be served
+	// to a caller — see IconOrderRenderRecord.
+	render: {
+		type: new Schema<IconOrderRenderRecord>(
+			{
+				geometry: {
+					width: { type: Number, required: true },
+					height: { type: Number, required: true },
+					iconSize: { type: Number, required: true },
+				},
+				settings: {
+					targetCount: { type: Number, required: true },
+					decoyCount: { type: Number, required: true },
+					strokeWidth: { type: Number, required: true },
+					iconOpacity: { type: Number, required: true },
+					haloOpacity: { type: Number, required: true },
+					backgroundClutter: { type: Number, required: true },
+				},
+				seed: { type: String, required: true },
+			},
+			{ _id: false },
+		),
 		required: false,
 	},
 });
@@ -1664,6 +1690,7 @@ export interface IProviderDatabase extends IDatabase {
 		ja4: string,
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
+		render?: IconOrderRenderRecord,
 	): Promise<void>;
 
 	getAudioCaptchaRecordByChallenge(
