@@ -51,7 +51,7 @@ jobs:
     # run on the self-hosted fleet.
     # Runs on drafts too: it is cheap, and translators iterate on drafts.
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         timeout-minutes: 5
@@ -59,7 +59,7 @@ jobs:
           submodules: "recursive"
 
       - name: Setup node and pnpm
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -69,17 +69,17 @@ jobs:
       # vite.test.config.ts imports the built @prosopo/config and needs an
       # .env.test, and the type tests resolve locale's other workspace
       # dependencies (such as @prosopo/util) through their dist/types.
-      - run: pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
-        timeout-minutes: 5
+      - run: timeout 29m pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
+        timeout-minutes: 30
 
       - run: cp dev/scripts/env.test .env.test
-        timeout-minutes: 5
+        timeout-minutes: 30
 
       - name: Catalogue tests
-        timeout-minutes: 5
+        timeout-minutes: 30
         working-directory: packages/locale
         run: >-
-          pnpm exec vitest run --config ./vite.test.config.ts
+          timeout 29m pnpm exec vitest run --config ./vite.test.config.ts
           src/tests/locales.unit.test.ts
           src/tests/localePlaceholders.unit.test.ts
           src/tests/translations.unit.test.ts

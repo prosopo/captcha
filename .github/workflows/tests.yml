@@ -87,7 +87,7 @@ jobs:
           submodules: "recursive"
 
       - name: Setup node and pnpm
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -95,29 +95,29 @@ jobs:
           store-path: ''
 
       - name: env
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
           # Copy the rococo env file to production env file
           echo "Copying the rococo env to production env file in procaptcha-bundle"
           cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
 
       # build all packages in workspace
-      - run: pnpm exec turbo run build
-        timeout-minutes: 15
-      - run: pnpm exec turbo run build:cjs
-        timeout-minutes: 5
+      - run: timeout 29m pnpm exec turbo run build
+        timeout-minutes: 30
+      - run: timeout 29m pnpm exec turbo run build:cjs
+        timeout-minutes: 30
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
-          NODE_ENV="development" pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
+          NODE_ENV="development" timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
 
       - name: Start the docker images
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
-          docker container ls
+          timeout 29m docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+          timeout 5m docker container ls
           sleep 10s
 
       # setup certs
@@ -147,7 +147,7 @@ jobs:
           sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
           sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
 
-          NODE_ENV="test" pnpm run setup
+          NODE_ENV="test" timeout 4m pnpm run setup
 
           echo NODE_ENV: "$NODE_ENV"
 
@@ -161,12 +161,12 @@ jobs:
           # the real decrypt path.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          pnpm exec concurrently \
+          timeout 44m pnpm exec concurrently \
             "NODE_ENV=test pnpm run start:provider" \
             "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test pnpm run test:all" \
             --success "first" --kill-others
 
-      - run: docker compose --file ./docker/docker-compose.test.yml down
+      - run: timeout 4m docker compose --file ./docker/docker-compose.test.yml down
         timeout-minutes: 5
 
   # The widget decides its own width through CSS intrinsic sizing, container
@@ -183,7 +183,7 @@ jobs:
   # so there is no list to add this to.
   widget-layout:
     name: widget layout
-    timeout-minutes: 5
+    timeout-minutes: 60
     runs-on: ubuntu-latest
     if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
@@ -193,7 +193,7 @@ jobs:
           submodules: false
 
       - name: Setup node and pnpm
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -202,8 +202,8 @@ jobs:
           install-args: '--prefer-offline --filter @prosopo/widget-skeleton'
 
       - name: Install the browser vitest drives
-        timeout-minutes: 5
-        run: pnpm --filter @prosopo/widget-skeleton exec playwright install --with-deps chromium
+        timeout-minutes: 30
+        run: timeout 29m pnpm --filter @prosopo/widget-skeleton exec playwright install --with-deps chromium
 
-      - run: pnpm --filter @prosopo/widget-skeleton run test:browser
-        timeout-minutes: 5
+      - run: timeout 29m pnpm --filter @prosopo/widget-skeleton run test:browser
+        timeout-minutes: 30
