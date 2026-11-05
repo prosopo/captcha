@@ -802,6 +802,9 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// Which of the page's widgets for this site key is asking, so each one is
 	// deduplicated onto its own session instead of all sharing the first.
 	[ApiParams.widgetSlot]: number().int().min(0).max(MAX_WIDGET_SLOT).optional(),
+	// A site bypass key read from the page's cookie. Never stored: the provider
+	// hashes it and only the hash is compared with the site's Allow rules.
+	[ApiParams.bypassKey]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

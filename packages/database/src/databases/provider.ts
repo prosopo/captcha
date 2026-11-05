@@ -41,6 +41,7 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IconOrderCaptchaStored,
+	type IconOrderRenderRecord,
 	type InteractiveCaptchaStored,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
@@ -1231,9 +1232,17 @@ export class ProviderDatabase
 							record as IconOrderCaptchaRecord,
 							markStored,
 						),
+					// The full record replaces the central copy's fields, so the
+					// render inputs the portal redraws from have to come with it.
 					streamUpdate: (challenge, markStored) =>
 						this.centralStreamer?.streamIconOrderUpdate(
-							() => this.getIconOrderCaptchaRecordByChallenge(challenge),
+							() =>
+								this.getInteractiveCaptchaRecordByChallenge<IconOrderCaptchaRecord>(
+									this.interactiveCollection(CaptchaType.iconOrder),
+									challenge,
+									"streamIconOrderUpdate",
+									{ render: 1 },
+								),
 							markStored,
 						),
 				};
@@ -1431,6 +1440,7 @@ export class ProviderDatabase
 		ja4: string,
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
+		render?: IconOrderRenderRecord,
 	): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.iconOrder),
@@ -1447,6 +1457,7 @@ export class ProviderDatabase
 				),
 				targets,
 				tolerance,
+				...(render && { render }),
 			},
 		);
 	}

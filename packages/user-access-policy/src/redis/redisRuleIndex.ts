@@ -56,6 +56,7 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	headerValue: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	headerOperator: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	webBotAuthAgent: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	bypassKeyHash: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies AllKeys<UserAttributes>;
 
 export const userScopeRedisSchema: RediSearchSchema = {

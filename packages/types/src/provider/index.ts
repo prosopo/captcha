@@ -20,3 +20,4 @@ export * from "./database.js";
 export * from "./matchedAccessRule.js";
 export * from "./isBlockingCaptchaResult.js";
 export * from "./reasons.js";
+export * from "./bypassKey.js";

@@ -1,5 +1,25 @@
 # @prosopo/procaptcha-pow
 
+## 2.14.11
+### Patch Changes
+
+- 213678a: A routing machine that sends a user from PoW to icon-order now actually serves them icon-order. Before, the provider dropped that escalation and let the PoW solve pass on its own, and the PoW widget ignored an icon-order escalation if one arrived. A site without the icon-order flag gets puzzle (or image) instead, as with any other disabled type.
+  
+  The missing-click and changed-IP checks also no longer replace a routed icon-order challenge with an image one.
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util@3.6.1
+  - @prosopo/util-crypto@13.6.5
+  - @prosopo/api@4.9.2
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.14
+  - @prosopo/procaptcha-common@2.23.3
+  - @prosopo/locale@3.14.2
+  - @prosopo/widget-skeleton@2.10.5
+
 ## 2.14.10
 ### Patch Changes
 

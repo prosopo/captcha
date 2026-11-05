@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/icon-order-assets",
-	"version": "0.2.5",
+	"version": "0.2.6",
 	"description": "Procedural imagery for the ordered-icon selection captcha",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
@@ -13,6 +13,11 @@
 			"types": "./dist/types/index.d.ts",
 			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./browser": {
+			"types": "./dist/types/browser.d.ts",
+			"import": "./dist/esm/browser.js",
+			"require": "./dist/cjs/browser.cjs"
 		}
 	},
 	"scripts": {

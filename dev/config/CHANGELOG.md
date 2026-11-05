@@ -1,5 +1,10 @@
 # @prosopo/config
 
+## 3.5.4
+### Patch Changes
+
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+
 ## 3.5.3
 ### Patch Changes
 

@@ -29,6 +29,8 @@ import type {
 } from "./types.js";
 
 export { createPrng, createSeed, SEED_BYTES } from "./prng.js";
+export type { Prng } from "./prng.js";
+export { hslToRgb } from "./palette.js";
 export { generateBackground } from "./background.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
 export type {
