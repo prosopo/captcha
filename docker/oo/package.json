@@ -3,8 +3,7 @@
 	"version": "1.0.0",
 	"description": "Compose stack for the OpenObserve instances",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"type": "module",
 	"scripts": {
