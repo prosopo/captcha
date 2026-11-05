@@ -23,22 +23,20 @@ import {
 	type FrictionlessReason,
 	type IFrictionlessTypes,
 	type IPuzzleSettings,
+	type InteractiveCaptchaType,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	imageMaxRoundsDefault,
+	isInteractiveCaptchaType,
 	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
-import {
-	type EscalationCaptchaType,
-	coerceToEnabledCaptchaType,
-	isEscalationCaptchaType,
-} from "../../tasks/captchaTypeSelection.js";
+import { coerceToEnabledCaptchaType } from "../../tasks/captchaTypeSelection.js";
 import { samplePuzzleDifficulty } from "../../tasks/puzzle/puzzleDifficulty.js";
 import { Tasks } from "../../tasks/tasks.js";
 import {
@@ -169,6 +167,7 @@ export default (env: ProviderEnvironment) =>
 			);
 
 			tasks.powCaptchaManager.setPostPowContext({
+				tier: clientRecord.tier,
 				ip: req.ip || "",
 				countryCode,
 				device: {
@@ -254,6 +253,7 @@ export default (env: ProviderEnvironment) =>
 				{
 					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
 						clientRecord.settings,
+						clientRecord.tier,
 					),
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
 					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
@@ -323,7 +323,7 @@ export const buildEscalation = async (
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
-	if (!isEscalationCaptchaType(result.routingOutput.captchaType)) {
+	if (!isInteractiveCaptchaType(result.routingOutput.captchaType)) {
 		return undefined;
 	}
 
@@ -351,7 +351,7 @@ export const buildEscalation = async (
 		});
 
 	const routed = result.routingOutput as {
-		captchaType: EscalationCaptchaType;
+		captchaType: InteractiveCaptchaType;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
 		reason?: string;

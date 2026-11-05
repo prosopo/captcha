@@ -40,9 +40,12 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
   check:
-    if: github.event.pull_request.draft != true
+    if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     name: locales
     # Hosted, as in lint.yml: this repository is public, so a fork PR must not
     # run on the self-hosted fleet.
@@ -51,11 +54,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           submodules: "recursive"
 
       - name: Setup node and pnpm
-        uses: prosopo/github_actions/.github/actions/setup-pnpm@a7252e6e2ad27703bc1a7abf63805f456a525608  # main
+        timeout-minutes: 5
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
           node-cache: 'pnpm'
@@ -65,10 +70,13 @@ jobs:
       # .env.test, and the type tests resolve locale's other workspace
       # dependencies (such as @prosopo/util) through their dist/types.
       - run: pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
+        timeout-minutes: 5
 
       - run: cp dev/scripts/env.test .env.test
+        timeout-minutes: 5
 
       - name: Catalogue tests
+        timeout-minutes: 5
         working-directory: packages/locale
         run: >-
           pnpm exec vitest run --config ./vite.test.config.ts

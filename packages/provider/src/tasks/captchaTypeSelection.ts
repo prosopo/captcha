@@ -15,29 +15,12 @@
 import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
+	type ConcreteCaptchaType,
 	type IFrictionlessTypes,
-	type PowCaptchaSolutionEscalation,
 	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
-
-/** The concrete types a session can actually be minted as. */
-export type ConcreteCaptchaType =
-	| CaptchaType.pow
-	| CaptchaType.image
-	| CaptchaType.puzzle
-	| CaptchaType.iconOrder;
-
-/** The interactive types a verified PoW solve can be escalated to. */
-export type EscalationCaptchaType = PowCaptchaSolutionEscalation["captchaType"];
-
-export const isEscalationCaptchaType = (
-	captchaType: CaptchaType | undefined,
-): captchaType is EscalationCaptchaType =>
-	CaptchaType.image === captchaType ||
-	CaptchaType.puzzle === captchaType ||
-	CaptchaType.iconOrder === captchaType;
 
 /**
  * Resolve a requested captcha type against what the site permits and what

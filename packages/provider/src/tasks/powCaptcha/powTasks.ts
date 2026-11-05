@@ -21,6 +21,7 @@ import {
 	CaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
+	isInteractiveCaptchaType,
 } from "@prosopo/types";
 import {
 	ApiParams,
@@ -45,6 +46,7 @@ import {
 	type RoutingMachineRawSignals,
 	type Session,
 	SimdReadingsStage,
+	type Tier,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type {
@@ -86,7 +88,6 @@ import {
 	solveDeviceSignals,
 } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
-import { isEscalationCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -116,6 +117,7 @@ import {
  * behavioural payload are in hand.
  */
 export interface PostPowRoutingContext {
+	tier?: Tier;
 	ip: string;
 	countryCode?: string;
 	// The submit request's half of the device inputs. The session supplies
@@ -578,7 +580,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		// no legitimate widget omits them.
 		if (
 			(escalateForMissingCoords || escalateForIpChange) &&
-			!isEscalationCaptchaType(routingOutput?.captchaType)
+			!isInteractiveCaptchaType(routingOutput?.captchaType)
 		) {
 			routingOutput = {
 				captchaType: CaptchaType.image,
@@ -641,6 +643,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		const ctx: RoutingContext = {
 			dappAccount,
 			userAccount,
+			...(this.postPowContext.tier !== undefined && {
+				tier: this.postPowContext.tier,
+			}),
 			ip: this.postPowContext.ip,
 			countryCode: this.postPowContext.countryCode,
 			score,

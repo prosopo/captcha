@@ -17,6 +17,7 @@ import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import {
 	ApiParams,
 	CaptchaType,
+	type ConcreteCaptchaType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 	ModeEnum,
 	type ScoreComponents,
@@ -277,6 +278,7 @@ export default (
 			);
 			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
 				clientRecord.settings,
+				clientRecord.tier,
 			);
 			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
 
@@ -386,11 +388,7 @@ export default (
 				// behave identically. One that mixes per-request signals with
 				// session-derived ones gets the request-time view of every
 				// input that's available without re-decrypting the payload.
-				const cachedCaptchaType = dedup.captchaType as
-					| CaptchaType.image
-					| CaptchaType.pow
-					| CaptchaType.puzzle
-					| CaptchaType.iconOrder;
+				const cachedCaptchaType = dedup.captchaType as ConcreteCaptchaType;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -595,11 +593,7 @@ export default (
 					recordFrictionlessDecision("reuse_session");
 					attachHoneypot(res, clientRecord);
 					return res.json({
-						[ApiParams.captchaType]: dedup.captchaType as
-							| CaptchaType.image
-							| CaptchaType.pow
-							| CaptchaType.puzzle
-							| CaptchaType.iconOrder,
+						[ApiParams.captchaType]: dedup.captchaType as ConcreteCaptchaType,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						...dnsBeaconUrls(dedup.sessionId),
@@ -994,6 +988,7 @@ export default (
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
+				tier: clientRecord.tier,
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,

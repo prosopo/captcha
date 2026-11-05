@@ -17,7 +17,7 @@ import type { TranslateFn } from "@prosopo/locale";
 import {
 	ApiParams,
 	type CaptchaResponseBody,
-	type CaptchaType,
+	type ConcreteCaptchaType,
 	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaResponse,
 	type GetIconOrderCaptchaResponse,
@@ -77,11 +77,7 @@ export const buildMaintenanceVerificationResponse = (
 });
 
 export const buildFrictionlessMaintenanceResponse = (
-	captchaType:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.iconOrder,
+	captchaType: ConcreteCaptchaType,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
 	[ApiParams.captchaType]: captchaType,
