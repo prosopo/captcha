@@ -43,7 +43,7 @@ defaults:
 jobs:
   changeset:
     name: changeset
-    timeout-minutes: 10
+    timeout-minutes: 60
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -69,7 +69,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup node and pnpm
-        timeout-minutes: 10
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: "24.22.1"
@@ -82,7 +82,7 @@ jobs:
       # root `prepare` hook (husky) would otherwise fail with "husky: not found"
       # (exit 127) and abort before the lockfile is refreshed.
       - name: Update lockfile
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: pnpm install --lockfile-only --ignore-scripts --prefer-offline
 
       - name: Generate changeset

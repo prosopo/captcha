@@ -22,7 +22,7 @@ defaults:
 jobs:
   tag:
     name: Tag Release
-    timeout-minutes: 5
+    timeout-minutes: 60
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -52,7 +52,7 @@ jobs:
           ref: main
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
-        timeout-minutes: 5
+        timeout-minutes: 30
         with:
           node-version: '24.22.1'
 
