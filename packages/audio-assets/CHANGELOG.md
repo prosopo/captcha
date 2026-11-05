@@ -1,5 +1,11 @@
 # @prosopo/audio-assets
 
+## 0.2.6
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+  - @prosopo/puzzle-assets@0.2.7
+
 ## 0.2.5
 ### Patch Changes
 
