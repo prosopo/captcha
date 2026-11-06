@@ -9,6 +9,11 @@ name: cypress-baselines
 on:
   workflow_dispatch:
     inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
       configs:
         description: "Comma-separated configs to regenerate (image,frictionless,pow,invisible). Default: all four."
         required: false
@@ -37,16 +42,25 @@ defaults:
     shell: bash
 
 jobs:
-  regenerate:
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: cypress-baselines
+      runner: ${{ inputs.runner || 'auto' }}
+
+  regenerate:
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
