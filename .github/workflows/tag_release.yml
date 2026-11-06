@@ -22,7 +22,7 @@ defaults:
 jobs:
   tag:
     name: Tag Release
-    timeout-minutes: 5
+    timeout-minutes: 60
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -49,10 +49,10 @@ jobs:
           submodules: 'recursive'
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
-          ref: main
+          ref: ${{ github.event.repository.default_branch }}
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
-        timeout-minutes: 5
+        timeout-minutes: 30
         with:
           node-version: '24.22.1'
 
@@ -78,5 +78,5 @@ jobs:
           root_version="${{ steps.version.outputs.root_version }}"
           echo "Tagging v$root_version"
           git tag "v$root_version" || echo "Tag already exists, skipping"
-          git push origin --tags
+          timeout 4m git push origin --tags
 
