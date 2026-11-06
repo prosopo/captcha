@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.runner }}-${{ inputs.configs }}
   cancel-in-progress: true
 
 env:
@@ -101,10 +101,12 @@ jobs:
           timeout 5m docker container ls
           sleep 10s
 
-      - run: NODE_ENV="test" timeout 29m pnpm run setup
+      - run: timeout 29m pnpm run setup
         timeout-minutes: 30
 
-      - run: NODE_ENV="development" timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
+      - env:
+          NODE_ENV: "development"
+        run: timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
         timeout-minutes: 30
 
       - name: Regenerate image baselines

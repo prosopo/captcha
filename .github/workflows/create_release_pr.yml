@@ -14,6 +14,7 @@ on:
 permissions:
   contents: read
 
+# One release branch: a second run would push over the first.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
