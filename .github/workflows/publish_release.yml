@@ -138,7 +138,7 @@ jobs:
         timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: '24.22.1'
+          node-version-file: .nvmrc
           node-cache: 'pnpm'
           store-path: ''
           run-install: 'false'
@@ -183,15 +183,15 @@ jobs:
         timeout-minutes: 30
         run: |
           echo "Building all packages in production mode"
-          NODE_ENV=production timeout 29m pnpm run build:all:tsc
-          NODE_ENV=production timeout 29m pnpm run build:all
-          NODE_ENV=production timeout 29m pnpm run build:all:cjs
+          timeout 29m pnpm run build:all:tsc
+          timeout 29m pnpm run build:all
+          timeout 29m pnpm run build:all:cjs
 
       - name: Bundle the production provider CLI
         timeout-minutes: 30
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="production" timeout 29m pnpm --filter @prosopo/cli run bundle
+          timeout 29m pnpm --filter @prosopo/cli run bundle
 
       - name: Verify production build
         timeout-minutes: 30
@@ -260,21 +260,25 @@ jobs:
         timeout-minutes: 30
         run: |
           echo "Publishing production provider image to Docker Hub"
-          NODE_ENV="production" timeout 29m pnpm --filter @prosopo/cli run build:docker
-          NODE_ENV="production" timeout 29m pnpm --filter @prosopo/cli run publish:docker
+          timeout 29m pnpm --filter @prosopo/cli run build:docker
+          timeout 29m pnpm --filter @prosopo/cli run publish:docker
 
       - name: Bundle the staging provider CLI
         timeout-minutes: 30
+        env:
+          NODE_ENV: "staging"
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="staging" timeout 29m pnpm --filter @prosopo/cli run bundle
+          timeout 29m pnpm --filter @prosopo/cli run bundle
 
       - name: Publish production image to Docker Hub
         timeout-minutes: 30
+        env:
+          NODE_ENV: "staging"
         run: |
           echo "Publishing staging provider image to Docker Hub"
-          NODE_ENV="staging" timeout 29m pnpm --filter @prosopo/cli run build:docker
-          NODE_ENV="staging" timeout 29m pnpm --filter @prosopo/cli run publish:docker
+          timeout 29m pnpm --filter @prosopo/cli run build:docker
+          timeout 29m pnpm --filter @prosopo/cli run publish:docker
 
       - name: Create GitHub Release
         timeout-minutes: 5

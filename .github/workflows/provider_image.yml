@@ -85,7 +85,7 @@ jobs:
         timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: '24.22.1'
+          node-version-file: .nvmrc
           node-cache: 'pnpm'
           store-path: ''
 
@@ -94,9 +94,13 @@ jobs:
         run: |
           node .github/scripts/setup-env-files.mjs --mode production --only .,packages/cli
 
-      - run: NODE_ENV="production" timeout 29m pnpm exec turbo run @prosopo/cli#build
+      - env:
+          NODE_ENV: "production"
+        run: timeout 29m pnpm exec turbo run @prosopo/cli#build
         timeout-minutes: 30
-      - run: NODE_ENV="production" timeout 29m pnpm exec turbo run @prosopo/cli#bundle
+      - env:
+          NODE_ENV: "production"
+        run: timeout 29m pnpm exec turbo run @prosopo/cli#bundle
         timeout-minutes: 30
 
       - name: Set up Docker Buildx
@@ -126,8 +130,11 @@ jobs:
       # Generate a mnemonic for the provider image
       - name: Generate mnemonic and add to env file
         timeout-minutes: 5
+        env:
+          PROSOPO_ROOT_DIR: ${{ github.workspace }}
+          NODE_ENV: production
         run: |
-          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" pnpm exec tsx dev/scripts/src/scripts/generateMnemonic.ts --env
+          timeout 4m pnpm exec tsx dev/scripts/src/scripts/generateMnemonic.ts --env
 
       # Check that the version command works when running the bundle in the provider image
       - name: Check provider bundle runs
