@@ -61,18 +61,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-        timeout-minutes: 2
+        timeout-minutes: 5
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: "24.22.1"
-        timeout-minutes: 2
+        timeout-minutes: 5
 
       - name: Check script tests
         run: timeout 120 node --test .github/scripts/check-package-scope.test.mjs
-        timeout-minutes: 3
+        timeout-minutes: 5
 
       - name: Check every package name is @prosopo/-scoped
         run: timeout 60 node .github/scripts/check-package-scope.mjs
-        timeout-minutes: 2
+        timeout-minutes: 5
     timeout-minutes: 10

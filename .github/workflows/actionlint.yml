@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-        timeout-minutes: 2
+        timeout-minutes: 5
 
       # A pinned, checksummed release tarball rather than upstream's
       # download-actionlint.bash, which resolves "latest" through the
@@ -56,7 +56,7 @@ jobs:
             "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/$tarball"
           echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$tarball" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" actionlint
-        timeout-minutes: 3
+        timeout-minutes: 5
 
       # shellcheck comes preinstalled on the ubuntu images; actionlint skips the
       # run: checks silently without it, so fail loudly instead.
