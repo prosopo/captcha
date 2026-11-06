@@ -21,6 +21,11 @@ on:
     - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
       dry-run:
         description: "Log which PRs would be drafted without changing anything"
         type: boolean
@@ -43,8 +48,25 @@ defaults:
     shell: bash
 
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: stale-pr-to-draft
+      runner: ${{ inputs.runner || 'auto' }}
+
   draft-stale:
-    runs-on: ubuntu-latest
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     timeout-minutes: 10
     steps:
       # Deliberately hosted, not the self-hosted fleet: this workflow exists to
@@ -82,7 +104,7 @@ jobs:
           #   reviewDecision     an approved PR is waiting on a human to merge,
           #                      not abandoned
           #   keep-ready label   the manual opt-out
-          gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 200 \
+          timeout 4m gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 200 \
             --json number,title,updatedAt,isDraft,autoMergeRequest,reviewDecision,labels,author \
             > prs.json
 
@@ -121,6 +143,6 @@ jobs:
               "No updates since \`$updated\` (over $STALE_DAYS days), so this PR has been converted to draft. That stops it holding CI runners." \
               "Nothing is lost — \`gh pr ready $number\`, or the \"Ready for review\" button, picks it straight back up. Add the \`keep-ready\` label to exempt it permanently." \
               "Converting to draft disables auto-merge, so PRs with auto-merge enabled are excluded from this entirely.")
-            gh pr comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
-            gh pr ready "$number" --repo "$GITHUB_REPOSITORY" --undo
+            timeout 4m gh pr comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+            timeout 4m gh pr ready "$number" --repo "$GITHUB_REPOSITORY" --undo
           done < stale.tsv

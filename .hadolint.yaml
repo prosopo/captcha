@@ -1,0 +1,13 @@
+# Read by hadolint in .github/workflows/docker.yml (and locally, from the repo root).
+#
+# DL3008/DL3018 (pin apt/apk package versions) are off: the base image is
+# pinned, and a distro archive drops old package versions, so a pinned package
+# turns a routine rebuild into a failed one rather than a reproducible one.
+#
+# failure-threshold warning: info findings (consecutive RUNs,
+# --no-install-recommends) still print, but they are style, and a blocking
+# check that fails on style gets disabled rather than fixed.
+failure-threshold: warning
+ignored:
+  - DL3008
+  - DL3018

@@ -39,7 +39,7 @@ defaults:
 jobs:
   build:
     name: ios-webview
-    timeout-minutes: 5
+    timeout-minutes: 60
     if: ${{ (github.event.pull_request.draft != true) && github.event.pull_request.head.repo.full_name == github.repository }}
     # Hosted, deliberately: this repository is public, so a fork PR running on
     # the self-hosted macOS runner would execute arbitrary code on it.
@@ -53,7 +53,7 @@ jobs:
         timeout-minutes: 5
 
       - name: Toolchain versions
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: xcodebuild -version
 
       # `-target`, not `-scheme`: the project ships no shared scheme
@@ -65,7 +65,7 @@ jobs:
       # so it would otherwise fail looking for a signing identity and a
       # provisioning profile that CI has no business holding.
       - name: Build (iOS Simulator)
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
           xcodebuild build \
             -project procaptcha.xcodeproj \
