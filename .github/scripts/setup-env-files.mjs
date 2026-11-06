@@ -42,9 +42,11 @@ export const COPIES = {
 		"dev/scripts": "dev/scripts/env.test",
 		"packages/cli": "dev/scripts/env.test",
 		"packages/procaptcha-bundle": "dev/scripts/env.test",
-		"demos/client-example-server": "demos/client-example-server/env.test",
-		// No env.test exists; the development values point at the same local
-		// provider and server the test jobs start.
+		// The demos' env.test files are not usable by the test jobs (the server's
+		// sets an environment its schema rejects); the development values point
+		// at the same local provider and server the test jobs start.
+		"demos/client-example-server":
+			"demos/client-example-server/env.development",
 		"demos/client-bundle-example":
 			"demos/client-bundle-example/env.development",
 	},
