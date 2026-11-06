@@ -95,13 +95,15 @@ jobs:
       - name: Get version from tag or input
         timeout-minutes: 5
         id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            version="${{ inputs.version }}"
+          if [ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]; then
+            version="$INPUT_VERSION"
           else
             version=${GITHUB_REF#refs/tags/v}
           fi
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Version: $version"
 
       - name: Preflight publishability check

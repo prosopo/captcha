@@ -140,7 +140,7 @@ jobs:
         run: |
           ./setup_certs.sh
           ./install_cert.sh
-          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> $GITHUB_ENV
+          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> "$GITHUB_ENV"
 
       - name: Setup env
         timeout-minutes: 5

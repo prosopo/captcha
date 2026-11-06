@@ -74,8 +74,8 @@ jobs:
         timeout-minutes: 5
         id: version
         run: |
-          root_version=$(cat package.json | jq -r '.version')
-          echo "root_version=$root_version" >> $GITHUB_OUTPUT
+          root_version=$(jq -r '.version' package.json)
+          echo "root_version=$root_version" >> "$GITHUB_OUTPUT"
           echo "Root version: $root_version"
 
       - name: Create tag
