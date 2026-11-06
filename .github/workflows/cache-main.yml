@@ -22,7 +22,6 @@ on:
 
 permissions:
   contents: read
-  actions: write
 
 concurrency:
   group: cache-main
@@ -47,6 +46,9 @@ jobs:
       runner: ${{ inputs.runner || 'auto' }}
 
   cache:
+    permissions:
+      contents: read
+      actions: write
     needs: runner
     uses: prosopo/github_actions/.github/workflows/cache-main.yml@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
     with:
