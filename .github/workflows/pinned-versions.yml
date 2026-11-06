@@ -72,8 +72,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         timeout-minutes: 30
         with:
-          node-version: "24.22.1"
-
+          node-version-file: .nvmrc
       # No `pnpm install` needed — the check only reads package.json files and
       # pnpm-lock.yaml.
       - name: Check dependencies are pinned to exact versions
