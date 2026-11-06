@@ -34,7 +34,7 @@ services:
   redis:
     # Must be redis-stack, not plain Redis: the provider stores access rules in
     # a RediSearch index, which stock Redis does not ship.
-    image: redis/redis-stack-server:latest
+    image: redis/redis-stack-server:7.4.0-v8
     restart: unless-stopped
     environment:
       REDIS_ARGS: --requirepass ${REDIS_CONNECTION_PASSWORD}
@@ -101,7 +101,7 @@ services:
       - '80:80'
       - '443:443'
     volumes:
-      - ./docker/provider.Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./docker/provider/provider.Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     logging:

@@ -1,7 +1,7 @@
 # for testing only
 services:
     https-portal:
-        image: prosopo/js_server:latest
+        image: prosopo/js_server:2.1.0
         ports:
             - '80:80'
             - '443:443'

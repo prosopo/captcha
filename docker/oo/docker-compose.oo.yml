@@ -7,7 +7,7 @@
 services:
     caddy:
         container_name: caddy
-        image: prosopo/caddy:latest
+        image: prosopo/caddy:2.5.12
         env_file:
             - ../.env.${NODE_ENV}
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
@@ -31,7 +31,7 @@ services:
             timeout: 10s
     oo:
         container_name: oo
-        image: public.ecr.aws/zinclabs/openobserve:latest
+        image: public.ecr.aws/zinclabs/openobserve:v1.1.2
         env_file:
             - ../.env.${NODE_ENV}
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot

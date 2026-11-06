@@ -1,0 +1,131 @@
+# Lints every tracked Dockerfile with hadolint and builds each one, never
+# pushing, on PRs that change it. A per-concern workflow beside the others in
+# this directory until the shared stages in prosopo/github_actions grow a
+# docker job; follow this layout. A new workflow or structural change needs a
+# written justification in the PR description and review by the .github/ code
+# owners.
+
+name: docker
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft # so the concurrency group cancels in-flight runs
+    # Inclusion filter, unlike the exclusion lists elsewhere: hadolint reads
+    # only Dockerfiles and .hadolint.yaml, and the build job only builds a
+    # Dockerfile this PR changed, so no other path can change this result.
+    # The globs match a Dockerfile at any depth, so a new one is covered the
+    # moment it exists. Nothing required depends on this workflow, so a PR it
+    # skips does not wait on a missing check.
+    paths:
+      - '**/Dockerfile'
+      - '**/Dockerfile.*'
+      - '**/*.Dockerfile'
+      - '.hadolint.yaml'
+      - '.github/workflows/docker.yml'
+  workflow_dispatch:
+    inputs:
+      concurrency-key:
+        description: "Overrides the concurrency group (default: workflow + ref)."
+        type: string
+        default: ""
+  workflow_call:
+    inputs:
+      concurrency-key:
+        description: "Overrides the concurrency group (default: workflow + PR or ref)."
+        type: string
+        default: ""
+
+concurrency:
+  group: ${{ inputs.concurrency-key || format('docker-{0}', github.event.pull_request.number || github.ref) }}
+  cancel-in-progress: true
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  # Adding a Dockerfile: list it in DOCKERFILES (the first step fails until
+  # it is), then give it a docker-build entry or record why not with a line
+  # `# docker build opt-out: <path> -- <reason>` beside the build matrix.
+  hadolint:
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft != true) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      DOCKERFILES: >-
+        demos/client-example-server/Dockerfile
+        demos/provider-mock/Dockerfile
+        docker/images/caddy/src/Dockerfile
+        docker/images/vector/src/Dockerfile
+        packages/cli/Dockerfile
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
+      - name: Every tracked Dockerfile is listed in DOCKERFILES
+        timeout-minutes: 2
+        run: diff <(git ls-files '*Dockerfile' '*Dockerfile.*' | grep -v '\.dockerignore$' | sort) <(tr ' ' '\n' <<<"$DOCKERFILES" | sort)
+      - name: Install hadolint
+        timeout-minutes: 5
+        run: |
+          timeout 2m curl -fsSL --retry 5 -o "$RUNNER_TEMP/hadolint" https://github.com/hadolint/hadolint/releases/download/v2.14.0/hadolint-linux-x86_64
+          echo "6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47  $RUNNER_TEMP/hadolint" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/hadolint"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      # Rules and their reasons live in .hadolint.yaml, which hadolint reads from the working directory.
+      - name: hadolint
+        timeout-minutes: 5
+        run: timeout 4m hadolint ${{ env.DOCKERFILES }}
+
+  # Dockerfiles not built here, and why:
+  # docker build opt-out: demos/client-example-server/Dockerfile -- only copies dist/bundle, which the pnpm build makes; captcha-private's publish_services.yml builds it after that build
+  # docker build opt-out: demos/provider-mock/Dockerfile -- only copies dist/bundle, which the pnpm build makes; captcha-private's publish_services.yml builds it after that build
+  # docker build opt-out: packages/cli/Dockerfile -- provider_image.yml already builds it on PRs, after the bundle build it needs
+  docker-build:
+    name: docker-build (${{ matrix.dockerfile }})
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.draft != true) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      pull-requests: read # gh pr diff
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: docker/images/caddy/src/Dockerfile
+            context: docker/images/caddy/src
+          - dockerfile: docker/images/vector/src/Dockerfile
+            context: docker/images/vector/src
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
+      # Build only what the PR touched: some of these are long release
+      # builds. Changing this workflow or .hadolint.yaml rebuilds them all,
+      # and so does a manual run.
+      - name: Did this PR change the Dockerfile
+        id: changed
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          DOCKERFILE: ${{ matrix.dockerfile }}
+        run: |
+          build=true
+          if [ -n "$PR" ]; then
+            files=$(timeout 2m gh pr diff "$PR" --name-only)
+            grep -qxF -e "$DOCKERFILE" -e .github/workflows/docker.yml -e .hadolint.yaml <<<"$files" || build=false
+          fi
+          echo "build=$build" | tee -a "$GITHUB_OUTPUT"
+      - name: docker build (no push)
+        if: steps.changed.outputs.build == 'true'
+        timeout-minutes: 35
+        run: timeout 30m docker build --file ${{ matrix.dockerfile }} ${{ matrix.context }}
