@@ -66,8 +66,12 @@ jobs:
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
-          node-cache: 'pnpm'
+          node-cache: ''
           store-path: ''
+          # changeset status reads package.json files and .changeset/ only, so
+          # the workspace install would be wasted.
+          run-install: 'false'
+          restore-store-cache: 'false'
 
       # checkout the base and head refs
       # ensures we have history for both
@@ -93,4 +97,5 @@ jobs:
         run: |
 
           # check that the changesets are present for each package which has been modified
-          timeout 4m pnpm run changesets --since "$BASE_REF"
+          version=$(node -p 'require("./package.json").devDependencies["@changesets/cli"]')
+          timeout 240 pnpm --package="@changesets/cli@$version" dlx changeset status --verbose --since "$BASE_REF"
