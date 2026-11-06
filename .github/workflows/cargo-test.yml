@@ -23,6 +23,12 @@ on:
       - ready_for_review
       - converted_to_draft
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: read
@@ -44,11 +50,28 @@ defaults:
 # secrets and write shared caches that later trusted jobs restore, so fork
 # code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: cargo-test
+      runner: ${{ inputs.runner || 'auto' }}
+
   cargo-test:
     name: cargo test (${{ matrix.crate }})
     timeout-minutes: 60
     # Hosted for the same reason as tests.yml: this repository is public.
-    runs-on: ubuntu-latest
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     strategy:
       fail-fast: false

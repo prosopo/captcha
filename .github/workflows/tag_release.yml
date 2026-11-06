@@ -20,18 +20,26 @@ defaults:
 # secrets and write shared caches that later trusted jobs restore, so fork
 # code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: tag_release
+
   tag:
     name: Tag Release
     timeout-minutes: 60
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
-    # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     # Only run if PR was merged and title starts with "Release"
     if: ${{ (github.event.pull_request.merged == true && startsWith(github.event.pull_request.title, 'Release v')) && github.event.pull_request.head.repo.full_name == github.repository }}
     steps:
@@ -66,8 +74,8 @@ jobs:
         timeout-minutes: 5
         id: version
         run: |
-          root_version=$(cat package.json | jq -r '.version')
-          echo "root_version=$root_version" >> $GITHUB_OUTPUT
+          root_version=$(jq -r '.version' package.json)
+          echo "root_version=$root_version" >> "$GITHUB_OUTPUT"
           echo "Root version: $root_version"
 
       - name: Create tag
