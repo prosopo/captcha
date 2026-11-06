@@ -58,7 +58,10 @@ pub fn compute_captcha_solution_hash(
 pub fn build_merkle_layers(leaves: Vec<String>) -> napi::Result<Vec<Vec<String>>> {
     let layers = merkle::build_layers(&leaves);
     if layers.is_empty() {
-        return Err(Error::new(Status::InvalidArg, "leaves is empty".to_string()));
+        return Err(Error::new(
+            Status::InvalidArg,
+            "leaves is empty".to_string(),
+        ));
     }
     Ok(layers)
 }

@@ -1,5 +1,13 @@
 # Prosopo Procaptcha
 
+[![auto-update-pr](https://github.com/prosopo/captcha/actions/workflows/auto-update-pr.yml/badge.svg?branch=main)](https://github.com/prosopo/captcha/actions/workflows/auto-update-pr.yml?query=branch%3Amain)
+[![cache-main](https://github.com/prosopo/captcha/actions/workflows/cache-main.yml/badge.svg?branch=main)](https://github.com/prosopo/captcha/actions/workflows/cache-main.yml?query=branch%3Amain)
+[![npm procaptcha](https://img.shields.io/npm/v/@prosopo/procaptcha?label=%40prosopo%2Fprocaptcha)](https://www.npmjs.com/package/@prosopo/procaptcha)
+[![npm procaptcha-bundle](https://img.shields.io/npm/v/@prosopo/procaptcha-bundle?label=%40prosopo%2Fprocaptcha-bundle)](https://www.npmjs.com/package/@prosopo/procaptcha-bundle)
+[![npm procaptcha-react](https://img.shields.io/npm/v/@prosopo/procaptcha-react?label=%40prosopo%2Fprocaptcha-react)](https://www.npmjs.com/package/@prosopo/procaptcha-react)
+[![npm server](https://img.shields.io/npm/v/@prosopo/server?label=%40prosopo%2Fserver)](https://www.npmjs.com/package/@prosopo/server)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
 Prosopo Procaptcha is a drop-replacement for reCAPTCHA, hCaptcha, and Cloudflare Turnstile that protects user privacy and collects zero data.
 
 **Licensed [Apache-2.0](LICENSE)** — a permissive OSI-approved licence, for commercial use as well as non-commercial,

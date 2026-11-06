@@ -12,6 +12,12 @@ on:
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
       - converted_to_draft
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: read
@@ -38,18 +44,27 @@ defaults:
 # secrets and write shared caches that later trusted jobs restore, so fork
 # code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: provider_image
+      runner: ${{ inputs.runner || 'auto' }}
+
   check:
     name: provider-image
-    timeout-minutes: 15
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
-    # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
@@ -67,7 +82,7 @@ jobs:
           submodules: "recursive"
 
       - name: Setup node and pnpm
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -77,17 +92,12 @@ jobs:
       - name: env
         timeout-minutes: 5
         run: |
-          # Copy the .env.production from the dev script to the cli folder and root folder
-          cp ./dev/scripts/env.production ./packages/cli/.env.production
-          cp ./dev/scripts/env.production ./.env.production
-          
-          # Append the development PROVIDER_MNEMONIC from env.development to the .env.production file
-          grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
+          node .github/scripts/setup-env-files.mjs --mode production --only .,packages/cli
 
-      - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#build
-        timeout-minutes: 10
-      - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#bundle
-        timeout-minutes: 5
+      - run: NODE_ENV="production" timeout 29m pnpm exec turbo run @prosopo/cli#build
+        timeout-minutes: 30
+      - run: NODE_ENV="production" timeout 29m pnpm exec turbo run @prosopo/cli#bundle
+        timeout-minutes: 30
 
       - name: Set up Docker Buildx
         timeout-minutes: 5
@@ -98,7 +108,7 @@ jobs:
 
       # create the provider image for AMD64
       - name: Build the Provider Container
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
         with:
           context: ${{github.workspace}}
@@ -110,8 +120,8 @@ jobs:
 
       # load the AMD64 image
       - name: Load the Provider Container
-        timeout-minutes: 5
-        run: docker load -i provider-amd64.tar
+        timeout-minutes: 30
+        run: timeout 29m docker load -i provider-amd64.tar
 
       # Generate a mnemonic for the provider image
       - name: Generate mnemonic and add to env file
@@ -121,7 +131,7 @@ jobs:
 
       # Check that the version command works when running the bundle in the provider image
       - name: Check provider bundle runs
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
@@ -129,16 +139,16 @@ jobs:
           # The runtime image is distroless: no shell, no npx. ENTRYPOINT is
           # node, so the bundle path and its args are passed as argv, and
           # NODE_ENV comes in as a real env var rather than a shell prefix.
-          CONTAINER="$(docker run -d -e NODE_ENV=production -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /usr/src/app/provider.cli.bundle.js version)"
+          CONTAINER="$(timeout 29m docker run -d -e NODE_ENV=production -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /usr/src/app/provider.cli.bundle.js version)"
           
           # Wait for container to complete
           sleep 20s
           
           # Get container exit code
-          EXIT_CODE="$(docker wait "$CONTAINER" || echo "timeout")"
+          EXIT_CODE="$(timeout 5m docker wait "$CONTAINER" || echo "timeout")"
           
           # Capture logs
-          docker logs "$CONTAINER" > provider.log 2>&1
+          timeout 5m docker logs "$CONTAINER" > provider.log 2>&1
           cat provider.log
           
           # Check if container exited successfully

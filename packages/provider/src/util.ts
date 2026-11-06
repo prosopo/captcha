@@ -101,6 +101,46 @@ export const getIPAddress = (ipAddressString: string): IPAddress => {
 	}
 };
 
+// Unwraps an IPv4-mapped IPv6 address (::ffff:a.b.c.d) to its IPv4 form, so
+// both sides of a comparison are judged in the same family.
+const unmapIpv4 = (address: IPAddress): IPAddress =>
+	"address4" in address && address.address4 ? address.address4 : address;
+
+/**
+ * Returns the address family of an IP string, or undefined when it does not
+ * parse. IPv4-mapped IPv6 addresses count as IPv4.
+ */
+export const getIpFamily = (ip: string): 4 | 6 | undefined => {
+	try {
+		return unmapIpv4(getIPAddress(ip)).v4 ? 4 : 6;
+	} catch {
+		return undefined;
+	}
+};
+
+// Prefix lengths inside which two addresses are treated as one subscriber's
+// network. An IPv6 host rotates its privacy addresses inside its /64, and
+// carrier NAT pools hand a user neighbouring IPv4 addresses from one /24.
+const SAME_NETWORK_PREFIX_V4 = 24;
+const SAME_NETWORK_PREFIX_V6 = 64;
+
+/**
+ * True when two addresses are in the same family and share a /24 (IPv4) or
+ * /64 (IPv6). Such a pair is one user on one network, not a relayed token.
+ */
+export const isSameSubscriberNetwork = (
+	first: IPAddress,
+	second: IPAddress,
+): boolean => {
+	const a = unmapIpv4(first);
+	const b = unmapIpv4(second);
+	if (a.v4 !== b.v4) {
+		return false;
+	}
+	const prefix = a.v4 ? SAME_NETWORK_PREFIX_V4 : SAME_NETWORK_PREFIX_V6;
+	return a.mask(prefix) === b.mask(prefix);
+};
+
 export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
 	try {
 		if (ipAddressBigInt > 4228250626n) {
@@ -265,10 +305,43 @@ export const evaluateIpValidationRules = (
 		}));
 	}
 
+	// Dual-stack precondition for the ISP and geo-drift rules.
+	// Why: a browser can solve over IPv4 while the site's server sees the same
+	// user over IPv6, or the other way round. In some markets the two legs of
+	// one home connection are run by different operators on different ASNs
+	// (IPv6 is often delivered by a wholesaler over IPoE), and each leg geolocates
+	// to its own operator's POP. So an IPv4/IPv6 pair inside one country, with
+	// neither side a datacenter, VPN or proxy, says nothing about a token being
+	// relayed. The country and reputation rules still apply.
+	const ip1Family = getIpFamily(comparison.ip1);
+	const ip2Family = getIpFamily(comparison.ip2);
+	const dualStackSameCountry =
+		!!ip1Family &&
+		!!ip2Family &&
+		ip1Family !== ip2Family &&
+		!!ip1CountryCode &&
+		ip1CountryCode === ip2CountryCode &&
+		ip1ConnectionType !== "datacenter" &&
+		ip2ConnectionType !== "datacenter" &&
+		!comparison.comparison.anyVpnOrProxy;
+
+	if (dualStackSameCountry) {
+		logger.info(() => ({
+			msg: "Skipping ISP, city and distance IP validation rules for dual-stack address pair",
+			data: {
+				ip1Provider,
+				ip2Provider,
+				countryCode: ip1CountryCode,
+			},
+		}));
+	}
+
+	const skipGeoDrift = sameTrustedProvider || dualStackSameCountry;
+
 	// Check for city change
 	const ip1City = comparison.comparison.ip1Details?.city;
 	const ip2City = comparison.comparison.ip2Details?.city;
-	if (!sameTrustedProvider && ip1City !== ip2City) {
+	if (!skipGeoDrift && ip1City !== ip2City) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.cityChangeAction,
@@ -277,7 +350,7 @@ export const evaluateIpValidationRules = (
 	}
 
 	// Check for ISP change
-	if (comparison.comparison.differentProviders) {
+	if (!dualStackSameCountry && comparison.comparison.differentProviders) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.ispChangeAction,
@@ -288,7 +361,7 @@ export const evaluateIpValidationRules = (
 	// Check for distance exceed condition
 	const distanceKm = comparison.comparison.distanceKm;
 	if (
-		!sameTrustedProvider &&
+		!skipGeoDrift &&
 		distanceKm !== undefined &&
 		distanceKm > effectiveRules.distanceThresholdKm
 	) {
@@ -447,6 +520,16 @@ export const deepValidateIpAddress = async (
 				isValid: false,
 				errorMessage: standardValidation.errorMessage,
 			};
+		}
+		// A neighbouring address on the same network is the same user (IPv6
+		// privacy address rotation, carrier NAT pools), so treat it as a match.
+		// Without this, any rotation on an address whose reputation score is at
+		// or above the threshold is rejected.
+		if (isSameSubscriberNetwork(getIPAddress(ip), challengeIpAddress)) {
+			log.info(() => ({
+				msg: "IP addresses differ but share a subscriber network prefix",
+			}));
+			return { isValid: true };
 		}
 	} else {
 		// IPs match exactly - return valid without distance checking

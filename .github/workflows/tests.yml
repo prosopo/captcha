@@ -31,6 +31,12 @@ on:
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
       - converted_to_draft
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: read
@@ -58,18 +64,27 @@ defaults:
 # secrets and write shared caches that later trusted jobs restore, so fork
 # code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: tests
+      runner: ${{ inputs.runner || 'auto' }}
+
   check:
     name: tests
     timeout-minutes: 60
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
-    # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
@@ -87,7 +102,7 @@ jobs:
           submodules: "recursive"
 
       - name: Setup node and pnpm
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -95,29 +110,28 @@ jobs:
           store-path: ''
 
       - name: env
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
-          # Copy the rococo env file to production env file
-          echo "Copying the rococo env to production env file in procaptcha-bundle"
-          cp ./dev/scripts/env.production ./packages/procaptcha-bundle/.env.production
+          # The bundle is built in production mode even here.
+          node .github/scripts/setup-env-files.mjs --mode production --only packages/procaptcha-bundle
 
       # build all packages in workspace
-      - run: pnpm exec turbo run build
-        timeout-minutes: 15
-      - run: pnpm exec turbo run build:cjs
-        timeout-minutes: 5
+      - run: timeout 29m pnpm exec turbo run build
+        timeout-minutes: 30
+      - run: timeout 29m pnpm exec turbo run build:cjs
+        timeout-minutes: 30
 
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
-          NODE_ENV="development" pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
+          NODE_ENV="development" timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
 
       - name: Start the docker images
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
-          docker container ls
+          timeout 29m docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+          timeout 5m docker container ls
           sleep 10s
 
       # setup certs
@@ -126,28 +140,16 @@ jobs:
         run: |
           ./setup_certs.sh
           ./install_cert.sh
-          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> $GITHUB_ENV
+          echo "NODE_EXTRA_CA_CERTS=$(pwd)/certs/server.crt" >> "$GITHUB_ENV"
 
       - name: Setup env
         timeout-minutes: 5
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-          cp demos/client-example-server/env.development demos/client-example-server/.env.test
-          cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
-          cp dev/scripts/env.test .env.test
-          cp dev/scripts/env.test dev/scripts/.env.test
-          cp dev/scripts/env.test packages/cli/.env.test
-          cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
+          node .github/scripts/setup-env-files.mjs --https
 
-          # Update URLs to use HTTPS since certificates are present
-          sed -i 's|http://localhost|https://localhost|g' demos/client-bundle-example/.env.test
-          sed -i 's|http://localhost|https://localhost|g' .env.test
-          sed -i 's|http://localhost|https://localhost|g' dev/scripts/.env.test
-          sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
-          sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
-
-          NODE_ENV="test" pnpm run setup
+          NODE_ENV="test" timeout 4m pnpm run setup
 
           echo NODE_ENV: "$NODE_ENV"
 
@@ -161,12 +163,12 @@ jobs:
           # the real decrypt path.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          pnpm exec concurrently \
+          timeout 44m pnpm exec concurrently \
             "NODE_ENV=test pnpm run start:provider" \
             "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test pnpm run test:all" \
             --success "first" --kill-others
 
-      - run: docker compose --file ./docker/docker-compose.test.yml down
+      - run: timeout 4m docker compose --file ./docker/docker-compose.test.yml down
         timeout-minutes: 5
 
   # The widget decides its own width through CSS intrinsic sizing, container
@@ -183,8 +185,9 @@ jobs:
   # so there is no list to add this to.
   widget-layout:
     name: widget layout
-    timeout-minutes: 5
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -193,7 +196,7 @@ jobs:
           submodules: false
 
       - name: Setup node and pnpm
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -202,8 +205,8 @@ jobs:
           install-args: '--prefer-offline --filter @prosopo/widget-skeleton'
 
       - name: Install the browser vitest drives
-        timeout-minutes: 5
-        run: pnpm --filter @prosopo/widget-skeleton exec playwright install --with-deps chromium
+        timeout-minutes: 30
+        run: timeout 29m pnpm --filter @prosopo/widget-skeleton exec playwright install --with-deps chromium
 
-      - run: pnpm --filter @prosopo/widget-skeleton run test:browser
-        timeout-minutes: 5
+      - run: timeout 29m pnpm --filter @prosopo/widget-skeleton run test:browser
+        timeout-minutes: 30
