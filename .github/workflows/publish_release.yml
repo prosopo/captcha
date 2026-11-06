@@ -87,7 +87,7 @@ jobs:
           else
             version=${GITHUB_REF#refs/tags/v}
           fi
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Version: $version"
 
       - name: Preflight publishability check

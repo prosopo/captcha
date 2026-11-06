@@ -79,10 +79,10 @@ jobs:
         run: |
           if find .changeset -name "*.md" ! -name "README.md" | grep -q . ; then
             echo "Found changesets"
-            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
           else
             echo "No changesets found"
-            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Exit if no changesets
@@ -104,7 +104,7 @@ jobs:
           # image tag now comes from packages/cli's own version, so there is no
           # wrapper package left to keep in step.
           root_version=$(jq -r .version packages/cli/package.json)
-          echo "root_version=$root_version" >> $GITHUB_ENV
+          echo "root_version=$root_version" >> "$GITHUB_ENV"
           echo "Setting versions to $root_version"
           
           timeout 29m pnpm pkg set version="$root_version"
