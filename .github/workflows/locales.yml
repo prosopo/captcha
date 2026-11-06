@@ -72,7 +72,7 @@ jobs:
       - run: timeout 29m pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
         timeout-minutes: 30
 
-      - run: cp dev/scripts/env.test .env.test
+      - run: node .github/scripts/setup-env-files.mjs --mode test --only .
         timeout-minutes: 30
 
       - name: Catalogue tests
