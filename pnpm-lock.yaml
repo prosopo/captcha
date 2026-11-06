@@ -816,6 +816,18 @@ importers:
         specifier: 5.0.4
         version: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
 
+  docker/client-example-server: {}
+
+  docker/mongo: {}
+
+  docker/oo: {}
+
+  docker/provider: {}
+
+  docker/provider-mock: {}
+
+  docker/redis: {}
+
   integration/procaptcha-integration-build-config:
     dependencies:
       deepmerge:

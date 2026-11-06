@@ -57,6 +57,7 @@
 		"lint:workflowNames": "pnpm --filter @prosopo/lint run start workflowNames --root $(pwd)",
 		"lint:tsconfigIncludes": "pnpm --filter @prosopo/lint run start tsconfigIncludes --pkg $(pwd)/package.json",
 		"lint-fix:tsconfigIncludes": "pnpm run --silent lint:tsconfigIncludes --fix",
+		"lint:docker": "turbo run lint:docker",
 		"lint:json": "pnpm --filter @prosopo/lint run start json --pkg $(pwd)/package.json",
 		"depcheck": "pnpm -r exec depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",
 		"esbuild": "0.28.2",

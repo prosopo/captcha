@@ -3,6 +3,14 @@ packages:
   - packages/*
   - demos/*
   - integration/*
+  # Compose bundles, versioned so deploys can pin them. Not docker/*: the
+  # docker/images wrappers stay out of the workspace (see docker/bake.mjs).
+  - docker/provider
+  - docker/provider-mock
+  - docker/oo
+  - docker/client-example-server
+  - docker/redis
+  - docker/mongo
 
 overrides:
   "@types/express-serve-static-core": 5.1.3
