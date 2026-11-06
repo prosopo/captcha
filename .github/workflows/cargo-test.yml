@@ -1,5 +1,7 @@
 # The napi crates carry Rust unit tests that `pnpm run test:all` never runs:
-# turbo only drives the JS suites. Its own workflow, not a tests.yml job, so a
+# turbo only drives the JS suites. Each crate is also held to `cargo fmt
+# --check` and `cargo clippy -D warnings`, which nothing else runs. Its own
+# workflow, not a tests.yml job, so a
 # Rust failure is reported on its own and does not wait for the full JS build,
 # and so it runs only when a crate can have changed.
 
@@ -81,6 +83,19 @@ jobs:
         with:
           workspaces: ${{ matrix.crate }}
           prefix-key: v0-rust-${{ steps.rustc-version.outputs.version }}
+
+      # Ahead of clippy and test: needs no build, so a formatting slip fails fast.
+      - name: cargo fmt --check
+        timeout-minutes: 5
+        working-directory: ${{ matrix.crate }}
+        run: timeout 4m cargo fmt --check
+
+      # --all-targets lints the #[cfg(test)] code too. Shares target/ with the
+      # test build below, so the dependencies compile once.
+      - name: cargo clippy
+        timeout-minutes: 30
+        working-directory: ${{ matrix.crate }}
+        run: timeout 25m cargo clippy --locked --all-targets -- -D warnings
 
       # Debug, not --release: the release profile's fat LTO and single codegen
       # unit are for the shipped addon, and only slow a test build down. The
