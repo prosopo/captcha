@@ -818,6 +818,12 @@ importers:
 
   docker/client-example-server: {}
 
+  docker/images/vector:
+    devDependencies:
+      '@prosopo/config':
+        specifier: workspace:*
+        version: link:../../../dev/config
+
   docker/mongo: {}
 
   docker/oo: {}
