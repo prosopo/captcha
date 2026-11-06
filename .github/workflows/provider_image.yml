@@ -77,12 +77,7 @@ jobs:
       - name: env
         timeout-minutes: 5
         run: |
-          # Copy the .env.production from the dev script to the cli folder and root folder
-          cp ./dev/scripts/env.production ./packages/cli/.env.production
-          cp ./dev/scripts/env.production ./.env.production
-          
-          # Append the development PROVIDER_MNEMONIC from env.development to the .env.production file
-          grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
+          node .github/scripts/setup-env-files.mjs --mode production --only .,packages/cli
 
       - run: NODE_ENV="production" timeout 29m pnpm exec turbo run @prosopo/cli#build
         timeout-minutes: 30
