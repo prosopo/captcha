@@ -4,6 +4,12 @@ name: create_release_pr
 
 on:
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: write
@@ -22,18 +28,27 @@ env:
   NODE_ENV: "production"
 
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: create_release_pr
+      runner: ${{ inputs.runner || 'auto' }}
+
   create-pr:
     name: Create Release PR
-    timeout-minutes: 15
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
-    # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     steps:
       - name: Get token for gh app
         timeout-minutes: 5
@@ -51,7 +66,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup node and pnpm
-        timeout-minutes: 15
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -60,7 +75,7 @@ jobs:
           run-install: 'false'
 
       - name: Setup npm registry
-        timeout-minutes: 5
+        timeout-minutes: 30
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
 
@@ -70,8 +85,8 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
-        timeout-minutes: 5
+      - run: timeout 29m pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+        timeout-minutes: 30
 
       - name: Detect changesets
         timeout-minutes: 5
@@ -79,10 +94,10 @@ jobs:
         run: |
           if find .changeset -name "*.md" ! -name "README.md" | grep -q . ; then
             echo "Found changesets"
-            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "has_changesets=true" >> "$GITHUB_OUTPUT"
           else
             echo "No changesets found"
-            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "has_changesets=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Exit if no changesets
@@ -93,37 +108,37 @@ jobs:
           exit 0
 
       - name: Version bump
-        timeout-minutes: 5
+        timeout-minutes: 30
         if: steps.detect.outputs.has_changesets == 'true'
         run: |
-          pnpm exec changeset version --verbose
+          timeout 29m pnpm exec changeset version --verbose
 
-          pnpm install --lockfile-only --ignore-scripts
+          timeout 29m pnpm install --lockfile-only --ignore-scripts
           
           # Set the root package.json version to match @prosopo/cli. The provider
           # image tag now comes from packages/cli's own version, so there is no
           # wrapper package left to keep in step.
           root_version=$(jq -r .version packages/cli/package.json)
-          echo "root_version=$root_version" >> $GITHUB_ENV
+          echo "root_version=$root_version" >> "$GITHUB_ENV"
           echo "Setting versions to $root_version"
           
-          pnpm pkg set version="$root_version"
+          timeout 29m pnpm pkg set version="$root_version"
           
           git add -u .
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
-        timeout-minutes: 5
+      - run: timeout 29m pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+        timeout-minutes: 30
 
       - name: Build packages
-        timeout-minutes: 10
+        timeout-minutes: 30
         run: |
           echo "Building all packages"
-          pnpm run build:all
+          timeout 29m pnpm run build:all
 
       - name: lint-fix
         timeout-minutes: 5
         run: |
-          pnpm run lint-fix
+          timeout 4m pnpm run lint-fix
           git add -u .
 
       - name: Create release branch and PR
@@ -136,9 +151,9 @@ jobs:
           
           git checkout -b "$branch_name"
           git commit -m "chore: version bump v${{ env.root_version }}"
-          git push --set-upstream origin "$branch_name"
+          timeout 4m git push --set-upstream origin "$branch_name"
           
-          gh pr create \
+          timeout 4m gh pr create \
             --title "Release v${{ env.root_version }}" \
             --body "Automated release PR for version ${{ env.root_version }}" \
             --base main \

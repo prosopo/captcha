@@ -41,6 +41,7 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 			return typeof fn === "function" ? fn(...args) : undefined;
 		},
 	pickIpMode: () => undefined,
+	startPageBehaviourCapture: (): void => undefined,
 }));
 
 vi.mock("../util/widgetFactory.js", () => ({

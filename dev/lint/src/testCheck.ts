@@ -51,10 +51,11 @@ const testCheck = (args: {
 		console.log("Checking", pkgJsonPath);
 		const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 		const hasTestScript = pkgJson.scripts?.test !== undefined;
-		// Glob for test files (.test.ts / .spec.ts) anywhere in the package, not
+		// Glob for test files (.test.ts / .spec.ts / .test.mjs) anywhere in the package, not
 		// just under src/ — demos/cypress-shared keeps its only vitest test
 		// beside the script it covers, in scripts/, and a src-only glob reported
-		// it as "test script but no test files". Build output and dependencies
+		// it as "test script but no test files". docker/images/vector has no
+		// TypeScript and runs node:test on .test.mjs files. Build output and dependencies
 		// are excluded so a compiled copy never counts as a source test.
 		const testFiles = fg.globSync(
 			[
@@ -62,6 +63,7 @@ const testCheck = (args: {
 				`${path.dirname(pkgJsonPath)}/**/*.spec.ts`,
 				`${path.dirname(pkgJsonPath)}/**/*.test.tsx`,
 				`${path.dirname(pkgJsonPath)}/**/*.spec.tsx`,
+				`${path.dirname(pkgJsonPath)}/**/*.test.mjs`,
 			],
 			{ ignore: ["**/node_modules/**", "**/dist/**"] },
 		);

@@ -12,7 +12,8 @@
 # enough to trigger it. 0.55 interpolates by default and fails loudly on an
 # unset var. Do not add the 0.57 flag while pinned here: 0.55 does not
 # recognise it (it has the inverse, --disable-env-var-interpolation) and will
-# refuse to start.
+# refuse to start. `pnpm test` reads this FROM line and validates and
+# unit-tests vector.toml under exactly this version, so bump it here only.
 FROM timberio/vector:0.55.0-debian
 
 # Add Docker's official GPG key:
@@ -23,7 +24,7 @@ RUN apt-get update \
     && chmod a+r /etc/apt/keyrings/docker.asc \
     && echo \
     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
     gettext \

@@ -71,7 +71,7 @@ platform, so on an ARM host (Apple Silicon, Raspberry Pi, AWS Graviton) Docker r
 QEMU: Docker Desktop has it built in, and on Linux you can install it with
 `docker run --privileged --rm tonistiigi/binfmt --install amd64`. Emulated containers run noticeably slower.
 
-TLS is handled for you. The provider speaks plain HTTP on 9229; `docker/provider.Caddyfile` — the same config we run in
+TLS is handled for you. The provider speaks plain HTTP on 9229; `docker/provider/provider.Caddyfile` — the same config we run in
 production — sits in front of it and gets certificates over ACME, driven entirely by the `CADDY_*` vars in your `.env`.
 The image is `prosopo/caddy`, not upstream Caddy: that config needs `caddy-l4`, `chaddy`, `caddy-ratelimit` and
 `caddy-requestid` compiled in.
@@ -84,7 +84,7 @@ missing those two DNS records doesn't break the main one — you'll just see ACM
 
 `PROSOPO_PROVIDER_IMAGE_VERSION` in your `.env` is set to the release your checkout documents. When you pull a newer
 checkout, change it to match. Caddy's version is pinned in the compose file, so a newer checkout brings the Caddy its
-`docker/provider.Caddyfile` needs; set `CADDY_IMAGE_VERSION` in `.env` only to override it.
+`docker/provider/provider.Caddyfile` needs; set `CADDY_IMAGE_VERSION` in `.env` only to override it.
 
 ## 3. Register a site key
 
