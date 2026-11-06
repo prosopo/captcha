@@ -28,6 +28,10 @@ concurrency:
   group: cache-main
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   runner:
     # Hosted vs self-hosted for the cache job (precedence in pick-runner.yml).
