@@ -78,7 +78,7 @@ jobs:
           #   reviewDecision     an approved PR is waiting on a human to merge,
           #                      not abandoned
           #   keep-ready label   the manual opt-out
-          gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 200 \
+          timeout 4m gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 200 \
             --json number,title,updatedAt,isDraft,autoMergeRequest,reviewDecision,labels,author \
             > prs.json
 
@@ -117,6 +117,6 @@ jobs:
               "No updates since \`$updated\` (over $STALE_DAYS days), so this PR has been converted to draft. That stops it holding CI runners." \
               "Nothing is lost — \`gh pr ready $number\`, or the \"Ready for review\" button, picks it straight back up. Add the \`keep-ready\` label to exempt it permanently." \
               "Converting to draft disables auto-merge, so PRs with auto-merge enabled are excluded from this entirely.")
-            gh pr comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
-            gh pr ready "$number" --repo "$GITHUB_REPOSITORY" --undo
+            timeout 4m gh pr comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+            timeout 4m gh pr ready "$number" --repo "$GITHUB_REPOSITORY" --undo
           done < stale.tsv

@@ -33,7 +33,7 @@ defaults:
 jobs:
   check:
     name: changesets
-    timeout-minutes: 5
+    timeout-minutes: 60
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -62,7 +62,7 @@ jobs:
           fetch-depth: 0 # required for comparing changesets to the base branch
 
       - name: Setup node and pnpm
-        timeout-minutes: 5
+        timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           node-version: '24.22.1'
@@ -77,13 +77,13 @@ jobs:
         timeout-minutes: 5
         env:
           BASE_REF: ${{ github.base_ref }}
-        run: git fetch origin "$BASE_REF" && git checkout "$BASE_REF"
+        run: timeout 4m git fetch origin "$BASE_REF" && git checkout "$BASE_REF"
 
       - name: Checkout head ref
         timeout-minutes: 5
         env:
           HEAD_REF: ${{ github.head_ref }}
-        run: git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
+        run: timeout 4m git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
 
       # if this fails, you need to run `pnpm run changesets:add` (preferred!) or `pnpm run changesets:empty` for an empty changeset (avoid if possible)
       - name: check changesets
@@ -93,4 +93,4 @@ jobs:
         run: |
 
           # check that the changesets are present for each package which has been modified
-          pnpm run changesets --since "$BASE_REF"
+          timeout 4m pnpm run changesets --since "$BASE_REF"
