@@ -39,7 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          gh api repos/prosopo/captcha-private/dispatches \
+          timeout 60 gh api repos/prosopo/captcha-private/dispatches \
             -f event_type=submodule_updated \
-            -f "client_payload[repo]=$GITHUB_prosopo/captchaSITORY" \
+            -f "client_payload[repo]=$GITHUB_REPOSITORY" \
             -f "client_payload[sha]=$GITHUB_SHA"
