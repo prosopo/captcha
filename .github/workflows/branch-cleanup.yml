@@ -46,8 +46,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
-    uses: prosopo/github_actions/.github/workflows/branch-cleanup.yml@60b98a7e5d7444e7bb0c8f01e72840acf9be8a01
+    uses: prosopo/github_actions/.github/workflows/branch-cleanup.yml@8917aaddfeb0390cc3617a33d239e6a721ae4f47
     with:
-      actions-ref: 60b98a7e5d7444e7bb0c8f01e72840acf9be8a01
+      actions-ref: 8917aaddfeb0390cc3617a33d239e6a721ae4f47
       # Only an explicit manual run with dry-run unticked deletes.
       dry-run: ${{ github.event_name != 'workflow_dispatch' || inputs.dry-run }}
