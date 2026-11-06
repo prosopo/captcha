@@ -1,0 +1,55 @@
+# Fails a PR that adds a package.json whose name is outside the @prosopo/ scope.
+# See .github/scripts/check-package-scope.mjs. Reads tracked files only: no install.
+# No paths filter: required-check waits on every check, and a workflow a path
+# filter never starts would report nothing.
+name: package-scope
+
+on:
+  pull_request:
+    branches: [main, dev, staging, release/*]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  check:
+    name: package-scope
+    runs-on: ubuntu-latest
+    # Fork PRs never run here: self-hosted runners keep caches between jobs, which a fork could poison.
+    if: ${{ (!startsWith(github.event_name, 'pull_request') || github.event.pull_request.head.repo.full_name == github.repository) && (github.event_name != 'pull_request' || github.event.pull_request.draft != true) }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+        timeout-minutes: 2
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: "24.22.1"
+        timeout-minutes: 2
+
+      - name: Check script tests
+        run: timeout 120 node --test .github/scripts/check-package-scope.test.mjs
+        timeout-minutes: 3
+
+      - name: Check every package name is @prosopo/-scoped
+        run: timeout 60 node .github/scripts/check-package-scope.mjs
+        timeout-minutes: 2
+    timeout-minutes: 10
