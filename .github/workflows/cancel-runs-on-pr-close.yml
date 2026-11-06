@@ -9,7 +9,6 @@ on:
     types: [closed]
 
 permissions:
-  actions: write
   contents: read
 
 # Fork guard on every job: a PR from a fork never runs here. Jobs hold
@@ -21,5 +20,8 @@ defaults:
 
 jobs:
   cancel:
+    permissions:
+      actions: write
+      contents: read
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     uses: prosopo/github_actions/.github/workflows/cancel-runs-on-pr-close.yml@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
