@@ -138,13 +138,15 @@ jobs:
           sleep 10s
 
       # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-      - run: NODE_ENV="test" timeout 29m pnpm run setup
+      - run: timeout 29m pnpm run setup
         timeout-minutes: 30
 
       # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
       # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
       # by the cypress tests to find the elements they need to interact with
-      - run: NODE_ENV="development" timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
+      - env:
+          NODE_ENV: "development"
+        run: timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
         timeout-minutes: 30
 
       - name: Run the cypress tests on client-bundle-example

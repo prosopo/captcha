@@ -124,8 +124,10 @@ jobs:
       # bundle procaptcha-bundle using webpack
       - name: Webpack Bundle procaptcha-bundle
         timeout-minutes: 30
+        env:
+          NODE_ENV: "development"
         run: |
-          NODE_ENV="development" timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
+          timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle:webpack
 
       - name: Start the docker images
         timeout-minutes: 30
@@ -149,7 +151,7 @@ jobs:
 
           node .github/scripts/setup-env-files.mjs --https
 
-          NODE_ENV="test" timeout 4m pnpm run setup
+          timeout 4m pnpm run setup
 
           echo NODE_ENV: "$NODE_ENV"
 
@@ -164,8 +166,8 @@ jobs:
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           timeout 44m pnpm exec concurrently \
-            "NODE_ENV=test pnpm run start:provider" \
-            "sleep 10s && NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test pnpm run test:all" \
+            "pnpm run start:provider" \
+            "sleep 10s && pnpm run test:all" \
             --success "first" --kill-others
 
       - run: timeout 4m docker compose --file ./docker/docker-compose.test.yml down
