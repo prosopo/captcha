@@ -1,0 +1,45 @@
+name: notify-captcha-private
+
+# captcha-private pins this repo as a submodule. Telling it about every merge
+# to main lets its bump-submodules workflow open (or refresh) the rolling bump
+# PR within minutes, so breakage there surfaces while this change is fresh.
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  dispatch:
+    name: dispatch
+    # Forks have no app key, and pushes to a fork's main are not ours to announce.
+    if: github.repository == 'prosopo/captcha'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # GITHUB_TOKEN cannot reach another repo. The app token is narrowed to
+      # contents:write on captcha-private only, which is all a dispatch needs.
+      - name: Get token for gh app
+        id: app_token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510  # v3.3.0
+        timeout-minutes: 2
+        with:
+          app-id: ${{ vars.PROSOPONATOR_APP_ID }}
+          private-key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+          owner: prosopo
+          repositories: captcha-private
+          permission-contents: write
+
+      - name: Send submodule_updated
+        timeout-minutes: 2
+        env:
+          GH_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          timeout 60 gh api repos/prosopo/captcha-private/dispatches \
+            -f event_type=submodule_updated \
+            -f "client_payload[repo]=$GITHUB_REPOSITORY" \
+            -f "client_payload[sha]=$GITHUB_SHA"
