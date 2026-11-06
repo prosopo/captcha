@@ -58,8 +58,8 @@ jobs:
     timeout-minutes: 60
     needs: runner
     runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
-    # Skip if PR title starts with "Release v"
-    if: ${{ ((!startsWith(github.event.pull_request.title, 'Release v')) && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    # Skip release PRs (create_release_pr titles them "Release cli-v<version>")
+    if: ${{ ((!startsWith(github.event.pull_request.title, 'Release cli-v')) && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
         timeout-minutes: 5
