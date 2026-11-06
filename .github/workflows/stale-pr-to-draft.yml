@@ -37,7 +37,6 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
 
 concurrency:
   group: ${{ github.workflow }}
@@ -65,6 +64,9 @@ jobs:
       runner: ${{ inputs.runner || 'auto' }}
 
   draft-stale:
+    permissions:
+      contents: read
+      pull-requests: write
     needs: runner
     runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     timeout-minutes: 10
