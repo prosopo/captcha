@@ -90,9 +90,22 @@ export const categoryToReason = (
 	category: TrafficCategory,
 ): TrafficBlockReason => CATEGORY_TO_REASON[category];
 
+// Reduce a provider name to its letters and digits, lower-cased, so list
+// entries match however upstream punctuates or spaces the name: "GMO
+// Internet,Inc." and "GMO Internet , Inc." both become "gmointernetinc".
+// NFKD plus dropping combining marks folds accents and full-width forms
+// ("Ｇｍｏ" → "gmo"). Letters from any script are kept, so non-Latin names
+// still compare rather than collapsing to an empty string.
+export const normaliseProviderName = (name: string): string =>
+	name
+		.normalize("NFKD")
+		.replace(/\p{M}/gu, "")
+		.toLowerCase()
+		.replace(/[^\p{L}\p{N}]/gu, "");
+
 // Match a name list against `datacenterName`, `providerName`
-// (`company.name`), and `asnOrganization` — case-insensitive, whitespace
-// trimmed. The upstream ipapi only populates `datacenter.datacenter` for
+// (`company.name`), and `asnOrganization`, compared via
+// `normaliseProviderName`. The upstream ipapi only populates `datacenter.datacenter` for
 // curated named ranges, so falling back to providerName and asnOrganization
 // lets the lists also catch generic CDN / cloud-provider IPs that come
 // back with `is_datacenter: true` but no datacenter name.
@@ -110,13 +123,13 @@ const matchesNameList = (
 		ipInfo.asnOrganization,
 	]) {
 		if (typeof value !== "string") continue;
-		const trimmed = value.trim().toLowerCase();
-		if (trimmed) candidates.push(trimmed);
+		const normalised = normaliseProviderName(value);
+		if (normalised) candidates.push(normalised);
 	}
 	if (candidates.length === 0) {
 		return false;
 	}
-	const normalisedList = list.map((entry) => entry.trim().toLowerCase());
+	const normalisedList = list.map(normaliseProviderName);
 	return candidates.some((c) => normalisedList.includes(c));
 };
 
