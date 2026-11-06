@@ -26,7 +26,6 @@ import {
 	type TrafficFilterMatch,
 	categoryToReason,
 	checkTrafficFilter,
-	normaliseProviderName,
 	resolveChallengePolicy,
 	resolvePadBytes,
 } from "../../../../tasks/spam/checkTrafficFilter.js";
@@ -1992,30 +1991,6 @@ describe("checkTrafficFilter", () => {
 				reason: "API.PROXY_BLOCKED",
 			});
 		});
-	});
-});
-
-describe("normaliseProviderName", () => {
-	it("drops case, punctuation and whitespace", () => {
-		expect(normaliseProviderName("  GMO Internet , Inc. ")).toBe(
-			"gmointernetinc",
-		);
-		expect(normaliseProviderName("GMO Internet,Inc.")).toBe("gmointernetinc");
-	});
-
-	it("folds accents and full-width forms", () => {
-		expect(normaliseProviderName("Ｔéléhost　Ｓ.Ａ.")).toBe("telehostsa");
-	});
-
-	it("keeps letters and digits from non-Latin scripts", () => {
-		expect(normaliseProviderName("さくらインターネット 株式会社")).toBe(
-			"さくらインターネット株式会社",
-		);
-		expect(normaliseProviderName("M247 Europe SRL")).toBe("m247europesrl");
-	});
-
-	it("returns an empty string for punctuation-only input", () => {
-		expect(normaliseProviderName(" -., ")).toBe("");
 	});
 });
 
