@@ -3,7 +3,7 @@
 services:
     server1:
         container_name: server1
-        image: prosopo/client-example-server:latest
+        image: prosopo/client-example-server:2.7.31
         labels:
             - "vector.provider=true" # enable logging as a provider
             - "vector.docker=true" # log docker events
