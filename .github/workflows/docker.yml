@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         timeout-minutes: 5
       - name: Every tracked Dockerfile is listed in DOCKERFILES
-        timeout-minutes: 2
+        timeout-minutes: 5
         run: diff <(git ls-files '*Dockerfile' '*Dockerfile.*' | grep -v '\.dockerignore$' | sort) <(tr ' ' '\n' <<<"$DOCKERFILES" | sort)
       - name: Install hadolint
         timeout-minutes: 5
@@ -113,7 +113,7 @@ jobs:
       # and so does a manual run.
       - name: Did this PR change the Dockerfile
         id: changed
-        timeout-minutes: 3
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
