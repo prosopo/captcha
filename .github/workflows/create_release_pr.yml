@@ -14,6 +14,7 @@ on:
 permissions:
   contents: read
 
+# One release branch: a second run would push over the first.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -29,11 +30,6 @@ env:
   CARGO_PROFILE_DEV_DEBUG: line-tables-only
   BRANCH_PROTECTION_DISABLED: 'true'
   NODE_ENV: "production"
-
-# One release branch: a second run would push over the first.
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
 
 jobs:
   runner:
