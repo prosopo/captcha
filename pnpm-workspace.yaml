@@ -4,13 +4,15 @@ packages:
   - demos/*
   - integration/*
   # Compose bundles, versioned so deploys can pin them. Not docker/*: the
-  # docker/images wrappers stay out of the workspace (see docker/bake.mjs).
+  # docker/images wrappers stay out of the workspace (see docker/bake.mjs),
+  # except vector, whose config tests run in CI via `pnpm run test:all`.
   - docker/provider
   - docker/provider-mock
   - docker/oo
   - docker/client-example-server
   - docker/redis
   - docker/mongo
+  - docker/images/vector
 
 overrides:
   "@types/express-serve-static-core": 5.1.3

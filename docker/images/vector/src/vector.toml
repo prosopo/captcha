@@ -1121,3 +1121,70 @@ type = "memory"
 max_events = 10000
 when_full = "drop_newest"
 
+
+# =============================================================================
+# UNIT TESTS
+# =============================================================================
+#
+# Run by `pnpm --filter @prosopo/vector-docker test` via `vector test`, which
+# feeds these events straight into the transform; the docker_logs sources and
+# the sinks are not started. Vector ignores [[tests]] when running the config.
+# OO_HOST is the dummy value that script sets: dummy_oo_host.
+
+[[tests]]
+name = "provider_format lifts JSON log fields and adds container metadata"
+
+[[tests.inputs]]
+insert_at = "provider_format"
+type = "log"
+
+[tests.inputs.log_fields]
+message = '{"level":"info","msg":"captcha served","requestId":"abc123"}'
+container_name = "provider"
+image = "prosopo/provider:3.0.0"
+stream = "stdout"
+source_type = "docker_logs"
+
+[[tests.outputs]]
+extract_from = "provider_format"
+
+[[tests.outputs.conditions]]
+type = "vrl"
+source = '''
+assert_eq!(.level, "info")
+assert_eq!(.msg, "captcha served")
+assert_eq!(.requestId, "abc123")
+assert_eq!(.host, "dummy_oo_host")
+assert_eq!(.container_name, "provider")
+assert_eq!(.image, "prosopo/provider:3.0.0")
+assert_eq!(.stream, "stdout")
+assert_eq!(.source_type, "docker_logs")
+assert!(!exists(.message))
+'''
+
+[[tests]]
+name = "provider_format keeps a non-JSON line as the message"
+
+[[tests.inputs]]
+insert_at = "provider_format"
+type = "log"
+
+[tests.inputs.log_fields]
+message = '{"level":"info", truncated'
+container_name = "provider"
+image = "prosopo/provider:3.0.0"
+stream = "stderr"
+source_type = "docker_logs"
+
+[[tests.outputs]]
+extract_from = "provider_format"
+
+[[tests.outputs.conditions]]
+type = "vrl"
+source = '''
+assert_eq!(.message, "{\"level\":\"info\", truncated")
+assert_eq!(.host, "dummy_oo_host")
+assert_eq!(.container_name, "provider")
+assert_eq!(.stream, "stderr")
+assert!(!exists(.level))
+'''
