@@ -18,6 +18,7 @@
 
 name: dependabot-changeset
 
+# No draft gate: dependabot never opens draft PRs, and the job is cheap.
 on:
   pull_request:
     types:

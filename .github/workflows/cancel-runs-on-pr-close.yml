@@ -4,6 +4,7 @@
 
 name: cancel-runs-on-pr-close
 
+# No draft gate: it fires only on close, when a draft's runs need cancelling too.
 on:
   pull_request:
     types: [closed]
