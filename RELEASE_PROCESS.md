@@ -7,7 +7,7 @@ This document explains how releases work in this repository.
 The release process is split into 3 automatic workflows that run in sequence:
 
 1. **Create Release PR** - Bumps versions and creates a pull request
-2. **Tag Release** - Tags the code after the PR is merged
+2. **Tag** - On every push to main, tags each package whose version changed (`<name>-v<version>`)
 3. **Publish Release** - Builds, publishes, and creates the GitHub release
 
 ---
@@ -21,11 +21,10 @@ Go to the **Actions** tab in GitHub and manually run the **"Create Release PR"**
 **What happens:**
 - The workflow reads all the changesets (`.changeset/*.md` files)
 - It uses `@changesets/cli` to bump package versions
-- It updates the root `package.json` to match the CLI version
-- It creates a branch called `release/vX.Y.Z`
+- It creates a branch called `release/cli-vX.Y.Z`, named after the `@prosopo/cli` version (the root `package.json` has no version)
 - It opens a pull request with all the version changes
 
-**Result:** You get a PR titled "Release vX.Y.Z" that shows all version bumps.
+**Result:** You get a PR titled "Release cli-vX.Y.Z" that shows all version bumps.
 
 ---
 
@@ -41,19 +40,17 @@ Look at the release PR to make sure the version changes look correct.
 Once you're happy, **manually approve and merge the PR**.
 
 **What happens automatically:**
-- As soon as the PR merges, the **"Tag Release"** workflow runs
-- It creates a git tag for the new version (e.g., `v3.43.0`)
-- The tag is pushed to GitHub
+- On every push to `main`, the **"publish_release"** workflow tags each package whose `package.json` version changed as `<name>-v<version>` (e.g. `cli-v3.43.0`, `types-v3.12.0`)
 
-**Result:** The `main` branch is now tagged with the new version.
+**Result:** The merge commit is tagged for every package it bumped.
 
-Note: tag step is separate to publish step so that failed publishes can be retried without doing a big rerun of everything.
+Note: a failed publish can be retried without re-tagging: run **"publish_release"** by hand with the `@prosopo/cli` version, and it publishes from the `cli-v<version>` tag.
 
 ---
 
 ### 3️ Publish Happens Automatically
 
-When the tags are pushed, the **"Publish Release"** workflow runs automatically.
+When that push created a `cli-v<version>` tag, the same workflow publishes straight after tagging. Packages bumped without a CLI bump are tagged but wait for the next CLI release to reach npm.
 
 **What happens:**
 - Builds all the packages
@@ -61,7 +58,7 @@ When the tags are pushed, the **"Publish Release"** workflow runs automatically.
   - **If any npm publish fails, the workflow stops immediately**
 - Publishes the provider Docker image to Docker Hub (only if npm publishing succeeded)
 - Creates a zip of `procaptcha-bundle/dist/bundle` 
-- Creates a GitHub Release with auto-generated release notes
+- Creates a GitHub Release `cli-vX.Y.Z` with auto-generated release notes
 - Attaches the bundle zip to the release
 - Sends Slack notifications about what succeeded or failed
 
