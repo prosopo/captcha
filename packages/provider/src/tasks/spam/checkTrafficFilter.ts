@@ -30,6 +30,7 @@ import {
 	TrafficFilterAction,
 	trafficFilterReputationScoreThresholdDefault,
 } from "@prosopo/types";
+import { normaliseForMatching } from "@prosopo/util";
 
 export type TrafficBlockReason =
 	| ResultReason.VPN_BLOCKED
@@ -91,8 +92,9 @@ export const categoryToReason = (
 ): TrafficBlockReason => CATEGORY_TO_REASON[category];
 
 // Match a name list against `datacenterName`, `providerName`
-// (`company.name`), and `asnOrganization` — case-insensitive, whitespace
-// trimmed. The upstream ipapi only populates `datacenter.datacenter` for
+// (`company.name`), and `asnOrganization`, compared via
+// `normaliseForMatching` so punctuation, spacing, case and accents don't
+// matter. The upstream ipapi only populates `datacenter.datacenter` for
 // curated named ranges, so falling back to providerName and asnOrganization
 // lets the lists also catch generic CDN / cloud-provider IPs that come
 // back with `is_datacenter: true` but no datacenter name.
@@ -110,13 +112,13 @@ const matchesNameList = (
 		ipInfo.asnOrganization,
 	]) {
 		if (typeof value !== "string") continue;
-		const trimmed = value.trim().toLowerCase();
-		if (trimmed) candidates.push(trimmed);
+		const normalised = normaliseForMatching(value);
+		if (normalised) candidates.push(normalised);
 	}
 	if (candidates.length === 0) {
 		return false;
 	}
-	const normalisedList = list.map((entry) => entry.trim().toLowerCase());
+	const normalisedList = list.map(normaliseForMatching);
 	return candidates.some((c) => normalisedList.includes(c));
 };
 

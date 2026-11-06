@@ -470,6 +470,31 @@ describe("checkTrafficFilter", () => {
 			expect(result).toMatchObject({ isBlocked: false });
 		});
 
+		it("matches the allowlist regardless of punctuation and spacing", () => {
+			// Upstream reports the same provider with different punctuation
+			// on different ranges, so an entry copied from one IP must still
+			// cover the others.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "GMO Internet , Inc.",
+				}),
+				{ ...allBlocked, datacenterNameAllowlist: ["GMO Internet,Inc."] },
+			);
+			expect(result).toMatchObject({ isBlocked: false });
+		});
+
+		it("matches the allowlist across accents and full-width characters", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "Ｔéléhost　Ｓ.Ａ.",
+				}),
+				{ ...allBlocked, datacenterNameAllowlist: ["Telehost SA"] },
+			);
+			expect(result).toMatchObject({ isBlocked: false });
+		});
+
 		it("still blocks datacenter IPs whose name does not match", () => {
 			const result = checkTrafficFilter(
 				baseInfo({ isDatacenter: true, datacenterName: "Amazon AWS" }),
@@ -856,6 +881,24 @@ describe("checkTrafficFilter", () => {
 				{
 					...allBlocked,
 					datacenterNameDenylist: ["proxy-lease-provider"],
+				},
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("matches the denylist regardless of punctuation and spacing", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					datacenterName: "Proxy Lease Provider, LLC",
+				}),
+				{
+					...allBlocked,
+					datacenterNameDenylist: ["proxy-lease-provider llc"],
 				},
 			);
 			expect(result).toMatchObject({
