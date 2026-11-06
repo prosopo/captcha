@@ -45,8 +45,8 @@ defaults:
 
 jobs:
   update:
-    uses: prosopo/github_actions/.github/workflows/auto-update-pr.yml@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
+    uses: prosopo/github_actions/.github/workflows/auto-update-pr.yml@9183b698754fdd30517025d08f446dc34042e873  # main
     with:
-      actions-ref: 0f332e76cb54093f6130fa9bdee5b54a9f870de9
+      actions-ref: 9183b698754fdd30517025d08f446dc34042e873
     secrets:
       update-token: ${{ secrets.PROSOPONATOR_PAT }}
