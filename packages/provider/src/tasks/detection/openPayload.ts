@@ -14,6 +14,7 @@
 
 import { constants, createDecipheriv, privateDecrypt } from "node:crypto";
 import type { OpenDetectorPayload, OpenDetectorToken } from "@prosopo/types";
+import { decodeBase64 } from "@prosopo/util/node";
 import { z } from "zod";
 import {
 	type DecodedDetectorPayload,
@@ -64,10 +65,10 @@ export const decodeOpenPayload = (
 			padding: constants.RSA_PKCS1_OAEP_PADDING,
 			oaepHash: "sha256",
 		},
-		Buffer.from(envelope.key, "base64"),
+		decodeBase64(envelope.key).expect("decoding the token key"),
 	);
-	const iv = Buffer.from(envelope.iv, "base64");
-	const sealed = Buffer.from(envelope.data, "base64");
+	const iv = decodeBase64(envelope.iv).expect("decoding the token iv");
+	const sealed = decodeBase64(envelope.data).expect("decoding the token data");
 	if (
 		aesKey.length !== AES_KEY_BYTES ||
 		iv.length !== GCM_IV_BYTES ||
