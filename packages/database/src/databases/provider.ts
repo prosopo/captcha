@@ -2404,7 +2404,13 @@ export class ProviderDatabase
 							streamer.streamSessionRecord(record, markStored);
 						}
 					})
-					.catch(() => {});
+					.catch((err) => {
+						this.logger.warn(() => ({
+							err,
+							data: { sessionId },
+							msg: "Failed to stream session record",
+						}));
+					});
 			}
 		} catch (err) {
 			throw new ProsopoError({
