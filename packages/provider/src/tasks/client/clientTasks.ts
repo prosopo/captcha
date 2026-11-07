@@ -180,6 +180,7 @@ export class ClientTaskManager {
 					processedCommitments += filteredBatch.length;
 				},
 				(row) => (row as { _id?: unknown })._id,
+				BATCH_SIZE,
 			);
 
 			// Process PoW records with cursor
@@ -205,6 +206,7 @@ export class ClientTaskManager {
 					processedPowRecords += filteredBatch.length;
 				},
 				(row) => (row as { _id?: unknown })._id,
+				BATCH_SIZE,
 			);
 
 			// process session records with cursor
@@ -227,6 +229,7 @@ export class ClientTaskManager {
 					processedSessionRecords += filteredBatch.length;
 				},
 				(row) => (row as { _id?: unknown })._id,
+				BATCH_SIZE,
 			);
 
 			await this.providerDB.updateScheduledTaskStatus(
@@ -609,11 +612,19 @@ export class ClientTaskManager {
 	 * a batch row; both `PoWCaptchaRecord` and `UserCommitmentRecord` are
 	 * `mongoose.Document` subtypes so `_id` is always present at runtime
 	 * even though our stored types don't spell it out.
+	 *
+	 * A short page means the sweep has reached the tail, so it stops there.
+	 * Rows keep joining the tail while the sweep runs (new records, and
+	 * records re-flagged by an update a second after they were streamed).
+	 * Chasing them one tiny batch at a time, each paying a full round trip
+	 * to the central DB, can keep one phase running for over an hour on a
+	 * busy node and starve the phases after it. The next sweep picks them up.
 	 */
 	private async processBatchesWithCursor<T>(
 		fetchBatch: (afterId?: unknown) => Promise<T[]>,
 		processBatch: (batch: T[]) => Promise<void>,
 		getLastId: (row: T) => unknown,
+		batchSize: number,
 	): Promise<void> {
 		let afterId: unknown | undefined;
 		while (true) {
@@ -621,6 +632,7 @@ export class ClientTaskManager {
 			if (!batch.length) break;
 
 			await processBatch(batch);
+			if (batch.length < batchSize) break;
 			const last = batch[batch.length - 1];
 			if (last === undefined) break;
 			const nextId = getLastId(last);
