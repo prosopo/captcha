@@ -29,7 +29,19 @@ export async function storeCaptchasExternally(
 
 	const tasks = new Tasks(env);
 
+	// checkIfTaskIsRunning treats a sweep older than two minutes as dead, so
+	// a slow sweep would otherwise get a second one started beside it. Both
+	// share one central DB connection and each closes it after every batch,
+	// failing the other's in-flight writes.
+	let sweepInProgress = false;
+
 	const job = new CronJob(cronSchedule, async () => {
+		if (sweepInProgress) {
+			env.logger.info(() => ({
+				msg: `${ScheduledTaskNames.StoreCommitmentsExternal} still running in this process, skipping`,
+			}));
+			return;
+		}
 		const taskRunning = await checkIfTaskIsRunning(
 			ScheduledTaskNames.StoreCommitmentsExternal,
 			env.getDb(),
@@ -42,12 +54,17 @@ export async function storeCaptchasExternally(
 			env.logger.info(() => ({
 				msg: `${ScheduledTaskNames.StoreCommitmentsExternal} task....`,
 			}));
-			await tasks.clientTaskManager.storeCommitmentsExternal().catch((err) => {
+			sweepInProgress = true;
+			try {
+				await tasks.clientTaskManager.storeCommitmentsExternal();
+			} catch (err) {
 				env.logger.error(() => ({
 					err,
 					msg: "Error storing commitments externally",
 				}));
-			});
+			} finally {
+				sweepInProgress = false;
+			}
 		}
 	});
 

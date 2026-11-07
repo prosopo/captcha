@@ -259,31 +259,45 @@ describe("ClientTaskManager", () => {
 		expect(providerDB.getUnstoredDappUserCommitments).not.toHaveBeenCalled();
 	});
 
-	it("paginates unstored commitments by `_id` keyset — subsequent fetches carry the last _id", async () => {
-		const page1: (Pick<UserCommitment, "id"> & { _id: string })[] = [
-			{ id: "c1", _id: "id-1" },
-			{ id: "c2", _id: "id-2" },
-		];
-		const page2: (Pick<UserCommitment, "id"> & { _id: string })[] = [
-			{ id: "c3", _id: "id-3" },
-		];
+	const commitmentPage = (
+		from: number,
+		count: number,
+	): UserCommitmentRecord[] =>
+		Array.from(
+			{ length: count },
+			(_, i): Pick<UserCommitment, "id"> & { _id: string } => ({
+				id: `c${from + i}`,
+				_id: `id-${from + i}`,
+			}),
+		) as unknown as UserCommitmentRecord[];
 
-		// biome-ignore lint/suspicious/noExplicitAny: mock-only shape
-		const commMock = providerDB.getUnstoredDappUserCommitments as any;
+	it("paginates unstored commitments by `_id` keyset — subsequent fetches carry the last _id", async () => {
+		const commMock = vi.mocked(providerDB.getUnstoredDappUserCommitments);
 		commMock
-			.mockResolvedValueOnce(page1)
-			.mockResolvedValueOnce(page2)
+			.mockResolvedValueOnce(commitmentPage(1, 1000))
+			.mockResolvedValueOnce(commitmentPage(1001, 1000))
 			.mockResolvedValueOnce([]);
-		// biome-ignore lint/suspicious/noExplicitAny: mock-only shape
-		(providerDB.createScheduledTaskStatus as any).mockResolvedValueOnce({});
-		// biome-ignore lint/suspicious/noExplicitAny: mock-only shape
-		(providerDB.updateScheduledTaskStatus as any).mockResolvedValueOnce({});
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(commMock).toHaveBeenNthCalledWith(1, expect.any(Number), undefined);
-		expect(commMock).toHaveBeenNthCalledWith(2, expect.any(Number), "id-2");
-		expect(commMock).toHaveBeenNthCalledWith(3, expect.any(Number), "id-3");
+		expect(commMock).toHaveBeenCalledTimes(3);
+		expect(commMock).toHaveBeenNthCalledWith(1, 1000, undefined);
+		expect(commMock).toHaveBeenNthCalledWith(2, 1000, "id-1000");
+		expect(commMock).toHaveBeenNthCalledWith(3, 1000, "id-2000");
+	});
+
+	it("stops a phase at the first short page instead of chasing rows that arrive during the sweep", async () => {
+		const commMock = vi.mocked(providerDB.getUnstoredDappUserCommitments);
+		commMock
+			.mockResolvedValueOnce(commitmentPage(1, 1000))
+			.mockResolvedValueOnce(commitmentPage(1001, 3))
+			.mockResolvedValueOnce(commitmentPage(1004, 2));
+
+		await clientTaskManager.storeCommitmentsExternal();
+
+		expect(commMock).toHaveBeenCalledTimes(2);
+		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledTimes(2);
+		expect(providerDB.getUnstoredSessionRecords).toHaveBeenCalled();
 	});
 
 	it("should store commitments externally if mongoCaptchaUri is set", async () => {
