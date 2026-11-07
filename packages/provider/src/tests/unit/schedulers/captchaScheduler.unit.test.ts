@@ -60,17 +60,15 @@ vi.mock("../../../tasks/tasks.js", () => ({
 }));
 
 vi.mock("cron", () => ({
-	CronJob: vi
-		.fn()
-		.mockImplementation(function (
-			cronTime: string,
-			onTick: () => Promise<void>,
-		) {
-			return {
-				start: vi.fn().mockImplementation(onTick),
-				onTick,
-			};
-		}),
+	CronJob: vi.fn().mockImplementation(function (
+		cronTime: string,
+		onTick: () => Promise<void>,
+	) {
+		return {
+			start: vi.fn().mockImplementation(onTick),
+			onTick,
+		};
+	}),
 }));
 
 vi.mock("../../../util.js", () => ({
@@ -124,7 +122,9 @@ describe("storeCaptchasExternally", () => {
 					}),
 			);
 		vi.mocked(Tasks).mockImplementationOnce(function () {
-			return { clientTaskManager: { storeCommitmentsExternal } } as unknown as Tasks;
+			return {
+				clientTaskManager: { storeCommitmentsExternal },
+			} as unknown as Tasks;
 		});
 
 		await storeCaptchasExternally(mockPair, "0 * * * *", mockConfig);
