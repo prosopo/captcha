@@ -15,6 +15,7 @@
 import { stringifyBigInts } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	setGlobalLogContext,
 	getLogger,
 	parseDirectives,
 	parseLogLevel,
@@ -406,6 +407,32 @@ describe("emitted record", () => {
 		} finally {
 			infoSpy.mockRestore();
 		}
+	});
+});
+
+describe("setGlobalLogContext", () => {
+	afterEach(() => setGlobalLogContext(undefined));
+
+	it("adds the context to loggers created before it was set", () => {
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		const logger = getLogger("info", "module");
+		setGlobalLogContext({ requestId: "abc" });
+		logger.info(() => ({ msg: "hello", data: { a: 1 } }));
+		const record = JSON.parse(String(infoSpy.mock.calls[0]?.[0]));
+		infoSpy.mockRestore();
+		expect(record.req_id).toBe("abc");
+		expect(record.data).toEqual({ requestId: "abc", a: 1 });
+	});
+
+	it("stops adding the context once cleared", () => {
+		const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+		setGlobalLogContext({ requestId: "abc" });
+		setGlobalLogContext(undefined);
+		getLogger("info", "module").info(() => ({ msg: "hello" }));
+		const record = JSON.parse(String(infoSpy.mock.calls[0]?.[0]));
+		infoSpy.mockRestore();
+		expect(record.req_id).toBeUndefined();
+		expect(record.data).toBeUndefined();
 	});
 });
 
