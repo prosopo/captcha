@@ -343,5 +343,10 @@ jobs:
             ./demos/cypress-shared/cypress/snapshots/actual
           if-no-files-found: ignore
 
+      - name: Container logs
+        if: ${{ failure() || cancelled() }}
+        timeout-minutes: 3
+        uses: prosopo/github_actions/.github/actions/container-logs@1b3257b005f4c59f97205f5e99c19d11e9d70a25  # main
+
       - run: timeout 4m docker compose --file ./docker/docker-compose.test.yml down
         timeout-minutes: 5
