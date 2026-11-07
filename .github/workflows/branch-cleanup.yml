@@ -1,0 +1,53 @@
+# Housekeeping entry point (thin caller): runs the shared branch-cleanup
+# workflow from prosopo/github_actions, which deletes branches whose merged PR
+# head is still the branch tip. Rules and restore steps live in that repo's
+# scripts/branch_cleanup/branch_cleanup.py.
+#
+# Deletion stays off until the dry-run candidate list has been reviewed: the
+# weekly run and pull_request runs (this file changed) only print the list in
+# the job summary. workflow_dispatch with dry-run=false deletes.
+#
+# Follow the existing layout and conventions; a new workflow or structural
+# change needs a justification in the PR and review by the .github/ code owners.
+# workflow-lint: entry point -- pure trigger wrapper around a workflow_call file
+
+name: branch-cleanup
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Only list candidates in the job summary; untick to delete."
+        type: boolean
+        default: true
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    paths:
+      - .github/workflows/branch-cleanup.yml
+
+concurrency:
+  # Differs from the called workflow's group (branch-cleanup-<repo>): equal
+  # nested groups make the inner run wait on the outer one forever.
+  group: ${{ github.workflow }}-caller
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  cleanup:
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft) }}
+    permissions:
+      contents: write
+      pull-requests: read
+    uses: prosopo/github_actions/.github/workflows/branch-cleanup.yml@64d37cfb6e4a5bdba14c004e7d1c133f59df2c97
+    with:
+      actions-ref: 64d37cfb6e4a5bdba14c004e7d1c133f59df2c97
+      # Only an explicit manual run with dry-run unticked deletes.
+      dry-run: ${{ github.event_name != 'workflow_dispatch' || inputs.dry-run }}
