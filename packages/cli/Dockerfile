@@ -30,9 +30,9 @@ RUN mkdir -p data/detector-pool
 
 # Download the GeoLite2 databases into the same directory. One layer rather
 # than three so the intermediate states are not retained.
-RUN curl -fLsS -o GeoLite2-Country.mmdb https://git.io/GeoLite2-Country.mmdb && \
-    curl -fLsS -o GeoLite2-City.mmdb https://git.io/GeoLite2-City.mmdb && \
-    curl -fLsS -o GeoLite2-ASN.mmdb https://git.io/GeoLite2-ASN.mmdb
+RUN curl -fLsS -o GeoLite2-Country.mmdb https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-Country.mmdb && \
+    curl -fLsS -o GeoLite2-City.mmdb https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-City.mmdb && \
+    curl -fLsS -o GeoLite2-ASN.mmdb https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
 
 # The generated package.json declares `sharp` as a runtime dependency so
 # `npm i` installs the linux-x64 native binary — vite bundles the JS shim but
