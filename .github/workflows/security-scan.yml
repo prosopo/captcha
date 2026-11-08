@@ -91,9 +91,9 @@ jobs:
         # From the Docker Hub image, not the GitHub release: github.com release
         # downloads 504'd for hours on 2026-11-08 and failed every PR.
         run: |
-          id=$(docker create zricethezav/gitleaks:v8.28.0@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854)
-          sudo docker cp "$id:/usr/bin/gitleaks" /usr/local/bin/gitleaks
-          docker rm "$id"
+          id=$(timeout 5m docker create zricethezav/gitleaks:v8.28.0@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854)
+          sudo timeout 2m docker cp "$id:/usr/bin/gitleaks" /usr/local/bin/gitleaks
+          timeout 1m docker rm "$id"
           gitleaks version
 
       # On a PR, scan only the commits the PR adds. Scanning all of history on
