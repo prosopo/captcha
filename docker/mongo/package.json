@@ -10,9 +10,7 @@
 		"lint:docker": "node ../lint-bundle.mjs"
 	},
 	"prosopo": {
-		"publish": [
-			"gh-release:docker-compose.mongo.yml"
-		]
+		"publish": ["gh-release:docker-compose.mongo.yml"]
 	},
 	"repository": {
 		"type": "git",
