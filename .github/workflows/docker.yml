@@ -75,10 +75,13 @@ jobs:
         run: diff <(git ls-files '*Dockerfile' '*Dockerfile.*' | grep -v '\.dockerignore$' | sort) <(tr ' ' '\n' <<<"$DOCKERFILES" | sort)
       - name: Install hadolint
         timeout-minutes: 5
+        # From the Docker Hub image, not the GitHub release: github.com release
+        # downloads 504'd for hours on 2026-11-08 and failed every PR.
         run: |
-          timeout 2m curl -fsSL --retry 5 -o "$RUNNER_TEMP/hadolint" https://github.com/hadolint/hadolint/releases/download/v2.14.0/hadolint-linux-x86_64
+          id=$(docker create hadolint/hadolint:v2.14.0@sha256:27086352fd5e1907ea2b934eb1023f217c5ae087992eb59fde121dce9c9ff21e)
+          docker cp "$id:/bin/hadolint" "$RUNNER_TEMP/hadolint"
+          docker rm "$id"
           echo "6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47  $RUNNER_TEMP/hadolint" | sha256sum -c -
-          chmod +x "$RUNNER_TEMP/hadolint"
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
       # Rules and their reasons live in .hadolint.yaml, which hadolint reads from the working directory.
       - name: hadolint
