@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/client-example-server-compose",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Compose stack for the client example server",
 	"engines": {
 		"node": "^24"
