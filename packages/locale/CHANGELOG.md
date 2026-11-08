@@ -1,5 +1,11 @@
 # @prosopo/locale
 
+## 3.14.3
+### Patch Changes
+
+- Updated dependencies [2732f63]
+  - @prosopo/util@3.7.0
+
 ## 3.14.2
 ### Patch Changes
 

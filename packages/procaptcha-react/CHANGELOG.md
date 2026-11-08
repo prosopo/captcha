@@ -1,5 +1,17 @@
 # @prosopo/procaptcha-react
 
+## 2.14.23
+### Patch Changes
+
+- Updated dependencies [2732f63]
+- Updated dependencies [fc89f02]
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/locale@3.14.3
+  - @prosopo/procaptcha@2.12.4
+  - @prosopo/procaptcha-common@2.23.4
+  - @prosopo/common@3.3.2
+
 ## 2.14.22
 ### Patch Changes
 

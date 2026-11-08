@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/redis-compose",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Compose files and config for a standalone Redis",
 	"engines": {
 		"node": "^24"
