@@ -88,12 +88,12 @@ jobs:
 
       - name: Install gitleaks
         timeout-minutes: 30
+        # From the Docker Hub image, not the GitHub release: github.com release
+        # downloads 504'd for hours on 2026-11-08 and failed every PR.
         run: |
-          version=8.28.0
-          timeout 5m curl -sSfL -o /tmp/gitleaks.tar.gz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
-          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
-          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          id=$(docker create zricethezav/gitleaks:v8.28.0@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854)
+          sudo docker cp "$id:/usr/bin/gitleaks" /usr/local/bin/gitleaks
+          docker rm "$id"
           gitleaks version
 
       # On a PR, scan only the commits the PR adds. Scanning all of history on
