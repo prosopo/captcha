@@ -1,5 +1,61 @@
 # @prosopo/provider
 
+## 5.29.0
+### Minor Changes
+
+- fc89f02: Site bypass keys: a browser carrying a site's bypass key skips the CAPTCHA on that site.
+  
+  The widget reads a `prosopo_bypass_key` cookie from the page and sends it with the frictionless request. The provider
+  hashes it (SHA-256) and adds the hash to the request's user scope as `bypassKeyHash`, a new access-rule field. A
+  site-scoped Allow rule carrying that hash then takes the existing authenticated fast path, so the visitor gets an
+  `authenticated` token without a challenge, and verification still requires the visitor's IP. Rules only ever hold the
+  hash, never the key.
+  
+  A reused frictionless session is now also evicted when an Allow rule matches and the cached session is not already
+  authenticated, so a visitor who loaded the page before adding a key, or before an IP Allow rule was created, is not
+  left on the old challenge.
+
+### Patch Changes
+
+- 2732f63: Traffic filter name lists now match provider names whatever their punctuation, spacing or accents. An allowlist entry of `Example Hosting,Inc.` used to miss IPs that upstream reports as `Example Hosting , Inc.`, so users on one range of a provider were let through while users on another range of the same provider were still blocked. Names are now reduced to their letters and digits before comparing, with accents and full-width characters folded, so both spellings match. Names in non-Latin scripts still compare as before.
+  
+  `@prosopo/util` now exports `normaliseForMatching`, the helper that does this, so other code that compares free-text names can use the same rules.
+- 196f2c0: IP validation no longer rejects real users whose address changes in two common, harmless ways between solving the captcha and the site verifying the token.
+  
+  A neighbouring address on the same network is now treated as a match: the same /64 for IPv6 (privacy addresses rotate inside it) or the same /24 for IPv4 (carrier NAT pools hand out neighbouring addresses). Before, any such change was rejected whenever the address's reputation score was at or above the threshold.
+  
+  An IPv4 address and an IPv6 address in the same country, with neither side a datacenter, VPN or proxy, now skip the ISP, city and distance rules. In some markets the IPv6 leg of a home connection is run by a different operator on a different ASN and geolocates to that operator's hub, so one user looked like an ISP change hundreds of kilometres away. The country and reputation rules still apply to these pairs.
+- 6b8a477: Stop the job that copies captcha records to the central database from getting stuck on busy nodes.
+  
+  Each part of the job now stops when it reaches the end of the records waiting at that moment, instead of chasing new ones as they arrive. On a busy node it could spend over an hour on proof-of-work records and never reach sessions, so session results stopped reaching the central database.
+  
+  The job also no longer starts a second copy while the first is still running in the same process. The two copies shared one connection and closed it under each other, so most runs failed.
+- Updated dependencies [2732f63]
+- Updated dependencies [ef8cd40]
+- Updated dependencies [fc89f02]
+  - @prosopo/util@3.7.0
+  - @prosopo/native-merkle@0.0.10
+  - @prosopo/native-puzzle@0.1.6
+  - @prosopo/user-access-policy@3.16.0
+  - @prosopo/types@5.28.0
+  - @prosopo/api@4.10.0
+  - @prosopo/api-express-router@3.3.16
+  - @prosopo/database@4.6.4
+  - @prosopo/datasets@3.2.24
+  - @prosopo/keyring@2.10.24
+  - @prosopo/load-balancer@2.11.28
+  - @prosopo/locale@3.14.3
+  - @prosopo/logger@2.1.11
+  - @prosopo/web-bot-auth@0.1.10
+  - @prosopo/types-database@5.18.2
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.93
+  - @prosopo/fingerprint@2.8.15
+  - @prosopo/ipinfo@0.7.2
+  - @prosopo/types-env@2.12.3
+  - @prosopo/api-route@2.6.71
+  - @prosopo/redis-client@1.0.48
+
 ## 5.28.1
 ### Patch Changes
 
