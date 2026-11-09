@@ -12,6 +12,9 @@
 	],
 	"references": [
 		{
+			"path": "../api-route/tsconfig.cjs.json"
+		},
+		{
 			"path": "../types/tsconfig.cjs.json"
 		},
 		{

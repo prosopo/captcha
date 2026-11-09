@@ -888,6 +888,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@prosopo/api-route':
+        specifier: workspace:*
+        version: link:../api-route
       '@prosopo/types':
         specifier: workspace:*
         version: link:../types

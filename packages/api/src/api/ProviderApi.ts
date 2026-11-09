@@ -13,7 +13,38 @@
 // limitations under the License.
 
 import {
-	AdminApiPaths,
+	assignDetectorBundleRoute,
+	clearAllCountersRoute,
+	getAllDecisionMachinesRoute,
+	getAudioCaptchaChallengeRoute,
+	getDecisionMachineRoute,
+	getFrictionlessCaptchaChallengeRoute,
+	getIconOrderCaptchaChallengeRoute,
+	getImageCaptchaChallengeRoute,
+	getPowCaptchaChallengeRoute,
+	getProviderDetailsRoute,
+	getPuzzleCaptchaChallengeRoute,
+	registerSiteKeyRoute,
+	registerSiteKeysRoute,
+	removeAllDecisionMachinesRoute,
+	removeDecisionMachineRoute,
+	removeSiteKeyRoute,
+	removeSiteKeysRoute,
+	submitAudioCaptchaSolutionRoute,
+	submitIconOrderCaptchaSolutionRoute,
+	submitImageCaptchaSolutionRoute,
+	submitPowCaptchaSolutionRoute,
+	submitPuzzleCaptchaSolutionRoute,
+	toggleMaintenanceModeRoute,
+	updateDecisionMachineRoute,
+	verifyAudioCaptchaSolutionRoute,
+	verifyAuthenticatedSessionRoute,
+	verifyIconOrderCaptchaSolutionRoute,
+	verifyImageCaptchaSolutionRoute,
+	verifyPowCaptchaSolutionRoute,
+	verifyPuzzleCaptchaSolutionRoute,
+} from "@prosopo/api-route/contracts";
+import {
 	ApiParams,
 	type ApiResponse,
 	type AssignDetectorBundleRequestBodyOutput,
@@ -51,7 +82,6 @@ import {
 	type Provider,
 	type ProviderApiInterface,
 	type ProviderRegistered,
-	PublicApiPaths,
 	type PuzzleCaptchaSolutionResponse,
 	type RandomProvider,
 	type RegisterSitekeyBodyTypeOutput,
@@ -183,7 +213,7 @@ export default class ProviderApi
 			body[ApiParams.simdReadings] = simdReadings;
 		}
 		return this.dedupedPost<CaptchaResponseBody, CaptchaRequestBodyType>(
-			ClientApiPaths.GetImageCaptchaChallenge,
+			getImageCaptchaChallengeRoute.path,
 			sessionId,
 			body,
 			{
@@ -224,7 +254,7 @@ export default class ProviderApi
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		};
-		return this.post(ClientApiPaths.SubmitImageCaptchaSolution, body, {
+		return this.post(submitImageCaptchaSolutionRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -256,7 +286,7 @@ export default class ProviderApi
 			payload[ApiParams.clientSessionId] = clientSessionId;
 		}
 
-		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
+		return this.post(verifyImageCaptchaSolutionRoute.path, payload, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -279,7 +309,7 @@ export default class ProviderApi
 		return this.dedupedPost<
 			GetPowCaptchaResponse,
 			GetPowCaptchaChallengeRequestBodyType
-		>(ClientApiPaths.GetPowCaptchaChallenge, sessionId, body, {
+		>(getPowCaptchaChallengeRoute.path, sessionId, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -321,7 +351,7 @@ export default class ProviderApi
 				[ApiParams.fingerprintProof]: fingerprintProof,
 			}),
 		});
-		return this.post(ClientApiPaths.SubmitPowCaptchaSolution, body, {
+		return this.post(submitPowCaptchaSolutionRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -336,7 +366,7 @@ export default class ProviderApi
 		simdReadings?: string,
 	): Promise<GetPuzzleCaptchaResponse> {
 		return this.getInteractiveCaptchaChallenge(
-			ClientApiPaths.GetPuzzleCaptchaChallenge,
+			getPuzzleCaptchaChallengeRoute.path,
 			user,
 			dapp,
 			sessionId,
@@ -351,7 +381,7 @@ export default class ProviderApi
 		simdReadings?: string,
 	): Promise<GetIconOrderCaptchaResponse> {
 		return this.getInteractiveCaptchaChallenge(
-			ClientApiPaths.GetIconOrderCaptchaChallenge,
+			getIconOrderCaptchaChallengeRoute.path,
 			user,
 			dapp,
 			sessionId,
@@ -366,7 +396,7 @@ export default class ProviderApi
 		simdReadings?: string,
 	): Promise<GetAudioCaptchaResponse> {
 		return this.getInteractiveCaptchaChallenge(
-			ClientApiPaths.GetAudioCaptchaChallenge,
+			getAudioCaptchaChallengeRoute.path,
 			user,
 			dapp,
 			sessionId,
@@ -429,7 +459,7 @@ export default class ProviderApi
 			[ApiParams.finalY]: finalY,
 			[ApiParams.puzzleEvents]: puzzleEvents,
 		});
-		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {
+		return this.post(submitPuzzleCaptchaSolutionRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -446,7 +476,7 @@ export default class ProviderApi
 		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		return this.submitInteractiveCaptchaVerify(
-			ClientApiPaths.VerifyPuzzleCaptchaSolution,
+			verifyPuzzleCaptchaSolutionRoute.path,
 			token,
 			signatureHex,
 			user,
@@ -465,7 +495,7 @@ export default class ProviderApi
 		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		return this.submitInteractiveCaptchaVerify(
-			ClientApiPaths.VerifyIconOrderCaptchaSolution,
+			verifyIconOrderCaptchaSolutionRoute.path,
 			token,
 			signatureHex,
 			user,
@@ -484,7 +514,7 @@ export default class ProviderApi
 		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		return this.submitInteractiveCaptchaVerify(
-			ClientApiPaths.VerifyAudioCaptchaSolution,
+			verifyAudioCaptchaSolutionRoute.path,
 			token,
 			signatureHex,
 			user,
@@ -553,7 +583,7 @@ export default class ProviderApi
 			[ApiParams.replays]: replays,
 			[ApiParams.audioEvents]: audioEvents,
 		});
-		return this.post(ClientApiPaths.SubmitAudioCaptchaSolution, body, {
+		return this.post(submitAudioCaptchaSolutionRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -587,7 +617,7 @@ export default class ProviderApi
 			[ApiParams.clicks]: clicks,
 			[ApiParams.iconOrderEvents]: iconOrderEvents,
 		});
-		return this.post(ClientApiPaths.SubmitIconOrderCaptchaSolution, body, {
+		return this.post(submitIconOrderCaptchaSolutionRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
@@ -606,7 +636,7 @@ export default class ProviderApi
 		const body: AssignDetectorBundleRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
 		};
-		return this.post(ClientApiPaths.AssignDetectorBundle, body, {
+		return this.post(assignDetectorBundleRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 			},
@@ -649,7 +679,7 @@ export default class ProviderApi
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,
 			typeof body
-		>(ClientApiPaths.GetFrictionlessCaptchaChallenge, body, {
+		>(getFrictionlessCaptchaChallengeRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -687,7 +717,7 @@ export default class ProviderApi
 	}
 
 	public getProviderDetails(): Promise<Provider> {
-		return this.fetch(PublicApiPaths.GetProviderDetails, {
+		return this.fetch(getProviderDetailsRoute.path, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 			},
@@ -733,7 +763,7 @@ export default class ProviderApi
 		if (clientSessionId) {
 			body[ApiParams.clientSessionId] = clientSessionId;
 		}
-		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
+		return this.post(verifyPowCaptchaSolutionRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -775,7 +805,7 @@ export default class ProviderApi
 		if (clientSessionId) {
 			body[ApiParams.clientSessionId] = clientSessionId;
 		}
-		return this.post(ClientApiPaths.VerifyAuthenticatedSession, body, {
+		return this.post(verifyAuthenticatedSessionRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -790,7 +820,7 @@ export default class ProviderApi
 		jwt: string,
 	): Promise<ApiResponse> {
 		const body: RegisterSitekeyBodyTypeOutput = { siteKey, tier, settings };
-		return this.post(AdminApiPaths.SiteKeyRegister, body, {
+		return this.post(registerSiteKeyRoute.path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				Authorization: `Bearer ${jwt}`,
@@ -802,7 +832,7 @@ export default class ProviderApi
 		siteKeys: RegisterSitekeysBodyTypeOutput,
 		jwt: string,
 	): Promise<ApiResponse> {
-		return this.post(AdminApiPaths.SiteKeysRegister, siteKeys, {
+		return this.post(registerSiteKeysRoute.path, siteKeys, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				Authorization: `Bearer ${jwt}`,
@@ -812,7 +842,7 @@ export default class ProviderApi
 
 	public removeSiteKey(siteKey: string, jwt: string): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.SiteKeyRemove,
+			removeSiteKeyRoute.path,
 			RemoveSitekeyBody.parse({ siteKey }),
 			{
 				headers: {
@@ -828,7 +858,7 @@ export default class ProviderApi
 		jwt: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.SiteKeysRemove,
+			removeSiteKeysRoute.path,
 			RemoveSitekeysBody.parse(siteKeys),
 			{
 				headers: {
@@ -852,7 +882,7 @@ export default class ProviderApi
 		kind?: DecisionMachineKind,
 	): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.UpdateDecisionMachine,
+			updateDecisionMachineRoute.path,
 			UpdateDecisionMachineBody.parse({
 				[ApiParams.decisionMachineScope]: scope,
 				[ApiParams.decisionMachineRuntime]: runtime,
@@ -875,7 +905,7 @@ export default class ProviderApi
 
 	public getAllDecisionMachines(jwt: string): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.GetAllDecisionMachines,
+			getAllDecisionMachinesRoute.path,
 			GetAllDecisionMachinesBody.parse({}),
 			{
 				headers: {
@@ -888,7 +918,7 @@ export default class ProviderApi
 
 	public getDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.GetDecisionMachine,
+			getDecisionMachineRoute.path,
 			GetDecisionMachineBody.parse({ id }),
 			{
 				headers: {
@@ -901,7 +931,7 @@ export default class ProviderApi
 
 	public removeDecisionMachine(id: string, jwt: string): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.RemoveDecisionMachine,
+			removeDecisionMachineRoute.path,
 			RemoveDecisionMachineBody.parse({ id }),
 			{
 				headers: {
@@ -914,7 +944,7 @@ export default class ProviderApi
 
 	public removeAllDecisionMachines(jwt: string): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.RemoveAllDecisionMachines,
+			removeAllDecisionMachinesRoute.path,
 			RemoveAllDecisionMachinesBody.parse({}),
 			{
 				headers: {
@@ -930,7 +960,7 @@ export default class ProviderApi
 		dappAccount?: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.ClearAllCounters,
+			clearAllCountersRoute.path,
 			ClearAllCountersBody.parse({ [ApiParams.dapp]: dappAccount }),
 			{
 				headers: {
@@ -947,7 +977,7 @@ export default class ProviderApi
 		signature: string,
 	): Promise<ApiResponse> {
 		return this.post(
-			AdminApiPaths.ToggleMaintenanceMode,
+			toggleMaintenanceModeRoute.path,
 			ToggleMaintenanceModeBody.parse({ enabled }),
 			{
 				headers: {
