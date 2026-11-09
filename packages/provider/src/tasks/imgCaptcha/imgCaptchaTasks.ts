@@ -37,8 +37,6 @@ import {
 	type Hash,
 	type IPAddress,
 	type IPInfoResponse,
-	type ISpamFilterRules,
-	type ITrafficFilter,
 	type ImageVerificationResponse,
 	type KeyringPair,
 	type PendingImageCaptchaRequest,
@@ -52,11 +50,7 @@ import {
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessRulesStorage,
-	describeMatchedRule,
-} from "@prosopo/user-access-policy";
+import { describeMatchedRule } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
@@ -90,12 +84,31 @@ import {
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import type { VerifyImageCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import { isSignatureValid } from "../signatureCheck.js";
 import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
 } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
+
+export interface ImageSolutionSubmission {
+	userAccount: string;
+	dappAccount: string;
+	requestHash: string;
+	captchas: CaptchaSolution[];
+	/** Proves the user owns `userAccount`. */
+	userTimestampSignature: string;
+	timestamp: number;
+	providerRequestHashSignature: string;
+	ipAddress: IPAddress;
+	headers: RequestHeaders;
+	ja4: string;
+	behavioralData?: string;
+	ipInfo?: IPInfoResponse;
+	simdReadings?: string;
+	clientMetaData?: ClientMetaData;
+}
 
 export class ImgCaptchaManager extends CaptchaManager {
 	private decisionMachineRunner: DecisionMachineRunner;
@@ -138,15 +151,23 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return captchaDocs;
 	}
 
-	async getRandomCaptchasAndRequestHash(
-		datasetId: Hash,
-		userAccount: string,
-		ipAddress: IPAddress,
-		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
-		threshold: number,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<{
+	async getRandomCaptchasAndRequestHash({
+		datasetId,
+		userAccount,
+		ipAddress,
+		captchaConfig,
+		threshold,
+		sessionId,
+		ipInfo,
+	}: {
+		datasetId: Hash;
+		userAccount: string;
+		ipAddress: IPAddress;
+		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput;
+		threshold: number;
+		sessionId?: string;
+		ipInfo?: IPInfoResponse;
+	}): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
 		timestamp: number;
@@ -231,36 +252,24 @@ export class ImgCaptchaManager extends CaptchaManager {
 	}
 
 	/**
-	 * Validate and store the text captcha solution(s) from the Dapp User in a web2 environment
-	 * @param {string} userAccount
-	 * @param {string} dappAccount
-	 * @param {string} requestHash
-	 * @param {JSON} captchas
-	 * @param userTimestampSignature
-	 * @param timestamp
-	 * @param providerRequestHashSignature
-	 * @param ipAddress
-	 * @param headers
-	 * @param ja4
-	 * @param behavioralData
-	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
+	 * Validate and store the image captcha solution(s) from the Dapp User
 	 */
-	async dappUserSolution(
-		userAccount: string,
-		dappAccount: string,
-		requestHash: string,
-		captchas: CaptchaSolution[],
-		userTimestampSignature: string, // the signature to indicate ownership of account
-		timestamp: number,
-		providerRequestHashSignature: string,
-		ipAddress: IPAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		behavioralData?: string,
-		ipInfo?: IPInfoResponse,
-		simdReadings?: string,
-		clientMetaData?: ClientMetaData,
-	): Promise<DappUserSolutionResult> {
+	async dappUserSolution({
+		userAccount,
+		dappAccount,
+		requestHash,
+		captchas,
+		userTimestampSignature,
+		timestamp,
+		providerRequestHashSignature,
+		ipAddress,
+		headers,
+		ja4,
+		behavioralData,
+		ipInfo,
+		simdReadings,
+		clientMetaData,
+	}: ImageSolutionSubmission): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		if (
 			!isSignatureValid(
@@ -723,25 +732,24 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return dappUserSolution;
 	}
 
-	async verifyImageCaptchaSolution(
-		user: string,
-		dapp: string,
-		commitmentId: string | undefined,
-		env: ProviderEnvironment,
-		maxVerifiedTime?: number,
-		ip?: string,
-		disallowWebView?: boolean,
-		userAccessRulesStorage?: AccessRulesStorage,
-		email?: string,
-		spamEmailDomainCheckingEnabled = false,
-		spamFilter?: ISpamFilterRules,
-		trafficFilter?: ITrafficFilter,
-		storeMetadata = false,
-		// The session id the site rendered the widget with. When supplied, the
-		// solution must carry the same value in its `clientMetaData` or it is
-		// disapproved.
-		clientSessionId?: string,
-	): Promise<ImageVerificationResponse> {
+	async verifyImageCaptchaSolution({
+		user,
+		dappAccount: dapp,
+		commitmentId,
+		env,
+		maxVerifiedTime,
+		settings: {
+			disallowWebView,
+			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
+			spamFilter,
+			trafficFilter,
+			storeMetadata = false,
+		},
+		ip,
+		email,
+		clientSessionId,
+		userAccessRulesStorage,
+	}: VerifyImageCaptchaSolutionArgs): Promise<ImageVerificationResponse> {
 		// Bind the commitmentId/dapp context once so every log line in this
 		// method carries it without repeating the fields in each `data` block.
 		const logger = this.logger.with({ commitmentId, dapp });

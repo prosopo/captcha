@@ -517,22 +517,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				}
 
 				const response =
-					await tasks.imgCaptchaManager.verifyImageCaptchaSolution(
+					await tasks.imgCaptchaManager.verifyImageCaptchaSolution({
 						user,
-						dapp,
+						dappAccount: dapp,
 						commitmentId,
+						settings: clientRecord.settings,
 						env,
 						maxVerifiedTime,
 						ip,
-						clientRecord.settings.disallowWebView,
 						userAccessRulesStorage,
 						email,
-						clientRecord.settings.spamEmailDomainCheckEnabled,
-						clientRecord.settings.spamFilter,
-						clientRecord.settings.trafficFilter,
-						clientRecord.settings.storeMetadata,
 						clientSessionId,
-					);
+					});
 
 				req.logger.debug(() => ({ data: { response } }));
 				const verificationResponse: ImageVerificationResponse =

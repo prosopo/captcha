@@ -326,18 +326,15 @@ export default (
 			}
 
 			const taskData =
-				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
+				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash({
 					datasetId,
-					user,
+					userAccount: user,
 					ipAddress,
 					captchaConfig,
-					clientRecord.settings.imageThreshold ?? 0.8,
-					validSessionId,
-					// Persist the full ipinfo payload — consumers read
-					// individual flags off this object instead of separate
-					// flat fields.
-					req.ipInfo,
-				);
+					threshold: clientRecord.settings.imageThreshold ?? 0.8,
+					sessionId: validSessionId,
+					ipInfo: req.ipInfo,
+				});
 			const assetsResolver =
 				getSealedAssetsResolver() ??
 				getSignedAssetsResolver(normalizedIp) ??
