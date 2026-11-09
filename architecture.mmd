@@ -150,7 +150,7 @@ graph TB
     FrictionlessTasks -->|"verifyWebBotAuth"| WebBotAuth
     WebBotAuth -.->|"fetch JWKS<br/>(no timeout)"| AgentJwks["Agent JWKS host<br/>(external, caller-named)"]
     FrictionlessTasks --> Redis
-    FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override)"| AccessPolicies
+    FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override;<br/>routing machine skipped)"| AccessPolicies
     FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle,IconOrder})"| TrafficFilter
     FrictionlessTasks -->|"3. runDecisionMachine<br/>(score-based routing)"| DecisionMachine
     FrictionlessTasks -->|human detected| Manager

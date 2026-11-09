@@ -59,6 +59,7 @@ type MockTasks = {
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
 		sendPuzzleCaptcha: MockFn;
+		sendAccessRuleCaptcha: MockFn;
 		registerBlockedSession: MockFn;
 		getPrioritisedAccessPolicies: MockFn;
 		isValidRequest: MockFn;
@@ -215,6 +216,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 					sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
 					sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
+					sendAccessRuleCaptcha: vi.fn().mockResolvedValue({ type: "rule" }),
 					registerBlockedSession: vi.fn(),
 					getPrioritisedAccessPolicies: vi.fn().mockResolvedValue([]),
 					isValidRequest: vi.fn().mockResolvedValue({ valid: true }),
@@ -303,6 +305,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
 			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
+			sendAccessRuleCaptcha: vi.fn().mockResolvedValue({ type: "rule" }),
 			registerBlockedSession: vi.fn(),
 			getPrioritisedAccessPolicies: vi.fn().mockResolvedValue([]),
 			isValidRequest: vi.fn().mockResolvedValue({ valid: true }),
@@ -491,8 +494,8 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		);
 		// ...and the request falls through to the access policy, which serves image.
 		expect(
-			tasksInstance.frictionlessManager.sendImageCaptcha,
-		).toHaveBeenCalled();
+			tasksInstance.frictionlessManager.sendAccessRuleCaptcha,
+		).toHaveBeenCalledWith(CaptchaType.image, expect.anything());
 	});
 
 	it("carries a refresh chain from the session the user refreshed away from", async () => {
@@ -955,6 +958,43 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		// Reuse-session response shape is NOT used.
 		expect(res.json).not.toHaveBeenCalledWith(
 			expect.objectContaining({ sessionId: "stale-pow-session-routing" }),
+		);
+	});
+
+	it("keeps reusing a session whose type an access rule named, even when the routing machine wants another", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteDedupRuleOverRouting",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		});
+		tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+			sessionId: "rule-image-session",
+			captchaType: CaptchaType.image,
+			score: 0,
+			webView: false,
+		});
+		tasksInstance.frictionlessManager.getPrioritisedAccessPolicies.mockResolvedValue(
+			[{ type: AccessPolicyType.Restrict, captchaType: CaptchaType.image }],
+		);
+		tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+			captchaType: CaptchaType.puzzle,
+		});
+
+		const { req, res, next } = buildReqRes({
+			token: "tRuleOverRouting",
+			headHash: "hhRuleOverRouting",
+			dapp: "siteDedupRuleOverRouting",
+			user: "u",
+		});
+		await handler(req as never, res as never, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		expect(res.json).toHaveBeenCalledWith(
+			expect.objectContaining({ sessionId: "rule-image-session" }),
 		);
 	});
 

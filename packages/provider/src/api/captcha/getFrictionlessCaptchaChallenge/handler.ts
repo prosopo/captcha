@@ -21,6 +21,7 @@ import {
 	GetFrictionlessCaptchaChallengeRequestBody,
 	ModeEnum,
 	type ScoreComponents,
+	isConcreteCaptchaType,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
@@ -471,7 +472,10 @@ export default (
 					: { captchaType: cachedCaptchaType };
 				// Compared after coercion, as `sendCaptcha` would mint it, so a router
 				// that keeps asking for a disallowed type doesn't evict every reuse.
+				// A rule that names the type overrules the router here too, as it
+				// does when the session is first minted.
 				const dedupConflictsWithRouting =
+					!isConcreteCaptchaType(dedupAccessPolicy?.captchaType) &&
 					coerceToEnabledCaptchaType(
 						dedupRouted.captchaType,
 						allowedCaptchaTypes,
