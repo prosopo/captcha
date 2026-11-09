@@ -20,6 +20,7 @@ import {
 import {
 	type JWT,
 	blake2AsU8a,
+	decodeAddress,
 	jwtVerify,
 	sr25519jwtIssue,
 } from "@prosopo/util-crypto";
@@ -298,7 +299,13 @@ export function createPair(
 			context?: string | Uint8Array,
 			extra?: string | Uint8Array,
 		): boolean => {
-			return sr25519VrfVerify(message, vrfResult, publicKey, context, extra);
+			return sr25519VrfVerify(
+				message,
+				vrfResult,
+				decodeAddress(signerPublic),
+				context,
+				extra,
+			);
 		},
 	};
 }
