@@ -549,18 +549,11 @@ export abstract class InteractiveCaptchaManager<
 
 		notVerifiedResponse.sessionId = challengeRecord.sessionId;
 
-		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoError({
-				code: "INVALID_SOLUTION",
-				errorSite: "PROV-71",
-				context: {
-					failedFuncName: this.serverVerifyInteractiveCaptchaSolution.name,
-					challenge,
-				},
-			});
-		}
-
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
+		if (
+			challengeRecord.result.status !== CaptchaStatus.approved ||
+			challengeRecord.serverChecked
+		)
+			return notVerifiedResponse;
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -950,7 +943,7 @@ export abstract class InteractiveCaptchaManager<
 
 		return {
 			verified: true,
-			...(score ? { score } : {}),
+			...(Number.isFinite(score) && { score }),
 			...(challengeRecord.sessionId && {
 				sessionId: challengeRecord.sessionId,
 			}),
