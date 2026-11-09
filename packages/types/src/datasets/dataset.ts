@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { array, nativeEnum, number, object, string } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import type { Hash } from "../provider/api.js";
 import {
 	type Captcha,
@@ -55,13 +56,21 @@ export interface DatasetWithIdsAndTree extends DatasetWithIds {
 // Zod schemas
 
 export const DatasetSchema = object({
-	datasetId: string().optional(),
-	datasetContentId: string().optional(),
+	datasetId: string().max(INPUT_LIMITS.ID).optional(),
+	datasetContentId: string().max(INPUT_LIMITS.TOKEN).optional(),
 	captchas: CaptchasSchema,
 	format: nativeEnum(CaptchaTypes),
-	solutionTree: array(array(string())).optional(),
-	contentTree: array(array(string())).optional(),
-	timeLimit: number().optional(),
+	solutionTree: array(
+		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.ARRAY),
+	)
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	contentTree: array(
+		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.ARRAY),
+	)
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	timeLimit: number().safe().optional(),
 });
 
 export const DatasetWithNumericSolutionSchema = DatasetSchema.extend({
@@ -69,15 +78,27 @@ export const DatasetWithNumericSolutionSchema = DatasetSchema.extend({
 });
 
 export const DatasetWithIdsSchema = object({
-	datasetId: string(),
-	datasetContentId: string().optional(),
-	captchas: array(SelectAllCaptchaSchema),
+	datasetId: string().max(INPUT_LIMITS.ID),
+	datasetContentId: string().max(INPUT_LIMITS.TOKEN).optional(),
+	captchas: array(SelectAllCaptchaSchema).max(INPUT_LIMITS.ARRAY),
 	format: nativeEnum(CaptchaTypes),
-	solutionTree: array(array(string())).optional(),
-	contentTree: array(array(string())).optional(),
+	solutionTree: array(
+		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.ARRAY),
+	)
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	contentTree: array(
+		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.ARRAY),
+	)
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
 });
 
 export const DatasetWithIdsAndTreeSchema = DatasetWithIdsSchema.extend({
-	solutionTree: array(array(string())),
-	contentTree: array(array(string())),
+	solutionTree: array(
+		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.ARRAY),
+	).max(INPUT_LIMITS.ARRAY),
+	contentTree: array(
+		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.ARRAY),
+	).max(INPUT_LIMITS.ARRAY),
 });

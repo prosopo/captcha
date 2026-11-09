@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { number, object } from "zod";
+import {} from "../api/inputLimits.js";
 
 export const PENALTY_OLD_TIMESTAMP_DEFAULT = 0.2;
 export const PENALTY_ACCESS_RULE_DEFAULT = 0.5;
@@ -19,18 +20,22 @@ export const PENALTY_UNVERIFIED_HOST_DEFAULT = 0.2;
 export const PENALTY_WEBVIEW_DEFAULT = 0.1;
 export const FrictionlessPenalties = object({
 	PENALTY_OLD_TIMESTAMP: number()
+		.safe()
 		.positive()
 		.optional()
 		.default(PENALTY_OLD_TIMESTAMP_DEFAULT),
 	PENALTY_ACCESS_RULE: number()
+		.safe()
 		.positive()
 		.optional()
 		.default(PENALTY_ACCESS_RULE_DEFAULT),
 	PENALTY_UNVERIFIED_HOST: number()
+		.safe()
 		.positive()
 		.optional()
 		.default(PENALTY_UNVERIFIED_HOST_DEFAULT),
 	PENALTY_WEBVIEW: number()
+		.safe()
 		.positive()
 		.optional()
 		.default(PENALTY_WEBVIEW_DEFAULT),

@@ -37,6 +37,10 @@ export const INPUT_LIMITS = {
 	LONG_TEXT: 65536,
 	/** Tokens, signatures, base64 payloads, simd readings. */
 	TOKEN: 131072,
+	/** List items. */
+	ARRAY: 10000,
+	/** Keys in a record. */
+	RECORD_KEYS: 10000,
 	/**
 	 * Encrypted behavioural data. The widget keeps up to 2,200 pointer, touch,
 	 * press and scroll points, and the payload is base64-encoded twice, so a
@@ -45,3 +49,8 @@ export const INPUT_LIMITS = {
 	 */
 	BEHAVIOURAL_DATA: 524288,
 } as const;
+
+export const hasAtMostKeys =
+	(max: number) =>
+	(record: Record<string, unknown>): boolean =>
+		Object.keys(record).length <= max;

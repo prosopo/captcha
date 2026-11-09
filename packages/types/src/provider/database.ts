@@ -32,6 +32,7 @@ import {
 	unknown as unknownType,
 	type infer as zInfer,
 } from "zod";
+import { INPUT_LIMITS, hasAtMostKeys } from "../api/inputLimits.js";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType, type ChallengeCaptchaType } from "../client/index.js";
 import type {
@@ -245,20 +246,20 @@ export interface FingerprintSummaryStored {
 }
 
 export const FingerprintDisclosedValuesSchema = object({
-	timezone: string().optional(),
-	languages: string().optional(),
-	architecture: number().optional(),
+	timezone: string().max(INPUT_LIMITS.NAME).optional(),
+	languages: string().max(INPUT_LIMITS.NAME).optional(),
+	architecture: number().safe().optional(),
 	cookiesEnabled: boolean().optional(),
 	sessionStorage: boolean().optional(),
 	localStorage: boolean().optional(),
 });
 
 export const FingerprintSummarySchema = object({
-	root: string(),
-	groupHash: string(),
-	bucketId: string().optional(),
-	colorDepth: number().optional(),
-	hardwareConcurrency: number().optional(),
+	root: string().max(INPUT_LIMITS.LONG_TEXT),
+	groupHash: string().max(INPUT_LIMITS.ID),
+	bucketId: string().max(INPUT_LIMITS.ID).optional(),
+	colorDepth: number().safe().optional(),
+	hardwareConcurrency: number().safe().optional(),
 	disclosed: FingerprintDisclosedValuesSchema.optional(),
 });
 
@@ -360,7 +361,7 @@ export interface UserCommitment extends StoredCaptcha {
 	inputMethods?: InputMethod[][];
 }
 
-// Runtime parsing stays permissive (`string().optional()`) because decision
+// Runtime parsing stays permissive (`string().max(INPUT_LIMITS.NAME).optional()`) because decision
 // machines are operator-authored JS — their `reason` is whatever string the
 // machine returns, including values that won't be in `ResultReason`. The
 // strict `ResultReason` type is preserved at the schema's output via
@@ -369,44 +370,45 @@ export interface UserCommitment extends StoredCaptcha {
 const CaptchaResultSchema = object({
 	status: nativeEnum(CaptchaStatus),
 	reason: string()
+		.max(INPUT_LIMITS.TEXT)
 		.optional()
 		.transform((v) => v as ResultReason | undefined),
-	error: string().optional(),
+	error: string().max(INPUT_LIMITS.TEXT).optional(),
 }) satisfies ZodType<CaptchaResult, ZodTypeDef, unknown>;
 
 // Zod schema for BehavioralDataPacked
 const BehavioralDataPackedSchema = object({
-	c1: array(any()),
-	c2: array(any()),
-	c3: array(any()),
-	c4: array(any()).optional(),
-	d: string(),
+	c1: array(any()).max(INPUT_LIMITS.ARRAY),
+	c2: array(any()).max(INPUT_LIMITS.ARRAY),
+	c3: array(any()).max(INPUT_LIMITS.ARRAY),
+	c4: array(any()).max(INPUT_LIMITS.ARRAY).optional(),
+	d: string().max(INPUT_LIMITS.LONG_TEXT),
 });
 
 export const StoredCaptchaMetadataSchema = object({
-	email: string().optional(),
-	emailNormalised: string().optional(),
+	email: string().max(INPUT_LIMITS.EMAIL).optional(),
+	emailNormalised: string().max(INPUT_LIMITS.EMAIL).optional(),
 }) satisfies ZodType<StoredCaptchaMetadata, ZodTypeDef, unknown>;
 
 export const ClientMetaDataDbSchema = object({
-	hp: string().optional(),
-	clientSessionId: string().optional(),
+	hp: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	clientSessionId: string().max(INPUT_LIMITS.ID).optional(),
 }) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
 
 export const UserCommitmentSchema = object({
-	userAccount: string(),
-	dappAccount: string(),
-	datasetId: string(),
-	providerAccount: string(),
-	id: string(),
+	userAccount: string().max(INPUT_LIMITS.ID),
+	dappAccount: string().max(INPUT_LIMITS.ID),
+	datasetId: string().max(INPUT_LIMITS.ID),
+	providerAccount: string().max(INPUT_LIMITS.ID),
+	id: string().max(INPUT_LIMITS.ID),
 	result: CaptchaResultSchema,
-	userSignature: string(),
+	userSignature: string().max(INPUT_LIMITS.TOKEN),
 	ipAddress: CompositeIpAddressSchema,
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
 	clientMetaData: ClientMetaDataDbSchema.optional(),
-	headers: object({}).catchall(string()),
-	ja4: string(),
+	headers: object({}).catchall(string().max(INPUT_LIMITS.LONG_TEXT)),
+	ja4: string().max(INPUT_LIMITS.LONG_TEXT),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
 	// The full ipinfo payload — optional and not validated nominally
@@ -423,69 +425,75 @@ export const UserCommitmentSchema = object({
 	failedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
-	sessionId: string().optional(),
-	coords: array(array(tuple([number(), number()]))).optional(),
-	inputMethods: array(array(InputMethodSchema)).optional(),
+	sessionId: string().max(INPUT_LIMITS.ID).optional(),
+	coords: array(
+		array(tuple([number().safe(), number().safe()])).max(INPUT_LIMITS.ARRAY),
+	)
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	inputMethods: array(array(InputMethodSchema).max(INPUT_LIMITS.ARRAY))
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
 	// Pending request fields for image captcha workflow
 	pending: boolean(),
-	salt: string(),
-	requestHash: string(),
+	salt: string().max(INPUT_LIMITS.LONG_TEXT),
+	requestHash: string().max(INPUT_LIMITS.ID),
 	deadlineTimestamp: date(),
-	threshold: number(),
+	threshold: number().safe(),
 	// Behavioral data fields
-	deviceCapability: string().optional(),
+	deviceCapability: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
 	// Internal ML labelling (see StoredCaptcha.label)
 	label: CaptchaLabelSchema.optional(),
-	labelReason: string().optional(),
-	labelledBy: string().optional(),
+	labelReason: string().max(INPUT_LIMITS.TEXT).optional(),
+	labelledBy: string().max(INPUT_LIMITS.NAME).optional(),
 	labelledAt: date().optional(),
 	fingerprintSummary: FingerprintSummarySchema.optional(),
 }) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
 
 // Zod schema for ScoreComponents
 export const ScoreComponentsSchema = object({
-	baseScore: number(),
-	lScore: number().optional(),
-	timeout: number().optional(),
-	accessPolicy: number().optional(),
-	unverifiedHost: number().optional(),
-	webView: number().optional(),
-	triggeredDetectors: array(number()).optional(),
+	baseScore: number().safe(),
+	lScore: number().safe().optional(),
+	timeout: number().safe().optional(),
+	accessPolicy: number().safe().optional(),
+	unverifiedHost: number().safe().optional(),
+	webView: number().safe().optional(),
+	triggeredDetectors: array(number().safe()).max(INPUT_LIMITS.ARRAY).optional(),
 	shadowDomPenalty: boolean().optional(),
-	dnsAsymmetry: number().optional(),
-	ipDetectorRisk: number().optional(),
+	dnsAsymmetry: number().safe().optional(),
+	ipDetectorRisk: number().safe().optional(),
 });
 
 // Zod schema for the WASM SIMD CPU fingerprint readings collected by the
 // catcher client and forwarded in the encrypted payload. Mirrors the
 // `SimdReadings` discriminated union in ./detection.ts.
 const SimdOpReadingRecordSchema = object({
-	name: string(),
+	name: string().max(INPUT_LIMITS.NAME),
 	category: nativeEnum({
 		FP: "FP",
 		INT: "INT",
 		BIT: "BIT",
 		PERM: "PERM",
 	} as const),
-	bestNs: number(),
-	medianNs: number(),
-	iters: number(),
-	resultLane: number(),
+	bestNs: number().safe(),
+	medianNs: number().safe(),
+	iters: number().safe(),
+	resultLane: number().safe(),
 });
 
 export const SimdReadingsSchema = union([
 	object({
 		supported: literal(false),
-		reason: string(),
+		reason: string().max(INPUT_LIMITS.TEXT),
 	}),
 	object({
 		supported: literal(true),
-		schema: number(),
-		timerResolutionMs: number(),
-		runsPerOp: number(),
-		durationMs: number(),
-		ops: array(SimdOpReadingRecordSchema),
+		schema: number().safe(),
+		timerResolutionMs: number().safe(),
+		runsPerOp: number().safe(),
+		durationMs: number().safe(),
+		ops: array(SimdOpReadingRecordSchema).max(INPUT_LIMITS.ARRAY),
 	}),
 ]);
 
@@ -500,7 +508,10 @@ export const SimdReadingsSchema = union([
 // The caps that make it safe to persist are applied on ingress by the
 // provider's `sanitiseDetectorData` — not here, since this schema also has to
 // parse records that were stored before any given cap existed.
-export const DetectorDataSchema = record(string(), unknownType());
+export const DetectorDataSchema = record(
+	string().max(INPUT_LIMITS.TOKEN),
+	unknownType(),
+).refine(hasAtMostKeys(INPUT_LIMITS.RECORD_KEYS), { message: "Too many keys" });
 
 // Stage at which the catcher's SIMD readings first reached the provider.
 // Tracked once on the Session record (first hop wins) so analytics can see
@@ -529,23 +540,23 @@ export interface ScoreComponents {
 
 // Zod schema for Session
 export const SessionSchema = object({
-	sessionId: string(),
+	sessionId: string().max(INPUT_LIMITS.ID),
 	createdAt: date(),
-	token: string(),
-	score: number(),
-	threshold: number(),
+	token: string().max(INPUT_LIMITS.TOKEN),
+	score: number().safe(),
+	threshold: number().safe(),
 	scoreComponents: ScoreComponentsSchema,
 	ipAddress: CompositeIpAddressSchema,
 	captchaType: nativeEnum(CaptchaType),
 	mode: nativeEnum(ModeEnum).optional(),
-	solvedImagesCount: number().optional(),
-	powDifficulty: number().optional(),
+	solvedImagesCount: number().safe().optional(),
+	powDifficulty: number().safe().optional(),
 	challengeParams: ChallengeParamsSchema.optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
 	deleted: boolean().optional(),
-	userSitekeyIpHash: string().optional(),
+	userSitekeyIpHash: string().max(INPUT_LIMITS.ID).optional(),
 	webView: boolean(),
 	iFrame: boolean(),
 	// True when this session was minted by the post-PoW routing machine
@@ -559,17 +570,17 @@ export const SessionSchema = object({
 	// isEscalation is true; used by the DM-input read path to fall back
 	// to the origin for fields the escalation doesn't carry itself
 	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
-	originSessionId: string().optional(),
+	originSessionId: string().max(INPUT_LIMITS.ID).optional(),
 	solveDevice: object({
-		deviceCapability: string().optional(),
-		touchEventCount: number().optional(),
+		deviceCapability: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+		touchEventCount: number().safe().optional(),
 	}).optional(),
-	refreshOf: string().optional(),
-	retryOf: string().optional(),
-	refreshCount: number().optional(),
-	refreshedAfterMs: number().optional(),
-	decryptedHeadHash: string(),
-	siteKey: string().optional(),
+	refreshOf: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	retryOf: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	refreshCount: number().safe().optional(),
+	refreshedAfterMs: number().safe().optional(),
+	decryptedHeadHash: string().max(INPUT_LIMITS.ID),
+	siteKey: string().max(INPUT_LIMITS.TOKEN).optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
 	// string, fragment and any embedded credentials are stripped client- and
 	// server-side). Reported by the client in the frictionless payload; its
@@ -578,8 +589,8 @@ export const SessionSchema = object({
 	// When the widget is embedded, `currentUrl` is the top-frame URL and
 	// `iframeUrl` is the widget's own frame URL. `iframeUrl` is undefined
 	// when the widget IS the top frame (nothing to distinguish).
-	currentUrl: string().optional(),
-	iframeUrl: string().optional(),
+	currentUrl: string().max(INPUT_LIMITS.URL).optional(),
+	iframeUrl: string().max(INPUT_LIMITS.URL).optional(),
 	// True when this session looks like a Protect deployment: the widget
 	// iframe was served from `protect.<tenant>` and embedded in a page on
 	// the same tenant (see isProtectDeployment in @prosopo/util for the
@@ -592,13 +603,14 @@ export const SessionSchema = object({
 	// values) still parse. Output type is cast back to the enum so the
 	// TS surface stays strict.
 	reason: string()
+		.max(INPUT_LIMITS.TEXT)
 		.optional()
 		.transform((v) => v as FrictionlessReason | undefined),
 	blocked: boolean().optional(),
 	// See Session.ruleHash — populated on synthetic blocked-session records.
-	ruleHash: string().optional(),
-	ruleType: string().array().optional(),
-	ruleDescription: string().optional(),
+	ruleHash: string().max(INPUT_LIMITS.ID).optional(),
+	ruleType: string().max(INPUT_LIMITS.NAME).array().max(INPUT_LIMITS.ARRAY).optional(),
+	ruleDescription: string().max(INPUT_LIMITS.TOKEN).optional(),
 	// See Session.matchedRule.
 	matchedRule: MatchedAccessRuleSchema.optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
@@ -607,15 +619,16 @@ export const SessionSchema = object({
 	// they need (countryCode, isVPN, etc.). Mirrors what's stored on
 	// captcha records (PoW / Puzzle / UserCommitment).
 	ipInfo: any().optional(),
-	headers: object({}).catchall(string()),
+	headers: object({}).catchall(string().max(INPUT_LIMITS.LONG_TEXT)),
 	result: object({
 		status: nativeEnum(CaptchaStatus),
 		// See the comment on `CaptchaResultSchema.reason`: permissive at
 		// runtime, cast back to `ResultReason` on the TS surface.
 		reason: string()
+			.max(INPUT_LIMITS.TEXT)
 			.optional()
 			.transform((v) => v as ResultReason | undefined),
-		error: string().optional(),
+		error: string().max(INPUT_LIMITS.TEXT).optional(),
 	}).optional(),
 	userSubmitted: boolean().optional(),
 	serverChecked: boolean().optional(),
@@ -636,8 +649,8 @@ export const SessionSchema = object({
 	// traversed a proxy chain before reaching Caddy. Optional so
 	// pre-migration sessions parse and dev requests that skip TLS still
 	// write.
-	tcpToChelloUs: number().optional(),
-	chelloToHandshakeUs: number().optional(),
+	tcpToChelloUs: number().safe().optional(),
+	chelloToHandshakeUs: number().safe().optional(),
 	// Raw per-connection TCP-handshake signals forwarded by chaddy from
 	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
 	// (RFC-793 / RFC-9293) — kernel nanosecond timestamps of SYN /
@@ -647,9 +660,9 @@ export const SessionSchema = object({
 	// time. Undefined on sessions that came in without the tcp-probe
 	// pipeline (pre-rollout traffic, dev, or requests through a
 	// non-chaddy front).
-	synNs: number().optional(),
-	synackNs: number().optional(),
-	ackNs: number().optional(),
+	synNs: number().safe().optional(),
+	synackNs: number().safe().optional(),
+	ackNs: number().safe().optional(),
 	observedTtl: number().min(0).max(255).optional(),
 	tcpMss: number().min(0).max(65535).optional(),
 	tcpWscale: number().min(0).max(255).optional(),
@@ -679,8 +692,8 @@ export const SessionSchema = object({
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
 	tlsHandshakeRttUs: number().min(0).max(4_294_967_295).optional(),
 	dnsEvent: object({
-		resolverIp: string().optional(),
-		peerIp: string().optional(),
+		resolverIp: string().max(INPUT_LIMITS.ID).optional(),
+		peerIp: string().max(INPUT_LIMITS.ID).optional(),
 		pathValid: boolean().optional(),
 		assetSeen: boolean().optional(),
 		receivedAt: date(),
@@ -911,12 +924,12 @@ export type Session = {
 export const PoWCaptchaStoredSchema = object({
 	// From PoWCaptchaUser (extends PoWCaptcha)
 	challenge: PowChallengeIdSchema,
-	difficulty: number(),
-	providerSignature: string(),
-	userSignature: string().optional(),
-	score: number().optional(),
-	userAccount: string(),
-	dappAccount: string(),
+	difficulty: number().safe(),
+	providerSignature: string().max(INPUT_LIMITS.TOKEN),
+	userSignature: string().max(INPUT_LIMITS.TOKEN).optional(),
+	score: number().safe().optional(),
+	userAccount: string().max(INPUT_LIMITS.ID),
+	dappAccount: string().max(INPUT_LIMITS.ID),
 	// From StoredCaptcha
 	result: CaptchaResultSchema,
 	requestedAtTimestamp: date(),
@@ -927,8 +940,8 @@ export const PoWCaptchaStoredSchema = object({
 	providedIp: CompositeIpAddressSchema.optional(),
 	metadata: StoredCaptchaMetadataSchema.optional(),
 	clientMetaData: ClientMetaDataDbSchema.optional(),
-	headers: object({}).catchall(string()),
-	ja4: string(),
+	headers: object({}).catchall(string().max(INPUT_LIMITS.LONG_TEXT)),
+	ja4: string().max(INPUT_LIMITS.LONG_TEXT),
 	userSubmitted: boolean(),
 	serverChecked: boolean(),
 	// The full ipinfo payload — optional and not validated nominally
@@ -938,17 +951,27 @@ export const PoWCaptchaStoredSchema = object({
 	parsedUserAgentInfo: any().optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
-	sessionId: string().optional(),
-	coords: array(array(tuple([number(), number()]))).optional(),
-	mouseEvents: array(object({}).catchall(any())).optional(),
-	touchEvents: array(object({}).catchall(any())).optional(),
-	clickEvents: array(object({}).catchall(any())).optional(),
-	deviceCapability: string().optional(),
+	sessionId: string().max(INPUT_LIMITS.ID).optional(),
+	coords: array(
+		array(tuple([number().safe(), number().safe()])).max(INPUT_LIMITS.ARRAY),
+	)
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	mouseEvents: array(object({}).catchall(any()))
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	touchEvents: array(object({}).catchall(any()))
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	clickEvents: array(object({}).catchall(any()))
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
+	deviceCapability: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
 	// Internal ML labelling (see StoredCaptcha.label)
 	label: CaptchaLabelSchema.optional(),
-	labelReason: string().optional(),
-	labelledBy: string().optional(),
+	labelReason: string().max(INPUT_LIMITS.TEXT).optional(),
+	labelledBy: string().max(INPUT_LIMITS.NAME).optional(),
 	labelledAt: date().optional(),
 }) satisfies ZodType<PoWCaptchaStored, ZodTypeDef, unknown>;
 
@@ -1082,7 +1105,7 @@ export interface SolutionRecord extends CaptchaSolution {
 export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 	processed: boolean(),
 	checked: boolean(),
-	commitmentId: string(),
+	commitmentId: string().max(INPUT_LIMITS.ID),
 	createdAt: date(),
 	fingerprintSummary: FingerprintSummarySchema.optional(),
 });
@@ -1090,7 +1113,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 export type UserSolution = zInfer<typeof UserSolutionSchema>;
 
 export const UserCommitmentWithSolutionsSchema = UserCommitmentSchema.extend({
-	captchas: array(UserSolutionSchema),
+	captchas: array(UserSolutionSchema).max(INPUT_LIMITS.ARRAY),
 });
 
 export type UserCommitmentWithSolutions = zInfer<

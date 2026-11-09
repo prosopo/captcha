@@ -14,6 +14,7 @@
 
 import { constants, createDecipheriv, privateDecrypt } from "node:crypto";
 import type { OpenDetectorPayload, OpenDetectorToken } from "@prosopo/types";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { z } from "zod";
 import {
 	type DecodedDetectorPayload,
@@ -26,17 +27,17 @@ const GCM_TAG_BYTES = 16;
 
 const OpenDetectorTokenSchema = z.object({
 	v: z.literal(1),
-	key: z.string(),
-	iv: z.string(),
-	data: z.string(),
+	key: z.string().max(INPUT_LIMITS.TOKEN),
+	iv: z.string().max(INPUT_LIMITS.LONG_TEXT),
+	data: z.string().max(INPUT_LIMITS.TOKEN),
 }) satisfies z.ZodType<OpenDetectorToken>;
 
 const OpenDetectorPayloadSchema = z.object({
-	score: z.number().finite(),
-	timestamp: z.number().finite(),
-	userId: z.string(),
-	userAgent: z.string(),
-	headHash: z.string(),
+	score: z.number().safe().finite(),
+	timestamp: z.number().safe().finite(),
+	userId: z.string().max(INPUT_LIMITS.ID),
+	userAgent: z.string().max(INPUT_LIMITS.TEXT),
+	headHash: z.string().max(INPUT_LIMITS.ID),
 	isWebView: z.boolean().optional(),
 	isIframe: z.boolean().optional(),
 	d: z.unknown().optional(),

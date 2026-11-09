@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import type {
 	AccessPolicy,
@@ -45,8 +46,8 @@ export type AccessRuleInput = AccessPolicy &
 
 const ruleGroupInput = z
 	.object({
-		groupId: z.coerce.string().optional(),
-		ruleGroupId: z.coerce.string().optional(),
+		groupId: z.coerce.string().max(INPUT_LIMITS.ID).optional(),
+		ruleGroupId: z.coerce.string().max(INPUT_LIMITS.ID).optional(),
 	} satisfies AllKeys<RuleGroupInput>)
 	.transform((ruleGroupInput: RuleGroupInput) => {
 		const { ruleGroupId, ...ruleGroup } = ruleGroupInput;
@@ -83,7 +84,7 @@ export const accessRuleInput: ZodType<AccessRule, z.ZodTypeDef, unknown> = z
 export const ruleEntryInput: ZodType<AccessRuleEntry, z.ZodTypeDef, unknown> =
 	z.object({
 		rule: accessRuleInput,
-		expiresUnixTimestamp: z.coerce.number().optional(),
+		expiresUnixTimestamp: z.coerce.number().safe().optional(),
 	} satisfies AllKeys<AccessRuleEntry>);
 
 export type AccessRulesFilterInput = AccessRulesFilter & {
@@ -99,7 +100,7 @@ export type AccessRulesFilterInput = AccessRulesFilter & {
 // `ZodType<T, ZodTypeDef, unknown>` form for the same reason.
 export const accessRulesFilterInput = z.object({
 	policyScope: policyScopeInput.optional(),
-	policyScopes: z.array(policyScopeInput).optional(),
+	policyScopes: z.array(policyScopeInput).max(INPUT_LIMITS.ARRAY).optional(),
 	policyScopeMatch: z
 		.nativeEnum(FilterScopeMatch)
 		.default(FilterScopeMatch.Exact),
@@ -107,7 +108,7 @@ export const accessRulesFilterInput = z.object({
 	userScopeMatch: z
 		.nativeEnum(FilterScopeMatch)
 		.default(FilterScopeMatch.Exact),
-	groupId: z.string().optional(),
+	groupId: z.string().max(INPUT_LIMITS.ID).optional(),
 	blockOnly: z.boolean().optional(),
 	includeDeferred: z.boolean().optional(),
 } satisfies AllKeys<AccessRulesFilterInput>);

@@ -14,6 +14,7 @@
 
 import crypto from "node:crypto";
 import type { AllKeys } from "@prosopo/common";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { stripTrailingSlashes } from "@prosopo/util";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
@@ -38,26 +39,26 @@ function normaliseSignatureAgentUrl(raw: string): string {
 
 const userAttributesSchema = z.object({
 	// coerce is used for safety, as e.g., incoming userId can be digital
-	userId: z.coerce.string().optional(),
-	ja4Hash: z.coerce.string().optional(),
-	headersHash: z.coerce.string().optional(),
-	userAgentHash: z.coerce.string().optional(),
-	headHash: z.coerce.string().optional(),
-	coords: z.coerce.string().optional(),
-	countryCode: z.coerce.string().optional(),
-	asn: z.coerce.number().int().nonnegative().optional(),
+	userId: z.coerce.string().max(INPUT_LIMITS.ID).optional(),
+	ja4Hash: z.coerce.string().max(INPUT_LIMITS.ID).optional(),
+	headersHash: z.coerce.string().max(INPUT_LIMITS.ID).optional(),
+	userAgentHash: z.coerce.string().max(INPUT_LIMITS.TEXT).optional(),
+	headHash: z.coerce.string().max(INPUT_LIMITS.ID).optional(),
+	coords: z.coerce.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	countryCode: z.coerce.string().max(INPUT_LIMITS.NAME).optional(),
+	asn: z.coerce.number().safe().int().nonnegative().optional(),
 	// Plain lowercase OS tag (see `classifyOs`). Loose `string` like
 	// countryCode: a stale/unknown value just never matches a request rather
 	// than failing the whole rule parse.
-	os: z.coerce.string().optional(),
-	browser: z.coerce.string().optional(),
+	os: z.coerce.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	browser: z.coerce.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	// Arbitrary-header matching (see `headerMatch.ts`). `headerMatch` is the
 	// indexed sentinel; name/value/operator are rule data checked in code, not
 	// via the Redis query. Loose `string` like the other tags.
-	headerMatch: z.coerce.string().optional(),
-	headerName: z.coerce.string().optional(),
-	headerValue: z.coerce.string().optional(),
-	headerOperator: z.coerce.string().optional(),
+	headerMatch: z.coerce.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	headerName: z.coerce.string().max(INPUT_LIMITS.NAME).optional(),
+	headerValue: z.coerce.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	headerOperator: z.coerce.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	// Web Bot Auth Signature-Agent URL. Normalised at parse time
 	// (lowercase scheme+host, no trailing slash) so the runtime matcher can
 	// use exact string equality against the verified `Signature-Agent`
@@ -67,13 +68,17 @@ const userAttributesSchema = z.object({
 		.url()
 		.transform(normaliseSignatureAgentUrl)
 		.optional(),
-	bypassKeyHash: z.string().regex(BYPASS_KEY_HASH_PATTERN).optional(),
+	bypassKeyHash: z
+		.string()
+		.max(INPUT_LIMITS.ID)
+		.regex(BYPASS_KEY_HASH_PATTERN)
+		.optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z
 	.object({
 		...userAttributesSchema.shape,
-		userAgent: z.coerce.string().optional(),
+		userAgent: z.coerce.string().max(INPUT_LIMITS.TEXT).optional(),
 	} satisfies AllKeys<UserAttributesInput>)
 	.transform((userAttributesInput: UserAttributesInput): UserAttributes => {
 		// this line creates a new "userAttributes", without userAgent
@@ -100,8 +105,8 @@ const userIpSchema = z.object({
 const userIpInput = z
 	.object({
 		...userIpSchema.shape,
-		ip: z.string().optional(),
-		ipMask: z.string().optional(),
+		ip: z.string().max(INPUT_LIMITS.ID).optional(),
+		ipMask: z.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	} satisfies AllKeys<UserIpInput>)
 	.transform((userIpInput: UserIpInput): UserIp => {
 		// this line creates a new "userScope", without ip and ipMask

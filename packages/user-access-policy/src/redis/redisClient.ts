@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
+import {} from "@prosopo/types";
 import type { RedisClientType } from "redis";
 import { type ZodType, type ZodTypeDef, z } from "zod";
 
@@ -92,7 +93,7 @@ export const parseRedisRecords = <T>(
 		return [];
 	});
 
-const expirationRecordSchema = z.coerce.number();
+const expirationRecordSchema = z.coerce.number().safe();
 // Redis returns -1 when expiration is not set
 const UNSET_EXPIRATION_VALUE = -1;
 

@@ -22,6 +22,7 @@ import { record, string, enum as zEnum } from "zod";
 import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
+import { INPUT_LIMITS, hasAtMostKeys } from "../api/inputLimits.js";
 import { Mode, ModeEnum } from "./mode.js";
 import { type StartMode, StartModeEnum, StartModes } from "./startMode.js";
 export { Mode, ModeEnum };
@@ -92,12 +93,12 @@ export type EnvironmentTypes = zInfer<typeof EnvironmentTypesSchema>;
 export const DatabaseConfigSchema = record(
 	EnvironmentTypesSchema,
 	object({
-		type: string(),
-		endpoint: string(),
-		dbname: string().default("prosopo"),
-		authSource: string().default("admin"),
+		type: string().max(INPUT_LIMITS.NAME),
+		endpoint: string().max(INPUT_LIMITS.URL),
+		dbname: string().max(INPUT_LIMITS.NAME).default("prosopo"),
+		authSource: string().max(INPUT_LIMITS.TOKEN).default("admin"),
 	}),
-);
+).refine(hasAtMostKeys(INPUT_LIMITS.RECORD_KEYS), { message: "Too many keys" });
 
 export type DatabaseConfigInput = input<typeof DatabaseConfigSchema>;
 export type DatabaseConfigOutput = output<typeof DatabaseConfigSchema>;
@@ -109,23 +110,25 @@ export const ProsopoBaseConfigSchema = object({
 	),
 	// The account with which to query the contract.merge sign transactions
 	account: object({
-		address: string().optional(),
-		secret: string().optional(),
-		password: string().optional(),
+		address: string().max(INPUT_LIMITS.ID).optional(),
+		secret: string().max(INPUT_LIMITS.TOKEN).optional(),
+		password: string().max(INPUT_LIMITS.TOKEN).optional(),
 	}),
 });
 export const PolkadotSecretJSONSpec = z.object({
-	encoded: z.string(),
+	encoded: z.string().max(INPUT_LIMITS.TOKEN),
 	encoding: z.object({
-		content: z.array(z.string()),
-		type: z.array(z.string()),
-		version: z.string(),
+		content: z
+			.array(z.string().max(INPUT_LIMITS.TOKEN))
+			.max(INPUT_LIMITS.ARRAY),
+		type: z.array(z.string().max(INPUT_LIMITS.NAME)).max(INPUT_LIMITS.ARRAY),
+		version: z.string().max(INPUT_LIMITS.ID),
 	}),
-	address: z.string(),
+	address: z.string().max(INPUT_LIMITS.ID),
 	meta: z.object({
-		genesisHash: z.string(),
-		name: z.string(),
-		whenCreated: z.number(),
+		genesisHash: z.string().max(INPUT_LIMITS.ID),
+		name: z.string().max(INPUT_LIMITS.NAME),
+		whenCreated: z.number().safe(),
 	}),
 });
 
@@ -141,26 +144,29 @@ export type ProsopoBasicConfigInput = input<typeof ProsopoBasicConfigSchema>;
 export type ProsopoBasicConfigOutput = output<typeof ProsopoBasicConfigSchema>;
 
 export const ProsopoApiConfigSchema = object({
-	baseURL: string().url(),
-	port: number().optional().default(9229),
+	baseURL: string().max(INPUT_LIMITS.URL).url(),
+	port: number().safe().optional().default(9229),
 }).default({
 	baseURL: "http://localhost",
 	port: 9229,
 });
 
 export const ProsopoCaptchaSolutionConfigSchema = object({
-	requiredNumberOfSolutions: number().positive().min(2),
+	requiredNumberOfSolutions: number().safe().positive().min(2),
 	solutionWinningPercentage: number().positive().max(100),
-	captchaBlockRecency: number().positive().min(2),
+	captchaBlockRecency: number().safe().positive().min(2),
 });
 
 export const ProsopoClientConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
-		userAccountAddress: string().optional(),
+		userAccountAddress: string().max(INPUT_LIMITS.ID).optional(),
 		web2: boolean().optional().default(true),
 		solutionThreshold: number().positive().max(100).optional().default(80),
-		dappName: string().optional().default("ProsopoClientDapp"),
-		serverUrl: string().optional(),
+		dappName: string()
+			.max(INPUT_LIMITS.ID)
+			.optional()
+			.default("ProsopoClientDapp"),
+		serverUrl: string().max(INPUT_LIMITS.URL).optional(),
 	}),
 );
 
@@ -212,81 +218,98 @@ export const CaptchaTimeoutSchema = object({
 	image: object({
 		// Set this to a default value for the frontend
 		challengeTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_IMAGE_CAPTCHA_TIMEOUT),
 		// Set this to a default value for the frontend
 		solutionTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT),
 		verifiedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT),
 		cachedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	}).default(defaultImageCaptchaTimeouts),
 	pow: object({
 		verifiedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT),
 		solutionTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
 		cachedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultPoWCaptchaTimeouts),
 	puzzle: object({
 		verifiedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT),
 		solutionTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT),
 		cachedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultPuzzleCaptchaTimeouts),
 	audio: object({
 		verifiedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT),
 		solutionTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT),
 		cachedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultAudioCaptchaTimeouts),
 	iconOrder: object({
 		verifiedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT),
 		solutionTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT),
 		cachedTimeout: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultIconOrderCaptchaTimeouts),
 	contract: object({
 		maxVerifiedTime: number()
+			.safe()
 			.positive()
 			.optional()
 			.default(DEFAULT_MAX_VERIFIED_TIME_CONTRACT),
@@ -299,11 +322,12 @@ export type CaptchaTimeoutOutput = output<typeof CaptchaTimeoutSchema>;
 
 export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
 	object({
-		serverUrl: string().url().optional(),
+		serverUrl: string().max(INPUT_LIMITS.URL).url().optional(),
 		timeouts: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		// How long a verify call to the provider may take before it fails, so a
 		// stalled provider cannot hold the site owner's request open.
 		providerRequestTimeoutMs: number()
+			.safe()
 			.int()
 			.positive()
 			.optional()
@@ -318,15 +342,15 @@ export type ProsopoServerConfigOutput = output<
 
 export const AccountCreatorConfigSchema = object({
 	area: object({
-		width: number().positive(),
-		height: number().positive(),
+		width: number().safe().positive(),
+		height: number().safe().positive(),
 	}),
-	offsetParameter: number().positive(),
-	multiplier: number().positive(),
-	fontSizeFactor: number().positive(),
-	maxShadowBlur: number().positive(),
-	numberOfRounds: number().positive(),
-	seed: number().positive(),
+	offsetParameter: number().safe().positive(),
+	multiplier: number().safe().positive(),
+	fontSizeFactor: number().safe().positive(),
+	maxShadowBlur: number().safe().positive(),
+	numberOfRounds: number().safe().positive(),
+	seed: number().safe().positive(),
 });
 
 export type ProsopoClientConfigInput = input<typeof ProsopoClientConfigSchema>;
@@ -361,10 +385,10 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// `clientMetaData.clientSessionId` on solution submission so the verify
 		// call can correlate it. Named `clientSessionId` here to keep it clear
 		// of the provider's own frictionless `sessionId`.
-		clientSessionId: string().optional(),
+		clientSessionId: string().max(INPUT_LIMITS.ID).optional(),
 		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 		// See ProcaptchaRenderOptions.integration.
-		integration: string().optional(),
+		integration: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	}),
 );
 
@@ -374,14 +398,14 @@ export type ProcaptchaClientConfigOutput = output<
 >;
 
 export const IpApiServiceSpec = z.object({
-	apiKey: z.string(),
-	baseUrl: z.string().url(),
+	apiKey: z.string().max(INPUT_LIMITS.TOKEN),
+	baseUrl: z.string().max(INPUT_LIMITS.URL).url(),
 });
 export type IpApiService = zInfer<typeof IpApiServiceSpec>;
 
 export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 	object({
-		host: string(),
+		host: string().max(INPUT_LIMITS.NAME),
 		captchas: ProsopoCaptchaCountConfigSchema.optional().default({
 			solved: { count: DEFAULT_SOLVED_COUNT },
 			unsolved: { count: DEFAULT_UNSOLVED_COUNT },
@@ -394,44 +418,52 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		}),
 		scheduledTasks: object({
 			captchaScheduler: object({
-				schedule: string().optional(),
+				schedule: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 			}).optional(),
 			clientListScheduler: object({
-				schedule: string().optional(),
+				schedule: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 			}).optional(),
 			clientEntropyScheduler: object({
-				schedule: string().optional(),
+				schedule: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 			}).optional(),
 			spamEmailDomainsScheduler: object({
-				schedule: string().optional(),
+				schedule: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 			}).optional(),
 		}).optional(),
 		server: ProsopoApiConfigSchema.optional(),
-		mongoEventsUri: string().optional(),
-		mongoCaptchaUri: string().optional(),
-		mongoClientUri: string().optional(),
+		mongoEventsUri: string().max(INPUT_LIMITS.URL).optional(),
+		mongoCaptchaUri: string().max(INPUT_LIMITS.URL).optional(),
+		mongoClientUri: string().max(INPUT_LIMITS.URL).optional(),
 		ipApi: IpApiServiceSpec.optional(),
-		spamEmailDomainsUrls: array(string()).optional(),
+		spamEmailDomainsUrls: array(string().max(INPUT_LIMITS.URL))
+			.max(INPUT_LIMITS.ARRAY)
+			.optional(),
 		redisConnection: object({
-			url: string(),
-			password: string(),
-			indexName: string().optional(),
+			url: string().max(INPUT_LIMITS.URL),
+			password: string().max(INPUT_LIMITS.TOKEN),
+			indexName: string().max(INPUT_LIMITS.NAME).optional(),
 		}).default({
 			url: "redis://localhost:6379",
 			password: "root",
 		}),
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
-		proxyCount: number().optional().default(0),
-		lRules: record(string(), number()).optional(),
-		maxmindDbPath: string().optional(),
-		maxmindCityDbPath: string().optional(),
-		maxmindAsnDbPath: string().optional(),
+		proxyCount: number().safe().optional().default(0),
+		lRules: record(string().max(INPUT_LIMITS.TOKEN), number().safe())
+			.refine(hasAtMostKeys(INPUT_LIMITS.RECORD_KEYS), {
+				message: "Too many keys",
+			})
+			.optional(),
+		maxmindDbPath: string().max(INPUT_LIMITS.URL).optional(),
+		maxmindCityDbPath: string().max(INPUT_LIMITS.URL).optional(),
+		maxmindAsnDbPath: string().max(INPUT_LIMITS.URL).optional(),
 		authAccount: object({
-			address: string().optional(),
-			secret: string().optional(),
-			password: string().optional(),
+			address: string().max(INPUT_LIMITS.ID).optional(),
+			secret: string().max(INPUT_LIMITS.TOKEN).optional(),
+			password: string().max(INPUT_LIMITS.TOKEN).optional(),
 		}),
-		dnsServers: array(string()).optional(),
+		dnsServers: array(string().max(INPUT_LIMITS.LONG_TEXT))
+			.max(INPUT_LIMITS.ARRAY)
+			.optional(),
 	}),
 );
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { z } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import type { AccountSighting, IPInfoResponse } from "../api/ipapi.js";
 import {
 	type ChallengeCaptchaType,
@@ -294,18 +295,21 @@ export type DecisionMachineConfig = {
 
 export const DecisionMachineOutputSchema = z.object({
 	decision: z.nativeEnum(DecisionMachineDecision),
-	reason: z.string().optional(),
-	score: z.number().optional(),
-	tags: z.array(z.string()).optional(),
+	reason: z.string().max(INPUT_LIMITS.TEXT).optional(),
+	score: z.number().safe().optional(),
+	tags: z
+		.array(z.string().max(INPUT_LIMITS.NAME))
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
 });
 
 export const DecisionMachineConfigSchema = z.object({
 	runtime: z.nativeEnum(DecisionMachineRuntime),
-	source: z.string(),
+	source: z.string().max(INPUT_LIMITS.TOKEN),
 	language: z.nativeEnum(DecisionMachineLanguage).optional(),
-	name: z.string().optional(),
-	version: z.string().optional(),
-	createdAt: z.string(),
+	name: z.string().max(INPUT_LIMITS.NAME).optional(),
+	version: z.string().max(INPUT_LIMITS.ID).optional(),
+	createdAt: z.string().max(INPUT_LIMITS.NAME),
 	captchaType: ChallengeCaptchaTypeSchema.optional(),
 });
 
@@ -566,9 +570,9 @@ export interface RoutingMachineOutput {
 
 export const RoutingMachineOutputSchema = z.object({
 	captchaType: ConcreteCaptchaTypeSchema,
-	solvedImagesCount: z.number().int().positive().optional(),
-	powDifficulty: z.number().positive().optional(),
-	reason: z.string().optional(),
+	solvedImagesCount: z.number().safe().int().positive().optional(),
+	powDifficulty: z.number().safe().positive().optional(),
+	reason: z.string().max(INPUT_LIMITS.TEXT).optional(),
 	// Bounded by the same validators the site-wide settings use, so a machine
 	// cannot hand the renderer a tolerance or decoy count the portal would
 	// reject.

@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import { ProsopoError } from "@prosopo/common";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +11,14 @@ import { ProsopoError } from "@prosopo/common";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import fs from "node:fs";
+import { ProsopoError } from "@prosopo/common";
+import { INPUT_LIMITS } from "@prosopo/types";
 import * as z from "zod";
 import { CliCommand } from "../cli/cliCommand.js";
 
 export const InputArgsSchema = z.object({
-	input: z.string(),
+	input: z.string().max(INPUT_LIMITS.LONG_TEXT),
 });
 
 export type InputArgs = z.infer<typeof InputArgsSchema>;

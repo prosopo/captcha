@@ -25,6 +25,7 @@ import {
 	number as zNumber,
 	undefined as zUndefined,
 } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import type { ResultReason } from "../provider/reasons.js";
 
 export enum CaptchaTypes {
@@ -143,7 +144,7 @@ export enum DappPayee {
 	any = "Any",
 }
 
-export const TimestampSchema = zNumber();
+export const TimestampSchema = zNumber().safe();
 export type Timestamp = zInfer<typeof TimestampSchema>;
 export type UserAccount = string;
 export type DappAccount = string;
@@ -194,68 +195,72 @@ export interface PoWCaptchaUser extends PoWCaptcha {
 }
 
 export const CaptchaSchema = object({
-	captchaId: union([string(), zUndefined()]),
-	captchaContentId: union([string(), zUndefined()]),
-	salt: string().min(34),
-	solution: number().array().optional(),
-	unlabelled: number().array().optional(),
-	timeLimit: number().optional(),
+	captchaId: union([string().max(INPUT_LIMITS.ID), zUndefined()]),
+	captchaContentId: union([string().max(INPUT_LIMITS.TOKEN), zUndefined()]),
+	salt: string().max(INPUT_LIMITS.LONG_TEXT).min(34),
+	solution: number().safe().array().max(INPUT_LIMITS.ARRAY).optional(),
+	unlabelled: number().safe().array().max(INPUT_LIMITS.ARRAY).optional(),
+	timeLimit: number().safe().optional(),
 });
 
 export const CaptchaItemSchema = object({
-	hash: string(),
-	data: string(),
+	hash: string().max(INPUT_LIMITS.ID),
+	data: string().max(INPUT_LIMITS.TOKEN),
 	type: nativeEnum(CaptchaItemTypes),
 });
 
 export const HashedCaptchaItemSchema = CaptchaItemSchema.extend({
-	hash: string(),
+	hash: string().max(INPUT_LIMITS.ID),
 });
 export const LabelledItemSchema = HashedCaptchaItemSchema.extend({
-	label: string(),
+	label: string().max(INPUT_LIMITS.NAME),
 });
 
 export const MaybeLabelledHashedItemSchema = HashedCaptchaItemSchema.extend({
-	label: string().optional(),
+	label: string().max(INPUT_LIMITS.NAME).optional(),
 });
 
 export const SelectAllCaptchaSchemaRaw = CaptchaSchema.extend({
-	items: array(CaptchaItemSchema),
-	target: string(),
+	items: array(CaptchaItemSchema).max(INPUT_LIMITS.ARRAY),
+	target: string().max(INPUT_LIMITS.LONG_TEXT),
 });
 
 export const SelectAllCaptchaSchema = SelectAllCaptchaSchemaRaw.extend({
-	solution: string().array().optional(),
-	unlabelled: string().array().optional(),
+	solution: string().max(INPUT_LIMITS.LONG_TEXT).array().max(INPUT_LIMITS.ARRAY).optional(),
+	unlabelled: string().max(INPUT_LIMITS.NAME).array().max(INPUT_LIMITS.ARRAY).optional(),
 });
 
 export const SelectAllCaptchaSchemaWithNumericSolution =
 	SelectAllCaptchaSchema.extend({
-		solution: number().array().optional(),
-		unlabelled: number().array().optional(),
+		solution: number().safe().array().max(INPUT_LIMITS.ARRAY).optional(),
+		unlabelled: number().safe().array().max(INPUT_LIMITS.ARRAY).optional(),
 	});
 
-export const CaptchasSchema = array(SelectAllCaptchaSchemaRaw);
+export const CaptchasSchema = array(SelectAllCaptchaSchemaRaw).max(
+	INPUT_LIMITS.ARRAY,
+);
 export const CaptchasWithNumericSolutionSchema = array(
 	SelectAllCaptchaSchemaWithNumericSolution,
-);
+).max(INPUT_LIMITS.ARRAY);
 
 export const CaptchaSolutionSchema = object({
-	captchaId: string(),
-	captchaContentId: string(),
-	solution: string().array(),
-	salt: string(),
-	inputMethods: array(InputMethodSchema).optional(),
+	captchaId: string().max(INPUT_LIMITS.ID),
+	captchaContentId: string().max(INPUT_LIMITS.TOKEN),
+	solution: string().max(INPUT_LIMITS.LONG_TEXT).array().max(INPUT_LIMITS.ARRAY),
+	salt: string().max(INPUT_LIMITS.LONG_TEXT),
+	inputMethods: array(InputMethodSchema).max(INPUT_LIMITS.ARRAY).optional(),
 });
 
-export const CaptchaSolutionArraySchema = array(CaptchaSolutionSchema);
+export const CaptchaSolutionArraySchema = array(CaptchaSolutionSchema).max(
+	INPUT_LIMITS.ARRAY,
+);
 
 export const DataSchema = object({
-	items: array(MaybeLabelledHashedItemSchema),
+	items: array(MaybeLabelledHashedItemSchema).max(INPUT_LIMITS.ARRAY),
 });
 
 export const LabelledDataSchema = object({
-	items: array(LabelledItemSchema),
+	items: array(LabelledItemSchema).max(INPUT_LIMITS.ARRAY),
 });
 
 export const CaptchasContainerSchema = object({
@@ -264,5 +269,5 @@ export const CaptchasContainerSchema = object({
 });
 
 export const LabelsContainerSchema = object({
-	labels: array(string()),
+	labels: array(string().max(INPUT_LIMITS.NAME)).max(INPUT_LIMITS.ARRAY),
 });

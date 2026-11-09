@@ -22,6 +22,7 @@ import {
 	type Item,
 	type RawSolution,
 } from "@prosopo/types";
+import {} from "@prosopo/types";
 import { at, get } from "@prosopo/util";
 import { blake2AsHex } from "@prosopo/util-crypto";
 import { lodash } from "@prosopo/util/lodash";
@@ -31,10 +32,10 @@ import * as z from "zod";
 import { Generate, ArgsSchema as GenerateArgsSchema } from "./generate.js";
 
 export const ArgsSchema = GenerateArgsSchema.extend({
-	solved: z.number().optional(),
-	unsolved: z.number().optional(),
-	minCorrect: z.number().optional(),
-	maxCorrect: z.number().optional(),
+	solved: z.number().safe().optional(),
+	unsolved: z.number().safe().optional(),
+	minCorrect: z.number().safe().optional(),
+	maxCorrect: z.number().safe().optional(),
 });
 export type ArgsSchemaType = typeof ArgsSchema;
 export type Args = z.infer<ArgsSchemaType>;

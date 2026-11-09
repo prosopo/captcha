@@ -31,6 +31,7 @@ import {
 	type RoutingMachineOutput,
 	RoutingMachineOutputSchema,
 } from "@prosopo/types";
+import { INPUT_LIMITS } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { parseInteger } from "@prosopo/util";
 import { z } from "zod";
@@ -72,7 +73,9 @@ const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
 };
 
-const RequiredCountersSchema = z.array(CounterSpecSchema);
+const RequiredCountersSchema = z
+	.array(CounterSpecSchema)
+	.max(INPUT_LIMITS.ARRAY);
 
 const NO_REQUIREMENTS: DecisionMachineRequirements = {
 	counters: [],
