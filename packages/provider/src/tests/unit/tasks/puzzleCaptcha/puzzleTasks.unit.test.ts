@@ -383,17 +383,16 @@ describe("PuzzleCaptchaManager", () => {
 			);
 			vi.mocked(db.claimPuzzleCaptchaSubmission).mockResolvedValue(false);
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				100,
-				100,
-				[],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 100,
+				finalY: 100,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
 
 			expect(result).toBe(false);
 			expect(db.claimPuzzleCaptchaSubmission).toHaveBeenCalledWith(a.challenge);
