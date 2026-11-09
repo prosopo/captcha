@@ -461,6 +461,51 @@ describe("PuzzleCaptchaManager", () => {
 			);
 		});
 
+		it.each([
+			{ verdict: "approved", correct: true },
+			{ verdict: "rejected", correct: false },
+		])(
+			"stores the submitted drop position and its distance from the target on a $verdict solve",
+			async ({ correct }: { verdict: string; correct: boolean }) => {
+				const a = buildArgs();
+				vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+					asPuzzleRecord({
+						challenge: a.challenge,
+						dappAccount: a.dappAccount,
+						userAccount: a.userAccount,
+						targetX: 100,
+						targetY: 100,
+						tolerance: 15,
+						ipAddress: getCompositeIpAddress(a.ipAddress),
+						result: { status: CaptchaStatus.pending },
+					}),
+				);
+				vi.mocked(verifyRecency).mockImplementation(() => true);
+				vi.mocked(validatePuzzleSolution).mockReturnValue(correct);
+
+				await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+					a.challenge,
+					a.providerSignature,
+					103,
+					104,
+					[],
+					1000,
+					a.userSignature,
+					a.ipAddress,
+					a.headers,
+				);
+
+				expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+					a.challenge,
+					expect.objectContaining({
+						finalX: 103,
+						finalY: 104,
+						distanceFromTarget: 5,
+					}),
+				);
+			},
+		);
+
 		it("returns true and approves when the solution is within tolerance", async () => {
 			const a = buildArgs();
 			const challengeRecord: Partial<PuzzleCaptchaStored> = {
