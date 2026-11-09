@@ -121,8 +121,9 @@ export const iconOrderToleranceDefault = 0.75;
 export const powDifficultyFieldSchema = number().positive().min(1).max(10);
 export const imageThresholdFieldSchema = number().min(0).max(1);
 
-// Tarpit: bytes of incompressible padding the provider appends to a challenge
-// issuance response for this traffic category. The bytes are generated
+// Tarpit: bytes of incompressible padding the provider appends to a PoW or
+// image challenge issuance response for this traffic category. Puzzle,
+// icon-order and audio challenges are never padded. The bytes are generated
 // provider-side into the response only — never persisted, never client-set —
 // so a category can be made expensive to solve at scale without touching the
 // stored session. Capped at 5 MiB so a misconfiguration (or an attacker who
