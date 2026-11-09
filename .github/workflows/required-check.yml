@@ -46,6 +46,7 @@ on:
   merge_group:
 
 permissions:
+  actions: read
   contents: read
   checks: read
   statuses: read
@@ -120,14 +121,45 @@ jobs:
           # dedupe is by name, so a second workflow reusing a name would be
           # silently dropped here. `build` was shared by android-webview and
           # ios-webview and both are renamed.
+          #
+          # The name dedupe cannot pair a matrix job cancelled before it
+          # expanded: the dead copy is plain `cargo audit`, the live copies are
+          # `cargo audit (packages/native-ja4)` and so on, so the dead one
+          # survived as a failure and re-running `check` could never clear it
+          # (https://github.com/prosopo/captcha/pull/3770). So before the name
+          # dedupe, drop any cancelled check run whose workflow run has a later
+          # run of the same workflow on this commit, and wait on that later run
+          # until it completes, so its jobs are judged rather than skipped
+          # while they are still registering. Our own workflow is exempt from
+          # the wait, since its latest run is this one. If the runs API fails,
+          # nothing is dropped and the cancelled copy fails as before.
+          workflow_runs() {
+            timeout 5m gh api "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${SHA}&per_page=100" --paginate \
+              --jq '.workflow_runs[] | [.id, .workflow_id, .status, .name] | @tsv'
+          }
+
           latest_runs() {
+            local wf
+            wf=$(workflow_runs 2>/dev/null || true)
             timeout 5m gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/check-runs?per_page=100" --paginate \
-              --jq '.check_runs[] | [.id, .status, (.conclusion // "-"), .name] | @tsv' 2>/dev/null \
-            | awk -F'\t' '
-                NF>=4 && $4!="check" {
-                  if (!($4 in id) || $1+0 > id[$4]) { id[$4]=$1+0; st[$4]=$2; cc[$4]=$3 }
+              --jq '.check_runs[] | [.id, .status, (.conclusion // "-"), ((.details_url // "" | capture("/actions/runs/(?<run>[0-9]+)/").run) // "-"), .name] | @tsv' 2>/dev/null \
+            | awk -F'\t' -v own="$GITHUB_RUN_ID" '
+                FILENAME==ARGV[1] {
+                  wf_of[$1]=$2
+                  if (!($2 in last) || $1+0 > last[$2]) { last[$2]=$1+0; last_st[$2]=$3; last_name[$2]=$4 }
+                  next
                 }
-                END { for (n in id) printf "%s\t%s\t%s\n", st[n], cc[n], n }'
+                NF>=5 && $5!="check" {
+                  w=wf_of[$4]
+                  if ($3=="cancelled" && w!="" && last[w] > $4+0) { replaced[w]=1; next }
+                  if (!($5 in id) || $1+0 > id[$5]) { id[$5]=$1+0; st[$5]=$2; cc[$5]=$3 }
+                }
+                END {
+                  for (n in id) printf "%s\t%s\t%s\n", st[n], cc[n], n
+                  for (w in replaced)
+                    if (last_st[w]!="completed" && w!=wf_of[own])
+                      printf "%s\t-\t%s (run %s)\n", last_st[w], last_name[w], last[w]
+                }' <(printf '%s\n' "$wf") -
           }
 
           failures() {
