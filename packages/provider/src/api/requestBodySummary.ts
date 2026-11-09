@@ -32,6 +32,11 @@ export type RequestBodySummary = {
 	bytes?: number;
 	keys?: string[];
 	keyCount?: number;
+	/**
+	 * Length of each top-level string field, so an oversized field shows up
+	 * even when it is redacted or falls past the end of the preview.
+	 */
+	lengths?: Record<string, number>;
 	preview: string;
 };
 
@@ -91,11 +96,16 @@ export const summariseRequestBody = (req: {
 		return { type, ...(bytes !== undefined && { bytes }), preview };
 	}
 	const keys = Object.keys(body);
+	const lengths: Record<string, number> = {};
+	for (const [key, value] of Object.entries(body).slice(0, MAX_KEYS)) {
+		if (typeof value === "string") lengths[key] = value.length;
+	}
 	return {
 		type,
 		...(bytes !== undefined && { bytes }),
 		keys: keys.slice(0, MAX_KEYS),
 		keyCount: keys.length,
+		lengths,
 		preview,
 	};
 };
