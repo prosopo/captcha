@@ -366,18 +366,16 @@ export default (
 				const dedupTrafficPolicies = deriveTrafficPolicies(
 					clientRecord.settings?.trafficFilter,
 				);
-				const dedupUserScope = getRequestUserScope(
-					dedupFlatHeaders,
-					req.ja4,
-					normalizedIp,
+				const dedupUserScope = getRequestUserScope({
+					requestHeaders: dedupFlatHeaders,
+					ja4: req.ja4,
+					ip: normalizedIp,
 					user,
-					undefined,
-					undefined,
-					dedupCountryCode,
-					dedupAsn,
-					verifiedSignerUrl,
+					countryCode: dedupCountryCode,
+					asn: dedupAsn,
+					webBotAuthAgent: verifiedSignerUrl,
 					bypassKeyHash,
-				);
+				});
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
 				// prematurely eject a user whose frictionless flow should
@@ -710,18 +708,16 @@ export default (
 				...(solveDevice && { solveDevice }),
 			};
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
+			const userScope = getRequestUserScope({
+				requestHeaders: flatten(req.headers),
+				ja4: req.ja4,
+				ip: normalizedIp,
 				user,
-				undefined,
-				undefined,
 				countryCode,
 				asn,
-				verifiedSignerUrl,
+				webBotAuthAgent: verifiedSignerUrl,
 				bypassKeyHash,
-			);
+			});
 			const lookupAccessPolicies = () =>
 				tasks.frictionlessManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,

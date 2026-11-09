@@ -136,16 +136,15 @@ export default (
 				? await tasks.db.getSessionRecordBySessionId(sessionId)
 				: undefined;
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
+			const userScope = getRequestUserScope({
+				requestHeaders: flatten(req.headers),
+				ja4: req.ja4,
+				ip: normalizedIp,
 				user,
-				sessionRecord?.decryptedHeadHash,
-				undefined, // coords
+				headHash: sessionRecord?.decryptedHeadHash,
 				countryCode,
 				asn,
-			);
+			});
 			// Skip deferToVerify policies at request time — see
 			// getImageCaptchaChallenge for the full rationale (sanitiser
 			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE

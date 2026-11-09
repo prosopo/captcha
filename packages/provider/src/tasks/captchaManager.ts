@@ -1088,16 +1088,16 @@ export class CaptchaManager {
 			challengeRecord.ipAddress,
 		);
 
-		const userScope = getRequestUserScope(
-			headers,
-			challengeRecord.ja4,
-			ipAddressRecord.address,
-			userAccount,
+		const userScope = getRequestUserScope({
+			requestHeaders: headers,
+			ja4: challengeRecord.ja4,
+			ip: ipAddressRecord.address,
+			user: userAccount,
 			headHash,
-			coordsString,
+			coords: coordsString,
 			countryCode,
 			asn,
-		);
+		});
 
 		const accessPolicies = await this.getPrioritisedAccessPolicies(
 			userAccessRulesStorage,
