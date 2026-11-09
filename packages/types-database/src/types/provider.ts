@@ -1721,6 +1721,9 @@ export interface IProviderDatabase extends IDatabase {
 	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
 	/** Same claim contract as {@link claimIconOrderCaptchaSubmission}. */
+	claimPuzzleCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
+
+	/** Same claim contract as {@link claimIconOrderCaptchaSubmission}. */
 	claimAudioCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
 	updateIconOrderCaptchaRecordResult(
