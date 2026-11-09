@@ -3408,12 +3408,16 @@ export class ProviderDatabase
 		if (!accounts || accounts.length === 0) {
 			return;
 		}
+		// Revoked keys are re-sent on every client sync, so the cache is only
+		// dropped when a row actually goes.
+		let removedAny = true;
 		try {
-			await this.tables?.client.deleteMany({
+			const result = await this.tables?.client.deleteMany({
 				account: { $in: accounts },
 			});
+			removedAny = (result?.deletedCount ?? 0) > 0;
 		} finally {
-			clientRecordCache.clear();
+			if (removedAny) clientRecordCache.clear();
 		}
 	}
 

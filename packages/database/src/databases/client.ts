@@ -39,6 +39,15 @@ interface UpdatedClientAccount {
 		siteKey?: string;
 		settings?: IUserSettings;
 		updatedAt?: Timestamp;
+		active?: boolean;
+	}[];
+}
+
+interface RevokedClientAccount {
+	accountDisabled?: boolean;
+	sites?: {
+		siteKey?: string;
+		active?: boolean;
 	}[];
 }
 
@@ -102,6 +111,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 						{ "sites.updatedAt": { $exists: false } },
 					],
 					"users.status": "active",
+					accountDisabled: { $ne: true },
 				},
 				{
 					tier: 1,
@@ -109,6 +119,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 					"sites.siteKey": 1,
 					"sites.settings": 1,
 					"sites.updatedAt": 1,
+					"sites.active": 1,
 				},
 			)
 			.lean();
@@ -120,7 +131,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 		const newClientRecords: IUserDataSlim[] = [];
 		for (const account of accounts) {
 			for (const site of account.sites ?? []) {
-				if (!site.siteKey || !site.settings) continue;
+				if (!site.siteKey || !site.settings || site.active === false) continue;
 				const isNew =
 					site.updatedAt === undefined || site.updatedAt > updatedAtTimestamp;
 				if (!isNew) continue;
@@ -134,5 +145,32 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 
 		await this.close();
 		return newClientRecords;
+	}
+
+	// Bans and site deletions do not move `sites.updatedAt` into the sync
+	// window, so the keys to drop are read in full every run rather than by
+	// time. This is what keeps a ban in force when the portal's direct
+	// removal call to a provider fails.
+	async getRevokedSiteKeys(): Promise<string[]> {
+		await this.connect();
+		const accounts = await this.tables.accounts
+			.find<RevokedClientAccount>(
+				{ $or: [{ accountDisabled: true }, { "sites.active": false }] },
+				{ accountDisabled: 1, "sites.siteKey": 1, "sites.active": 1 },
+			)
+			.lean();
+
+		const revoked: string[] = [];
+		for (const account of accounts) {
+			for (const site of account.sites ?? []) {
+				if (!site.siteKey) continue;
+				if (account.accountDisabled === true || site.active === false) {
+					revoked.push(site.siteKey);
+				}
+			}
+		}
+
+		await this.close();
+		return revoked;
 	}
 }
