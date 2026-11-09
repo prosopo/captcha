@@ -35,6 +35,15 @@ import submitIconOrderCaptchaSolution from "./captcha/submitIconOrderCaptchaSolu
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
 import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
+import { logRejectedSolution } from "./logRejectedSolution.js";
+
+const SOLUTION_PATHS = [
+	ClientApiPaths.SubmitImageCaptchaSolution,
+	ClientApiPaths.SubmitPowCaptchaSolution,
+	ClientApiPaths.SubmitPuzzleCaptchaSolution,
+	ClientApiPaths.SubmitAudioCaptchaSolution,
+	ClientApiPaths.SubmitIconOrderCaptchaSolution,
+];
 
 /**
  * Wraps an async route handler so that any rejection - including synchronous
@@ -174,6 +183,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.
 	// https://stackoverflow.com/a/62358794/1178971
+	router.use(SOLUTION_PATHS, logRejectedSolution);
 	router.use(handleErrors);
 
 	return router;
