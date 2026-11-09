@@ -37,11 +37,9 @@ import {
 	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
-import type { JWT } from "@prosopo/util-crypto";
 import { packageDir } from "@prosopo/util/node";
 import cors, { type CorsOptions } from "cors";
 import express from "express";
-import type { Request } from "express";
 import rateLimit from "express-rate-limit";
 import {
 	DEFAULT_DETECTOR_POOL_DIR,
@@ -49,6 +47,7 @@ import {
 } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
 import { adminAuthOptions } from "./adminAuthOptions.js";
+import { adminRateLimitKey } from "./adminJwt.js";
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
@@ -142,36 +141,6 @@ export const getClientApiPathsExpectingProsopoHeaders =
 		);
 		return paths as ClientApiPaths[];
 	};
-
-/**
- * Extract authenticated user address from JWT for rate limiting
- * @param req Express request object
- * @returns User address from JWT or undefined
- */
-export const getUserFromJWT = (req: Request): string | undefined => {
-	try {
-		const authHeader = req.headers.Authorization || req.headers.authorization;
-		if (!authHeader || typeof authHeader !== "string") {
-			return undefined;
-		}
-		const jwt = authHeader.replace("Bearer ", "") as JWT;
-		if (!jwt) {
-			return undefined;
-		}
-		// We don't need to verify the signature here, just extract the subject
-		// The actual verification happens in authMiddleware
-		const parts = jwt.split(".");
-		if (parts.length !== 3 || !parts[1]) {
-			return undefined;
-		}
-		const payload = JSON.parse(
-			Buffer.from(parts[1], "base64url").toString("utf-8"),
-		);
-		return payload.sub as string | undefined;
-	} catch (e) {
-		return undefined;
-	}
-};
 
 /**
  * `.listen()` returns before the socket is bound, so a bind failure such as
@@ -344,21 +313,16 @@ export async function startProviderApi(
 			...getExpressApiRuleRateLimits(),
 		};
 		const adminPaths = Object.values(AdminApiPaths);
+		const adminKey = adminRateLimitKey(env.pair, env.authAccount);
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
-			// For admin paths, key by authenticated user instead of IP
-			// This prevents tests (and legitimate users) from interfering with each other
 			if (adminPaths.includes(enumPath as AdminApiPaths)) {
 				apiApp.use(
 					enumPath,
 					rateLimit({
 						...limit,
 						handler: rateLimitHandler(env.logger, enumPath),
-						keyGenerator: (req) => {
-							const user = getUserFromJWT(req);
-							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
-							return user || req.ip || "unknown";
-						},
+						keyGenerator: adminKey,
 					}),
 				);
 			} else if (
