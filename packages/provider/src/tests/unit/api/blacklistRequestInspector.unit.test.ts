@@ -443,6 +443,70 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 		);
 		expect(shouldAbort).toBe(true);
 	});
+
+	type SeenIds = { clientId: unknown; userId: unknown };
+
+	const lookUpIds = async (
+		requestHeaders: Record<string, string>,
+		requestBody: Record<string, unknown>,
+	): Promise<SeenIds[]> => {
+		const seen: SeenIds[] = [];
+		const storage = buildStorage(async (filter) => {
+			const f = filter as {
+				policyScope?: { clientId?: string };
+				userScope: Record<string, unknown>;
+			};
+			seen.push({
+				clientId: f.policyScope?.clientId,
+				userId: f.userScope.userId,
+			});
+			return [];
+		});
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+		);
+
+		await inspector.shouldAbortRequest(
+			"/v1/prosopo/provider/client/captcha/frictionless",
+			"1.1.1.1",
+			"ja4hash",
+			requestHeaders,
+			requestBody,
+			mockLogger,
+			validIpInfo("DE"),
+		);
+
+		return seen;
+	};
+
+	it("reads the user and site key from the lower-cased request headers", async () => {
+		const seen = await lookUpIds(
+			{ "prosopo-user": "header-user", "prosopo-site-key": "header-site" },
+			{},
+		);
+
+		expect(seen.length).toBeGreaterThan(0);
+		expect(
+			seen.every(
+				(ids) => ids.clientId === "header-site" && ids.userId === "header-user",
+			),
+		).toBe(true);
+	});
+
+	it("prefers the user and site key in the body over the headers", async () => {
+		const seen = await lookUpIds(
+			{ "prosopo-user": "header-user", "prosopo-site-key": "header-site" },
+			{ user: "body-user", dapp: "body-site" },
+		);
+
+		expect(seen.length).toBeGreaterThan(0);
+		expect(
+			seen.every(
+				(ids) => ids.clientId === "body-site" && ids.userId === "body-user",
+			),
+		).toBe(true);
+	});
 });
 
 // Coverage for the synthetic blocked-session persistence + structured log
