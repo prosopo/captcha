@@ -60,14 +60,14 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 		userSignature: string,
 		coords: [number, number][][] | undefined,
 	): Promise<void> {
-		return this.db.updatePuzzleCaptchaRecordResult(
+		return this.db.updatePuzzleCaptchaRecordResult({
 			challenge,
 			result,
-			false,
-			true,
+			serverChecked: false,
+			userSubmitted: true,
 			userSignature,
 			coords,
-		);
+		});
 	}
 
 	protected claimSubmission(record: PuzzleCaptchaRecord): Promise<boolean> {

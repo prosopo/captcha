@@ -343,7 +343,8 @@ describe("the session's fingerprint summary at issuance", () => {
 
 	/** The summary argument storePuzzleCaptchaRecord was given. */
 	const storedSummary = (ctx: ChallengeIssueContext): unknown =>
-		vi.mocked(ctx.tasks.db.storePuzzleCaptchaRecord).mock.calls[0]?.[13];
+		vi.mocked(ctx.tasks.db.storePuzzleCaptchaRecord).mock.calls[0]?.[0]
+			?.fingerprintSummary;
 
 	it("is stored on the puzzle record", async () => {
 		const fingerprintSummary = {

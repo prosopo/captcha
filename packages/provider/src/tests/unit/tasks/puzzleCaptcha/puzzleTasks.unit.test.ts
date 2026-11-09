@@ -440,17 +440,16 @@ describe("PuzzleCaptchaManager", () => {
 
 			expect(result).toBe(false);
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SALT,
 				},
-				false, // serverChecked
-				true, // userSubmitted
-				a.userSignature,
-				undefined, // coords must NOT be the bad value
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 
 		it("returns false and records a timeout when the challenge is not recent", async () => {
@@ -483,17 +482,16 @@ describe("PuzzleCaptchaManager", () => {
 			});
 
 			expect(result).toBe(false);
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				expect.objectContaining({
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: expect.objectContaining({
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_TIMESTAMP",
 				}),
-				false,
-				true,
-				a.userSignature,
-				undefined, // coords — no salt supplied in this test
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 
 		it("returns true and approves when the solution is within tolerance", async () => {
@@ -528,14 +526,13 @@ describe("PuzzleCaptchaManager", () => {
 
 			expect(result).toBe(true);
 			expect(checkPowSignature).toHaveBeenCalled();
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
-				a.userSignature,
-				undefined, // coords — no salt supplied in this test
-			);
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 			// puzzleEvents stored when no behavioral data
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
 				a.challenge,
@@ -816,17 +813,14 @@ describe("PuzzleCaptchaManager", () => {
 			});
 
 			expect(result).toBe(true);
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
-				a.userSignature,
-				// The whole contract: coords[0] is the "click" tile, coords[0][0]
-				// is the [x, y] pair the widget embedded. A regression that drops
-				// the decode or writes [0, 0] fails this exact match.
-				[[[clickX, clickY]]],
-			);
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+				coords: [[[clickX, clickY]]],
+			});
 		});
 
 		it("returns false and disapproves when the solution is outside tolerance", async () => {
@@ -860,17 +854,16 @@ describe("PuzzleCaptchaManager", () => {
 			});
 
 			expect(result).toBe(false);
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				expect.objectContaining({
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: expect.objectContaining({
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_SOLUTION",
 				}),
-				false,
-				true,
-				a.userSignature,
-				undefined, // coords — no salt supplied in this test
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 	});
 

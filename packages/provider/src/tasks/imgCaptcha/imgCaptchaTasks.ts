@@ -227,17 +227,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			.reduce((a, b) => a + b, 0);
 		const deadlineDate = new Date(timeLimit + currentTime);
 
-		await this.db.storePendingImageCommitment(
+		await this.db.storePendingImageCommitment({
 			userAccount,
 			requestHash,
 			salt,
-			deadlineDate,
-			new Date(currentTime),
-			getCompositeIpAddress(ipAddress),
+			deadlineTimestamp: deadlineDate,
+			requestedAtTimestamp: new Date(currentTime),
+			ipAddress: getCompositeIpAddress(ipAddress),
 			threshold,
 			sessionId,
 			ipInfo,
-		);
+		});
 		return {
 			captchas,
 			requestHash,

@@ -245,31 +245,26 @@ export default (
 					});
 			}
 
-			await tasks.db.storePowCaptchaRecord(
-				challenge.challenge,
-				{
+			await tasks.db.storePowCaptchaRecord({
+				challenge: challenge.challenge,
+				components: {
 					requestedAtTimestamp: challenge.requestedAtTimestamp,
 					userAccount: user,
 					dappAccount: dapp,
 				},
-				challenge.difficulty,
-				challenge.providerSignature,
-				getCompositeIpAddress(normalizedIp),
-				flatten(req.headers),
-				req.ja4,
-				validSessionId,
-				undefined,
-				undefined,
-				undefined,
-				// Persist the full ipinfo payload — consumers (portal,
-				// anomaly detection, CHECK_IP_INFO backfill) read the
-				// individual flags off this object instead of separate
-				// flat fields.
-				req.ipInfo,
-				// From the proof sent at frictionless time. A proof submitted
-				// with the solution replaces it.
-				sessionRecord?.fingerprintSummary,
-			);
+				difficulty: challenge.difficulty,
+				providerSignature: challenge.providerSignature,
+				ipAddress: getCompositeIpAddress(normalizedIp),
+				headers: flatten(req.headers),
+				ja4: req.ja4,
+				sessionId: validSessionId,
+				// Consumers (portal, anomaly detection, CHECK_IP_INFO backfill) read
+				// the individual flags off the full ipinfo payload.
+				ipInfo: req.ipInfo,
+				// From the proof sent at frictionless time; a proof submitted with the
+				// solution replaces it.
+				fingerprintSummary: sessionRecord?.fingerprintSummary,
+			});
 
 			const padBytes = trafficVerdict.padBytes;
 

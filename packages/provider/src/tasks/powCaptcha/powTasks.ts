@@ -301,14 +301,13 @@ export class PowCaptchaManager extends CaptchaManager {
 				reason: ResultReason.CAPTCHA_INVALID_SALT,
 			};
 			const writePromises: Promise<void>[] = [
-				this.db.updatePowCaptchaRecordResult(
+				this.db.updatePowCaptchaRecordResult({
 					challenge,
-					badSaltResult,
-					false, // serverChecked
-					true, // userSubmitted
-					userTimestampSignature,
-					undefined, // never persist the bad coords
-				),
+					result: badSaltResult,
+					serverChecked: false,
+					userSubmitted: true,
+					userSignature: userTimestampSignature,
+				}),
 			];
 			if (challengeRecord.sessionId) {
 				writePromises.push(
@@ -336,14 +335,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 			// Write pow record and session update in parallel
 			const writePromises: Promise<void>[] = [
-				this.db.updatePowCaptchaRecordResult(
+				this.db.updatePowCaptchaRecordResult({
 					challenge,
-					timeoutResult,
-					false, //serverchecked
-					true, // usersubmitted
-					userTimestampSignature,
+					result: timeoutResult,
+					serverChecked: false,
+					userSubmitted: true,
+					userSignature: userTimestampSignature,
 					coords,
-				),
+				}),
 			];
 			if (challengeRecord.sessionId) {
 				writePromises.push(
@@ -469,14 +468,14 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		// Then write result + session in parallel (different documents/collections).
 		const writePromises: Promise<void>[] = [
-			this.db.updatePowCaptchaRecordResult(
+			this.db.updatePowCaptchaRecordResult({
 				challenge,
 				result,
-				false,
-				true,
-				userTimestampSignature,
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: userTimestampSignature,
 				coords,
-			),
+			}),
 		];
 
 		if (challengeRecord.sessionId) {
