@@ -13,48 +13,45 @@
 // limitations under the License.
 
 import { ApiClient } from "@prosopo/api";
-import type { ApiEndpointData, ApiEndpointResponse } from "@prosopo/api-route";
+import type {
+	ApiEndpointData,
+	ApiEndpointResponse,
+	ApiRouteContract,
+	ApiRouteRequest,
+	ApiRouteResponseData,
+} from "@prosopo/api-route";
+import type { ZodType, ZodTypeDef, z } from "zod";
 import {
-	type FetchRulesEndpointResponse,
-	type FetchRulesOptions,
-	fetchRulesResponse,
-} from "#policy/api/read/fetchRules.js";
-import {
-	type RuleIdsEndpointResponse,
-	ruleIdsResponse,
-} from "#policy/api/read/findRuleIds.js";
-import type { MissingIdsEndpointResponse } from "#policy/api/read/getMissingIds.js";
-import {
-	type DeletedRulesCount,
-	type MissingIds,
-	type RehashedRules,
+	deleteAllRulesRoute,
+	deleteRuleGroupsRoute,
+	deleteRulesRoute,
+	fetchRulesRoute,
+	findRuleIdsRoute,
 	getMissingIdsRoute,
+	insertRulesRoute,
+	rehashRulesRoute,
 } from "#policy/api/ruleApiContracts.js";
-import type { AccessRulesFilterInput } from "#policy/ruleInput/ruleInput.js";
-import type { DeleteSiteGroups } from "./delete/deleteRuleGroups.js";
-import { accessRuleApiPaths } from "./ruleApiRoutes.js";
-import type { InsertRulesGroup } from "./write/insertRules.js";
+
+type RouteResponse<Contract extends ApiRouteContract> = ApiEndpointResponse<
+	ApiRouteResponseData<Contract>
+>;
 
 export class AccessRulesApiClient extends ApiClient {
 	//// delete
 
 	public deleteMany(
-		filters: AccessRulesFilterInput[],
+		filters: ApiRouteRequest<typeof deleteRulesRoute>,
 		jwt: string,
-	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
-		return this.post(
-			accessRuleApiPaths.DELETE_MANY,
-			filters,
-			this.getAuthHeaders(jwt),
-		);
+	): Promise<RouteResponse<typeof deleteRulesRoute>> {
+		return this.post(deleteRulesRoute.path, filters, this.getAuthHeaders(jwt));
 	}
 
 	public deleteGroups(
-		siteGroups: DeleteSiteGroups,
+		siteGroups: ApiRouteRequest<typeof deleteRuleGroupsRoute>,
 		jwt: string,
-	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
+	): Promise<RouteResponse<typeof deleteRuleGroupsRoute>> {
 		return this.post(
-			accessRuleApiPaths.DELETE_GROUPS,
+			deleteRuleGroupsRoute.path,
 			siteGroups,
 			this.getAuthHeaders(jwt),
 		);
@@ -62,96 +59,69 @@ export class AccessRulesApiClient extends ApiClient {
 
 	public deleteAll(
 		jwt: string,
-	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
-		return this.post(
-			accessRuleApiPaths.DELETE_ALL,
-			{},
-			this.getAuthHeaders(jwt),
-		);
+	): Promise<RouteResponse<typeof deleteAllRulesRoute>> {
+		return this.post(deleteAllRulesRoute.path, {}, this.getAuthHeaders(jwt));
 	}
 
 	//// read
 
-	public async getMissingIds(
-		idsToCheck: MissingIds,
+	public getMissingIds(
+		idsToCheck: ApiRouteRequest<typeof getMissingIdsRoute>,
 		jwt: string,
-	): Promise<MissingIdsEndpointResponse> {
-		const endpointResponse: ApiEndpointResponse<ApiEndpointData> =
-			await this.post(
-				getMissingIdsRoute.path,
-				idsToCheck,
-				this.getAuthHeaders(jwt),
-			);
-
-		const parsedData = getMissingIdsRoute.responseSchema.safeParse(
-			endpointResponse.data,
-		);
-
-		return {
-			...endpointResponse,
-			data: parsedData.success ? parsedData.data : undefined,
-		};
+	): Promise<RouteResponse<typeof getMissingIdsRoute>> {
+		return this.postAndParse(getMissingIdsRoute, idsToCheck, jwt);
 	}
 
-	public async fetchMany(
-		fetchOptions: FetchRulesOptions,
+	public fetchMany(
+		fetchOptions: ApiRouteRequest<typeof fetchRulesRoute>,
 		jwt: string,
-	): Promise<FetchRulesEndpointResponse> {
-		const endpointResponse: ApiEndpointResponse<ApiEndpointData> =
-			await this.post(
-				accessRuleApiPaths.FETCH_MANY,
-				fetchOptions,
-				this.getAuthHeaders(jwt),
-			);
-
-		const parsedData = fetchRulesResponse.safeParse(endpointResponse.data);
-
-		return {
-			...endpointResponse,
-			data: parsedData.success ? parsedData.data : undefined,
-		};
+	): Promise<RouteResponse<typeof fetchRulesRoute>> {
+		return this.postAndParse(fetchRulesRoute, fetchOptions, jwt);
 	}
 
-	public async findIds(
-		filters: AccessRulesFilterInput[],
+	public findIds(
+		filters: ApiRouteRequest<typeof findRuleIdsRoute>,
 		jwt: string,
-	): Promise<RuleIdsEndpointResponse> {
-		const endpointResponse: ApiEndpointResponse<ApiEndpointData> =
-			await this.post(
-				accessRuleApiPaths.FIND_IDS,
-				filters,
-				this.getAuthHeaders(jwt),
-			);
-
-		const parsedData = ruleIdsResponse.safeParse(endpointResponse.data);
-
-		return {
-			...endpointResponse,
-			data: parsedData.success ? parsedData.data : undefined,
-		};
+	): Promise<RouteResponse<typeof findRuleIdsRoute>> {
+		return this.postAndParse(findRuleIdsRoute, filters, jwt);
 	}
 
 	//// write
 
-	public async rehashAll(
+	public rehashAll(
 		jwt: string,
-	): Promise<ApiEndpointResponse<RehashedRules>> {
+	): Promise<RouteResponse<typeof rehashRulesRoute>> {
+		return this.post(rehashRulesRoute.path, {}, this.getAuthHeaders(jwt));
+	}
+
+	public insertMany(
+		ruleGroups: ApiRouteRequest<typeof insertRulesRoute>,
+		jwt: string,
+	): Promise<RouteResponse<typeof insertRulesRoute>> {
 		return this.post(
-			accessRuleApiPaths.REHASH_ALL,
-			{},
+			insertRulesRoute.path,
+			ruleGroups,
 			this.getAuthHeaders(jwt),
 		);
 	}
 
-	public insertMany(
-		ruleGroups: InsertRulesGroup[],
+	// Data that fails the contract's response schema is dropped rather than
+	// thrown, so callers still see the status and error from the envelope.
+	protected async postAndParse<
+		Schema extends ZodType<ApiEndpointData, ZodTypeDef, unknown>,
+	>(
+		route: ApiRouteContract<string, ZodType | undefined, Schema>,
+		body: unknown,
 		jwt: string,
-	): Promise<ApiEndpointResponse<undefined>> {
-		return this.post(
-			accessRuleApiPaths.INSERT_MANY,
-			ruleGroups,
-			this.getAuthHeaders(jwt),
-		);
+	): Promise<ApiEndpointResponse<z.infer<Schema>>> {
+		const endpointResponse: ApiEndpointResponse<ApiEndpointData> =
+			await this.post(route.path, body, this.getAuthHeaders(jwt));
+		const parsedData = route.responseSchema.safeParse(endpointResponse.data);
+
+		return {
+			...endpointResponse,
+			data: parsedData.success ? parsedData.data : undefined,
+		};
 	}
 
 	protected getAuthHeaders(jwt: string): RequestInit {
