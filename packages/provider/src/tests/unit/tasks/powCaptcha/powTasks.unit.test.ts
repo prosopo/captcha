@@ -1020,6 +1020,90 @@ describe("PowCaptchaManager", () => {
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
 		});
 
+		it("returns verified:false, not an error, when the challenge was never approved", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				serverChecked: false,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+				},
+				sessionId: "unapproved-session",
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(result).toEqual({
+				verified: false,
+				reason: "CAPTCHA.INVALID_SOLUTION",
+				sessionId: "unapproved-session",
+			});
+			expect(db.markDappUserPoWCommitmentsChecked).not.toHaveBeenCalled();
+		});
+
+		it("returns a score of exactly 0 rather than dropping it", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const sessionId = "zero-score-session";
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				sessionId,
+			};
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				captchaType: CaptchaType.pow,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "h".repeat(16),
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(result).toEqual({ verified: true, score: 0, sessionId });
+		});
+
 		it("should return verified:false when user is blocked by access policy", async () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456789;

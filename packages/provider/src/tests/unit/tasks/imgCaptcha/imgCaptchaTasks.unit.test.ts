@@ -1309,6 +1309,70 @@ describe("ImgCaptchaManager", () => {
 		});
 	});
 
+	describe("verifyImageCaptchaSolution score", () => {
+		it("returns a score of exactly 0 rather than dropping it", async () => {
+			const commitmentId = "zeroScoreCommitmentId";
+			const sessionId = "zero-score-session";
+			const ipAddress = getIPAddress("1.1.1.1");
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				providerAccount: "providerAccount",
+				datasetId: "datasetId",
+				result: { status: CaptchaStatus.approved },
+				userSignature: "",
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers: { a: "1" },
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				captchaType: CaptchaType.image,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "h".repeat(16),
+			};
+			vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(
+				commitment as UserCommitment,
+			);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				"userAccount",
+				"dappAccount",
+				commitmentId,
+				mockEnv,
+			);
+
+			expect(result).toEqual(
+				expect.objectContaining({ verified: true, score: 0, sessionId }),
+			);
+		});
+	});
+
 	describe("session result tracking for verifyImageCaptchaSolution", () => {
 		const ipAddress = getIPAddress("1.1.1.1");
 		const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
