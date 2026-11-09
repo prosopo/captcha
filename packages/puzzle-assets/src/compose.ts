@@ -14,6 +14,7 @@
 
 import { relativeLuminance } from "./contrast.js";
 import { type NotchShape, coverageFromDistance } from "./notch.js";
+import { type RecessStyle, recessShadow, towardsGrey } from "./presentation.js";
 import type { Prng } from "./prng.js";
 import type { NotchPlacement, RgbaImage } from "./types.js";
 
@@ -282,7 +283,7 @@ export const cutNotch = (
 	size: number,
 	placement: NotchPlacement,
 	holeDarken: number,
-	smoothPieceSource: boolean,
+	style: RecessStyle | undefined,
 ): CutResult => {
 	const half = size / 2;
 	const left = Math.round(placement.targetX - half);
@@ -313,7 +314,7 @@ export const cutNotch = (
 				continue;
 			}
 
-			const sample = smoothPieceSource
+			const sample = style
 				? sampleSmoothedBackground(background, left + lx, top + ly)
 				: sampleBackground(background, left + lx, top + ly);
 			if (sample === null) {
@@ -363,18 +364,25 @@ export const cutNotch = (
 
 				// Darken towards the hole, deeper near the edges so the cut has
 				// an inner shadow rather than reading as a flat grey patch.
-				const edge = d > -3 ? HOLE_INNER_SHADOW * (1 + d / 3) : 0;
+				const edge = style
+					? recessShadow(d, lx, ly, size, HOLE_INNER_SHADOW, style)
+					: d > -3
+						? HOLE_INNER_SHADOW * (1 + d / 3)
+						: 0;
 				const factor = holeDarken * (1 - edge);
 				const mix = coverage;
+				const [sr, sg, sb] = style
+					? towardsGrey(r, g, b, style.desaturate)
+					: [r, g, b];
 
 				background.data[bi] = clamp255(
-					Math.round(r * (1 - mix) + r * factor * mix),
+					Math.round(r * (1 - mix) + sr * factor * mix),
 				);
 				background.data[bi + 1] = clamp255(
-					Math.round(g * (1 - mix) + g * factor * mix),
+					Math.round(g * (1 - mix) + sg * factor * mix),
 				);
 				background.data[bi + 2] = clamp255(
-					Math.round(b * (1 - mix) + b * factor * mix),
+					Math.round(b * (1 - mix) + sb * factor * mix),
 				);
 			} else if (d < SEAM_NOISE_RADIUS) {
 				// Just outside the cut: re-noise so the seam is not a clean

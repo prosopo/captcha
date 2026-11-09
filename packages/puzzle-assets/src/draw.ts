@@ -15,6 +15,7 @@
 import { cutNotch } from "./compose.js";
 import { paintDecoys } from "./decoys.js";
 import { createNotchShape } from "./notch.js";
+import { applyPattern, posePiece, samplePresentation } from "./presentation.js";
 import type { Prng } from "./prng.js";
 import type {
 	NotchPlacement,
@@ -44,6 +45,10 @@ export const drawPuzzle = (
 	prng: Prng,
 	version: PuzzleRendererVersion,
 ): DrawnPuzzle => {
+	const presentation =
+		version >= 2
+			? samplePresentation(prng, background.width, background.height)
+			: undefined;
 	const sharedShape =
 		version >= 2 ? createNotchShape(prng, pieceSize) : undefined;
 	// Decoys go on first so the real cut sits on top of any overlap and
@@ -58,15 +63,29 @@ export const drawPuzzle = (
 		settings.decoyEdgeDarkness,
 		settings.decoyBodyBrightness,
 		settings.decoyHoleDarken,
+		presentation?.recess,
 	);
 	const shape = sharedShape ?? createNotchShape(prng, pieceSize);
-	return cutNotch(
+	const cut = cutNotch(
 		prng,
 		background,
 		shape,
 		pieceSize,
 		placement,
 		settings.holeDarken,
-		version >= 2,
+		presentation?.recess,
 	);
+	if (!presentation) return cut;
+
+	const { pattern, pieceOffset } = presentation;
+	applyPattern(cut.background, pattern, 0, 0);
+	applyPattern(cut.piece, pattern, pieceOffset.x, pieceOffset.y);
+	return {
+		background: cut.background,
+		piece: posePiece(
+			cut.piece,
+			presentation.pieceRotation,
+			presentation.pieceScale,
+		),
+	};
 };

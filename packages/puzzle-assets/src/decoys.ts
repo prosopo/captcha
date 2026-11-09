@@ -17,6 +17,7 @@ import {
 	coverageFromDistance,
 	createNotchShape,
 } from "./notch.js";
+import { type RecessStyle, recessShadow, towardsGrey } from "./presentation.js";
 import type { Prng } from "./prng.js";
 import type { NotchPlacement, RgbaImage } from "./types.js";
 
@@ -73,6 +74,7 @@ export const paintDecoyPiece = (
 	edgeDarkness: number,
 	bodyBrightness: number,
 	holeDarken: number,
+	style?: RecessStyle,
 ): void => {
 	const half = size / 2;
 	const left = Math.round(cx - half);
@@ -100,11 +102,18 @@ export const paintDecoyPiece = (
 			// cut's structure. Without this, decoys were just faint edge
 			// tints and the real hole stood out as the only deep region on
 			// the frame — trivially findable by eye or by luminance.
-			const edge = d > -3 ? DECOY_INNER_SHADOW * (1 + d / 3) : 0;
+			const edge = style
+				? recessShadow(d, lx, ly, size, DECOY_INNER_SHADOW, style)
+				: d > -3
+					? DECOY_INNER_SHADOW * (1 + d / 3)
+					: 0;
 			const factor = holeDarken * (1 - edge);
-			const dr = r * factor;
-			const dg = g * factor;
-			const db = b * factor;
+			const [sr, sg, sb] = style
+				? towardsGrey(r, g, b, style.desaturate)
+				: [r, g, b];
+			const dr = sr * factor;
+			const dg = sg * factor;
+			const db = sb * factor;
 
 			// Existing additive tweak stays on top, so operators keep the
 			// same rim / body knobs — they now fine-tune the multiplicative
@@ -150,6 +159,7 @@ export const paintDecoys = (
 	edgeDarkness: number,
 	bodyBrightness: number,
 	holeDarken: number,
+	style?: RecessStyle,
 ): void => {
 	if (targetCount <= 0) return;
 
@@ -187,6 +197,7 @@ export const paintDecoys = (
 				edgeDarkness,
 				bodyBrightness,
 				holeDarken,
+				style,
 			);
 			break;
 		}

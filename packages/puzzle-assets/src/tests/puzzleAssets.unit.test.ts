@@ -23,6 +23,7 @@ import {
 	renderPuzzle,
 } from "../index.js";
 import { coverageFromDistance, createNotchShape } from "../notch.js";
+import { EVEN_RECESS_STYLE } from "../presentation.js";
 import { createPrng, createSeed } from "../prng.js";
 import type { RgbaImage } from "../types.js";
 
@@ -149,7 +150,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			placement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
-			true,
+			EVEN_RECESS_STYLE,
 		);
 
 		// Centre of the notch is darker than it was.
@@ -175,7 +176,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			placement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
-			true,
+			EVEN_RECESS_STYLE,
 		);
 
 		const half = Math.floor(geometry.notchSize / 2);
@@ -207,7 +208,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			overhangPlacement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
-			true,
+			EVEN_RECESS_STYLE,
 		);
 
 		const half = geometry.notchSize / 2;
@@ -250,7 +251,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			placement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
-			true,
+			EVEN_RECESS_STYLE,
 		);
 
 		const half = geometry.notchSize / 2;

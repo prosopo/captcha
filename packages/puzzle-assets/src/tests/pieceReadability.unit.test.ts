@@ -24,6 +24,7 @@ import {
 } from "../contrast.js";
 import { coverageFromDistance, createNotchShape } from "../notch.js";
 import { MIN_PALETTE_CONTRAST, drawPalette } from "../palette.js";
+import { EVEN_RECESS_STYLE } from "../presentation.js";
 import { createPrng } from "../prng.js";
 import type { RgbaImage } from "../types.js";
 
@@ -455,7 +456,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
-				true,
+				EVEN_RECESS_STYLE,
 			);
 
 			const { rim, core } = rimAndCore(piece, shape);
@@ -491,7 +492,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
-				true,
+				EVEN_RECESS_STYLE,
 			);
 
 			const { rim, core } = rimAndCore(piece, shape);
@@ -520,7 +521,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
-				true,
+				EVEN_RECESS_STYLE,
 			);
 
 			// Greyscale by luminance, then measure again. The cue is a luminance
@@ -570,7 +571,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
-				true,
+				EVEN_RECESS_STYLE,
 			);
 			const { rim, core } = rimAndCore(piece, shape);
 			// Reconstruct greys at the measured luminances and simulate. Working
