@@ -177,6 +177,53 @@ describe("decryptPayload", () => {
 		expect(result.triggeredDetectors).toEqual([50, 51]);
 	});
 
+	it("counts triggered-detector ids the decoder dropped as out of range", async () => {
+		const recordOutOfRangeDetectorIds = vi.fn<(count: number) => void>();
+		vi.doMock("../../../../api/metrics.js", async (importOriginal) => ({
+			...(await importOriginal<typeof import("../../../../api/metrics.js")>()),
+			recordOutOfRangeDetectorIds,
+		}));
+		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
+			getBotScore: vi.fn().mockImplementation(() => {
+				return {
+					baseBotScore: 0,
+					timestamp: Date.now(),
+					triggeredDetectors: [0, 1],
+					outOfRangeDetectorIds: 9,
+				};
+			}),
+		}));
+		const { initDetectorBundlePool } = await import(
+			"../../../../tasks/detection/bundlePool.js"
+		);
+		initDetectorBundlePool(dir);
+
+		const FrictionlessManager = (
+			await import("../../../../tasks/frictionless/frictionlessTasks.js")
+		).FrictionlessManager;
+
+		const writeQueue = {
+			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
+		} as unknown as RedisWriteQueue;
+
+		const frictionlessTaskManager = new FrictionlessManager(
+			db,
+			pair,
+			config,
+			undefined,
+			writeQueue,
+		);
+
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+			"det-1",
+		);
+
+		expect(result.triggeredDetectors).toEqual([0, 1]);
+		expect(recordOutOfRangeDetectorIds).toHaveBeenCalledWith(9);
+	});
+
 	it("fails closed (treated as bot) when no detector bundle can be resolved", async () => {
 		const FrictionlessManager = (
 			await import("../../../../tasks/frictionless/frictionlessTasks.js")
