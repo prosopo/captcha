@@ -17,14 +17,16 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import { type ZodType, z } from "zod";
+import type { ZodType } from "zod";
 import {
 	type AccessRulesStorage,
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
-import type { DeletedRulesCount } from "../ruleApiContracts.js";
+import {
+	type DeletedRulesCount,
+	deleteRuleGroupsRoute,
+} from "../ruleApiContracts.js";
 
 export type DeleteSiteGroup = {
 	clientIds: string[];
@@ -44,12 +46,7 @@ export class DeleteRuleGroupsEndpoint
 	) {}
 
 	public getRequestArgsSchema(): DeleteRuleGroupsSchema {
-		return z.array(
-			z.object({
-				clientIds: z.string().array(),
-				groupId: z.string(),
-			} satisfies AllKeys<DeleteSiteGroup>),
-		);
+		return deleteRuleGroupsRoute.requestSchema;
 	}
 
 	async processRequest(

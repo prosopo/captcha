@@ -1,4 +1,6 @@
 // Copyright 2021-2026 Prosopo (UK) Ltd.
+import { insertRulesRoute } from "../ruleApiContracts.js";
+
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +19,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys } from "@prosopo/common";
 import { LogLevel, type Logger } from "@prosopo/logger";
-import { type ZodType, type ZodTypeDef, z } from "zod";
+import type { ZodType, ZodTypeDef } from "zod";
 import type {
 	AccessPolicy,
 	AccessRule,
@@ -27,16 +28,8 @@ import type {
 	PolicyScopeExclusions,
 	UserScope,
 } from "#policy/rule.js";
-import {
-	accessPolicyInput,
-	policyScopeExclusionsInput,
-	policyScopeInput,
-	sanitizeAccessPolicy,
-} from "#policy/ruleInput/policyInput.js";
-import {
-	type UserScopeInput,
-	userScopeInput,
-} from "#policy/ruleInput/userScopeInput.js";
+import { sanitizeAccessPolicy } from "#policy/ruleInput/policyInput.js";
+import type { UserScopeInput } from "#policy/ruleInput/userScopeInput.js";
 import type {
 	AccessRuleEntry,
 	AccessRulesWriter,
@@ -71,16 +64,7 @@ export class InsertRulesEndpoint
 	) {}
 
 	public getRequestArgsSchema(): InsertRulesSchema {
-		return z.array(
-			z.object({
-				accessPolicy: accessPolicyInput,
-				policyScopes: z.array(policyScopeInput).optional(),
-				excludedClientIds: policyScopeExclusionsInput.shape.excludedClientIds,
-				groupId: z.string().optional(),
-				userScopes: z.array(userScopeInput),
-				expiresUnixTimestamp: z.number().optional(),
-			} satisfies AllKeys<InsertRulesGroup>),
-		);
+		return insertRulesRoute.requestSchema;
 	}
 
 	async processRequest(

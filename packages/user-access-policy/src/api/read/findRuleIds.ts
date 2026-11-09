@@ -1,4 +1,10 @@
 // Copyright 2021-2026 Prosopo (UK) Ltd.
+import {
+	type RuleIdsResponse,
+	findRuleIdsRoute,
+	ruleIdsResponse,
+} from "../ruleApiContracts.js";
+
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +23,11 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import { type AllKeys, executeBatchesSequentially } from "@prosopo/common";
+import { executeBatchesSequentially } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import { type ZodType, z } from "zod";
+import type { ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
-	accessRulesFilterInput,
 	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
@@ -31,13 +36,8 @@ import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 // for why the strict-identity form doesn't fit here.
 type FindRulesSchema = ZodType<AccessRulesFilterInput[], z.ZodTypeDef, unknown>;
 
-export type RuleIdsResponse = {
-	ruleIds: string[];
-};
-
-export const ruleIdsResponse = z.object({
-	ruleIds: z.string().array(),
-} satisfies AllKeys<RuleIdsResponse>) satisfies ZodType<RuleIdsResponse>;
+export type { RuleIdsResponse };
+export { ruleIdsResponse };
 
 export type RuleIdsEndpointResponse = ApiEndpointResponse<RuleIdsResponse>;
 
@@ -50,7 +50,7 @@ export class FindRuleIdsEndpoint
 	) {}
 
 	public getRequestArgsSchema(): FindRulesSchema {
-		return z.array(accessRulesFilterInput);
+		return findRuleIdsRoute.requestSchema;
 	}
 
 	async processRequest(

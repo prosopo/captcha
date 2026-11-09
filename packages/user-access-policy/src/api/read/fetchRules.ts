@@ -1,4 +1,6 @@
 // Copyright 2021-2026 Prosopo (UK) Ltd.
+import { fetchRulesResponse, fetchRulesRoute } from "../ruleApiContracts.js";
+
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +19,8 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import { type ZodType, z } from "zod";
-import { ruleEntryInput } from "#policy/ruleInput/ruleInput.js";
+import type { ZodType } from "zod";
 import type {
 	AccessRuleEntry,
 	AccessRulesStorage,
@@ -36,17 +36,7 @@ export type FetchRulesResponse = {
 	ruleEntries: AccessRuleEntry[];
 };
 
-// Explicit annotation with `unknown` input position rather than the
-// strict identity form because `ruleEntryInput.rule` transitively uses
-// `z.preprocess` on `deferToVerify`. Required for portable declaration
-// emit; the `AllKeys<...>` constraint still catches missing fields.
-export const fetchRulesResponse: ZodType<
-	FetchRulesResponse,
-	z.ZodTypeDef,
-	unknown
-> = z.object({
-	ruleEntries: ruleEntryInput.array(),
-} satisfies AllKeys<FetchRulesResponse>);
+export { fetchRulesResponse };
 
 export type FetchRulesEndpointResponse =
 	ApiEndpointResponse<FetchRulesResponse>;
@@ -60,9 +50,7 @@ export class FetchRulesEndpoint
 	) {}
 
 	public getRequestArgsSchema(): FetchRulesSchema {
-		return z.object({
-			ids: z.string().array(),
-		} satisfies AllKeys<FetchRulesOptions>);
+		return fetchRulesRoute.requestSchema;
 	}
 
 	async processRequest(

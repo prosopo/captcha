@@ -19,14 +19,16 @@ import {
 } from "@prosopo/api-route";
 import { executeBatchesSequentially } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import { type ZodType, z } from "zod";
+import type { ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
-	accessRulesFilterInput,
 	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
-import type { DeletedRulesCount } from "../ruleApiContracts.js";
+import {
+	type DeletedRulesCount,
+	deleteRulesRoute,
+} from "../ruleApiContracts.js";
 
 // `unknown` input position — see accessRulesFilterInput's block comment
 // for why the strict-identity form doesn't fit here.
@@ -45,7 +47,7 @@ export class DeleteRulesEndpoint
 	) {}
 
 	public getRequestArgsSchema(): DeleteRulesSchema {
-		return z.array(accessRulesFilterInput);
+		return deleteRulesRoute.requestSchema;
 	}
 
 	async processRequest(
