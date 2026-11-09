@@ -42,12 +42,15 @@ import { resetHealthzGeoRouter } from "../../../api/healthzGeo.js";
 import { metricsHandler } from "../../../api/metrics.js";
 import { publicRouter } from "../../../api/public.js";
 
-vi.mock("@prosopo/api-express-router", async (importActual) => ({
-	handleErrors: vi.fn(),
-	sendProsopoError: (
-		await importActual<typeof import("@prosopo/api-express-router")>()
-	).sendProsopoError,
-}));
+vi.mock("@prosopo/api-express-router", async (importActual) => {
+	const actual =
+		await importActual<typeof import("@prosopo/api-express-router")>();
+	return {
+		handleErrors: vi.fn(),
+		sendProsopoError: actual.sendProsopoError,
+		registerApiRoute: actual.registerApiRoute,
+	};
+});
 
 vi.mock("@prosopo/util", async (importActual) => {
 	const actual = await importActual<typeof import("@prosopo/util")>();

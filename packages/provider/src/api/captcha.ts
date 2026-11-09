@@ -12,8 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { handleErrors } from "@prosopo/api-express-router";
-import { ClientApiPaths } from "@prosopo/types";
+import { handleErrors, registerApiRoute } from "@prosopo/api-express-router";
+import {
+	assignDetectorBundleRoute,
+	checkSpamEmailRoute,
+	getAudioCaptchaChallengeRoute,
+	getFrictionlessCaptchaChallengeRoute,
+	getIconOrderCaptchaChallengeRoute,
+	getImageCaptchaChallengeRoute,
+	getPowCaptchaChallengeRoute,
+	getPuzzleCaptchaChallengeRoute,
+	submitAudioCaptchaSolutionRoute,
+	submitIconOrderCaptchaSolutionRoute,
+	submitImageCaptchaSolutionRoute,
+	submitPowCaptchaSolutionRoute,
+	submitPuzzleCaptchaSolutionRoute,
+} from "@prosopo/api-route/contracts";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, {
 	type NextFunction,
@@ -85,40 +99,45 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	/**
 	 * Provides a Captcha puzzle to a Dapp User
 	 */
-	router.post(
-		ClientApiPaths.GetImageCaptchaChallenge,
+	registerApiRoute(
+		router,
+		getImageCaptchaChallengeRoute,
 		asyncHandler(getImageCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
 	/**
 	 * Receives solved CAPTCHA challenges from the user, stores to database, and checks against solution commitment
 	 */
-	router.post(
-		ClientApiPaths.SubmitImageCaptchaSolution,
+	registerApiRoute(
+		router,
+		submitImageCaptchaSolutionRoute,
 		asyncHandler(submitImageCaptchaSolution(env)),
 	);
 
 	/**
 	 * Supplies a PoW challenge to a Dapp User
 	 */
-	router.post(
-		ClientApiPaths.GetPowCaptchaChallenge,
+	registerApiRoute(
+		router,
+		getPowCaptchaChallengeRoute,
 		asyncHandler(getPoWCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
 	/**
 	 * Verifies a user's PoW solution as being approved or not
 	 */
-	router.post(
-		ClientApiPaths.SubmitPowCaptchaSolution,
+	registerApiRoute(
+		router,
+		submitPowCaptchaSolutionRoute,
 		asyncHandler(submitPoWCaptchaSolution(env)),
 	);
 
 	/**
 	 * Gets a frictionless captcha challenge
 	 */
-	router.post(
-		ClientApiPaths.GetFrictionlessCaptchaChallenge,
+	registerApiRoute(
+		router,
+		getFrictionlessCaptchaChallengeRoute,
 		asyncHandler(getFrictionlessCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
@@ -126,50 +145,60 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 * Assigns a precomputed detector bundle for this session (or signals the
 	 * bundled fallback when no pool is loaded).
 	 */
-	router.post(ClientApiPaths.AssignDetectorBundle, (req, res, next) =>
+	registerApiRoute(router, assignDetectorBundleRoute, (req, res, next) =>
 		assignDetectorBundle(env)(req, res, next),
 	);
 
 	/**
 	 * Supplies a Puzzle challenge to a Dapp User
 	 */
-	router.post(
-		ClientApiPaths.GetPuzzleCaptchaChallenge,
+	registerApiRoute(
+		router,
+		getPuzzleCaptchaChallengeRoute,
 		asyncHandler(getPuzzleCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
 	/**
 	 * Verifies a user's Puzzle solution as being approved or not
 	 */
-	router.post(
-		ClientApiPaths.SubmitPuzzleCaptchaSolution,
+	registerApiRoute(
+		router,
+		submitPuzzleCaptchaSolutionRoute,
 		asyncHandler(submitPuzzleCaptchaSolution(env)),
 	);
 
-	router.post(
-		ClientApiPaths.GetAudioCaptchaChallenge,
+	registerApiRoute(
+		router,
+		getAudioCaptchaChallengeRoute,
 		asyncHandler(getAudioCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
-	router.post(
-		ClientApiPaths.SubmitAudioCaptchaSolution,
+	registerApiRoute(
+		router,
+		submitAudioCaptchaSolutionRoute,
 		asyncHandler(submitAudioCaptchaSolution(env)),
 	);
 
-	router.post(
-		ClientApiPaths.GetIconOrderCaptchaChallenge,
+	registerApiRoute(
+		router,
+		getIconOrderCaptchaChallengeRoute,
 		asyncHandler(getIconOrderCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
-	router.post(
-		ClientApiPaths.SubmitIconOrderCaptchaSolution,
+	registerApiRoute(
+		router,
+		submitIconOrderCaptchaSolutionRoute,
 		asyncHandler(submitIconOrderCaptchaSolution(env)),
 	);
 
 	/**
 	 * Checks if an email domain is spam
 	 */
-	router.post(ClientApiPaths.CheckSpamEmail, asyncHandler(checkSpamEmail(env)));
+	registerApiRoute(
+		router,
+		checkSpamEmailRoute,
+		asyncHandler(checkSpamEmail(env)),
+	);
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.

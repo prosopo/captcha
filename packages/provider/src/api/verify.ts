@@ -13,7 +13,20 @@
 // limitations under the License.
 
 import { VERIFY_FORWARDED_HEADER } from "@prosopo/api";
-import { handleErrors, verifySignature } from "@prosopo/api-express-router";
+import {
+	handleErrors,
+	registerApiRoute,
+	verifySignature,
+} from "@prosopo/api-express-router";
+import {
+	verifyAudioCaptchaSolutionRoute,
+	verifyAuthenticatedSessionRoute,
+	verifyIconOrderCaptchaSolutionRoute,
+	verifyImageCaptchaSolutionRoute,
+	verifyPowCaptchaSolutionRoute,
+	verifyPuzzleCaptchaSolutionRoute,
+} from "@prosopo/api-route/contracts";
+
 import { ProsopoError } from "@prosopo/common";
 import type { I18nLookup } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
@@ -395,8 +408,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	 * @param {string} commitmentId - The captcha solution to look up
 	 * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
 	 */
-	router.post(
-		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+	registerApiRoute(
+		router,
+		verifyImageCaptchaSolutionRoute,
 		async (req, res, next) => {
 			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
 			// because the Tasks constructor calls `env.getDb()`, which throws when
@@ -575,8 +589,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	 * @param {string} dappSignature - Signed token
 	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
 	 */
-	router.post(
-		ClientApiPaths.VerifyPowCaptchaSolution,
+	registerApiRoute(
+		router,
+		verifyPowCaptchaSolutionRoute,
 		async (req, res, next) => {
 			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
 			// because the Tasks constructor calls `env.getDb()`, which throws when
@@ -748,8 +763,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		},
 	);
 
-	router.post(
-		ClientApiPaths.VerifyPuzzleCaptchaSolution,
+	registerApiRoute(
+		router,
+		verifyPuzzleCaptchaSolutionRoute,
 		interactiveVerifyHandler({
 			env,
 			userAccessRulesStorage,
@@ -760,8 +776,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		}),
 	);
 
-	router.post(
-		ClientApiPaths.VerifyAudioCaptchaSolution,
+	registerApiRoute(
+		router,
+		verifyAudioCaptchaSolutionRoute,
 		interactiveVerifyHandler({
 			env,
 			userAccessRulesStorage,
@@ -772,8 +789,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		}),
 	);
 
-	router.post(
-		ClientApiPaths.VerifyIconOrderCaptchaSolution,
+	registerApiRoute(
+		router,
+		verifyIconOrderCaptchaSolutionRoute,
 		interactiveVerifyHandler({
 			env,
 			userAccessRulesStorage,
@@ -792,8 +810,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	 * regular image/pow/puzzle token routed to this endpoint fails with
 	 * INCORRECT_CAPTCHA_TYPE.
 	 */
-	router.post(
-		ClientApiPaths.VerifyAuthenticatedSession,
+	registerApiRoute(
+		router,
+		verifyAuthenticatedSessionRoute,
 		async (req, res, next) => {
 			if (getMaintenanceMode()) {
 				const verificationResponse: VerificationResponse =

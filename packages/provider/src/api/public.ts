@@ -12,10 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { handleErrors } from "@prosopo/api-express-router";
+import { handleErrors, registerApiRoute } from "@prosopo/api-express-router";
+import {
+	getProviderDetailsRoute,
+	healthzRoute,
+	metricsRoute,
+} from "@prosopo/api-route/contracts";
+
 import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
+import type { ProviderDetails } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
 import { assetDocumentRouter } from "./assetDocument.js";
@@ -49,7 +55,7 @@ export function publicRouter(env: ProviderEnvironment): Router {
 	// Optionally the answer is the node the CALLER's country maps to instead —
 	// see `healthzGeo.ts`. Off by default; when off this handler behaves
 	// exactly as it did before, including sending no cache headers.
-	router.get(PublicApiPaths.Healthz, (req, res) => {
+	registerApiRoute(router, healthzRoute, (req, res) => {
 		const ownHost =
 			env.config.host && env.config.host.length > 0
 				? env.config.host
@@ -75,13 +81,13 @@ export function publicRouter(env: ProviderEnvironment): Router {
 	// rate-limiting, auth and blocking middleware — scrapes are never throttled
 	// or blocked. `metricsAccess` limits it to internal callers or token holders.
 	if (metricsEnabled()) {
-		router.get(PublicApiPaths.Metrics, metricsHandler(env));
+		registerApiRoute(router, metricsRoute, metricsHandler(env));
 	}
 
 	/**
 	 * Gets public details of the provider
 	 */
-	router.get(PublicApiPaths.GetProviderDetails, async (req, res, next) => {
+	registerApiRoute(router, getProviderDetailsRoute, async (req, res, next) => {
 		try {
 			const db = env.getDb();
 
