@@ -18,9 +18,10 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { ClientSettingsSchema, RegisterSitekeysBody } from "@prosopo/types";
+import { RegisterSitekeysBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
+import { defaultSiteKeySettings } from "./defaultSiteKeySettings.js";
 
 type RegisterSitekeysBodyType = typeof RegisterSitekeysBody;
 
@@ -45,11 +46,7 @@ class ApiRegisterSiteKeysEndpoint
 		const siteKeys = args.map(({ siteKey, tier, settings }) => ({
 			siteKey,
 			tier,
-			settings:
-				settings ||
-				ClientSettingsSchema.parse({
-					domains: ["localhost"],
-				}),
+			settings: settings || defaultSiteKeySettings(),
 		}));
 
 		await this.clientTaskManager.registerSiteKeys(siteKeys);
