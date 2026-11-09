@@ -162,6 +162,51 @@ describe("verifyWebBotAuth", () => {
 		expect(fetched).toBe(false);
 	});
 
+	it("reports a Signature-Agent URL that does not parse as a failure", async () => {
+		const priv = ed25519.utils.randomSecretKey();
+		const pub = ed25519.getPublicKey(priv);
+		const { request, fetch } = buildSignedRequest(
+			priv,
+			pub,
+			Math.floor(Date.now() / 1000) + 60,
+		);
+		request.headers["signature-agent"] = '"https://[signer"';
+
+		const result = await verifyWebBotAuth(request, { fetch });
+		expect(result).toEqual({
+			verified: false,
+			reason: "unparseable-signature-agent",
+		});
+	});
+
+	it("skips null and scalar JWKS entries listed before the matching key", async () => {
+		const priv = ed25519.utils.randomSecretKey();
+		const pub = ed25519.getPublicKey(priv);
+		const { request } = buildSignedRequest(
+			priv,
+			pub,
+			Math.floor(Date.now() / 1000) + 60,
+		);
+		const fetch: JwksFetch = async () =>
+			new Response(
+				JSON.stringify({
+					keys: [
+						null,
+						7,
+						{ kty: "OKP", crv: "Ed25519", kid: KEY_ID, x: toBase64Url(pub) },
+					],
+				}),
+				{ status: 200 },
+			);
+
+		const result = await verifyWebBotAuth(request, { fetch });
+		expect(result).toEqual({
+			verified: true,
+			signerUrl: SIGNER_URL,
+			keyid: KEY_ID,
+		});
+	});
+
 	describe("replay window", () => {
 		const nowSeconds = (): number => Math.floor(Date.now() / 1000);
 		const COVERED = '("@authority" "signature-agent")';
