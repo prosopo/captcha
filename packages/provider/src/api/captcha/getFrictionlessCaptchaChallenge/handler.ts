@@ -642,13 +642,13 @@ export default (
 
 			// Ahead of the short-circuits, so a site pinned to puzzle can still be
 			// switched to image and still has its refreshes recorded.
-			const refresh = await resolveRefreshLineage(
-				tasks.db,
+			const refresh = await resolveRefreshLineage({
+				db: tasks.db,
 				refreshOf,
-				dapp,
+				siteKey: dapp,
 				userSitekeyIpHash,
-				new Date(),
-			);
+				now: new Date(),
+			});
 			// A retry that cannot be checked is served as a fresh session.
 			const retry = await resolveRetrySolveDevice(tasks.db, {
 				retryOf,

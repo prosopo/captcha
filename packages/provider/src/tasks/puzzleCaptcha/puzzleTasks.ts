@@ -153,13 +153,13 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 		return this.submitInteractiveCaptchaSolution({
 			...submission,
 			isCorrect: (record) =>
-				validatePuzzleSolution(
+				validatePuzzleSolution({
 					finalX,
 					finalY,
-					record.targetX,
-					record.targetY,
-					record.tolerance,
-				),
+					targetX: record.targetX,
+					targetY: record.targetY,
+					tolerance: record.tolerance,
+				}),
 			isFarMiss: (record) =>
 				isFarPuzzleMiss(finalX, finalY, record.targetX, record.targetY),
 			persistInteraction: () =>

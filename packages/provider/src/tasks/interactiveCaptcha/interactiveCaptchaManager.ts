@@ -257,28 +257,27 @@ export abstract class InteractiveCaptchaManager<
 		}
 
 		if (saltDecodeError) {
-			await this.recordSubmissionResult(
+			await this.recordSubmissionResult({
 				challengeRecord,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SALT,
 				},
-				userTimestampSignature,
-				undefined,
-			);
+				userSignature: userTimestampSignature,
+			});
 			return false;
 		}
 
 		if (!verifyRecency(challenge, submission.timeout)) {
-			await this.recordSubmissionResult(
+			await this.recordSubmissionResult({
 				challengeRecord,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 				},
-				userTimestampSignature,
+				userSignature: userTimestampSignature,
 				coords,
-			);
+			});
 			return false;
 		}
 
@@ -372,13 +371,13 @@ export abstract class InteractiveCaptchaManager<
 			});
 		}
 
-		await this.recordSubmissionResult(
+		await this.recordSubmissionResult({
 			challengeRecord,
 			result,
-			userTimestampSignature,
+			userSignature: userTimestampSignature,
 			coords,
-			storedClientMetaData,
-		);
+			clientMetaData: storedClientMetaData,
+		});
 
 		if (challengeRecord.sessionId && decodedPayloads.simd) {
 			await this.recordSessionSimdReadingsIfAbsentWithCache(
@@ -463,13 +462,19 @@ export abstract class InteractiveCaptchaManager<
 		}
 	}
 
-	private async recordSubmissionResult(
-		challengeRecord: TRecord,
-		result: CaptchaResult,
-		userSignature: string,
-		coords: [number, number][][] | undefined,
-		clientMetaData?: ClientMetaData,
-	): Promise<void> {
+	private async recordSubmissionResult({
+		challengeRecord,
+		result,
+		userSignature,
+		coords,
+		clientMetaData,
+	}: {
+		challengeRecord: TRecord;
+		result: CaptchaResult;
+		userSignature: string;
+		coords?: [number, number][][];
+		clientMetaData?: ClientMetaData;
+	}): Promise<void> {
 		await this.updateSubmissionResult(
 			challengeRecord.challenge,
 			result,

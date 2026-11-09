@@ -144,11 +144,15 @@ export class DetectorBundlePool {
 	 * without a readable, well-formed `.json` sibling is skipped (logged). Safe
 	 * to call on a missing directory (yields an empty pool).
 	 */
-	loadFromDir(
-		dir: string,
-		logger: LoadLogger = {},
-		expectedRelease?: string,
-	): void {
+	loadFromDir({
+		dir,
+		logger = {},
+		expectedRelease,
+	}: {
+		dir: string;
+		logger?: LoadLogger;
+		expectedRelease?: string;
+	}): void {
 		const next = new Map<string, PoolBundle>();
 		if (!existsSync(dir)) {
 			logger.warn?.("bundle pool directory does not exist", { dir });
@@ -285,13 +289,17 @@ let globalPool: DetectorBundlePool | null = null;
 let globalPoolDir: string = DEFAULT_DETECTOR_POOL_DIR;
 
 /** Initialise the global pool from `dir`. Idempotent (reloads on each call). */
-export function initDetectorBundlePool(
-	dir: string,
-	logger: LoadLogger = {},
-	expectedRelease?: string,
-): DetectorBundlePool {
+export function initDetectorBundlePool({
+	dir,
+	logger = {},
+	expectedRelease,
+}: {
+	dir: string;
+	logger?: LoadLogger;
+	expectedRelease?: string;
+}): DetectorBundlePool {
 	const pool = new DetectorBundlePool();
-	pool.loadFromDir(dir, logger, expectedRelease);
+	pool.loadFromDir({ dir, logger, expectedRelease });
 	globalPool = pool;
 	globalPoolDir = dir;
 	return pool;

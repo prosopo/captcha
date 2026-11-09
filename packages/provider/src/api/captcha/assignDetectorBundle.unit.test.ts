@@ -105,7 +105,7 @@ describe("assignDetectorBundle", () => {
 	});
 
 	it("returns useProviderBundle:false when the pool is empty", async () => {
-		initDetectorBundlePool(dir); // empty
+		initDetectorBundlePool({ dir }); // empty
 		const { res, json } = makeRes();
 
 		await assignDetectorBundle(env)(makeReq(), res, next);
@@ -123,7 +123,7 @@ describe("assignDetectorBundle", () => {
 			join(dir, "bundle-0.json"),
 			JSON.stringify({ privateKey: "PK", innerConfig: "C" }),
 		);
-		initDetectorBundlePool(dir); // size 1
+		initDetectorBundlePool({ dir }); // size 1
 		const { res, json } = makeRes();
 
 		await assignDetectorBundle(env)(makeReq(), res, next);
@@ -151,7 +151,7 @@ describe("assignDetectorBundle", () => {
 			join(dir, "bundle-0.json"),
 			JSON.stringify({ privateKey: "PK", innerConfig: "C" }),
 		);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 		cacheDetectorBundle.mockResolvedValueOnce(false);
 		const { res, json } = makeRes();
 
@@ -169,7 +169,7 @@ describe("assignDetectorBundle", () => {
 			join(dir, "bundle-0.json"),
 			JSON.stringify({ privateKey: "PK", innerConfig: "C", release: "3.9.1" }),
 		);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 		const req = makeReq();
 		const { res, json } = makeRes();
 
@@ -189,7 +189,7 @@ describe("assignDetectorBundle", () => {
 
 	it("does not log an assignment when the binding cannot be stored", async () => {
 		writePool(dir, 1);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 		cacheDetectorBundle.mockResolvedValueOnce(false);
 		const req = makeReq();
 
@@ -204,7 +204,7 @@ describe("assignDetectorBundle", () => {
 
 	it("serves one caller the same bundle across many assigns", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const served = new Set<string>();
 		for (let i = 0; i < 200; i++) {
@@ -217,7 +217,7 @@ describe("assignDetectorBundle", () => {
 
 	it("keeps serving that bundle after the secret is re-read from disk", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		await assignOnce();
 		const first = assignedBundleId();
@@ -231,7 +231,7 @@ describe("assignDetectorBundle", () => {
 
 	it("returns the bundle body matching the id it recorded", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const { json } = await assignOnceWith();
 		const body = json.mock.calls[0]?.[0] as { detectorScript: string };
@@ -242,7 +242,7 @@ describe("assignDetectorBundle", () => {
 
 	it("spreads distinct callers across the pool", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const served = new Set<string>();
 		for (let i = 0; i < 60; i++) {
@@ -256,7 +256,7 @@ describe("assignDetectorBundle", () => {
 	it("still assigns when Redis holds no client state", async () => {
 		// The mapping is derived, so there is no lookup to miss.
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const { json } = await assignOnceWith();
 		const body = json.mock.calls[0]?.[0] as { useProviderBundle: boolean };
@@ -266,7 +266,7 @@ describe("assignDetectorBundle", () => {
 
 	it("writes the secret 0600 and leaves it alone on reload", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		await assignOnce();
 		const secretPath = join(dir, ".assign-secret");

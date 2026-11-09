@@ -32,7 +32,10 @@ import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { renderPuzzleImagesMock } = vi.hoisted(() => ({
-	renderPuzzleImagesMock: vi.fn(),
+	renderPuzzleImagesMock:
+		vi.fn<
+			typeof import("../../../../tasks/puzzle/puzzleRenderer.js").renderPuzzleImages
+		>(),
 }));
 
 vi.mock(
@@ -139,7 +142,9 @@ const servedTolerance = (): number | undefined => {
 const servedPieceSize = (): number => {
 	const call = renderPuzzleImagesMock.mock.calls[0];
 	if (!call) throw new Error("nothing was rendered");
-	return call[2] as number;
+	const { pieceSize } = call[0];
+	if (pieceSize === undefined) throw new Error("no piece size was served");
+	return pieceSize;
 };
 
 const TOUCH_MIN_PIECE_PX = Math.round(

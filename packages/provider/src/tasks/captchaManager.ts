@@ -1154,12 +1154,12 @@ export class CaptchaManager {
 			return { isBlocked: false, matches: [] };
 		}
 
-		return checkTrafficFilter(
-			currentIpInfo ?? recordIpInfo,
-			effective,
-			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
-			enrichedDnsEvent?.pathValid,
-		);
+		return checkTrafficFilter({
+			ipInfo: currentIpInfo ?? recordIpInfo,
+			trafficFilter: effective,
+			extraIpInfos: extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+			dnsPathValid: enrichedDnsEvent?.pathValid,
+		});
 	}
 
 	/**

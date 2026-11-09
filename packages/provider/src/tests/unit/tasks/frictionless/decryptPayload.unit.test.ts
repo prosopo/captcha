@@ -85,7 +85,7 @@ describe("decryptPayload", () => {
 		const { initDetectorBundlePool } = await import(
 			"../../../../tasks/detection/bundlePool.js"
 		);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const FrictionlessManager = (
 			await import("../../../../tasks/frictionless/frictionlessTasks.js")
@@ -148,7 +148,7 @@ describe("decryptPayload", () => {
 		const { initDetectorBundlePool } = await import(
 			"../../../../tasks/detection/bundlePool.js"
 		);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const FrictionlessManager = (
 			await import("../../../../tasks/frictionless/frictionlessTasks.js")
