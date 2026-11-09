@@ -43,7 +43,7 @@ const isBsonLong = (value: unknown): boolean =>
 	value !== null &&
 	"_bsontype" in value &&
 	(value as { _bsontype: string })._bsontype === "Long";
-import type { QueryFilter } from "mongoose";
+import type { AnyBulkWriteOperation, QueryFilter } from "mongoose";
 import {
 	type MongoConnectionTimeouts,
 	MongoDatabase,
@@ -102,6 +102,55 @@ export const toCentralRecord = <
 ): Omit<T, "_id" | "storedAtTimestamp"> => {
 	const { _id, storedAtTimestamp, ...centralRecord } = record;
 	return centralRecord;
+};
+
+/**
+ * Bulk ops that write a provider snapshot of an interactive captcha record
+ * without letting an older snapshot replace a newer one.
+ *
+ * A provider streams a snapshot after every write to a record without waiting
+ * for the last one to land, and the sweep may resend it later, so snapshots
+ * arrive in any order. The first op only creates the document; the second
+ * applies the snapshot only if it is at least as new as the stored copy.
+ */
+export const interactiveRecordWrites = <
+	T extends { challenge: string; lastUpdatedTimestamp?: Date },
+>(
+	doc: T,
+): AnyBulkWriteOperation<T>[] => {
+	const { challenge, lastUpdatedTimestamp } = doc;
+	if (!lastUpdatedTimestamp) {
+		return [
+			{
+				updateOne: {
+					filter: { challenge },
+					update: { $set: doc },
+					upsert: true,
+				},
+			},
+		];
+	}
+	return [
+		{
+			updateOne: {
+				filter: { challenge },
+				update: { $setOnInsert: doc },
+				upsert: true,
+			},
+		},
+		{
+			updateOne: {
+				filter: {
+					challenge,
+					$or: [
+						{ lastUpdatedTimestamp: { $exists: false } },
+						{ lastUpdatedTimestamp: { $lte: lastUpdatedTimestamp } },
+					],
+				},
+				update: { $set: doc },
+			},
+		},
+	];
 };
 
 export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
@@ -372,18 +421,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			return;
 		}
 		const result = await this.tables[table].bulkWrite(
-			records.map((doc) => {
-				const normalised = CaptchaDatabase.normaliseDocCompositeIps(
-					toCentralRecord(doc),
-				);
-				return {
-					updateOne: {
-						filter: { challenge: normalised.challenge },
-						update: { $set: normalised },
-						upsert: true,
-					},
-				};
-			}),
+			records.flatMap((doc) =>
+				interactiveRecordWrites(
+					CaptchaDatabase.normaliseDocCompositeIps(toCentralRecord(doc)),
+				),
+			),
 		);
 		logger.info(() => ({
 			data: {

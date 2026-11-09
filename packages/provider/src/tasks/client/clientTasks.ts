@@ -17,23 +17,24 @@ import { ProsopoError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
+	CaptchaType,
 	type DecisionMachineCaptchaType,
 	type DecisionMachineKind,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
 	type IUserSettings,
-	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	type Tier,
-	type UserCommitment,
 } from "@prosopo/types";
 import type {
+	AudioCaptchaRecord,
 	ClientRecord,
 	IProviderDatabase,
-	SessionRecord,
+	IconOrderCaptchaRecord,
+	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
@@ -41,6 +42,13 @@ import {
 	invalidateAllDecisionMachineArtifactCaches,
 	invalidateDecisionMachineScriptCache,
 } from "../decisionMachine/decisionMachineRunner.js";
+
+/**
+ * How far back the sweep looks for interactive captcha records the streamer
+ * failed to land. Older pending records were streamed at least once and age
+ * out of the provider DB on their own.
+ */
+const INTERACTIVE_RESYNC_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -232,6 +240,50 @@ export class ClientTaskManager {
 				BATCH_SIZE,
 			);
 
+			const interactiveSince = new Date(
+				sweepStartedAt.getTime() - INTERACTIVE_RESYNC_WINDOW_MS,
+			);
+			const onlyUpdated = Boolean(lastTask?.updated);
+			const processedPuzzleRecords = await this.resyncInteractiveRecords(
+				CaptchaType.puzzle,
+				(afterId) =>
+					this.providerDB.getUnstoredPuzzleCaptchaRecords(
+						BATCH_SIZE,
+						afterId,
+						interactiveSince,
+					),
+				(batch) => captchaDB.saveCaptchas([], [], [], batch),
+				sweepStartedAt,
+				onlyUpdated,
+				BATCH_SIZE,
+			);
+			const processedIconOrderRecords = await this.resyncInteractiveRecords(
+				CaptchaType.iconOrder,
+				(afterId) =>
+					this.providerDB.getUnstoredIconOrderCaptchaRecords(
+						BATCH_SIZE,
+						afterId,
+						interactiveSince,
+					),
+				(batch) => captchaDB.saveCaptchas([], [], [], [], batch),
+				sweepStartedAt,
+				onlyUpdated,
+				BATCH_SIZE,
+			);
+			const processedAudioRecords = await this.resyncInteractiveRecords(
+				CaptchaType.audio,
+				(afterId) =>
+					this.providerDB.getUnstoredAudioCaptchaRecords(
+						BATCH_SIZE,
+						afterId,
+						interactiveSince,
+					),
+				(batch) => captchaDB.saveCaptchas([], [], [], [], [], batch),
+				sweepStartedAt,
+				onlyUpdated,
+				BATCH_SIZE,
+			);
+
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
@@ -240,6 +292,9 @@ export class ClientTaskManager {
 						processedSessionRecords,
 						processedCommitments,
 						processedPowRecords,
+						processedPuzzleRecords,
+						processedIconOrderRecords,
+						processedAudioRecords,
 					},
 				},
 			);
@@ -593,9 +648,48 @@ export class ClientTaskManager {
 		}
 	}
 
-	private isRecordUpdated(
-		record: UserCommitment | PoWCaptchaStored | SessionRecord,
-	): boolean {
+	/**
+	 * Re-send pending interactive captcha records to the central DB. These
+	 * phases run last: they only catch what the streamer missed, so they must
+	 * not starve the phases above.
+	 */
+	private async resyncInteractiveRecords<
+		T extends PuzzleCaptchaRecord | IconOrderCaptchaRecord | AudioCaptchaRecord,
+	>(
+		captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio,
+		fetchBatch: (afterId?: unknown) => Promise<T[]>,
+		save: (batch: T[]) => Promise<void>,
+		sweepStartedAt: Date,
+		onlyUpdated: boolean,
+		batchSize: number,
+	): Promise<number> {
+		let processed = 0;
+		await this.processBatchesWithCursor(
+			fetchBatch,
+			async (batch) => {
+				const filteredBatch = onlyUpdated
+					? batch.filter((record) => this.isRecordUpdated(record))
+					: batch;
+				if (filteredBatch.length > 0) {
+					await save(filteredBatch);
+					await this.providerDB.markInteractiveCaptchaRecordsStored(
+						captchaType,
+						filteredBatch.map((record) => record.challenge),
+						sweepStartedAt,
+					);
+				}
+				processed += filteredBatch.length;
+			},
+			(row) => (row as { _id?: unknown })._id,
+			batchSize,
+		);
+		return processed;
+	}
+
+	private isRecordUpdated(record: {
+		lastUpdatedTimestamp?: Date;
+		storedAtTimestamp?: Date;
+	}): boolean {
 		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (
 			!lastUpdatedTimestamp ||

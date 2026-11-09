@@ -21,7 +21,11 @@ import type {
 	StoredSession,
 	UserCommitmentRecord,
 } from "@prosopo/types-database";
-import { CaptchaDatabase, toCentralRecord } from "./captcha.js";
+import {
+	CaptchaDatabase,
+	interactiveRecordWrites,
+	toCentralRecord,
+} from "./captcha.js";
 
 /**
  * Callback invoked after a successful central DB write to mark the local
@@ -290,14 +294,11 @@ export class CentralDbStreamer {
 	): void {
 		const timestamp = this.getRecordTimestamp(record);
 		this.ensureConnected()
-			.then(() => {
-				const safeDoc = toCentralRecord(record);
-				return this.db.tables[table].updateOne(
-					{ challenge: safeDoc.challenge },
-					{ $set: safeDoc },
-					{ upsert: true },
-				);
-			})
+			.then(() =>
+				this.db.tables[table].bulkWrite(
+					interactiveRecordWrites(toCentralRecord(record)),
+				),
+			)
 			.then(() => markStored?.(timestamp))
 			.catch((err: unknown) => {
 				this.logger.error(() => ({

@@ -13,6 +13,7 @@
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
+	CaptchaType,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -26,6 +27,7 @@ import {
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
+	type IconOrderCaptchaRecord,
 	type PoWCaptchaRecord,
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
@@ -172,6 +174,10 @@ describe("ClientTaskManager", () => {
 			markDappUserCommitmentsStored: vi.fn(),
 			markDappUserPoWCommitmentsStored: vi.fn(),
 			getUnstoredDappUserPoWCommitments: vi.fn().mockResolvedValue([]),
+			getUnstoredPuzzleCaptchaRecords: vi.fn().mockResolvedValue([]),
+			getUnstoredIconOrderCaptchaRecords: vi.fn().mockResolvedValue([]),
+			getUnstoredAudioCaptchaRecords: vi.fn().mockResolvedValue([]),
+			markInteractiveCaptchaRecordsStored: vi.fn(),
 			createScheduledTaskStatus: vi.fn(
 				(taskName: ScheduledTaskNames, status: ScheduledTaskStatus) => {
 					const _id = collections.schedulers.nextID;
@@ -442,8 +448,47 @@ describe("ClientTaskManager", () => {
 					processedSessionRecords: 0,
 					processedCommitments: 0,
 					processedPowRecords: 1,
+					processedPuzzleRecords: 0,
+					processedIconOrderRecords: 0,
+					processedAudioRecords: 0,
 				},
 			},
+		);
+	});
+
+	it("re-sends pending interactive records from the last 48 hours and marks them stored", async () => {
+		const pendingIconOrder: Pick<IconOrderCaptchaRecord, "challenge">[] = [
+			{ challenge: "1794190728920___user___dapp___1" },
+		];
+		vi.mocked(
+			providerDB.getUnstoredIconOrderCaptchaRecords,
+		).mockResolvedValueOnce(pendingIconOrder as IconOrderCaptchaRecord[]);
+
+		const before = Date.now();
+		await clientTaskManager.storeCommitmentsExternal();
+
+		const [, , since] = vi.mocked(providerDB.getUnstoredIconOrderCaptchaRecords)
+			.mock.calls[0] as [number, unknown, Date];
+		const windowMs = before - since.getTime();
+		expect(windowMs).toBeGreaterThanOrEqual(48 * 60 * 60 * 1000 - 1000);
+		expect(windowMs).toBeLessThanOrEqual(48 * 60 * 60 * 1000 + 1000);
+		expect(providerDB.getUnstoredPuzzleCaptchaRecords).toHaveBeenCalledWith(
+			1000,
+			undefined,
+			since,
+		);
+		expect(providerDB.getUnstoredAudioCaptchaRecords).toHaveBeenCalledWith(
+			1000,
+			undefined,
+			since,
+		);
+		expect(
+			providerDB.markInteractiveCaptchaRecordsStored,
+		).toHaveBeenCalledTimes(1);
+		expect(providerDB.markInteractiveCaptchaRecordsStored).toHaveBeenCalledWith(
+			CaptchaType.iconOrder,
+			pendingIconOrder.map((record) => record.challenge),
+			expect.any(Date),
 		);
 	});
 
@@ -490,6 +535,9 @@ describe("ClientTaskManager", () => {
 
 					processedCommitments: 0,
 					processedPowRecords: 0,
+					processedPuzzleRecords: 0,
+					processedIconOrderRecords: 0,
+					processedAudioRecords: 0,
 				},
 			},
 		);

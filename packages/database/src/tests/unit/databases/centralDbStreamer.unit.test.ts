@@ -57,7 +57,7 @@ describe("CentralDbStreamer", () => {
 	let mockPowUpdateOne: MockInstance;
 	let mockCommitmentUpdateOne: MockInstance;
 	let mockSessionUpdateOne: MockInstance;
-	let mockPuzzleUpdateOne: MockInstance;
+	let mockPuzzleBulkWrite: MockInstance;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -67,7 +67,7 @@ describe("CentralDbStreamer", () => {
 		mockPowUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 		mockCommitmentUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 		mockSessionUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
-		mockPuzzleUpdateOne = vi.fn().mockResolvedValue({ upsertedCount: 1 });
+		mockPuzzleBulkWrite = vi.fn().mockResolvedValue({ upsertedCount: 1 });
 
 		streamer = new CentralDbStreamer(
 			"mongodb://localhost:27017/test",
@@ -85,7 +85,7 @@ describe("CentralDbStreamer", () => {
 			powcaptcha: { updateOne: mockPowUpdateOne },
 			commitment: { updateOne: mockCommitmentUpdateOne },
 			session: { updateOne: mockSessionUpdateOne },
-			puzzlecaptcha: { updateOne: mockPuzzleUpdateOne },
+			puzzlecaptcha: { bulkWrite: mockPuzzleBulkWrite },
 		};
 	});
 
@@ -308,13 +308,35 @@ describe("CentralDbStreamer", () => {
 			streamer.streamPuzzleRecord(record, markStored);
 			await flush();
 
-			expect(mockPuzzleUpdateOne).toHaveBeenCalledWith(
-				{ challenge: record.challenge },
+			expect(mockPuzzleBulkWrite).toHaveBeenCalledWith([
 				{
-					$set: expect.objectContaining({ challenge: record.challenge }),
+					updateOne: {
+						filter: { challenge: record.challenge },
+						update: {
+							$setOnInsert: expect.objectContaining({
+								challenge: record.challenge,
+							}),
+						},
+						upsert: true,
+					},
 				},
-				{ upsert: true },
-			);
+				{
+					updateOne: {
+						filter: {
+							challenge: record.challenge,
+							$or: [
+								{ lastUpdatedTimestamp: { $exists: false } },
+								{
+									lastUpdatedTimestamp: { $lte: record.lastUpdatedTimestamp },
+								},
+							],
+						},
+						update: {
+							$set: expect.objectContaining({ challenge: record.challenge }),
+						},
+					},
+				},
+			]);
 			expect(markStored).toHaveBeenCalledWith(record.lastUpdatedTimestamp);
 		});
 
@@ -325,13 +347,18 @@ describe("CentralDbStreamer", () => {
 			streamer.streamPuzzleRecord(record);
 			await flush();
 
-			const call = mockPuzzleUpdateOne.mock.calls[0] as unknown[];
-			const setArg = (call[1] as { $set: Record<string, unknown> }).$set;
-			expect(setArg._id).toBeUndefined();
+			const [ops] = mockPuzzleBulkWrite.mock.calls[0] as [
+				{ updateOne: { update: Record<string, Record<string, unknown>> } }[],
+			];
+			for (const op of ops) {
+				for (const doc of Object.values(op.updateOne.update)) {
+					expect(doc._id).toBeUndefined();
+				}
+			}
 		});
 
 		it("does not throw when the central write fails", async () => {
-			mockPuzzleUpdateOne.mockRejectedValueOnce(new Error("write failed"));
+			mockPuzzleBulkWrite.mockRejectedValueOnce(new Error("write failed"));
 			const markStored = vi.fn<MarkStoredCallback>();
 
 			streamer.streamPuzzleRecord(makePuzzleRecord(), markStored);
@@ -373,10 +400,14 @@ describe("CentralDbStreamer", () => {
 			await flush();
 
 			expect(getFullRecord).toHaveBeenCalled();
-			expect(mockPuzzleUpdateOne).toHaveBeenCalledWith(
-				{ challenge: "puzzle-challenge-2" },
-				expect.objectContaining({}),
-				{ upsert: true },
+			expect(mockPuzzleBulkWrite).toHaveBeenCalledWith(
+				expect.arrayContaining([
+					expect.objectContaining({
+						updateOne: expect.objectContaining({
+							filter: { challenge: "puzzle-challenge-2" },
+						}),
+					}),
+				]),
 			);
 			expect(markStored).toHaveBeenCalledWith(record.lastUpdatedTimestamp);
 		});
@@ -387,7 +418,7 @@ describe("CentralDbStreamer", () => {
 			streamer.streamPuzzleUpdate(getFullRecord);
 			await flush();
 
-			expect(mockPuzzleUpdateOne).not.toHaveBeenCalled();
+			expect(mockPuzzleBulkWrite).not.toHaveBeenCalled();
 		});
 
 		it("logs error when fetch fails", async () => {
@@ -399,7 +430,7 @@ describe("CentralDbStreamer", () => {
 			await flush();
 
 			expect(errorSpy).toHaveBeenCalled();
-			expect(mockPuzzleUpdateOne).not.toHaveBeenCalled();
+			expect(mockPuzzleBulkWrite).not.toHaveBeenCalled();
 		});
 	});
 

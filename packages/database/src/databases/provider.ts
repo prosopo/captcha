@@ -106,7 +106,7 @@ import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 // Types.ObjectId is the bson-backed id that Document._id carries. mongoose's bare
 // ObjectId export is the *schema* type, which as of mongoose 8.24 no longer
 // structurally matches it (missing _bsontype/toHexString/...).
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
 import { reconcileIndexes } from "../base/reconcileIndexes.js";
 import type {
@@ -1488,6 +1488,10 @@ export class ProviderDatabase
 						userAccount: 1,
 						dappAccount: 1,
 						requestedAtTimestamp: 1,
+						// The streamer orders central writes and clears
+						// pendingStage by this; without it every update reads
+						// as the insert.
+						lastUpdatedTimestamp: 1,
 						// submittedAtTimestamp gates the submit → verify
 						// recency check in serverVerifyInteractiveCaptchaSolution.
 						// Missing it here silently trips the "too old" path
@@ -1799,6 +1803,7 @@ export class ProviderDatabase
 		// on `updateInteractiveCaptchaRecordResult`.
 		const baseSet: Record<string, unknown> = {
 			...updates,
+			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
 			...(updates.serverChecked === true && {
 				verifiedAtTimestamp: timestamp,
@@ -2579,6 +2584,104 @@ export class ProviderDatabase
 					.lean<SessionRecord[]>(),
 			)
 			.then((docs) => docs || []);
+	}
+
+	/**
+	 * Keyset-paginated sweep of pending interactive captcha records, the
+	 * safety net for snapshots the streamer failed to land. See
+	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 *
+	 * `since` bounds the first page by insert time. Records written by older
+	 * releases never had pendingStage cleared after an update, so without a
+	 * bound the sweep would resend the whole local TTL window.
+	 */
+	private async getUnstoredInteractiveCaptchaRecords<
+		T extends InteractiveCaptchaRecordType,
+	>(
+		captchaType: InteractiveCaptchaType,
+		limit: number,
+		afterId: unknown,
+		since: Date | undefined,
+	): Promise<T[]> {
+		const lowerBound =
+			afterId ??
+			(since &&
+				Types.ObjectId.createFromTime(Math.floor(since.getTime() / 1000)));
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (lowerBound !== undefined) {
+			filter._id = { $gt: lowerBound };
+		}
+		const docs = await this.tables?.[
+			this.interactiveCollection(captchaType).table
+		]
+			.find(filter)
+			.hint("pendingStage_partial")
+			.sort({ _id: 1 })
+			.limit(limit)
+			.lean<T[]>();
+		return docs || [];
+	}
+
+	getUnstoredPuzzleCaptchaRecords(
+		limit = 1000,
+		afterId?: unknown,
+		since?: Date,
+	): Promise<PuzzleCaptchaRecord[]> {
+		return this.getUnstoredInteractiveCaptchaRecords<PuzzleCaptchaRecord>(
+			CaptchaType.puzzle,
+			limit,
+			afterId,
+			since,
+		);
+	}
+
+	getUnstoredIconOrderCaptchaRecords(
+		limit = 1000,
+		afterId?: unknown,
+		since?: Date,
+	): Promise<IconOrderCaptchaRecord[]> {
+		return this.getUnstoredInteractiveCaptchaRecords<IconOrderCaptchaRecord>(
+			CaptchaType.iconOrder,
+			limit,
+			afterId,
+			since,
+		);
+	}
+
+	getUnstoredAudioCaptchaRecords(
+		limit = 1000,
+		afterId?: unknown,
+		since?: Date,
+	): Promise<AudioCaptchaRecord[]> {
+		return this.getUnstoredInteractiveCaptchaRecords<AudioCaptchaRecord>(
+			CaptchaType.audio,
+			limit,
+			afterId,
+			since,
+		);
+	}
+
+	/** Same guard as {@link markDappUserCommitmentsStored}. */
+	async markInteractiveCaptchaRecordsStored(
+		captchaType: InteractiveCaptchaType,
+		challenges: string[],
+		asOfTimestamp: Date = new Date(),
+	): Promise<void> {
+		await this.tables?.[
+			this.interactiveCollection(captchaType).table
+		].updateMany(
+			{
+				challenge: { $in: challenges },
+				lastUpdatedTimestamp: { $lte: asOfTimestamp },
+			},
+			{
+				$set: { storedAtTimestamp: new Date() },
+				$unset: { pendingStage: 1 },
+			},
+			{ upsert: false },
+		);
 	}
 
 	/** Mark a list of session records as stored.
