@@ -76,6 +76,7 @@ import {
 } from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
+import { decryptIncomingSolveDevice } from "./decryptSolveDevice.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import {
 	isUserImageChoiceActive,
@@ -116,6 +117,7 @@ export default (
 				user,
 				mode,
 				simdReadings,
+				behavioralData,
 				detectorSessionId,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
@@ -231,23 +233,39 @@ export default (
 				widgetSlot,
 			);
 
-			// Fan out the three independent async dependencies in
-			// parallel: SIMD reading decrypt, session dedup lookup, and
+			// Fan out the independent async dependencies in parallel: the
+			// SIMD reading and behavioural decrypts, session dedup lookup, and
 			// the client record fetch. The original sequential ordering
 			// paid for each in series on every request and dominated p50
 			// on the hottest endpoint. Errors in any branch surface via
 			// Promise.all rejection, which the outer catch already
 			// handles.
-			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
-				await Promise.all([
-					decryptIncomingSimdReadings(
-						tasks.frictionlessManager,
-						simdReadings,
-						detectorSessionId,
-					),
-					resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
-					tasks.db.getClientRecord(dapp),
-				]);
+			const [
+				decodedSimdReadings,
+				frictionlessSolveDevice,
+				{ existingToken, dedup },
+				clientRecord,
+			] = await Promise.all([
+				decryptIncomingSimdReadings(
+					tasks.frictionlessManager,
+					simdReadings,
+					detectorSessionId,
+				),
+				// Behavioural data must never fail the request.
+				decryptIncomingSolveDevice(
+					tasks.frictionlessManager,
+					behavioralData,
+					detectorSessionId,
+				).catch((err: unknown) => {
+					req.logger.warn(() => ({
+						err,
+						msg: "Failed to read the frictionless behavioural data",
+					}));
+					return undefined;
+				}),
+				resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
+				tasks.db.getClientRecord(dapp),
+			]);
 
 			if (existingToken) {
 				req.logger.info(() => ({
@@ -648,6 +666,9 @@ export default (
 				}));
 				return undefined;
 			});
+			// A failed solve's readings outrank what the widget saw before any
+			// challenge was shown.
+			const solveDevice = retry?.solveDevice ?? frictionlessSolveDevice;
 			tasks.frictionlessManager.setImageSwitchRequested(
 				isUserImageChoiceActive(
 					{ switchToImage, switchToPuzzle },
@@ -686,6 +707,7 @@ export default (
 				...rawTlsSignalsForSession(req),
 				...(refresh && { refresh: refresh.lineage }),
 				...(retry && { retry }),
+				...(solveDevice && { solveDevice }),
 			};
 
 			const userScope = getRequestUserScope(
@@ -978,6 +1000,7 @@ export default (
 				...(fingerprintSummary && { fingerprintSummary }),
 				...refresh?.lineage,
 				...retry,
+				...(solveDevice && { solveDevice }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),

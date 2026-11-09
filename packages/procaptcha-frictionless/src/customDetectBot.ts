@@ -22,6 +22,7 @@ import {
 import {
 	ExtensionLoader,
 	PAGE_BEHAVIOUR_LIMITS,
+	encryptBehavioralDataForSubmit,
 	getPageBehaviour,
 	getProcaptchaRandomActiveProvider,
 	mergeBehaviourPoints,
@@ -412,6 +413,35 @@ const customDetectBot: BotDetectionFunction = async (
 	stopPageBehaviourCapture();
 	const pageBehaviour = getPageBehaviour();
 
+	const behaviour = {
+		behaviorCollector1: withPageBehaviour(
+			detectionResult.mouseTracker,
+			pageBehaviour?.mouse ?? [],
+			PAGE_BEHAVIOUR_LIMITS.mouse,
+		),
+		behaviorCollector2: withPageBehaviour(
+			detectionResult.touchTracker,
+			pageBehaviour?.touch ?? [],
+			PAGE_BEHAVIOUR_LIMITS.touch,
+		),
+		behaviorCollector3: withPageBehaviour(
+			detectionResult.clickTracker,
+			pageBehaviour?.press ?? [],
+			PAGE_BEHAVIOUR_LIMITS.press,
+		),
+		behaviorCollector4: withPageBehaviour(
+			detectionResult.scrollTracker,
+			pageBehaviour?.scroll ?? [],
+			PAGE_BEHAVIOUR_LIMITS.scroll,
+		),
+		deviceCapability: detectionResult.hasTouchSupport,
+		encryptBehavioralData: detectionResult.encryptBehavioralData,
+		packBehavioralData: detectionResult.packBehavioralData,
+	};
+	// Sent now as well as with the solution, so the first challenge can be
+	// sized for a touch screen rather than waiting for the first solve.
+	const behavioralData = await encryptBehavioralDataForSubmit(behaviour);
+
 	// SIMD readings deliberately omitted from the frictionless hop. The WASM
 	// benchmark is a CPU-bound loop that contends with BotScoreWorker if it
 	// runs during detection; deferring it until after the POST is in flight
@@ -437,6 +467,7 @@ const customDetectBot: BotDetectionFunction = async (
 		widgetSlot,
 		retryOf,
 		readBypassKeyCookie(),
+		behavioralData,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher
@@ -457,30 +488,7 @@ const customDetectBot: BotDetectionFunction = async (
 		hp: captcha.hp,
 		agent: captcha.agent,
 		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
-		// Map specific trackers to generic behavioral collectors
-		behaviorCollector1: withPageBehaviour(
-			detectionResult.mouseTracker,
-			pageBehaviour?.mouse ?? [],
-			PAGE_BEHAVIOUR_LIMITS.mouse,
-		),
-		behaviorCollector2: withPageBehaviour(
-			detectionResult.touchTracker,
-			pageBehaviour?.touch ?? [],
-			PAGE_BEHAVIOUR_LIMITS.touch,
-		),
-		behaviorCollector3: withPageBehaviour(
-			detectionResult.clickTracker,
-			pageBehaviour?.press ?? [],
-			PAGE_BEHAVIOUR_LIMITS.press,
-		),
-		behaviorCollector4: withPageBehaviour(
-			detectionResult.scrollTracker,
-			pageBehaviour?.scroll ?? [],
-			PAGE_BEHAVIOUR_LIMITS.scroll,
-		),
-		deviceCapability: detectionResult.hasTouchSupport,
-		encryptBehavioralData: detectionResult.encryptBehavioralData,
-		packBehavioralData: detectionResult.packBehavioralData,
+		...behaviour,
 		getSimdReadings: detectionResult.getSimdReadings,
 	};
 };

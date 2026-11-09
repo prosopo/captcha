@@ -136,6 +136,22 @@ describe("runConfiguredCaptchaTypeShortCircuit", () => {
 		).rejects.toThrow(/Unhandled configured captchaType/);
 	});
 
+	it("puts the frictionless device readings on a pinned puzzle session", async () => {
+		const solveDevice = { deviceCapability: "mobile", touchEventCount: 1 };
+		const { tasks, input } = buildInput({
+			clientRecord: {
+				settings: { imageMaxRounds: 10, captchaType: CaptchaType.puzzle },
+			},
+			solveDevice,
+		});
+		await runConfiguredCaptchaTypeShortCircuit(
+			input as never,
+			buildRes() as never,
+		);
+		const args = tasks.frictionlessManager.sendPuzzleCaptcha.mock.calls[0]?.[0];
+		expect(args.solveDevice).toEqual(solveDevice);
+	});
+
 	describe("bundleId promotion (regression)", () => {
 		it("promotes bundleId onto pow bypass session when client sent a detectorSessionId", async () => {
 			const { tasks, input } = buildInput(
