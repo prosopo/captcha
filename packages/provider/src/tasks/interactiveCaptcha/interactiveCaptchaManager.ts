@@ -619,20 +619,20 @@ export abstract class InteractiveCaptchaManager<
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
 			try {
-				const blockPolicy = await this.checkForHardBlock(
+				const blockPolicy = await this.checkForHardBlock({
 					userAccessRulesStorage,
 					challengeRecord,
-					challengeRecord.userAccount,
-					challengeRecord.headers,
-					sessionRecord?.decryptedHeadHash,
-					challengeRecord.coords,
-					challengeRecord.ipInfo?.isValid
+					userAccount: challengeRecord.userAccount,
+					headers: challengeRecord.headers,
+					headHash: sessionRecord?.decryptedHeadHash,
+					coords: challengeRecord.coords,
+					countryCode: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
-					challengeRecord.ipInfo?.isValid
+					asn: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.asnNumber
 						: undefined,
-				);
+				});
 
 				if (blockPolicy) {
 					logger.info(() => ({
@@ -732,12 +732,12 @@ export abstract class InteractiveCaptchaManager<
 		);
 
 		{
-			const check = await this.resolveTrafficFilterCheck(
-				challengeRecord.ipInfo,
+			const check = await this.resolveTrafficFilterCheck({
+				recordIpInfo: challengeRecord.ipInfo,
 				trafficFilter,
-				ip ? await env.ipInfoService.lookup(ip) : undefined,
+				currentIpInfo: ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
-			);
+			});
 			if (check.isBlocked) {
 				logger.info(() => ({
 					msg: `Traffic filter rejected request in ${this.logLabel} verification`,

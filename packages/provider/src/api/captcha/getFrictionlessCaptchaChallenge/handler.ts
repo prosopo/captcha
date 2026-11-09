@@ -878,11 +878,11 @@ export default (
 					headHash,
 					detectorSessionId,
 				),
-				tasks.frictionlessManager.isValidRequest(
-					clientRecord,
-					CaptchaType.frictionless,
+				tasks.frictionlessManager.isValidRequest({
+					clientSettings: clientRecord,
+					requestedCaptchaType: CaptchaType.frictionless,
 					env,
-				),
+				}),
 				signerAccessPolicies ?? lookupAccessPolicies(),
 			]);
 

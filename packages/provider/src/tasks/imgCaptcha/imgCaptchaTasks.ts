@@ -20,7 +20,6 @@ import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
-import type { TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -49,7 +48,7 @@ import {
 	type UserCommitment,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
-import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
+import type { IProviderDatabase } from "@prosopo/types-database";
 import { describeMatchedRule } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -76,7 +75,10 @@ import {
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
 import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
-import { CaptchaManager } from "../captchaManager.js";
+import {
+	CaptchaManager,
+	type VerificationResponseArgs,
+} from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -893,16 +895,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Check user access policies for hard blocks
 		if (!failStatus && userAccessRulesStorage) {
 			try {
-				const blockPolicy = await this.checkForHardBlock(
+				const blockPolicy = await this.checkForHardBlock({
 					userAccessRulesStorage,
-					solution,
-					solution.userAccount,
-					solution.headers,
-					sessionRecord?.decryptedHeadHash,
-					solution.coords,
-					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
-					solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
-				);
+					challengeRecord: solution,
+					userAccount: solution.userAccount,
+					headers: solution.headers,
+					headHash: sessionRecord?.decryptedHeadHash,
+					coords: solution.coords,
+					countryCode: solution.ipInfo?.isValid
+						? solution.ipInfo.countryCode
+						: undefined,
+					asn: solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
+				});
 
 				if (blockPolicy) {
 					logger.info(() => ({
@@ -1023,12 +1027,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 		);
 
 		if (!failStatus) {
-			const check = await this.resolveTrafficFilterCheck(
-				solution.ipInfo,
+			const check = await this.resolveTrafficFilterCheck({
+				recordIpInfo: solution.ipInfo,
 				trafficFilter,
-				ip ? await env.ipInfoService.lookup(ip) : undefined,
+				currentIpInfo: ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
-			);
+			});
 			if (check.isBlocked) {
 				logger.info(() => ({
 					msg: "Traffic filter rejected request",
@@ -1322,24 +1326,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return checkLangRules(this.config, acceptLanguage);
 	}
 
-	override getVerificationResponse(
-		verified: boolean,
-		clientRecord: ClientRecord,
-		translateFn: TranslateFn,
-		score?: number,
-		commitmentId?: Hash,
-		reason?: string,
-		sessionId?: string,
-	): ImageVerificationResponse {
+	override getVerificationResponse({
+		commitmentId,
+		...args
+	}: VerificationResponseArgs & {
+		commitmentId?: Hash;
+	}): ImageVerificationResponse {
 		return {
-			...super.getVerificationResponse(
-				verified,
-				clientRecord,
-				translateFn,
-				score,
-				reason,
-				sessionId,
-			),
+			...super.getVerificationResponse(args),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,
 			}),

@@ -131,6 +131,15 @@ export interface HardBlockRecordView {
 	ja4: string;
 }
 
+export interface VerificationResponseArgs {
+	verified: boolean;
+	clientRecord: ClientRecord;
+	translateFn: TranslateFn;
+	score?: number;
+	reason?: string;
+	sessionId?: string;
+}
+
 export class CaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
@@ -441,14 +450,21 @@ export class CaptchaManager {
 		return { valid: true };
 	}
 
-	async isValidRequest(
-		clientSettings: ClientRecord | IUserDataSlim,
-		requestedCaptchaType: CaptchaType,
-		env: ProviderEnvironment,
-		sessionId?: string,
-		userAccessPolicy?: AccessPolicy,
-		currentIP?: string,
-	): Promise<{
+	async isValidRequest({
+		clientSettings,
+		requestedCaptchaType,
+		env,
+		sessionId,
+		userAccessPolicy,
+		currentIP,
+	}: {
+		clientSettings: ClientRecord | IUserDataSlim;
+		requestedCaptchaType: CaptchaType;
+		env: ProviderEnvironment;
+		sessionId?: string;
+		userAccessPolicy?: AccessPolicy;
+		currentIP?: string;
+	}): Promise<{
 		valid: boolean;
 		reason?: TranslationKey;
 		sessionId?: string;
@@ -820,14 +836,14 @@ export class CaptchaManager {
 		return { valid: true, type: requestedCaptchaType };
 	}
 
-	getVerificationResponse(
-		verified: boolean,
-		clientRecord: ClientRecord,
-		translateFn: TranslateFn,
-		score?: number,
-		reason?: string,
-		sessionId?: string,
-	) {
+	getVerificationResponse({
+		verified,
+		clientRecord,
+		translateFn,
+		score,
+		reason,
+		sessionId,
+	}: VerificationResponseArgs) {
 		return {
 			status: translateFn(
 				verified ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
@@ -1042,20 +1058,29 @@ export class CaptchaManager {
 	 *
 	 * @returns The blocking policy if user should be blocked, undefined otherwise
 	 */
-	async checkForHardBlock(
-		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: HardBlockRecordView,
-		userAccount: string,
-		headers: RequestHeaders,
-		// From the session the caller has already read for its own checks.
-		headHash: string | undefined,
-		coords?: [number, number][][],
-		countryCode?: string,
-		asn?: number,
-		// Returns the whole rule, not just its policy half: callers persist
-		// the matched rule (scope fields included) onto the record they
-		// disapprove, so the audit page can name the exact policy.
-	): Promise<AccessRule | undefined> {
+	// Returns the whole rule, not just its policy half: callers persist
+	// the matched rule (scope fields included) onto the record they
+	// disapprove, so the audit page can name the exact policy.
+	async checkForHardBlock({
+		userAccessRulesStorage,
+		challengeRecord,
+		userAccount,
+		headers,
+		headHash,
+		coords,
+		countryCode,
+		asn,
+	}: {
+		userAccessRulesStorage: AccessRulesStorage;
+		challengeRecord: HardBlockRecordView;
+		userAccount: string;
+		headers: RequestHeaders;
+		/** From the session the caller has already read for its own checks. */
+		headHash?: string;
+		coords?: [number, number][][];
+		countryCode?: string;
+		asn?: number;
+	}): Promise<AccessRule | undefined> {
 		// Serialize coords to string for querying
 		const coordsString = coords ? JSON.stringify(coords) : undefined;
 
@@ -1133,12 +1158,17 @@ export class CaptchaManager {
 	 * updates record / session state differently); this helper just returns
 	 * the verdict.
 	 */
-	async resolveTrafficFilterCheck(
-		recordIpInfo: IPInfoResponse | undefined,
-		trafficFilter: Partial<ITrafficFilter> | undefined,
-		currentIpInfo?: IPInfoResponse,
-		enrichedDnsEvent?: EnrichedDnsEvent,
-	): Promise<TrafficCheckResult> {
+	async resolveTrafficFilterCheck({
+		recordIpInfo,
+		trafficFilter,
+		currentIpInfo,
+		enrichedDnsEvent,
+	}: {
+		recordIpInfo?: IPInfoResponse;
+		trafficFilter?: Partial<ITrafficFilter>;
+		currentIpInfo?: IPInfoResponse;
+		enrichedDnsEvent?: EnrichedDnsEvent;
+	}): Promise<TrafficCheckResult> {
 		const effective: Partial<ITrafficFilter> = {
 			abuser: { action: TrafficFilterAction.Block },
 			...trafficFilter,

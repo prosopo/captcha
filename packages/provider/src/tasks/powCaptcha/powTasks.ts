@@ -869,20 +869,20 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Check user access policies for hard blocks
 		if (!failResult && userAccessRulesStorage) {
 			try {
-				const blockPolicy = await this.checkForHardBlock(
+				const blockPolicy = await this.checkForHardBlock({
 					userAccessRulesStorage,
 					challengeRecord,
-					challengeRecord.userAccount,
-					challengeRecord.headers,
-					(await sessionRecordRead)?.decryptedHeadHash,
-					challengeRecord.coords,
-					challengeRecord.ipInfo?.isValid
+					userAccount: challengeRecord.userAccount,
+					headers: challengeRecord.headers,
+					headHash: (await sessionRecordRead)?.decryptedHeadHash,
+					coords: challengeRecord.coords,
+					countryCode: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
-					challengeRecord.ipInfo?.isValid
+					asn: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.asnNumber
 						: undefined,
-				);
+				});
 
 				if (blockPolicy) {
 					logger.info(() => ({
@@ -998,12 +998,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		const enrichedDnsEvent = await enrichedDnsEventRead;
 
 		if (!failResult) {
-			const check = await this.resolveTrafficFilterCheck(
-				challengeRecord.ipInfo,
+			const check = await this.resolveTrafficFilterCheck({
+				recordIpInfo: challengeRecord.ipInfo,
 				trafficFilter,
-				await currentIpInfoRead,
+				currentIpInfo: await currentIpInfoRead,
 				enrichedDnsEvent,
-			);
+			});
 			if (check.isBlocked) {
 				logger.info(() => ({
 					msg: "Traffic filter rejected request in PoW verification",

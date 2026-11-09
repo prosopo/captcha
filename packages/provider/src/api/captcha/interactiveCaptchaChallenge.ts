@@ -210,14 +210,14 @@ export const interactiveChallengeHandler =
 				valid,
 				reason,
 				sessionId: validSessionId,
-			} = await manager.isValidRequest(
+			} = await manager.isValidRequest({
 				clientSettings,
-				captchaType,
+				requestedCaptchaType: captchaType,
 				env,
 				sessionId,
 				userAccessPolicy,
-				normalizedIp,
-			);
+				currentIP: normalizedIp,
+			});
 
 			if (!valid) {
 				return next(

@@ -171,14 +171,14 @@ export default (
 				reason,
 				sessionId: validSessionId,
 				powDifficulty,
-			} = await tasks.powCaptchaManager.isValidRequest(
+			} = await tasks.powCaptchaManager.isValidRequest({
 				clientSettings,
-				CaptchaType.pow,
+				requestedCaptchaType: CaptchaType.pow,
 				env,
 				sessionId,
 				userAccessPolicy,
-				normalizedIp,
-			);
+				currentIP: normalizedIp,
+			});
 
 			if (!valid) {
 				return next(

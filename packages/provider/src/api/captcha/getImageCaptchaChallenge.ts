@@ -237,14 +237,14 @@ export default (
 				reason,
 				sessionId: validSessionId,
 				solvedImagesCount,
-			} = await tasks.imgCaptchaManager.isValidRequest(
-				clientRecord,
-				CaptchaType.image,
+			} = await tasks.imgCaptchaManager.isValidRequest({
+				clientSettings: clientRecord,
+				requestedCaptchaType: CaptchaType.image,
 				env,
 				sessionId,
 				userAccessPolicy,
-				normalizedIp,
-			);
+				currentIP: normalizedIp,
+			});
 
 			if (!valid) {
 				return next(
