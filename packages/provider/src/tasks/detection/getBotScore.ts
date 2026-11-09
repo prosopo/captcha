@@ -153,6 +153,7 @@ export type DecodedDetectorPayload = {
 	isIframe: boolean;
 	decryptedHeadHash: string;
 	triggeredDetectors?: number[];
+	outOfRangeDetectorIds?: number;
 	shadowDomPenalty?: boolean;
 	d?: DetectorData;
 };
@@ -195,6 +196,7 @@ export const getBotScore = async (
 		isIframe: result.isIframe ?? false,
 		decryptedHeadHash: result.decryptedHeadHash,
 		triggeredDetectors: result.triggeredDetectors,
+		outOfRangeDetectorIds: result.outOfRangeDetectorIds,
 		shadowDomPenalty: result.shadowDomPenalty,
 		d: sanitiseDetectorData(result.d),
 	};
