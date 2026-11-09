@@ -18,6 +18,7 @@ import {
 	applyAttributes,
 	applyStyles,
 	createControl,
+	createElement,
 } from "@prosopo/procaptcha-common";
 import {
 	canHover,
@@ -79,6 +80,13 @@ export const mountButton = (
 		},
 	});
 
+	// Drawn from a closed shadow root, so the control holds no text of its own
+	// for a fixed selector to match. Its name comes from aria-label.
+	const label = createElement("span");
+	const labelText = document.createTextNode("");
+	label.attachShadow({ mode: "closed" }).appendChild(labelText);
+	button.appendChild(label);
+
 	const buttonStyle = (): StyleMap => {
 		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
 		const baseStyle: StyleMap = {
@@ -129,7 +137,7 @@ export const mountButton = (
 			...addDataAttr({ dev: { cy: `button-${props.buttonType}` } }),
 			"aria-label": props.text,
 		});
-		button.textContent = props.text;
+		labelText.data = props.text;
 	};
 
 	// Only where a pointer can rest on the control. On a touch screen the
