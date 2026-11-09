@@ -541,9 +541,22 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.iconOrder, params);
 	}
 
+	/**
+	 * Serve the type an access rule named. The routing machine is skipped so it
+	 * cannot overrule the operator, but the enabled-type coercion and the
+	 * user's own switches still apply.
+	 */
+	async sendAccessRuleCaptcha(
+		captchaType: ConcreteCaptchaType,
+		params?: Partial<Session>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(captchaType, params, { route: false });
+	}
+
 	private async sendCaptcha(
 		captchaType: ConcreteCaptchaType,
 		params?: Partial<Session>,
+		{ route = true }: { route?: boolean } = {},
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
 		if (
@@ -570,15 +583,16 @@ export class FrictionlessManager extends CaptchaManager {
 					? effectiveParams.powDifficulty
 					: undefined,
 		};
-		const routed: RoutingMachineOutput = this.routingContext
-			? await applyRouter(
-					this.decisionMachineRunner,
-					this.usageCounters,
-					baseline,
-					this.routingContext,
-					this.logger,
-				)
-			: baseline;
+		const routed: RoutingMachineOutput =
+			route && this.routingContext
+				? await applyRouter(
+						this.decisionMachineRunner,
+						this.usageCounters,
+						baseline,
+						this.routingContext,
+						this.logger,
+					)
+				: baseline;
 
 		// Resolved before the session is written, and after the router, so it is
 		// the last word on captchaType. A session minted as a type we cannot

@@ -31,7 +31,6 @@ import {
 	describeMatchedRule,
 } from "@prosopo/user-access-policy";
 import type { Response } from "express";
-import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -209,8 +208,7 @@ export const handleAccessPolicy = async (
 		return {
 			handled: true,
 			response: res.json(
-				await sendChallenge(
-					tasks.frictionlessManager,
+				await tasks.frictionlessManager.sendAccessRuleCaptcha(
 					userAccessPolicy.captchaType,
 					{
 						...captchaTypeBaseParams,
