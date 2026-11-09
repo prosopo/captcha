@@ -50,6 +50,7 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { dnsBeaconUrls } from "../../api/dnsEventUrl.js";
+import { recordOutOfRangeDetectorIds } from "../../api/metrics.js";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
@@ -975,6 +976,13 @@ export class FrictionlessManager extends CaptchaManager {
 								attempt.keyMap,
 							);
 				decrypted = result;
+				if (result.outOfRangeDetectorIds) {
+					recordOutOfRangeDetectorIds(result.outOfRangeDetectorIds);
+					this.logger.warn(() => ({
+						msg: "Dropped triggered-detector ids outside the catalogue",
+						data: { count: result.outOfRangeDetectorIds },
+					}));
+				}
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
