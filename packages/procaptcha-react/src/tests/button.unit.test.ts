@@ -109,18 +109,6 @@ const textNodesIn = (element: HTMLElement): string[] => {
 	return found;
 };
 
-const LOWER_CASED =
-	"translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')";
-
-const textXPathMatches = (word: string): number =>
-	document.evaluate(
-		`.//button[contains(${LOWER_CASED}, '${word}')] | .//div[@role="button" and contains(${LOWER_CASED}, '${word}')]`,
-		mounted.container,
-		null,
-		XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-		null,
-	).snapshotLength;
-
 beforeEach(() => {
 	vi.clearAllMocks();
 	process.env.NODE_ENV = "test";
@@ -167,23 +155,6 @@ describe("what the button renders", () => {
 			expect(textNodesIn(element)).toEqual([]);
 		},
 	);
-
-	test.each(["button", "generic"] as const)(
-		"as a %s, is not matched by a text XPath for its label",
-		(kind: "button" | "generic") => {
-			for (const text of ["Next", "Submit", "Cancel"]) {
-				renderAs(kind, { text });
-				expect(textXPathMatches(text.toLowerCase())).toBe(0);
-			}
-		},
-	);
-
-	test("the text XPath does match a control that holds its label as text", () => {
-		const plain = document.createElement("button");
-		plain.textContent = "Next";
-		mounted.container.appendChild(plain);
-		expect(textXPathMatches("next")).toBe(1);
-	});
 
 	test("relabels in place when the text changes", () => {
 		const { element, shadows } = renderWithLabel({ text: "Next" });

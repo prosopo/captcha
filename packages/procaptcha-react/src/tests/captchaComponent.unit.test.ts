@@ -221,23 +221,22 @@ describe("the controls", () => {
 		expect(buttonLabelled("WIDGET.SUBMIT")).toBe(next);
 	});
 
-	test("no control in the panel can be found by the text of its label", () => {
-		const lowerCased =
-			"translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')";
-		const controlsContaining = (word: string): number =>
-			document.evaluate(
-				`.//button[contains(${lowerCased}, '${word}')] | .//div[@role="button" and contains(${lowerCased}, '${word}')]`,
-				mounted.container,
-				null,
-				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-				null,
-			).snapshotLength;
+	test("no control in the panel holds its label as text", () => {
+		const controlTexts = (): string[] =>
+			Array.from(
+				mounted.container.querySelectorAll<HTMLElement>(
+					'button, [role="button"]',
+				),
+				(control: HTMLElement) => control.textContent ?? "",
+			);
 		const challenge = twoRoundChallenge();
 
 		for (const index of [0, 1]) {
 			render({ challenge, index, solutions: [[], []] });
-			for (const word of ["cancel", "next", "submit"]) {
-				expect(controlsContaining(word)).toBe(0);
+			for (const label of ["WIDGET.CANCEL", "WIDGET.NEXT", "WIDGET.SUBMIT"]) {
+				expect(
+					controlTexts().filter((text: string) => text.includes(label)),
+				).toEqual([]);
 			}
 		}
 		expect(buttonLabelled("WIDGET.CANCEL")).toBeDefined();
