@@ -16,6 +16,7 @@ import type { EnvironmentTypes } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HardcodedProvider, IpMode } from "../balancer.js";
 import {
+	PROVIDER_LIST_FAILED_REFRESH_RETRY_MS,
 	PROVIDER_LIST_MISS_RELOAD_MS,
 	PROVIDER_LIST_TTL_MS,
 	_resetHealthzRetryPolicy,
@@ -63,6 +64,8 @@ let clock = CLOCK_START;
 const advanceClock = (ms: number) => {
 	clock += ms;
 };
+const flushBackgroundRefresh = (): Promise<void> =>
+	new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {
 	_resetPinCache();
@@ -289,7 +292,7 @@ describe("getProviders", () => {
 		expect(loadBalancer).toHaveBeenCalledWith("production", "ipv4");
 	});
 
-	it("reloads once the cached list is older than the TTL", async () => {
+	it("refreshes an expired list in the background while serving the old one", async () => {
 		const first: HardcodedProvider[] = [
 			{ address: "5A", url: "https://p1", datasetId: "0x0", weight: 1 },
 		];
@@ -301,9 +304,59 @@ describe("getProviders", () => {
 		expect(await getProviders("production")).toBe(first);
 		advanceClock(PROVIDER_LIST_TTL_MS - 1);
 		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
 		advanceClock(1);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+		await flushBackgroundRefresh();
 		expect(await getProviders("production")).toBe(second);
 		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("never makes a caller wait on a refresh once a list has loaded", async () => {
+		const first: HardcodedProvider[] = [
+			{ address: "5A", url: "https://p1", datasetId: "0x0", weight: 1 },
+		];
+		loadBalancer
+			.mockResolvedValueOnce(first)
+			.mockReturnValueOnce(new Promise<HardcodedProvider[]>(() => {}));
+
+		await getProviders("production");
+		advanceClock(PROVIDER_LIST_TTL_MS);
+
+		expect(await getProviders("production")).toBe(first);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("keeps serving the last good list after a failed refresh, without refetching per call", async () => {
+		const first: HardcodedProvider[] = [
+			{ address: "5A", url: "https://p1", datasetId: "0x0", weight: 1 },
+		];
+		const second: HardcodedProvider[] = [
+			{ address: "5B", url: "https://p2", datasetId: "0x0", weight: 1 },
+		];
+		loadBalancer
+			.mockResolvedValueOnce(first)
+			.mockRejectedValueOnce(new Error("timeout"))
+			.mockResolvedValueOnce(second);
+
+		await getProviders("production");
+		advanceClock(PROVIDER_LIST_TTL_MS);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+
+		await flushBackgroundRefresh();
+		expect(await getProviders("production")).toBe(first);
+		advanceClock(PROVIDER_LIST_FAILED_REFRESH_RETRY_MS - 1);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+
+		advanceClock(1);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(3);
+		await flushBackgroundRefresh();
+		expect(await getProviders("production")).toBe(second);
 	});
 });
 
@@ -399,6 +452,23 @@ describe("findProvider", () => {
 			undefined,
 		);
 
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("falls back to the last good list when the miss reload fails", async () => {
+		loadBalancer
+			.mockResolvedValueOnce(providers)
+			.mockRejectedValueOnce(new Error("timeout"));
+
+		await findProvider("production", "https://pronode1.io");
+		advanceClock(PROVIDER_LIST_MISS_RELOAD_MS);
+
+		expect(await findProvider("production", "https://pronode3.io")).toBe(
+			undefined,
+		);
+		expect(
+			(await findProvider("production", "https://pronode2.io"))?.address,
+		).toBe("5B");
 		expect(loadBalancer).toHaveBeenCalledTimes(2);
 	});
 
