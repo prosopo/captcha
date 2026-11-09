@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiEndpoint } from "@prosopo/api-route";
+import type { ApiEndpoint, ApiEndpointData } from "@prosopo/api-route";
 import { ProsopoError, isProsopoError } from "@prosopo/common";
 import type { LogLevel } from "@prosopo/logger";
 import { stringifyBigInts } from "@prosopo/util";
@@ -28,14 +28,16 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 	) {}
 
 	public async handleRequest(
-		endpoint: ApiEndpoint<ZodType | undefined>,
+		endpoint: ApiEndpoint<ZodType | undefined, ApiEndpointData>,
 		request: Request,
 		response: Response,
 		next: NextFunction,
 	): Promise<void> {
 		let args: unknown;
 		try {
-			args = endpoint.getRequestArgsSchema()?.parse(request.body);
+			const input =
+				endpoint.getMethod?.() === "get" ? request.query : request.body;
+			args = endpoint.getRequestArgsSchema()?.parse(input);
 		} catch (error) {
 			return next(
 				new ProsopoError({

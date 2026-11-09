@@ -19,7 +19,7 @@ import {
 } from "@prosopo/api-route";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { GetSessionBody } from "@prosopo/types";
+import { GetSessionBody, type GetSessionData } from "@prosopo/types";
 import type { z } from "zod";
 import type { Tasks } from "../../tasks/index.js";
 
@@ -35,13 +35,15 @@ type GetSessionBodyType = typeof GetSessionBody;
  * facing widget path; the cypress consistency suite is the only current
  * consumer.
  */
-class ApiGetSessionEndpoint implements ApiEndpoint<GetSessionBodyType> {
+class ApiGetSessionEndpoint
+	implements ApiEndpoint<GetSessionBodyType, GetSessionData>
+{
 	public constructor(private readonly tasks: Tasks) {}
 
 	async processRequest(
 		args: z.infer<GetSessionBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<GetSessionData>> {
 		logger = logger
 			? logger.with({}, "admin:session:get")
 			: getLogger("info", "provider:admin:session:get");

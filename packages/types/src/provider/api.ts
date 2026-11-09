@@ -498,12 +498,15 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.sessionId]?: string;
 }
 
+export type UpdateDecisionMachineData = {
+	scope: DecisionMachineScope;
+	dappAccount?: string;
+	kind?: DecisionMachineKind;
+	updatedAt: string;
+};
+
 export interface UpdateDecisionMachineResponse extends ApiResponse {
-	data: {
-		scope: DecisionMachineScope;
-		dappAccount?: string;
-		updatedAt: string;
-	};
+	data: UpdateDecisionMachineData;
 }
 
 export interface ImageVerificationResponse extends VerificationResponse {
@@ -685,11 +688,13 @@ export const DnsEventIngestBatchSchema = object({
 });
 export type DnsEventIngestBatch = output<typeof DnsEventIngestBatchSchema>;
 
-export interface DnsEventResponseBody extends ApiResponse {
+export type DnsEventData = {
 	stored: number;
 	errors: number;
 	dropped: number;
-}
+};
+
+export interface DnsEventResponseBody extends ApiResponse, DnsEventData {}
 
 export const GetPowCaptchaChallengeRequestBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
@@ -788,6 +793,25 @@ export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 	typeof GetFrictionlessCaptchaChallengeRequestBody
 >;
 
+export const CheckSpamEmailRequestBody = object({
+	email: safeLine(INPUT_LIMITS.EMAIL),
+	dapp: safeLine(INPUT_LIMITS.ID),
+});
+
+export type CheckSpamEmailRequestBodyOutput = output<
+	typeof CheckSpamEmailRequestBody
+>;
+
+export type CheckSpamEmailResponse = {
+	isSpam: boolean;
+	emailDomain: string | null;
+};
+
+export type HealthzResponse = {
+	ok: true;
+	host: string;
+};
+
 // ── Detector bundle pool ────────────────────────────────────────────────
 
 export const AssignDetectorBundleRequestBody = object({
@@ -839,12 +863,16 @@ export type ReplaceDetectorPoolBodyType = output<
 	typeof ReplaceDetectorPoolBody
 >;
 
-export interface ReplaceDetectorPoolResponse extends ApiResponse {
+export type ReplaceDetectorPoolData = {
 	count: number;
 	// False when the pool went live in memory but could not be written to the
 	// pool directory — it will not survive a provider restart.
 	persisted?: boolean;
-}
+};
+
+export interface ReplaceDetectorPoolResponse
+	extends ApiResponse,
+		ReplaceDetectorPoolData {}
 
 export type SubmitPowCaptchaSolutionBodyTypeOutput = output<
 	typeof SubmitPowCaptchaSolutionBody
@@ -1177,6 +1205,11 @@ export type ToggleMaintenanceModeBodyOutput = output<
 	typeof ToggleMaintenanceModeBody
 >;
 
+export type MaintenanceModeData = {
+	maintenanceMode: boolean;
+	maintenanceModeSiteKeys: string[];
+};
+
 // Diagnostic-only. Reads a single session record from both the Mongo
 // authoritative store and the Redis cache and returns both views so
 // consumers (currently the cypress consistency suite) can assert that
@@ -1187,10 +1220,12 @@ export const GetSessionBody = object({
 });
 export type GetSessionBodyOutput = output<typeof GetSessionBody>;
 
-export interface GetSessionResponse extends ApiResponse {
+export type GetSessionData = {
 	mongo: Record<string, unknown> | null;
 	redis: Record<string, unknown> | null;
-}
+};
+
+export interface GetSessionResponse extends ApiResponse, GetSessionData {}
 
 export type UpdateDecisionMachineBodyTypeOutput = output<
 	typeof UpdateDecisionMachineBody

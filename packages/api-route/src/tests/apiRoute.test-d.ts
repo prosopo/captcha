@@ -19,16 +19,19 @@
 
 import type { Logger } from "@prosopo/logger";
 import { assertType, describe, expectTypeOf, it } from "vitest";
-import type { ZodType, z } from "zod";
+import { type ZodType, z } from "zod";
 import type {
 	ApiEndpoint,
+	ApiEndpointData,
 	ApiEndpointResponse,
 	ApiRouteLimit,
 	ApiRouteLimits,
+	ApiRouteRequest,
+	ApiRouteResponseData,
 	ApiRoutes,
 	ApiRoutesProvider,
 } from "../index.js";
-import { ApiEndpointResponseStatus } from "../index.js";
+import { ApiEndpointResponseStatus, defineApiRoute } from "../index.js";
 
 type SiteKeySchema = ZodType<{ siteKey: string }>;
 
@@ -37,7 +40,7 @@ describe("ApiEndpoint.processRequest", () => {
 		// The whole point of the conditional: an endpoint with a schema receives
 		// the inferred arguments, not a raw unknown it has to parse itself.
 		expectTypeOf<
-			ApiEndpoint<SiteKeySchema>["processRequest"]
+			ApiEndpoint<SiteKeySchema, undefined>["processRequest"]
 		>().parameters.toEqualTypeOf<
 			[z.infer<SiteKeySchema>, (Logger | undefined)?]
 		>();
@@ -48,22 +51,23 @@ describe("ApiEndpoint.processRequest", () => {
 		// argument-free endpoint would be forced to accept a phantom first
 		// parameter.
 		expectTypeOf<
-			ApiEndpoint<undefined>["processRequest"]
+			ApiEndpoint<undefined, undefined>["processRequest"]
 		>().parameters.toEqualTypeOf<[(Logger | undefined)?]>();
 	});
 
 	it("keeps the logger optional on both branches", () => {
 		// Callers that do not have a logger to hand must still be able to invoke
 		// an endpoint directly.
-		const withArgs: ApiEndpoint<SiteKeySchema>["processRequest"] =
+		const withArgs: ApiEndpoint<SiteKeySchema, undefined>["processRequest"] =
 			async () => ({
 				status: ApiEndpointResponseStatus.SUCCESS,
 			});
 		expectTypeOf(withArgs).toBeCallableWith({ siteKey: "abc" });
 
-		const withoutArgs: ApiEndpoint<undefined>["processRequest"] = async () => ({
-			status: ApiEndpointResponseStatus.SUCCESS,
-		});
+		const withoutArgs: ApiEndpoint<undefined, undefined>["processRequest"] =
+			async () => ({
+				status: ApiEndpointResponseStatus.SUCCESS,
+			});
 		expectTypeOf(withoutArgs).toBeCallableWith();
 	});
 
@@ -71,19 +75,19 @@ describe("ApiEndpoint.processRequest", () => {
 		// A void-returning endpoint would give the mounting layer nothing to
 		// serialise back to the client.
 		expectTypeOf<
-			ApiEndpoint<SiteKeySchema>["processRequest"]
-		>().returns.toEqualTypeOf<Promise<ApiEndpointResponse>>();
+			ApiEndpoint<SiteKeySchema, undefined>["processRequest"]
+		>().returns.toEqualTypeOf<Promise<ApiEndpointResponse<undefined>>>();
 		expectTypeOf<
-			ApiEndpoint<undefined>["processRequest"]
-		>().returns.toEqualTypeOf<Promise<ApiEndpointResponse>>();
+			ApiEndpoint<undefined, undefined>["processRequest"]
+		>().returns.toEqualTypeOf<Promise<ApiEndpointResponse<undefined>>>();
 	});
 
 	it("rejects arguments that do not match the declared schema", () => {
-		const endpoint: ApiEndpoint<SiteKeySchema> = {
+		const endpoint: ApiEndpoint<SiteKeySchema, undefined> = {
 			getRequestArgsSchema: (): SiteKeySchema => {
 				throw new Error("not called");
 			},
-			processRequest: async (): Promise<ApiEndpointResponse> => ({
+			processRequest: async (): Promise<ApiEndpointResponse<undefined>> => ({
 				status: ApiEndpointResponseStatus.SUCCESS,
 			}),
 		};
@@ -92,9 +96,9 @@ describe("ApiEndpoint.processRequest", () => {
 	});
 
 	it("rejects an argument-free endpoint being called with arguments", () => {
-		const endpoint: ApiEndpoint<undefined> = {
+		const endpoint: ApiEndpoint<undefined, undefined> = {
 			getRequestArgsSchema: (): undefined => undefined,
-			processRequest: async (): Promise<ApiEndpointResponse> => ({
+			processRequest: async (): Promise<ApiEndpointResponse<undefined>> => ({
 				status: ApiEndpointResponseStatus.SUCCESS,
 			}),
 		};
@@ -108,16 +112,16 @@ describe("ApiEndpoint.getRequestArgsSchema", () => {
 		// Returning a widened ZodType would leave callers unable to infer the
 		// argument type from the schema they just fetched.
 		expectTypeOf<
-			ApiEndpoint<SiteKeySchema>["getRequestArgsSchema"]
+			ApiEndpoint<SiteKeySchema, undefined>["getRequestArgsSchema"]
 		>().returns.toEqualTypeOf<SiteKeySchema>();
 		expectTypeOf<
-			ApiEndpoint<undefined>["getRequestArgsSchema"]
+			ApiEndpoint<undefined, undefined>["getRequestArgsSchema"]
 		>().returns.toEqualTypeOf<undefined>();
 	});
 
 	it("takes no arguments", () => {
 		expectTypeOf<
-			ApiEndpoint<undefined>["getRequestArgsSchema"]
+			ApiEndpoint<undefined, undefined>["getRequestArgsSchema"]
 		>().parameters.toEqualTypeOf<[]>();
 	});
 });
@@ -125,34 +129,34 @@ describe("ApiEndpoint.getRequestArgsSchema", () => {
 describe("ApiEndpointResponse", () => {
 	it("requires a status and nothing else", () => {
 		// A bare acknowledgement is a valid response.
-		assertType<ApiEndpointResponse>({
+		assertType<ApiEndpointResponse<undefined>>({
 			status: ApiEndpointResponseStatus.SUCCESS,
 		});
 		// @ts-expect-error status is mandatory
-		assertType<ApiEndpointResponse>({ data: {} });
+		assertType<ApiEndpointResponse<undefined>>({ data: {} });
 	});
 
 	it("keeps data and error independently optional", () => {
 		// Not modelled as a discriminated union, so an endpoint may legitimately
 		// return partial data alongside an error.
-		expectTypeOf<ApiEndpointResponse["data"]>().toEqualTypeOf<
-			object | undefined
+		expectTypeOf<ApiEndpointResponse<{ id: string }>["data"]>().toEqualTypeOf<
+			{ id: string } | undefined
 		>();
-		expectTypeOf<ApiEndpointResponse["error"]>().toEqualTypeOf<
+		expectTypeOf<ApiEndpointResponse<{ id: string }>["error"]>().toEqualTypeOf<
 			string | undefined
 		>();
 	});
 
 	it("types the status as the enum, not a bare string", () => {
 		expectTypeOf<
-			ApiEndpointResponse["status"]
+			ApiEndpointResponse<undefined>["status"]
 		>().toEqualTypeOf<ApiEndpointResponseStatus>();
 		// @ts-expect-error an arbitrary string is not a status
-		assertType<ApiEndpointResponse>({ status: "OK" });
+		assertType<ApiEndpointResponse<undefined>>({ status: "OK" });
 	});
 
 	it("rejects an error that is not a string", () => {
-		assertType<ApiEndpointResponse>({
+		assertType<ApiEndpointResponse<undefined>>({
 			status: ApiEndpointResponseStatus.FAIL,
 			// @ts-expect-error error is a message, not an Error instance
 			error: new Error("boom"),
@@ -163,7 +167,7 @@ describe("ApiEndpointResponse", () => {
 describe("ApiRoutes", () => {
 	it("is keyed by route string and valued by endpoints of any schema", () => {
 		expectTypeOf<ApiRoutes>().toEqualTypeOf<
-			Record<string, ApiEndpoint<ZodType | undefined>>
+			Record<string, ApiEndpoint<ZodType | undefined, ApiEndpointData>>
 		>();
 	});
 
@@ -232,5 +236,36 @@ describe("ApiRouteLimits", () => {
 			0: { windowMs: 1000, limit: 5 },
 			1: { windowMs: 1000, limit: 5 },
 		});
+	});
+});
+
+describe("typed routes", () => {
+	it("rejects a route table missing a path or using an unknown one", () => {
+		type Paths = "/a" | "/b";
+		expectTypeOf<ApiRoutes<Paths>>().toHaveProperty("/a");
+		expectTypeOf<ApiRoutes<Paths>>().toHaveProperty("/b");
+		expectTypeOf<ApiRoutes<Paths>>().not.toHaveProperty("/c");
+	});
+
+	it("types the response data of an endpoint", () => {
+		expectTypeOf<
+			Awaited<
+				ReturnType<ApiEndpoint<undefined, { id: string }>["processRequest"]>
+			>
+		>().toEqualTypeOf<ApiEndpointResponse<{ id: string }>>();
+	});
+
+	it("infers request and response from a contract", () => {
+		const route = defineApiRoute({
+			path: "/a",
+			method: "post",
+			requestSchema: z.object({ siteKey: z.string() }),
+			responseSchema: undefined,
+		});
+		expectTypeOf(route.path).toEqualTypeOf<"/a">();
+		expectTypeOf<ApiRouteRequest<typeof route>>().toEqualTypeOf<{
+			siteKey: string;
+		}>();
+		expectTypeOf<ApiRouteResponseData<typeof route>>().toBeUndefined();
 	});
 });

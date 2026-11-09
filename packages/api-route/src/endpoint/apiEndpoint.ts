@@ -14,14 +14,25 @@
 
 import type { Logger } from "@prosopo/logger";
 import type { ZodType, z } from "zod";
-import type { ApiEndpointResponse } from "./apiEndpointResponse.js";
+import type { ApiRouteMethod } from "../apiRouteContract.js";
+import type {
+	ApiEndpointData,
+	ApiEndpointResponse,
+} from "./apiEndpointResponse.js";
 
-interface ApiEndpoint<T extends ZodType | undefined> {
+interface ApiEndpoint<
+	T extends ZodType | undefined,
+	Data extends ApiEndpointData,
+> {
 	processRequest: T extends ZodType
-		? (args: z.infer<T>, logger?: Logger) => Promise<ApiEndpointResponse>
-		: (logger?: Logger) => Promise<ApiEndpointResponse>;
+		? (args: z.infer<T>, logger?: Logger) => Promise<ApiEndpointResponse<Data>>
+		: (logger?: Logger) => Promise<ApiEndpointResponse<Data>>;
 
 	getRequestArgsSchema(): T;
+
+	// Omitted means POST, which is what every endpoint used before routes could
+	// declare a method.
+	getMethod?(): ApiRouteMethod;
 }
 
 export type { ApiEndpoint };

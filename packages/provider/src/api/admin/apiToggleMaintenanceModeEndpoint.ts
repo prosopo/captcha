@@ -18,7 +18,10 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { ToggleMaintenanceModeBody } from "@prosopo/types";
+import {
+	type MaintenanceModeData,
+	ToggleMaintenanceModeBody,
+} from "@prosopo/types";
 import type { z } from "zod";
 import { setMaintenanceModeGauge } from "../metrics.js";
 
@@ -89,12 +92,12 @@ export function isSiteKeyInMaintenanceMode(
 }
 
 class ApiToggleMaintenanceModeEndpoint
-	implements ApiEndpoint<ToggleMaintenanceModeBodyType>
+	implements ApiEndpoint<ToggleMaintenanceModeBodyType, MaintenanceModeData>
 {
 	async processRequest(
 		args: z.infer<ToggleMaintenanceModeBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<MaintenanceModeData>> {
 		const { enabled, siteKeys } = args;
 
 		logger = logger

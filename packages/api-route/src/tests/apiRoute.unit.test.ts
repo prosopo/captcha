@@ -77,10 +77,13 @@ describe("public export surface", () => {
 		expect(api.ApiEndpointResponseStatus).toBe(ApiEndpointResponseStatus);
 	});
 
-	it("ships the enum as its only runtime export", () => {
+	it("ships only the enum and defineApiRoute at runtime", () => {
 		// Everything else is type-only and must erase completely; a stray runtime
 		// value here would mean the package cannot be fully tree-shaken away.
-		expect(Object.keys(api)).toEqual(["ApiEndpointResponseStatus"]);
+		expect(Object.keys(api).sort()).toEqual([
+			"ApiEndpointResponseStatus",
+			"defineApiRoute",
+		]);
 	});
 });
 
@@ -88,19 +91,19 @@ describe("endpoint contract", () => {
 	/** An endpoint whose request carries arguments. */
 	const schema = z.object({ siteKey: z.string() });
 
-	const endpointWithArgs: ApiEndpoint<typeof schema> = {
+	const endpointWithArgs: ApiEndpoint<typeof schema, z.infer<typeof schema>> = {
 		getRequestArgsSchema: () => schema,
 		processRequest: async (
 			args: z.infer<typeof schema>,
-		): Promise<ApiEndpointResponse> => ({
+		): Promise<ApiEndpointResponse<z.infer<typeof schema>>> => ({
 			status: ApiEndpointResponseStatus.SUCCESS,
 			data: { siteKey: args.siteKey },
 		}),
 	};
 
-	const endpointWithoutArgs: ApiEndpoint<undefined> = {
+	const endpointWithoutArgs: ApiEndpoint<undefined, undefined> = {
 		getRequestArgsSchema: () => undefined,
-		processRequest: async (): Promise<ApiEndpointResponse> => ({
+		processRequest: async (): Promise<ApiEndpointResponse<undefined>> => ({
 			status: ApiEndpointResponseStatus.SUCCESS,
 		}),
 	};
@@ -139,7 +142,7 @@ describe("endpoint contract", () => {
 
 	it("permits a response with neither data nor error", async () => {
 		// status is the only required field; a bare acknowledgement is valid.
-		const response: ApiEndpointResponse =
+		const response: ApiEndpointResponse<undefined> =
 			await endpointWithoutArgs.processRequest();
 		expect(response.data).toBeUndefined();
 		expect(response.error).toBeUndefined();
@@ -167,9 +170,9 @@ describe("endpoint contract", () => {
 	it("surfaces a rejection rather than swallowing it into a FAIL response", async () => {
 		// Nothing in this contract catches; a throwing endpoint rejects, and the
 		// layer that mounts it is responsible for turning that into a response.
-		const throwing: ApiEndpoint<undefined> = {
+		const throwing: ApiEndpoint<undefined, undefined> = {
 			getRequestArgsSchema: () => undefined,
-			processRequest: async (): Promise<ApiEndpointResponse> => {
+			processRequest: async (): Promise<ApiEndpointResponse<undefined>> => {
 				throw new Error("boom");
 			},
 		};

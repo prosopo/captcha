@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiEndpoint, ApiRoutesProvider } from "@prosopo/api-route";
+import type {
+	ApiEndpoint,
+	ApiEndpointData,
+	ApiRoutesProvider,
+} from "@prosopo/api-route";
 import type { ProsopoError } from "@prosopo/common";
 import type { LogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
@@ -55,6 +59,7 @@ describe("the barrel's shape", () => {
 			| "createMemoryJwtReplayGuard"
 			| "verifySignature"
 			| "requestLoggerMiddleware"
+			| "registerApiRoute"
 			| "sendProsopoError"
 		>();
 	});
@@ -111,7 +116,7 @@ describe("the endpoint adapter interface", () => {
 	test("takes the endpoint and the express trio and resolves to void", () => {
 		expectTypeOf<ApiExpressEndpointAdapter["handleRequest"]>().toEqualTypeOf<
 			(
-				endpoint: ApiEndpoint<ZodType | undefined>,
+				endpoint: ApiEndpoint<ZodType | undefined, ApiEndpointData>,
 				request: Request,
 				response: Response,
 				next: NextFunction,

@@ -21,6 +21,7 @@ import type { IIpInfoService } from "@prosopo/ipinfo";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type DnsEvent,
+	type DnsEventData,
 	DnsEventIngestBatchSchema,
 	DnsEventSchema,
 } from "@prosopo/types";
@@ -53,7 +54,9 @@ export const dnsEventToFields = (
 	return out;
 };
 
-class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
+class ApiDnsEventEndpoint
+	implements ApiEndpoint<DnsEventBatchSchemaType, DnsEventData>
+{
 	public constructor(
 		private readonly db: IProviderDatabase,
 		private readonly ipInfoService?: IIpInfoService,
@@ -62,7 +65,7 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 	async processRequest(
 		args: z.infer<DnsEventBatchSchemaType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<DnsEventData>> {
 		logger = logger
 			? logger.with({}, "admin:dns-event:ingest")
 			: getLogger("info", "provider:admin:dns-event:ingest");

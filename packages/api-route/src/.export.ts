@@ -21,3 +21,11 @@ export type {
 	ApiRouteLimit,
 	ApiRouteLimits,
 } from "./apiRoutes.js";
+
+export { defineApiRoute } from "./apiRouteContract.js";
+export type {
+	ApiRouteContract,
+	ApiRouteMethod,
+	ApiRouteRequest,
+	ApiRouteResponseData,
+} from "./apiRouteContract.js";

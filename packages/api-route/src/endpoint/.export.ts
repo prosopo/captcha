@@ -13,5 +13,8 @@
 // limitations under the License.
 
 export type { ApiEndpoint } from "./apiEndpoint.js";
-export type { ApiEndpointResponse } from "./apiEndpointResponse.js";
+export type {
+	ApiEndpointData,
+	ApiEndpointResponse,
+} from "./apiEndpointResponse.js";
 export { ApiEndpointResponseStatus } from "./apiEndpointResponseStatus.js";

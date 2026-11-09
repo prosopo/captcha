@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ApiClient } from "@prosopo/api";
-import type { ApiEndpointResponse } from "@prosopo/api-route";
+import type { ApiEndpointData, ApiEndpointResponse } from "@prosopo/api-route";
 import {
 	type FetchRulesEndpointResponse,
 	type FetchRulesOptions,
@@ -23,11 +23,13 @@ import {
 	type RuleIdsEndpointResponse,
 	ruleIdsResponse,
 } from "#policy/api/read/findRuleIds.js";
+import type { MissingIdsEndpointResponse } from "#policy/api/read/getMissingIds.js";
 import {
+	type DeletedRulesCount,
 	type MissingIds,
-	type MissingIdsEndpointResponse,
-	missingIdsResponse,
-} from "#policy/api/read/getMissingIds.js";
+	type RehashedRules,
+	getMissingIdsRoute,
+} from "#policy/api/ruleApiContracts.js";
 import type { AccessRulesFilterInput } from "#policy/ruleInput/ruleInput.js";
 import type { DeleteSiteGroups } from "./delete/deleteRuleGroups.js";
 import { accessRuleApiPaths } from "./ruleApiRoutes.js";
@@ -39,7 +41,7 @@ export class AccessRulesApiClient extends ApiClient {
 	public deleteMany(
 		filters: AccessRulesFilterInput[],
 		jwt: string,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
 		return this.post(
 			accessRuleApiPaths.DELETE_MANY,
 			filters,
@@ -50,7 +52,7 @@ export class AccessRulesApiClient extends ApiClient {
 	public deleteGroups(
 		siteGroups: DeleteSiteGroups,
 		jwt: string,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
 		return this.post(
 			accessRuleApiPaths.DELETE_GROUPS,
 			siteGroups,
@@ -58,7 +60,9 @@ export class AccessRulesApiClient extends ApiClient {
 		);
 	}
 
-	public deleteAll(jwt: string): Promise<ApiEndpointResponse> {
+	public deleteAll(
+		jwt: string,
+	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
 		return this.post(
 			accessRuleApiPaths.DELETE_ALL,
 			{},
@@ -72,13 +76,16 @@ export class AccessRulesApiClient extends ApiClient {
 		idsToCheck: MissingIds,
 		jwt: string,
 	): Promise<MissingIdsEndpointResponse> {
-		const endpointResponse: ApiEndpointResponse = await this.post(
-			accessRuleApiPaths.GET_MISSING_IDS,
-			idsToCheck,
-			this.getAuthHeaders(jwt),
-		);
+		const endpointResponse: ApiEndpointResponse<ApiEndpointData> =
+			await this.post(
+				getMissingIdsRoute.path,
+				idsToCheck,
+				this.getAuthHeaders(jwt),
+			);
 
-		const parsedData = missingIdsResponse.safeParse(endpointResponse.data);
+		const parsedData = getMissingIdsRoute.responseSchema.safeParse(
+			endpointResponse.data,
+		);
 
 		return {
 			...endpointResponse,
@@ -90,11 +97,12 @@ export class AccessRulesApiClient extends ApiClient {
 		fetchOptions: FetchRulesOptions,
 		jwt: string,
 	): Promise<FetchRulesEndpointResponse> {
-		const endpointResponse: ApiEndpointResponse = await this.post(
-			accessRuleApiPaths.FETCH_MANY,
-			fetchOptions,
-			this.getAuthHeaders(jwt),
-		);
+		const endpointResponse: ApiEndpointResponse<ApiEndpointData> =
+			await this.post(
+				accessRuleApiPaths.FETCH_MANY,
+				fetchOptions,
+				this.getAuthHeaders(jwt),
+			);
 
 		const parsedData = fetchRulesResponse.safeParse(endpointResponse.data);
 
@@ -108,11 +116,12 @@ export class AccessRulesApiClient extends ApiClient {
 		filters: AccessRulesFilterInput[],
 		jwt: string,
 	): Promise<RuleIdsEndpointResponse> {
-		const endpointResponse: ApiEndpointResponse = await this.post(
-			accessRuleApiPaths.FIND_IDS,
-			filters,
-			this.getAuthHeaders(jwt),
-		);
+		const endpointResponse: ApiEndpointResponse<ApiEndpointData> =
+			await this.post(
+				accessRuleApiPaths.FIND_IDS,
+				filters,
+				this.getAuthHeaders(jwt),
+			);
 
 		const parsedData = ruleIdsResponse.safeParse(endpointResponse.data);
 
@@ -124,7 +133,9 @@ export class AccessRulesApiClient extends ApiClient {
 
 	//// write
 
-	public async rehashAll(jwt: string): Promise<ApiEndpointResponse> {
+	public async rehashAll(
+		jwt: string,
+	): Promise<ApiEndpointResponse<RehashedRules>> {
 		return this.post(
 			accessRuleApiPaths.REHASH_ALL,
 			{},
@@ -135,7 +146,7 @@ export class AccessRulesApiClient extends ApiClient {
 	public insertMany(
 		ruleGroups: InsertRulesGroup[],
 		jwt: string,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<undefined>> {
 		return this.post(
 			accessRuleApiPaths.INSERT_MANY,
 			ruleGroups,

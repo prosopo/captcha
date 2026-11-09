@@ -46,7 +46,7 @@ class ApiExpressRouterFactory {
 		apiEndpointAdapter: ApiExpressEndpointAdapter,
 	): void {
 		for (const [route, endpoint] of Object.entries(routes)) {
-			router.post(
+			router[endpoint.getMethod?.() ?? "post"](
 				route,
 				async (
 					request: Request,

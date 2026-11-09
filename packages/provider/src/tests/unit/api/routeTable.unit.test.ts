@@ -15,6 +15,7 @@ import {
 	apiExpressRouterFactory,
 	createApiExpressDefaultEndpointAdapter,
 } from "@prosopo/api-express-router";
+import type { ProviderEnvironment } from "@prosopo/env";
 import { LogLevel, getLogger } from "@prosopo/logger";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { AccessRuleApiRoutes } from "@prosopo/user-access-policy/api";
@@ -94,7 +95,11 @@ describe("provider route table", () => {
 
 	it("public routes", () => {
 		expect(
-			describeRouter(publicRouter(createMockProviderEnvironment())),
+			describeRouter(
+				publicRouter(
+					createMockProviderEnvironment() as Partial<ProviderEnvironment> as ProviderEnvironment,
+				),
+			),
 		).toMatchInlineSnapshot(`
 			[
 			  "GET /healthz handlers=1",
@@ -109,7 +114,9 @@ describe("provider route table", () => {
 	it("admin routes", () => {
 		expect(
 			describeRouter(
-				apiRouter(createApiAdminRoutesProvider(createMockProviderEnvironment())),
+				apiRouter(
+					createApiAdminRoutesProvider(createMockProviderEnvironment()),
+				),
 			),
 		).toMatchInlineSnapshot(`
 			[

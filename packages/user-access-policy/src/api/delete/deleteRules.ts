@@ -26,6 +26,7 @@ import {
 	getAccessRuleFiltersFromInput,
 } from "#policy/ruleInput/ruleInput.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
+import type { DeletedRulesCount } from "../ruleApiContracts.js";
 
 // `unknown` input position — see accessRulesFilterInput's block comment
 // for why the strict-identity form doesn't fit here.
@@ -35,7 +36,9 @@ type DeleteRulesSchema = ZodType<
 	unknown
 >;
 
-export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
+export class DeleteRulesEndpoint
+	implements ApiEndpoint<DeleteRulesSchema, DeletedRulesCount>
+{
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
@@ -48,7 +51,7 @@ export class DeleteRulesEndpoint implements ApiEndpoint<DeleteRulesSchema> {
 	async processRequest(
 		args: AccessRulesFilterInput[],
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
 		const log = logger ?? this.logger;
 		let deletedCount = 0;
 

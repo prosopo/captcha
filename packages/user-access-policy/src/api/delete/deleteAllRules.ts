@@ -19,8 +19,11 @@ import {
 } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/logger";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
+import type { DeletedRulesCount } from "../ruleApiContracts.js";
 
-export class DeleteAllRulesEndpoint implements ApiEndpoint<undefined> {
+export class DeleteAllRulesEndpoint
+	implements ApiEndpoint<undefined, DeletedRulesCount>
+{
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
@@ -28,7 +31,9 @@ export class DeleteAllRulesEndpoint implements ApiEndpoint<undefined> {
 
 	public getRequestArgsSchema(): undefined {}
 
-	async processRequest(logger?: Logger): Promise<ApiEndpointResponse> {
+	async processRequest(
+		logger?: Logger,
+	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
 		const log = logger ?? this.logger;
 		const deletedCount = await this.accessRulesStorage.deleteAllRules();
 

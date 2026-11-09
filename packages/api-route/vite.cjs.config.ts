@@ -13,10 +13,12 @@ import path from "node:path";
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ViteCommonJSConfig } from "@prosopo/config";
+import { entries } from "./entries.js";
 
 export default function () {
 	return ViteCommonJSConfig(
 		path.basename("."),
 		path.resolve("./tsconfig.json"),
+		entries,
 	);
 }

@@ -14,10 +14,13 @@
 
 import type { ApiEndpointResponseStatus } from "./apiEndpointResponseStatus.js";
 
-interface ApiEndpointResponse {
+// undefined is for endpoints that never send data.
+type ApiEndpointData = object | undefined;
+
+interface ApiEndpointResponse<Data extends ApiEndpointData> {
 	status: ApiEndpointResponseStatus;
-	data?: object;
+	data?: Data;
 	error?: string;
 }
 
-export type { ApiEndpointResponse };
+export type { ApiEndpointData, ApiEndpointResponse };

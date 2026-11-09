@@ -14,6 +14,7 @@
 
 import {
 	type ApiEndpoint,
+	type ApiEndpointData,
 	ApiEndpointResponseStatus,
 	type ApiRoutes,
 	type ApiRoutesProvider,
@@ -39,11 +40,11 @@ type Handler = (
 	next: NextFunction,
 ) => Promise<void>;
 
-const endpoint = (): ApiEndpoint<ZodType | undefined> => ({
+const endpoint = (): ApiEndpoint<ZodType | undefined, ApiEndpointData> => ({
 	getRequestArgsSchema: vi.fn<() => ZodType | undefined>(() => undefined),
-	processRequest: vi.fn<ApiEndpoint<ZodType | undefined>["processRequest"]>(
-		async () => ({ status: ApiEndpointResponseStatus.SUCCESS }),
-	),
+	processRequest: vi.fn<
+		ApiEndpoint<ZodType | undefined, ApiEndpointData>["processRequest"]
+	>(async () => ({ status: ApiEndpointResponseStatus.SUCCESS })),
 });
 
 const provider = (routes: ApiRoutes): ApiRoutesProvider => ({
@@ -211,5 +212,27 @@ describe("the handler each route is given", () => {
 		const handler = postRoutes(router)[0]?.[1];
 		await handler?.({} as Request, {} as Response, captureNext().fn);
 		expect(target.processRequest).not.toHaveBeenCalled();
+	});
+});
+
+describe("route method", () => {
+	test("registers an endpoint under the method it declares, defaulting to POST", () => {
+		const routes: ApiRoutes = {
+			"/declared": { ...endpoint(), getMethod: () => "get" },
+			"/default": endpoint(),
+		};
+
+		const router = new ApiExpressRouterFactory().createRouter(
+			provider(routes),
+			adapter(),
+		);
+
+		const methods = Object.fromEntries(
+			router.stack.flatMap((layer) =>
+				layer.route ? [[layer.route.path, layer.route.stack[0]?.method]] : [],
+			),
+		);
+		expect(methods["/declared"]).toBe("get");
+		expect(methods["/default"]).toBe("post");
 	});
 });

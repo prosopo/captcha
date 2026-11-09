@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ApiEndpoint } from "@prosopo/api-route";
+import type { ApiEndpoint, ApiEndpointData } from "@prosopo/api-route";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
 
 interface ApiExpressEndpointAdapter {
 	handleRequest(
-		endpoint: ApiEndpoint<ZodType | undefined>,
+		endpoint: ApiEndpoint<ZodType | undefined, ApiEndpointData>,
 		request: Request,
 		response: Response,
 		next: NextFunction,

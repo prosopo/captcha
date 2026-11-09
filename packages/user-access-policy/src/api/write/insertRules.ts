@@ -62,7 +62,9 @@ type ParsedInsertRuleGroups = ParsedInsertRulesGroup[];
 // `z.preprocess` on `deferToVerify` for Redis string round-tripping.
 type InsertRulesSchema = ZodType<InsertRulesGroup[], ZodTypeDef, unknown>;
 
-export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
+export class InsertRulesEndpoint
+	implements ApiEndpoint<InsertRulesSchema, undefined>
+{
 	public constructor(
 		private readonly accessRulesWriter: AccessRulesWriter,
 		private readonly logger: Logger,
@@ -84,16 +86,18 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	async processRequest(
 		args: ParsedInsertRuleGroups,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<undefined>> {
 		const log = logger ?? this.logger;
 
-		const timeoutPromise = new Promise<ApiEndpointResponse>((resolve) => {
-			setTimeout(() => {
-				resolve({
-					status: ApiEndpointResponseStatus.PROCESSING,
-				});
-			}, 5000);
-		});
+		const timeoutPromise = new Promise<ApiEndpointResponse<undefined>>(
+			(resolve) => {
+				setTimeout(() => {
+					resolve({
+						status: ApiEndpointResponseStatus.PROCESSING,
+					});
+				}, 5000);
+			},
+		);
 
 		const userScopesCount = args.reduce(
 			(userScopesCount, group) => userScopesCount + group.userScopes.length,

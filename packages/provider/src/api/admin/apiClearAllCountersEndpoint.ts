@@ -19,7 +19,11 @@ import {
 } from "@prosopo/api-route";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { ClearAllCountersBody, ClearAllCountersResponse } from "@prosopo/types";
+import {
+	ClearAllCountersBody,
+	ClearAllCountersResponse,
+	type ClearAllCountersResponseType,
+} from "@prosopo/types";
 import type { z } from "zod";
 import type { UsageCounters } from "../../util/usageCounters.js";
 
@@ -32,14 +36,14 @@ type ClearAllCountersBodyType = typeof ClearAllCountersBody;
  * of Redis keys deleted.
  */
 class ApiClearAllCountersEndpoint
-	implements ApiEndpoint<ClearAllCountersBodyType>
+	implements ApiEndpoint<ClearAllCountersBodyType, ClearAllCountersResponseType>
 {
 	public constructor(private readonly usageCounters: UsageCounters | null) {}
 
 	async processRequest(
 		args: z.infer<ClearAllCountersBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<ClearAllCountersResponseType>> {
 		logger = logger
 			? logger.with({}, "admin:counters:clear-all")
 			: getLogger("info", "provider:admin:counters:clear-all");

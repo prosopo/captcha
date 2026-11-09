@@ -17,35 +17,34 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { AllKeys } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import { type ZodType, z } from "zod";
+import type { ZodType } from "zod";
+import {
+	type MissingIds,
+	type MissingIdsResponse,
+	getMissingIdsRoute,
+	missingIdsResponse,
+} from "#policy/api/ruleApiContracts.js";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 
-export type MissingIds = string[];
+export { missingIdsResponse };
+export type { MissingIds, MissingIdsResponse };
 
 type MissingIdsSchema = ZodType<MissingIds>;
 
-export type MissingIdsResponse = {
-	ids: string[];
-};
+export type MissingIdsEndpointResponse =
+	ApiEndpointResponse<MissingIdsResponse>;
 
-export const missingIdsResponse = z.object({
-	ids: z.string().array(),
-} satisfies AllKeys<MissingIdsResponse>) satisfies ZodType<MissingIdsResponse>;
-
-export type MissingIdsEndpointResponse = ApiEndpointResponse & {
-	data?: MissingIdsResponse;
-};
-
-export class GetMissingIdsEndpoint implements ApiEndpoint<MissingIdsSchema> {
+export class GetMissingIdsEndpoint
+	implements ApiEndpoint<MissingIdsSchema, MissingIdsResponse>
+{
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
 	) {}
 
 	public getRequestArgsSchema(): MissingIdsSchema {
-		return z.string().array();
+		return getMissingIdsRoute.requestSchema;
 	}
 
 	async processRequest(

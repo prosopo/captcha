@@ -39,11 +39,11 @@ export const ruleIdsResponse = z.object({
 	ruleIds: z.string().array(),
 } satisfies AllKeys<RuleIdsResponse>) satisfies ZodType<RuleIdsResponse>;
 
-export type RuleIdsEndpointResponse = ApiEndpointResponse & {
-	data?: RuleIdsResponse;
-};
+export type RuleIdsEndpointResponse = ApiEndpointResponse<RuleIdsResponse>;
 
-export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
+export class FindRuleIdsEndpoint
+	implements ApiEndpoint<FindRulesSchema, RuleIdsResponse>
+{
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,

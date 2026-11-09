@@ -22,6 +22,7 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	GetDecisionMachineBody,
 	GetDecisionMachineResponse,
+	type GetDecisionMachineResponseType,
 } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -29,14 +30,15 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type GetDecisionMachineBodyType = typeof GetDecisionMachineBody;
 
 class ApiGetDecisionMachineEndpoint
-	implements ApiEndpoint<GetDecisionMachineBodyType>
+	implements
+		ApiEndpoint<GetDecisionMachineBodyType, GetDecisionMachineResponseType>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<GetDecisionMachineBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<GetDecisionMachineResponseType>> {
 		logger = logger
 			? logger.with({}, "admin:decision-machine:get")
 			: getLogger("info", "provider:admin:decision-machine:get");

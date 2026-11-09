@@ -25,14 +25,14 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type RegisterSitekeysBodyType = typeof RegisterSitekeysBody;
 
 class ApiRegisterSiteKeysEndpoint
-	implements ApiEndpoint<RegisterSitekeysBodyType>
+	implements ApiEndpoint<RegisterSitekeysBodyType, undefined>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<RegisterSitekeysBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<undefined>> {
 		logger = logger
 			? logger.with({}, "admin:site-keys:register")
 			: getLogger("info", "provider:admin:site-keys:register");

@@ -48,11 +48,12 @@ export const fetchRulesResponse: ZodType<
 	ruleEntries: ruleEntryInput.array(),
 } satisfies AllKeys<FetchRulesResponse>);
 
-export type FetchRulesEndpointResponse = ApiEndpointResponse & {
-	data?: FetchRulesResponse;
-};
+export type FetchRulesEndpointResponse =
+	ApiEndpointResponse<FetchRulesResponse>;
 
-export class FetchRulesEndpoint implements ApiEndpoint<FetchRulesSchema> {
+export class FetchRulesEndpoint
+	implements ApiEndpoint<FetchRulesSchema, FetchRulesResponse>
+{
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,

@@ -30,10 +30,10 @@ import { ApiReplaceDetectorPoolEndpoint } from "./apiReplaceDetectorPoolEndpoint
 import { ApiToggleMaintenanceModeEndpoint } from "./apiToggleMaintenanceModeEndpoint.js";
 import { ApiUpdateDecisionMachineEndpoint } from "./apiUpdateDecisionMachineEndpoint.js";
 
-class ApiAdminRoutesProvider implements ApiRoutesProvider {
+class ApiAdminRoutesProvider implements ApiRoutesProvider<AdminApiPaths> {
 	public constructor(private readonly tasks: Tasks) {}
 
-	public getRoutes(): ApiRoutes {
+	public getRoutes(): ApiRoutes<AdminApiPaths> {
 		return {
 			[AdminApiPaths.SiteKeyRegister]: new ApiRegisterSiteKeyEndpoint(
 				this.tasks.clientTaskManager,

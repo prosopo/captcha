@@ -25,13 +25,15 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
 type RemoveSitekeyBodyType = typeof RemoveSitekeyBody;
 
-class ApiRemoveSiteKeyEndpoint implements ApiEndpoint<RemoveSitekeyBodyType> {
+class ApiRemoveSiteKeyEndpoint
+	implements ApiEndpoint<RemoveSitekeyBodyType, undefined>
+{
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<RemoveSitekeyBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<undefined>> {
 		logger = logger
 			? logger.with({}, "admin:site-key:remove")
 			: getLogger("info", "provider:admin:site-key:remove");

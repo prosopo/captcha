@@ -24,6 +24,7 @@ import {
 	type AccessRulesStorage,
 	FilterScopeMatch,
 } from "#policy/rulesStorage.js";
+import type { DeletedRulesCount } from "../ruleApiContracts.js";
 
 export type DeleteSiteGroup = {
 	clientIds: string[];
@@ -35,7 +36,7 @@ export type DeleteSiteGroups = DeleteSiteGroup[];
 type DeleteRuleGroupsSchema = ZodType<DeleteSiteGroups>;
 
 export class DeleteRuleGroupsEndpoint
-	implements ApiEndpoint<DeleteRuleGroupsSchema>
+	implements ApiEndpoint<DeleteRuleGroupsSchema, DeletedRulesCount>
 {
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
@@ -54,7 +55,7 @@ export class DeleteRuleGroupsEndpoint
 	async processRequest(
 		args: DeleteSiteGroups,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<DeletedRulesCount>> {
 		const log = logger ?? this.logger;
 		const foundRuleIdPromises = args.flatMap((ruleToDelete) =>
 			ruleToDelete.clientIds.map((clientId) =>

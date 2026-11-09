@@ -12,6 +12,11 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./contracts": {
+			"types": "./dist/contracts/.export.d.ts",
+			"import": "./dist/contracts/.export.js",
+			"require": "./dist/cjs/contracts/.export.cjs"
 		}
 	},
 	"scripts": {
@@ -26,6 +31,7 @@
 	},
 	"dependencies": {
 		"@prosopo/logger": "workspace:*",
+		"@prosopo/types": "workspace:*",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

@@ -19,21 +19,25 @@ import {
 } from "@prosopo/api-route";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { UpdateDecisionMachineBody } from "@prosopo/types";
+import {
+	UpdateDecisionMachineBody,
+	type UpdateDecisionMachineData,
+} from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
 type UpdateDecisionMachineBodyType = typeof UpdateDecisionMachineBody;
 
 class ApiUpdateDecisionMachineEndpoint
-	implements ApiEndpoint<UpdateDecisionMachineBodyType>
+	implements
+		ApiEndpoint<UpdateDecisionMachineBodyType, UpdateDecisionMachineData>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<UpdateDecisionMachineBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<UpdateDecisionMachineData>> {
 		logger = logger
 			? logger.with({}, "admin:decision-machine:update")
 			: getLogger("info", "provider:admin:decision-machine:update");

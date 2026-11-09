@@ -19,7 +19,10 @@ import {
 } from "@prosopo/api-route";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { ReplaceDetectorPoolBody } from "@prosopo/types";
+import {
+	ReplaceDetectorPoolBody,
+	type ReplaceDetectorPoolData,
+} from "@prosopo/types";
 import type { z } from "zod";
 import {
 	type PoolBundle,
@@ -35,12 +38,12 @@ type ReplaceDetectorPoolBodyType = typeof ReplaceDetectorPoolBody;
  * process memory.
  */
 class ApiReplaceDetectorPoolEndpoint
-	implements ApiEndpoint<ReplaceDetectorPoolBodyType>
+	implements ApiEndpoint<ReplaceDetectorPoolBodyType, ReplaceDetectorPoolData>
 {
 	async processRequest(
 		args: z.infer<ReplaceDetectorPoolBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<ReplaceDetectorPoolData>> {
 		logger = logger || getLogger("info", "");
 		try {
 			const bundles = new Map<string, PoolBundle>(Object.entries(args.bundles));

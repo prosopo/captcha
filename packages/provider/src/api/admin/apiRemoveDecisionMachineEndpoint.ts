@@ -22,6 +22,7 @@ import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	RemoveDecisionMachineBody,
 	RemoveDecisionMachineResponse,
+	type RemoveDecisionMachineResponseType,
 } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -29,14 +30,18 @@ import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 type RemoveDecisionMachineBodyType = typeof RemoveDecisionMachineBody;
 
 class ApiRemoveDecisionMachineEndpoint
-	implements ApiEndpoint<RemoveDecisionMachineBodyType>
+	implements
+		ApiEndpoint<
+			RemoveDecisionMachineBodyType,
+			RemoveDecisionMachineResponseType
+		>
 {
 	public constructor(private readonly clientTaskManager: ClientTaskManager) {}
 
 	async processRequest(
 		args: z.infer<RemoveDecisionMachineBodyType>,
 		logger?: Logger,
-	): Promise<ApiEndpointResponse> {
+	): Promise<ApiEndpointResponse<RemoveDecisionMachineResponseType>> {
 		logger = logger
 			? logger.with({}, "admin:decision-machine:remove")
 			: getLogger("info", "provider:admin:decision-machine:remove");

@@ -27,29 +27,20 @@ import type { AccessRulesStorage } from "#policy/rulesStorage.js";
 import { DeleteAllRulesEndpoint } from "./delete/deleteAllRules.js";
 import { DeleteRuleGroupsEndpoint } from "./delete/deleteRuleGroups.js";
 import { DeleteRulesEndpoint } from "./delete/deleteRules.js";
+import { accessRuleApiPaths } from "./ruleApiPaths.js";
 import { InsertRulesEndpoint } from "./write/insertRules.js";
 
-export enum accessRuleApiPaths {
-	// delete
-	DELETE_ALL = "/v1/prosopo/user-access-policy/rules/delete-all",
-	DELETE_GROUPS = "/v1/prosopo/user-access-policy/rules/delete-groups",
-	DELETE_MANY = "/v1/prosopo/user-access-policy/rules/delete-many",
-	// read
-	FETCH_MANY = "/v1/prosopo/user-access-policy/rules/fetch-many",
-	FIND_IDS = "/v1/prosopo/user-access-policy/rules/find-ids",
-	GET_MISSING_IDS = "/v1/prosopo/user-access-policy/rules/get-missing-ids",
-	// write
-	INSERT_MANY = "/v1/prosopo/user-access-policy/rules/insert-many",
-	REHASH_ALL = "/v1/prosopo/user-access-policy/rules/rehash-all",
-}
+export { accessRuleApiPaths };
 
-export class AccessRuleApiRoutes implements ApiRoutesProvider {
+export class AccessRuleApiRoutes
+	implements ApiRoutesProvider<accessRuleApiPaths>
+{
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
 	) {}
 
-	public getRoutes(): ApiRoutes {
+	public getRoutes(): ApiRoutes<accessRuleApiPaths> {
 		return {
 			...this.makeDeleteEndpoints(),
 			...this.makeReadEndpoints(),

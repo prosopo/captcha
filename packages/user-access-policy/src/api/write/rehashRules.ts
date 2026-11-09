@@ -19,8 +19,11 @@ import {
 } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/logger";
 import type { AccessRulesStorage } from "#policy/rulesStorage.js";
+import type { RehashedRules } from "../ruleApiContracts.js";
 
-export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
+export class RehashRulesEndpoint
+	implements ApiEndpoint<undefined, RehashedRules>
+{
 	public constructor(
 		private readonly accessRulesStorage: AccessRulesStorage,
 		private readonly logger: Logger,
@@ -28,7 +31,9 @@ export class RehashRulesEndpoint implements ApiEndpoint<undefined> {
 
 	public getRequestArgsSchema(): undefined {}
 
-	async processRequest(logger?: Logger): Promise<ApiEndpointResponse> {
+	async processRequest(
+		logger?: Logger,
+	): Promise<ApiEndpointResponse<RehashedRules>> {
 		const log = logger ?? this.logger;
 		await this.accessRulesStorage.fetchAllRuleIds(async (ruleIds: string[]) => {
 			log.info(() => ({

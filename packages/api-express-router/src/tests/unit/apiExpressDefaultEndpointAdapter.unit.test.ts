@@ -14,6 +14,7 @@
 
 import {
 	type ApiEndpoint,
+	type ApiEndpointData,
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
@@ -77,13 +78,18 @@ const build = (body: unknown = {}, errorStatusCode = 500): Harness => {
 
 const endpoint = (
 	schema: ZodType | undefined,
-	process: ApiEndpoint<ZodType | undefined>["processRequest"] = async () => ({
+	process: ApiEndpoint<
+		ZodType | undefined,
+		ApiEndpointData
+	>["processRequest"] = async () => ({
 		status: ApiEndpointResponseStatus.SUCCESS,
 	}),
-): ApiEndpoint<ZodType | undefined> => ({
+): ApiEndpoint<ZodType | undefined, ApiEndpointData> => ({
 	getRequestArgsSchema: () => schema,
 	processRequest:
-		vi.fn<ApiEndpoint<ZodType | undefined>["processRequest"]>(process),
+		vi.fn<ApiEndpoint<ZodType | undefined, ApiEndpointData>["processRequest"]>(
+			process,
+		),
 });
 
 let harness: Harness;
@@ -270,12 +276,14 @@ describe("a body the schema rejects", () => {
 		// getRequestArgsSchema() is called inside the same try as parse(), so a
 		// broken schema factory is reported as a bad request rather than
 		// escaping handleRequest as an unhandled rejection.
-		const target: ApiEndpoint<ZodType | undefined> = {
+		const target: ApiEndpoint<ZodType | undefined, ApiEndpointData> = {
 			getRequestArgsSchema: () => {
 				throw new Error("schema construction failed");
 			},
 			processRequest:
-				vi.fn<ApiEndpoint<ZodType | undefined>["processRequest"]>(),
+				vi.fn<
+					ApiEndpoint<ZodType | undefined, ApiEndpointData>["processRequest"]
+				>(),
 		};
 
 		await harness.adapter.handleRequest(
@@ -404,7 +412,7 @@ describe("an endpoint that fails", () => {
 	test("a failure while serialising the response is caught too", async () => {
 		// stringifyBigInts walks the response, so a getter that throws lands in
 		// the same catch as an endpoint failure rather than escaping.
-		const hostile: ApiEndpointResponse = {
+		const hostile: ApiEndpointResponse<undefined> = {
 			get status(): ApiEndpointResponseStatus {
 				throw new Error("getter exploded");
 			},
@@ -416,5 +424,31 @@ describe("an endpoint that fails", () => {
 			harness.next.fn,
 		);
 		expect(harness.status).toHaveBeenCalledWith(500);
+	});
+});
+
+describe("where the arguments come from", () => {
+	test("a GET endpoint validates the query string, not the body", async () => {
+		const processRequest = vi.fn<
+			(args: { id: string }) => Promise<ApiEndpointResponse<undefined>>
+		>(async () => ({ status: ApiEndpointResponseStatus.SUCCESS }));
+		const endpoint: ApiEndpoint<ZodType<{ id: string }>, undefined> = {
+			getMethod: () => "get",
+			getRequestArgsSchema: () => z.object({ id: z.string() }),
+			processRequest,
+		};
+		const request = {
+			query: { id: "from-query" },
+			body: {},
+		} as Partial<Request> as Request;
+		const response = { json: vi.fn() } as Partial<Response> as Response;
+
+		const adapter = new ApiExpressDefaultEndpointAdapter(
+			LogLevel.enum.error,
+			500,
+		);
+		await adapter.handleRequest(endpoint, request, response, vi.fn());
+
+		expect(processRequest.mock.calls[0]?.[0]).toEqual({ id: "from-query" });
 	});
 });
