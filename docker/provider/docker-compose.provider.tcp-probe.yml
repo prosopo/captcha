@@ -3,33 +3,28 @@
 #     -f docker-compose.provider.tcp-probe.yml up -d
 # The caddy service in the base already mounts /var/run/tcp-probe read-only.
 services:
-  # eBPF sidecar that captures raw TCP handshake data (SYN / SYN-ACK / ACK)
-  # off the WAN interface and serves per-request lookups over a Unix socket.
-  # Chaddy (adjacent `caddy` service) reads that socket at accept() time and
-  # forwards the raw fields (`X-TLS-Syn-Ns`, `X-TLS-Observed-Ttl`, `X-TLS-Tcp-*`)
-  # onto the reverse-proxy request; the provider persists them onto the Session
-  # record. Nothing here is on by default: the service lives only in this
-  # overlay, so the base stack neither pulls nor starts it. Ansible layers it
-  # on for hosts with `tcp_probe_enabled`. The image is published from
-  # `protect/tcp-probe`; see `deploy/DEPLOY.md` there
-  # for the bumblebee-side reference deployment; the same wire protocol
-  # (12-byte req, 80- or 104-byte reply) and image are reused here.
+  caddy:
+    depends_on:
+      # Must attach first: only listeners opened afterwards keep the saved SYN.
+      tcp-probe:
+        condition: service_started
+    group_add:
+      - "${TCP_PROBE_GID:-10500}"
+  # eBPF sidecar that records each connection's TCP handshake from a sockops
+  # program on the root cgroup and serves per-connection lookups over a Unix
+  # socket. Chaddy reads that socket and forwards the record as `X-TCP-Probe`;
+  # the provider persists it onto the Session record. The service lives only
+  # in this overlay, so the base stack neither pulls nor starts it. Ansible
+  # layers it on for hosts with `tcp_probe_enabled`. The image is published
+  # from `protect/tcp-probe`.
   #
-  # `network_mode: host` is mandatory: XDP/TC hooks attach to real host
-  # interfaces, and the container-network veth wouldn't see the outside
-  # traffic. Caps are the minimum needed to load BPF programs and attach
-  # them; the probe never modifies traffic (XDP_PASS / TC_ACT_PIPE) so a
-  # crash cannot black-hole requests — worst case is the socket disappears
-  # and chaddy silently degrades to the pre-sidecar header set.
+  # `network_mode: host` and `cgroup: host` are mandatory: the program attaches
+  # to the host's root cgroup. It never modifies traffic, so a crash cannot
+  # black-hole requests; chaddy just stops adding the header.
   tcp-probe:
     container_name: tcp-probe
-    # Pinned, not `:latest`. The probe's reply is a bare fixed-size struct
-    # with no version in it, so the tag is the only thing that says which
-    # layout a host is serving — and publishing `:latest` would change that
-    # on every pronode at the next pull, with nobody running a deploy. Set
-    # TCP_PROBE_IMAGE explicitly to move a host. 0.1.1 serves the 80-byte
-    # record; chaddy reads that and the 104-byte one (prosopo/chaddy#17).
-    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-0.1.1}
+    # Pinned, not `:latest`, so publishing cannot change a host without a deploy.
+    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:?set TCP_PROBE_IMAGE to a version}
     network_mode: host
     cap_add:
       - BPF
@@ -44,15 +39,14 @@ services:
       # containers see the same inode. Docker will create the dir if it
       # doesn't exist yet.
       - /var/run/tcp-probe:/var/run/tcp-probe
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    cgroup: host
     command:
-      - "--iface"
-      # Each pronode's WAN NIC name is different (contabo/hetzner/etc.);
-      # ansible sets TCP_PROBE_IFACE per-host in .env.1.$NODE_ENV.
-      - "${TCP_PROBE_IFACE}"
+      # The port the listener sees, after Docker's DNAT.
       - "--port"
       - "443"
-      - "--format"
-      - "jsonl"
+      - "--socket-gid"
+      - "${TCP_PROBE_GID:-10500}"
       - "--lookup-socket"
       - "/var/run/tcp-probe/lookup.sock"
     restart: unless-stopped

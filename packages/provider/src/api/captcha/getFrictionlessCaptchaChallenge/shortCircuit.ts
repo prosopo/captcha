@@ -19,6 +19,7 @@ import {
 	type ModeEnum,
 	type RequestHeaders,
 	type ScoreComponents,
+	type TcpProbeRecord,
 	clampImageRounds,
 	isConcreteCaptchaType,
 } from "@prosopo/types";
@@ -57,6 +58,7 @@ export type ShortCircuitInput = {
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	tcpProbe?: TcpProbeRecord;
 	// Carried onto the session so a site pinned to a captcha type still
 	// records refreshes, and its refresh limit can still apply.
 	refresh?: RefreshLineage;
@@ -113,6 +115,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		...(input.chelloToHandshakeUs !== undefined && {
 			chelloToHandshakeUs: input.chelloToHandshakeUs,
 		}),
+		...(input.tcpProbe !== undefined && { tcpProbe: input.tcpProbe }),
 	};
 };
 

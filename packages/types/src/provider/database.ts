@@ -74,6 +74,7 @@ import {
 	MatchedAccessRuleSchema,
 } from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
+import { type TcpProbeRecord, TcpProbeRecordSchema } from "./tcpProbe.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -677,6 +678,7 @@ export const SessionSchema = object({
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
+	tcpProbe: TcpProbeRecordSchema.optional(),
 	tlsHandshakeRttUs: number().min(0).max(4_294_967_295).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
@@ -866,6 +868,10 @@ export type Session = {
 	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
+	// Everything tcp-probe recorded for this connection, including packets
+	// after the ClientHello. Also present on a miss, so the blank rate is
+	// measurable from stored sessions.
+	tcpProbe?: TcpProbeRecord;
 	// Microseconds from the server's TLS handshake flight to the client's
 	// reply, timed by chaddy: a round trip to whatever terminates TLS, where
 	// synackNs → ackNs is a round trip to whatever opened the TCP connection.
