@@ -133,6 +133,9 @@ const remember = (signerUrl: string, entry: CacheEntry): void => {
 	cache.set(signerUrl, entry);
 };
 
+const isJwk = (entry: unknown): entry is Jwk =>
+	typeof entry === "object" && entry !== null && !Array.isArray(entry);
+
 export const resolveJwksFromSignatureAgent = async (
 	signerUrl: string,
 	options: JwksResolverOptions = {},
@@ -159,13 +162,14 @@ export const resolveJwksFromSignatureAgent = async (
 	} catch {
 		throw new Error(`JWKS body at ${directoryUrl} is not JSON`);
 	}
-	// A `null` or scalar body has no keys rather than crashing on `.keys`.
+	// A `null` or scalar body, or a `null` or scalar entry, has no keys rather
+	// than crashing whoever reads them.
 	const keys =
 		typeof body === "object" &&
 		body !== null &&
 		"keys" in body &&
 		Array.isArray(body.keys)
-			? (body.keys as Jwk[])
+			? body.keys.filter(isJwk)
 			: [];
 
 	const ttl = Math.min(
