@@ -92,6 +92,29 @@ export const matchesGlob = (pattern: string, text: string): boolean => {
 	return p === pattern.length;
 };
 
+/** A dapp-scoped decision machine always names the dapp it applies to. */
+export type DecisionMachineTarget =
+	| { scope: DecisionMachineScope.Global; dappAccount?: string }
+	| { scope: DecisionMachineScope.Dapp; dappAccount: string };
+
+export const toDecisionMachineTarget = (
+	scope: DecisionMachineScope,
+	dappAccount?: string,
+): DecisionMachineTarget => {
+	if (scope === DecisionMachineScope.Global) {
+		return { scope, dappAccount };
+	}
+	if (!dappAccount) {
+		throw new ProsopoError({
+			code: "INVALID_REQUEST",
+			errorSite: "PROV-52",
+			message: "BadRequest",
+			context: { scope, dappAccount },
+		});
+	}
+	return { scope, dappAccount };
+};
+
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
 	logger: Logger;
@@ -441,31 +464,30 @@ export class ClientTaskManager {
 		await this.providerDB.removeClientRecords(accounts);
 	}
 
-	async updateDecisionMachine(
-		scope: DecisionMachineScope,
-		runtime: DecisionMachineRuntime,
-		source: string,
-		dappAccount?: string,
-		language?: DecisionMachineLanguage,
-		name?: string,
-		version?: string,
-		captchaType?: DecisionMachineCaptchaType,
-		kind?: DecisionMachineKind,
-	): Promise<{
+	async updateDecisionMachine({
+		scope,
+		dappAccount,
+		runtime,
+		source,
+		language,
+		name,
+		version,
+		captchaType,
+		kind,
+	}: DecisionMachineTarget & {
+		runtime: DecisionMachineRuntime;
+		source: string;
+		language?: DecisionMachineLanguage;
+		name?: string;
+		version?: string;
+		captchaType?: DecisionMachineCaptchaType;
+		kind?: DecisionMachineKind;
+	}): Promise<{
 		scope: DecisionMachineScope;
 		dappAccount?: string;
 		kind?: DecisionMachineKind;
 		updatedAt: string;
 	}> {
-		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
-			throw new ProsopoError({
-				code: "INVALID_REQUEST",
-				errorSite: "PROV-52",
-				message: "BadRequest",
-				context: { scope, dappAccount },
-			});
-		}
-
 		const now = new Date();
 		await this.providerDB.upsertDecisionMachineArtifact({
 			scope,
