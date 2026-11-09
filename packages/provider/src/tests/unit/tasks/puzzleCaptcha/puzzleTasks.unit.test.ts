@@ -861,6 +861,7 @@ describe("PuzzleCaptchaManager", () => {
 				pair,
 				mockEnv.config,
 				undefined,
+				null,
 				counters,
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
@@ -1147,6 +1148,7 @@ describe("PuzzleCaptchaManager", () => {
 					pair,
 					mockEnv.config,
 					undefined,
+					null,
 					counters,
 				);
 				decide = vi
