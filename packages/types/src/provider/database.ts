@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { parseBigInt } from "@prosopo/util";
 import {
 	type ZodType,
 	type ZodTypeDef,
@@ -32,7 +33,7 @@ import {
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
-import { CaptchaType } from "../client/index.js";
+import { CaptchaType, type ChallengeCaptchaType } from "../client/index.js";
 import type {
 	ContextType,
 	IIconOrderSettings,
@@ -63,6 +64,10 @@ import type {
 	PuzzleEvent,
 	RequestHeaders,
 } from "./api.js";
+import {
+	type ChallengeParams,
+	ChallengeParamsSchema,
+} from "./challengeParams.js";
 import type { DetectorData, SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -134,9 +139,16 @@ export type MongooseCompositeIpAddress = {
 export const parseMongooseCompositeIpAddress = (
 	ip: MongooseCompositeIpAddress,
 ): CompositeIpAddress => {
+	// A Decimal128 instance has no $numberDecimal but stringifies to its
+	// digits. BigInt() would throw a bare SyntaxError on a form like
+	// "1.5E+3"; name the field instead.
+	const toBigInt = (part: { $numberDecimal: string }, label: string) =>
+		parseBigInt(part.$numberDecimal ?? String(part)).expect(
+			`composite IP address ${label}`,
+		);
 	return {
-		lower: BigInt(ip.lower.$numberDecimal ?? ip.lower),
-		upper: ip.upper ? BigInt(ip.upper?.$numberDecimal ?? ip.upper) : undefined,
+		lower: toBigInt(ip.lower, "lower"),
+		upper: ip.upper ? toBigInt(ip.upper, "upper") : undefined,
 		type: ip.type,
 	};
 };
@@ -529,6 +541,7 @@ export const SessionSchema = object({
 	mode: nativeEnum(ModeEnum).optional(),
 	solvedImagesCount: number().optional(),
 	powDifficulty: number().optional(),
+	challengeParams: ChallengeParamsSchema.optional(),
 	storedAtTimestamp: date().optional(),
 	lastUpdatedTimestamp: date().optional(),
 	pendingStage: boolean().optional(),
@@ -548,7 +561,12 @@ export const SessionSchema = object({
 	// to the origin for fields the escalation doesn't carry itself
 	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
 	originSessionId: string().optional(),
+	solveDevice: object({
+		deviceCapability: string().optional(),
+		touchEventCount: number().optional(),
+	}).optional(),
 	refreshOf: string().optional(),
+	retryOf: string().optional(),
 	refreshCount: number().optional(),
 	refreshedAfterMs: number().optional(),
 	decryptedHeadHash: string(),
@@ -661,6 +679,7 @@ export const SessionSchema = object({
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
 	tcpProbe: TcpProbeRecordSchema.optional(),
+	tlsHandshakeRttUs: number().min(0).max(4_294_967_295).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -674,6 +693,13 @@ export const SessionSchema = object({
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
+/** What a solve's behavioural payload says about the input device. */
+export interface SolveDeviceSignals {
+	/** The client's own touch-support reading: "mobile" or "desktop". */
+	deviceCapability?: string;
+	touchEventCount?: number;
+}
+
 export type Session = {
 	sessionId: string;
 	createdAt: Date;
@@ -686,6 +712,7 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	challengeParams?: ChallengeParams;
 	// Puzzle-only render overrides chosen by the routing machine, persisted
 	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
 	// re-derives its overrides from a live trafficFilter verdict, which a
@@ -716,6 +743,13 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
+	// What the solve this session follows said about the input device, so a
+	// challenge issued for it judges the same device: the PoW solve on an
+	// escalation, or the failed puzzle named by `retryOf`.
+	solveDevice?: SolveDeviceSignals;
+	// The challenge of the failed puzzle this session was minted to replace.
+	// Set only when that puzzle passed the checks in `resolveRetrySolveDevice`.
+	retryOf?: string;
 	// Set when this session was minted because the user pressed refresh on
 	// the challenge of `refreshOf`. `refreshCount` is how many refreshes in a
 	// row led here, and `refreshedAfterMs` how long the replaced session had
@@ -838,6 +872,10 @@ export type Session = {
 	// after the ClientHello. Also present on a miss, so the blank rate is
 	// measurable from stored sessions.
 	tcpProbe?: TcpProbeRecord;
+	// Microseconds from the server's TLS handshake flight to the client's
+	// reply, timed by chaddy: a round trip to whatever terminates TLS, where
+	// synackNs → ackNs is a round trip to whatever opened the TCP connection.
+	tlsHandshakeRttUs?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -991,6 +1029,9 @@ export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
 	originY: number;
 	puzzleEvents?: PuzzleEvent[];
 	render?: PuzzleRenderRecord;
+	// Set once a retry session has taken this failed puzzle's device readings.
+	// A failed puzzle vouches for at most one retry.
+	retried?: boolean;
 }
 
 /** `answer` is the spoken transcript: the secret, never sent to a client. */
@@ -1004,6 +1045,21 @@ export interface AudioCaptchaStored extends InteractiveCaptchaStored {
 }
 
 /**
+ * What the portal needs to redraw the icon order challenge a user was served.
+ * Absent on records written before this field existed.
+ *
+ * `seed` drives the whole render, so it regenerates the answer along with the
+ * imagery: it must never be served to a caller, and never while the
+ * challenge is still live.
+ */
+export interface IconOrderRenderRecord {
+	geometry: { width: number; height: number; iconSize: number };
+	settings: Required<IIconOrderSettings>;
+	/** 128-bit hex. */
+	seed: string;
+}
+
+/**
  * `targets` is the answer. Nothing on this record is ever sent to a client,
  * and decoys are not stored because grading never consults them.
  */
@@ -1013,6 +1069,7 @@ export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
 	tolerance: number;
 	clicks?: IconClick[];
 	iconOrderEvents?: IconOrderEvent[];
+	render?: IconOrderRenderRecord;
 }
 
 /** A target icon as persisted: what grading needs, without render-only fields. */
@@ -1067,12 +1124,7 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.audio
-		| CaptchaType.iconOrder;
+	captchaType?: ChallengeCaptchaType;
 	createdAt: Date;
 	updatedAt: Date;
 };

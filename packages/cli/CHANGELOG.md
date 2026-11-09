@@ -1,5 +1,160 @@
 # @prosopo/cli
 
+## 3.10.10
+### Patch Changes
+
+- Updated dependencies [7a4767d]
+- Updated dependencies [624db1a]
+  - @prosopo/provider@5.29.2
+  - @prosopo/types@5.28.2
+  - @prosopo/env@3.6.95
+  - @prosopo/api@4.10.2
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.26
+
+## 3.10.9
+### Patch Changes
+
+- b2e3f27: Accept behavioural data up to 512 KB on captcha answers. The cap was 128 KB. A visitor who moves around the page for a while fills the widget's behaviour buffers, and the encrypted data then goes over 128 KB. Their image answer was rejected with a 400, and the widget started a new challenge straight away. They could not get past the captcha. On 9 Nov, 502 of the 537 rejected image answers in 24 hours were over the old cap. A full buffer is about 340 KB, so the new cap leaves room to spare.
+  
+  The provider now also logs refused captcha answers at info, with the error site and the length of each field, so the next cause like this shows up in the logs.
+- 4693a20: Download the provider image's GeoLite2 databases from the publisher's `download` branch on raw.githubusercontent.com instead of via git.io, which redirects to GitHub release assets. Those returned 504 for hours on 8 Nov and broke the provider image build. The files are the same.
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/provider@5.29.1
+  - @prosopo/api@4.10.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.94
+  - @prosopo/keyring@2.10.25
+
+## 3.10.8
+### Patch Changes
+
+- af1b2d3: Stop CI depending on GitHub release downloads, which returned 504 for hours on 8 Nov and failed every PR. The actionlint check is removed. gitleaks and hadolint are now copied out of their official Docker Hub images, pinned by digest, instead of downloaded from GitHub releases.
+- Updated dependencies [2732f63]
+- Updated dependencies [196f2c0]
+- Updated dependencies [6b8a477]
+- Updated dependencies [fc89f02]
+  - @prosopo/provider@5.29.0
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/api@4.10.0
+  - @prosopo/keyring@2.10.24
+  - @prosopo/locale@3.14.3
+  - @prosopo/logger@2.1.11
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.93
+  - @prosopo/dotenv@3.0.68
+
+## 3.10.7
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [213678a]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/provider@5.28.1
+  - @prosopo/util@3.6.1
+  - @prosopo/api@4.9.2
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.92
+  - @prosopo/keyring@2.10.23
+  - @prosopo/locale@3.14.2
+  - @prosopo/logger@2.1.10
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.67
+
+## 3.10.6
+### Patch Changes
+
+- 65d87f2: Provider deployments now define provider1 and provider2 from one shared block, and both always pull their image. Mongo and Redis no longer have host ports and sit on a private network that only their users can join. Development and test compose files bind datastores to localhost only.
+- 65d87f2: The provider now keeps retrying and logging when its database is not reachable at startup, for as long as that takes, instead of crashing. Containers can start in any order.
+- Updated dependencies [65d87f2]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/provider@5.28.0
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/env@3.6.91
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 3.10.5
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/provider@5.27.0
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.90
+  - @prosopo/keyring@2.10.21
+
+## 3.10.4
+### Patch Changes
+
+- f9a2e30: Stop logging the provider's whole config at debug level on start. It included database URIs, the Redis password, API keys and account secrets in plain text.
+- cc3436f: `ensure_indexes` now builds the provider's indexes instead of stopping with `mongoCaptchaUri not set in config`. That check belongs to `ensure_external_indexes`, which writes to the separate captcha store; `ensure_indexes` only touches the provider's own database, so a node without a captcha store, such as every self-hosted one, could never run it.
+- 04b6f70: The provider now decodes sealed detector payloads with
+  `@prosopo/native-bundle-payload`, a compiled Rust module published to npm. It
+  is the same code Prosopo's own servers use to read these payloads, and the
+  provider has stopped carrying its own TypeScript copy. It accepts and rejects
+  exactly the payloads the old decoder did, and a payload it cannot read still
+  counts as "decryption failed".
+  
+  - `decodePayload.js` has been regenerated. It is about half its old size, and a
+    full decode takes about 1.2 ms instead of 3.8 ms.
+  - `@prosopo/provider` depends on `@prosopo/native-bundle-payload` 0.1.0, a
+    prebuilt linux-x64 binary, so you don't need Rust to install it.
+  - The CLI bundle copies the binary beside `decodePayload.js`, as it already
+    does for the other native modules, so the Docker image needs no
+    `node_modules`. `@prosopo/native-*` packages are now hoisted so the CLI build
+    can find them.
+  - Open-format payloads (`open-v1`) are unchanged.
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [04b6f70]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/provider@5.26.2
+  - @prosopo/types@5.24.0
+  - @prosopo/api@4.8.7
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/keyring@2.10.20
+  - @prosopo/dotenv@3.0.65
+
+## 3.10.3
+### Patch Changes
+
+- bea67d6: Decide whether a visitor is on a phone in one place, from the same inputs, wherever the provider needs to know.
+  
+  Frictionless routing, post-PoW routing, the decision machines, puzzle sizing on escalation and puzzle issuance each built that verdict themselves, and fed it different evidence. Post-PoW routing judged the device before the solve was decrypted, so the touch readings the solve carried never counted, while the escalation that followed judged it again with them included. They now share `deriveDevice`, which takes the user agent, client hints, IP lookup, packet size, in-app flag and, wherever a solve exists, what that solve said about the input device. Post-PoW routing computes it once and the escalation reuses it. An escalated session keeps the solve's two device readings, so a puzzle issued for it judges the same device.
+  
+  An iPad that sends a Mac user agent but taps with a finger can now be recognised from its taps after a solve. The weighing itself is unchanged: a touchscreen laptop, or a phone browser asking for the desktop site, still counts as a desktop.
+- Updated dependencies [bea67d6]
+  - @prosopo/provider@5.26.1
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.88
+  - @prosopo/keyring@2.10.19
+
 ## 3.10.2
 ### Patch Changes
 

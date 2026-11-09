@@ -11,5 +11,5 @@ FROM caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc2
 RUN apk add --no-cache libpcap curl
 # Create a static directory for Caddy and write robots.txt inside the image
 RUN mkdir -p /srv/static && \
-    echo -e "User-agent: *\nDisallow: /" > /srv/static/robots.txt
+    printf 'User-agent: *\nDisallow: /\n' > /srv/static/robots.txt
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy

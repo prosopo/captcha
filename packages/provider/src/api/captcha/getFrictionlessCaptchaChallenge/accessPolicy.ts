@@ -21,6 +21,7 @@ import {
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
+	isConcreteCaptchaType,
 	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -113,7 +114,7 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
+		await tasks.frictionlessManager.registerBlockedSession(CaptchaType.image, {
 			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
@@ -151,14 +152,19 @@ export const handleAccessPolicy = async (
 				captchaType: userAccessPolicy.captchaType,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
-			userSitekeyIpHash: input.userSitekeyIpHash,
-			reason: FrictionlessReason.AUTO_BAN_SCORE,
-			siteKey: input.dapp,
-			ipInfo: input.ipInfo,
-			headers: input.flatHeaders,
-		});
+		await tasks.frictionlessManager.registerBlockedSession(
+			isConcreteCaptchaType(userAccessPolicy.captchaType)
+				? userAccessPolicy.captchaType
+				: CaptchaType.image,
+			{
+				solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
+				userSitekeyIpHash: input.userSitekeyIpHash,
+				reason: FrictionlessReason.AUTO_BAN_SCORE,
+				siteKey: input.dapp,
+				ipInfo: input.ipInfo,
+				headers: input.flatHeaders,
+			},
+		);
 		return {
 			handled: true,
 			response: sendProsopoError(
@@ -176,72 +182,39 @@ export const handleAccessPolicy = async (
 		headers: input.flatHeaders,
 	};
 
-	if (userAccessPolicy.captchaType === CaptchaType.image) {
+	// Image clamps the rule's round count to the sitekey's bounds. Puzzle takes
+	// the raw count because it sets the puzzle's difficulty, not a number of
+	// rounds. Pow and icon-order take none.
+	if (isConcreteCaptchaType(userAccessPolicy.captchaType)) {
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
 				decision: "user_access_policy",
-				captchaType: CaptchaType.image,
+				captchaType: userAccessPolicy.captchaType,
 			},
 		}));
 		attachHoneypot(res, clientRecord);
+		const solvedImagesCount =
+			userAccessPolicy.captchaType === CaptchaType.image
+				? userAccessPolicy.solvedImagesCount
+					? clampImageRounds(
+							userAccessPolicy.solvedImagesCount,
+							clientRecord.settings,
+						)
+					: resolveImageRoundsBounds(clientRecord.settings).max
+				: userAccessPolicy.captchaType === CaptchaType.puzzle
+					? userAccessPolicy.solvedImagesCount
+					: undefined;
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendImageCaptcha({
-					...captchaTypeBaseParams,
-					solvedImagesCount: userAccessPolicy.solvedImagesCount
-						? clampImageRounds(
-								userAccessPolicy.solvedImagesCount,
-								clientRecord.settings,
-							)
-						: resolveImageRoundsBounds(clientRecord.settings).max,
-				}),
-			),
-		};
-	}
-
-	if (userAccessPolicy.captchaType === CaptchaType.pow) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.pow,
-			},
-		}));
-		attachHoneypot(res, clientRecord);
-		return {
-			handled: true,
-			response: res.json(
-				await tasks.frictionlessManager.sendPowCaptcha(captchaTypeBaseParams),
-			),
-		};
-	}
-
-	if (userAccessPolicy.captchaType === CaptchaType.puzzle) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.puzzle,
-			},
-		}));
-		attachHoneypot(res, clientRecord);
-		return {
-			handled: true,
-			response: res.json(
-				await tasks.frictionlessManager.sendPuzzleCaptcha({
-					...captchaTypeBaseParams,
-					// Carried so the rule's severity reaches the puzzle difficulty
-					// ladder. A puzzle has no rounds, and `sendCaptcha` drops the
-					// count from a puzzle session — it reads it only to decide how
-					// hard the puzzle should be. Without this a rule that asked for
-					// 8 rounds and one that asked for 2 would produce identical
-					// puzzles.
-					...(userAccessPolicy.solvedImagesCount !== undefined && {
-						solvedImagesCount: userAccessPolicy.solvedImagesCount,
-					}),
-				}),
+				await tasks.frictionlessManager.sendAccessRuleCaptcha(
+					userAccessPolicy.captchaType,
+					{
+						...captchaTypeBaseParams,
+						...(solvedImagesCount !== undefined && { solvedImagesCount }),
+					},
+				),
 			),
 		};
 	}

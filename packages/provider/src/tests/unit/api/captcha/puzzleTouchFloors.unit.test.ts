@@ -23,7 +23,11 @@ import {
 	TOUCH_MIN_TOLERANCE_PX,
 } from "@prosopo/captcha-severity";
 import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
-import type { FingerprintSummaryStored, IPuzzleSettings } from "@prosopo/types";
+import type {
+	FingerprintSummaryStored,
+	IPuzzleSettings,
+	SolveDeviceSignals,
+} from "@prosopo/types";
 import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -78,6 +82,7 @@ const buildContext = (overrides: {
 	trafficVerdict?: RequestTimeTrafficVerdict;
 	carrierNetwork?: boolean;
 	sessionFingerprintSummary?: FingerprintSummaryStored;
+	sessionSolveDevice?: SolveDeviceSignals;
 }): ChallengeIssueContext => ({
 	tasks: buildTasks(),
 	user: "user",
@@ -98,6 +103,9 @@ const buildContext = (overrides: {
 		...(overrides.sessionPuzzle && { puzzle: overrides.sessionPuzzle }),
 		...(overrides.sessionFingerprintSummary && {
 			fingerprintSummary: overrides.sessionFingerprintSummary,
+		}),
+		...(overrides.sessionSolveDevice && {
+			solveDevice: overrides.sessionSolveDevice,
 		}),
 	} as unknown as ProjectedSession,
 	trafficVerdict: overrides.trafficVerdict ?? { kind: "pass" },
@@ -280,6 +288,18 @@ describe("the floors need corroboration", () => {
 		});
 		expect(servedTolerance()).toBe(5);
 		expect(servedPieceSize()).toBe(Math.round(DEFAULT_GEOMETRY.width * 0.1));
+	});
+
+	it("eases an escalation on the touch readings of the solve before it", async () => {
+		await issue({
+			userAgent: IPHONE_UA,
+			carrierNetwork: false,
+			sitePuzzleTolerance: 5,
+			sitePuzzle: { pieceScale: { min: 0.1, max: 0.1 } },
+			sessionSolveDevice: { deviceCapability: "mobile", touchEventCount: 2 },
+		});
+		expect(servedTolerance()).toBe(TOUCH_MIN_TOLERANCE_PX);
+		expect(servedPieceSize()).toBe(TOUCH_MIN_PIECE_PX);
 	});
 
 	it("eases the same request once the network corroborates it", async () => {

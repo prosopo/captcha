@@ -585,9 +585,10 @@ describe("CaptchaManager", () => {
 			describe("icon-order", () => {
 				const iconOrderSite = (
 					captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags,
+					tier: Tier = Tier.Professional,
 				): Pick<ClientRecord, "account" | "tier" | "settings"> => ({
 					account: "account",
-					tier: Tier.Free,
+					tier,
 					settings: {
 						...defaultUserSettings,
 						captchaType: CaptchaType.iconOrder,
@@ -628,6 +629,33 @@ describe("CaptchaManager", () => {
 						type: CaptchaType.iconOrder,
 					});
 					expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+				});
+
+				it("serves icon-order on a free site with no flag set", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite(undefined, Tier.Free),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: true,
+						type: CaptchaType.iconOrder,
+					});
+				});
+
+				it("refuses icon-order on a free site whose flag is switched off", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite({ iconOrder: false }, Tier.Free),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
 				});
 
 				it("serves icon-order once Prosopo turns the flag on", async () => {
@@ -2537,6 +2565,7 @@ describe("CaptchaManager", () => {
 				isAbuser: boolean;
 				abuserScore: number;
 				companyAbuserScore: number;
+				reputationScore: number;
 				providerType: "isp" | "hosting" | undefined;
 				datacenterName: string | undefined;
 				providerName: string | undefined;
@@ -2594,16 +2623,26 @@ describe("CaptchaManager", () => {
 			const check = await captchaManager.resolveTrafficFilterCheck(
 				undefined,
 				{},
-				ipInfoResponse({
-					isAbuser: true,
-					abuserScore: 0.9,
-					companyAbuserScore: 0.9,
-				}),
+				ipInfoResponse({ reputationScore: 0.99 }),
 			);
 			expect(check.isBlocked).toBe(true);
 			if (check.isBlocked) {
 				expect(check.reason).toBe(ResultReason.ABUSER_BLOCKED);
 			}
+		});
+
+		it("does not apply the abuser default below the default reputation threshold, whatever the abuser scores", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				undefined,
+				{},
+				ipInfoResponse({
+					reputationScore: 0.97,
+					isAbuser: true,
+					abuserScore: 0.9,
+					companyAbuserScore: 0.9,
+				}),
+			);
+			expect(check.isBlocked).toBe(false);
 		});
 
 		it("passes when no category is active and the abuser default doesn't match (clean IP)", async () => {

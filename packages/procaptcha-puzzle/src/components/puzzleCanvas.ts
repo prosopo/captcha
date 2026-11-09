@@ -17,8 +17,8 @@ import {
 	type AudioAlternativeFooterProps,
 	type AudioAlternativeOffer,
 	type ChallengeSurfaceComponent,
+	type ChallengeSwitchButtonProps,
 	type Component,
-	type ImageSwitchButtonProps,
 	type StyleMap,
 	Teardown,
 	applyAttributes,
@@ -27,7 +27,7 @@ import {
 	isEventTrusted,
 	mountAudioAlternativeFooter,
 	mountChallengeSurface,
-	mountImageSwitchButton,
+	mountChallengeSwitchButton,
 	mountReloadButton,
 } from "@prosopo/procaptcha-common";
 import type { PlacementType, PuzzleEvent } from "@prosopo/types";
@@ -336,7 +336,8 @@ export const mountPuzzleCanvas = (
 		? mountReloadButton(refreshSlot, refreshButtonProps())
 		: undefined;
 
-	const imageSwitchButtonProps = (): ImageSwitchButtonProps => ({
+	const imageSwitchButtonProps = (): ChallengeSwitchButtonProps => ({
+		target: "image",
 		themeColor:
 			lightTheme === props.theme ? ("light" as const) : ("dark" as const),
 		label: t("WIDGET.PUZZLE.SWITCH_TO_IMAGE", {
@@ -350,7 +351,7 @@ export const mountPuzzleCanvas = (
 			}
 		},
 	});
-	let imageSwitchButton: Component<ImageSwitchButtonProps> | undefined;
+	let imageSwitchButton: Component<ChallengeSwitchButtonProps> | undefined;
 	const hidePinnedSwitchTooltip = () => {
 		if (hasMovedPiece) {
 			return;
@@ -367,7 +368,7 @@ export const mountPuzzleCanvas = (
 		if (imageSwitchButton) {
 			imageSwitchButton.update(imageSwitchButtonProps());
 		} else {
-			imageSwitchButton = mountImageSwitchButton(
+			imageSwitchButton = mountChallengeSwitchButton(
 				switchSlot,
 				imageSwitchButtonProps(),
 			);

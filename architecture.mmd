@@ -150,7 +150,7 @@ graph TB
     FrictionlessTasks -->|"verifyWebBotAuth"| WebBotAuth
     WebBotAuth -.->|"fetch JWKS<br/>(no timeout)"| AgentJwks["Agent JWKS host<br/>(external, caller-named)"]
     FrictionlessTasks --> Redis
-    FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override)"| AccessPolicies
+    FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override;<br/>routing machine skipped)"| AccessPolicies
     FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle,IconOrder})"| TrafficFilter
     FrictionlessTasks -->|"3. runDecisionMachine<br/>(score-based routing)"| DecisionMachine
     FrictionlessTasks -->|human detected| Manager
@@ -216,6 +216,8 @@ graph TB
     PuzzleChallengeEP -->|"isValidRequest: refuse a type<br/>its feature flag switched off"| AllowedTypes
     PuzzleChallengeEP --> PuzzleTasks
     PuzzleCaptcha -->|"switch to image<br/>(refreshOf + switchToImage;<br/>only where widgetFeatureFlags<br/>.puzzleImageSwitch is on)"| FrictionlessEP
+    ImageCaptcha -->|"switch back to puzzle<br/>(refreshOf + switchToPuzzle; offered<br/>only on an image the user chose)"| FrictionlessEP
+    FrictionlessEP -->|"refreshOf: chain followed only for<br/>the same user, IP and site; count +<br/>timing go to the routing machine"| DecisionMachine
     PuzzleTasks -->|"background + notch placement<br/>(tolerance cascade: trafficFilter →<br/>session → siteSettings)"| PuzzleCaptcha
     PuzzleCaptcha -->|"dropped piece position<br/>+ behavioural data"| PuzzleSolutionEP
     PuzzleSolutionEP --> PuzzleTasks

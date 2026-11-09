@@ -43,8 +43,12 @@ const isBsonLong = (value: unknown): boolean =>
 	value !== null &&
 	"_bsontype" in value &&
 	(value as { _bsontype: string })._bsontype === "Long";
-import type { QueryFilter } from "mongoose";
-import { type MongoConnectionTimeouts, MongoDatabase } from "../base/index.js";
+import type { AnyBulkWriteOperation, QueryFilter } from "mongoose";
+import {
+	type MongoConnectionTimeouts,
+	MongoDatabase,
+	reconcileIndexes,
+} from "../base/index.js";
 
 const logger = getLogger("info", "database:captcha");
 
@@ -91,6 +95,64 @@ const CAPTCHA_TABLES = [
 	},
 ];
 
+export const toCentralRecord = <
+	T extends { _id?: unknown; storedAtTimestamp?: Date },
+>(
+	record: T,
+): Omit<T, "_id" | "storedAtTimestamp"> => {
+	const { _id, storedAtTimestamp, ...centralRecord } = record;
+	return centralRecord;
+};
+
+/**
+ * Bulk ops that write a provider snapshot of an interactive captcha record
+ * without letting an older snapshot replace a newer one.
+ *
+ * A provider streams a snapshot after every write to a record without waiting
+ * for the last one to land, and the sweep may resend it later, so snapshots
+ * arrive in any order. The first op only creates the document; the second
+ * applies the snapshot only if it is at least as new as the stored copy.
+ */
+export const interactiveRecordWrites = <
+	T extends { challenge: string; lastUpdatedTimestamp?: Date },
+>(
+	doc: T,
+): AnyBulkWriteOperation<T>[] => {
+	const { challenge, lastUpdatedTimestamp } = doc;
+	if (!lastUpdatedTimestamp) {
+		return [
+			{
+				updateOne: {
+					filter: { challenge },
+					update: { $set: doc },
+					upsert: true,
+				},
+			},
+		];
+	}
+	return [
+		{
+			updateOne: {
+				filter: { challenge },
+				update: { $setOnInsert: doc },
+				upsert: true,
+			},
+		},
+		{
+			updateOne: {
+				filter: {
+					challenge,
+					$or: [
+						{ lastUpdatedTimestamp: { $exists: false } },
+						{ lastUpdatedTimestamp: { $lte: lastUpdatedTimestamp } },
+					],
+				},
+				update: { $set: doc },
+			},
+		},
+	];
+};
+
 export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	tables: Tables<TableNames>;
 	private indexesEnsured = false;
@@ -129,37 +191,37 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async ensureIndexes(): Promise<void> {
-		const indexPromises: Promise<void>[] = [];
-		if (!this.indexesEnsured) {
-			CAPTCHA_TABLES.map(({ collectionName }) => {
-				indexPromises.push(
-					new Promise((resolve) => {
-						if (this.connected) {
-							this.tables[collectionName].collection.dropIndexes().then(() => {
-								this.tables[collectionName]
-									.ensureIndexes()
-									.then(() => {
-										resolve();
-									})
-									.catch((err) => {
-										this.logger.warn(() => ({
-											err,
-											msg: `Error creating indexes for collection ${collectionName}`,
-										}));
-										resolve();
-									});
-							});
+		if (!this.indexesEnsured && this.connected) {
+			await Promise.all(
+				CAPTCHA_TABLES.map(async ({ collectionName }) => {
+					try {
+						const result = await reconcileIndexes(this.tables[collectionName], {
+							dropUndeclared: false,
+						});
+						if (result.failed.length > 0) {
+							this.logger.warn(() => ({
+								msg: `Error creating indexes for collection ${collectionName}`,
+								data: result,
+							}));
 						} else {
 							this.logger.info(() => ({
-								msg: `Skipping index creation for collection ${collectionName} as not connected`,
+								msg: `Indexes ensured for collection ${collectionName}`,
+								data: result,
 							}));
-							resolve();
 						}
-					}),
-				);
-			});
+					} catch (err) {
+						this.logger.warn(() => ({
+							err,
+							msg: `Error creating indexes for collection ${collectionName}`,
+						}));
+					}
+				}),
+			);
+		} else if (!this.connected) {
+			this.logger.info(() => ({
+				msg: "Skipping index creation as not connected",
+			}));
 		}
-		await Promise.all(indexPromises);
 		this.indexesEnsured = true;
 	}
 
@@ -250,8 +312,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			// and up to 7 have been observed on a single sessionId.
 			const result = await this.tables.session.bulkWrite(
 				sessionEvents.map((document) => {
-					const { _id, ...safeDoc } = document;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(
+						toCentralRecord(document),
+					);
 					return {
 						updateOne: {
 							filter: { sessionId: normalised.sessionId },
@@ -275,9 +338,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (imageCaptchaEvents.length) {
 			const result = await this.tables.commitment.bulkWrite(
 				imageCaptchaEvents.map((doc) => {
-					// remove the _id field to avoid problems when upserting
-					const { _id, ...safeDoc } = doc;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(
+						toCentralRecord(doc),
+					);
 					return {
 						updateOne: {
 							filter: { id: normalised.id },
@@ -300,9 +363,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		if (powCaptchaEvents.length) {
 			const result = await this.tables.powcaptcha.bulkWrite(
 				powCaptchaEvents.map((doc) => {
-					// remove the _id field to avoid problems when upserting
-					const { _id, ...safeDoc } = doc;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+					const normalised = CaptchaDatabase.normaliseDocCompositeIps(
+						toCentralRecord(doc),
+					);
 					return {
 						updateOne: {
 							filter: { challenge: normalised.challenge },
@@ -358,17 +421,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			return;
 		}
 		const result = await this.tables[table].bulkWrite(
-			records.map((doc) => {
-				const { _id, ...safeDoc } = doc;
-				const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
-				return {
-					updateOne: {
-						filter: { challenge: normalised.challenge },
-						update: { $set: normalised },
-						upsert: true,
-					},
-				};
-			}),
+			records.flatMap((doc) =>
+				interactiveRecordWrites(
+					CaptchaDatabase.normaliseDocCompositeIps(toCentralRecord(doc)),
+				),
+			),
 		);
 		logger.info(() => ({
 			data: {

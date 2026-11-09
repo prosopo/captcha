@@ -50,6 +50,9 @@ importers:
       husky:
         specifier: 9.1.7
         version: 9.1.7
+      node:
+        specifier: runtime:24.22.1
+        version: runtime:24.22.1
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -816,6 +819,24 @@ importers:
         specifier: 5.0.4
         version: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
 
+  docker/client-example-server: {}
+
+  docker/images/vector:
+    devDependencies:
+      '@prosopo/config':
+        specifier: workspace:*
+        version: link:../../../dev/config
+
+  docker/mongo: {}
+
+  docker/oo: {}
+
+  docker/provider: {}
+
+  docker/provider-mock: {}
+
+  docker/redis: {}
+
   integration/procaptcha-integration-build-config:
     dependencies:
       deepmerge:
@@ -925,6 +946,9 @@ importers:
       '@prosopo/types':
         specifier: workspace:*
         version: link:../types
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -1861,6 +1885,9 @@ importers:
       '@prosopo/types':
         specifier: workspace:*
         version: link:../types
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -2738,6 +2765,9 @@ importers:
       '@prosopo/logger':
         specifier: workspace:*
         version: link:../logger
+      '@prosopo/native-bundle-payload':
+        specifier: 0.1.0
+        version: 0.1.0
       '@prosopo/native-ja4':
         specifier: workspace:*
         version: link:../native-ja4
@@ -3286,6 +3316,9 @@ importers:
       '@noble/hashes':
         specifier: 2.4.0
         version: 2.4.0
+      '@prosopo/result':
+        specifier: 0.1.0
+        version: 0.1.0
       ip-address:
         specifier: 10.7.4
         version: 10.7.4
@@ -3405,6 +3438,9 @@ importers:
       '@noble/curves':
         specifier: 2.4.0
         version: 2.4.0
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -5849,6 +5885,14 @@ packages:
 
   '@polkadot/x-ws@14.0.3':
     resolution: {integrity: sha512-tOPdkMye3iuXnuFtdNg5+iSu7Cz9LRL8z5psMuZpUpThMYChGsS2pDFtNvXOKU8ohhO+frY9VdJ9VBg1WL9Iug==}
+    engines: {node: '>=18'}
+
+  '@prosopo/native-bundle-payload@0.1.0':
+    resolution: {integrity: sha512-RcsErHI3g/rI9jsrw7EgRWX/+gv25AaHzO272K4fk8sFr7ix4SOGrYbmROlPoSrkCJp6Xi8hpm2Ev29PJMmGZw==}
+    engines: {node: ^24, npm: ^11}
+
+  '@prosopo/result@0.1.0':
+    resolution: {integrity: sha512-n1VyAs4n2R0nTJ5V2jzBrXS8L6GeDQTsUy7Ay8AN9Zo9hBmmhST4TrdcFu7rXP99wI8sZV6di9HJaeeFBdq0Cw==}
     engines: {node: '>=18'}
 
   '@protobufjs/aspromise@1.1.2':
@@ -9273,6 +9317,138 @@ packages:
   node-stdlib-browser@1.3.1:
     resolution: {integrity: sha512-X75ZN8DCLftGM5iKwoYLA3rjnrAEs97MkzvSd4q2746Tgpg8b8XWiBGiBG4ZpgcAqBgtgPHTiAc8ZMCvZuikDw==}
     engines: {node: '>=10'}
+
+  node@runtime:24.22.1:
+    resolution:
+      type: variations
+      variants:
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-9ie20HmCnmSKS4AP+oidN9viORNQcDADDbhaqGFZGiY=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-aix-ppc64.tar.gz
+          targets:
+            - cpu: ppc64
+              os: aix
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-icaCWT12zUQjP6U7FWMmTn3py7GJytFpE1xbT637wKc=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-darwin-arm64.tar.gz
+          targets:
+            - cpu: arm64
+              os: darwin
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-0TJVfn7iuFrwiwyMNDOOZcZDDyI40B9ydyjvQtyDsDU=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-darwin-x64.tar.gz
+          targets:
+            - cpu: x64
+              os: darwin
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-M8N74jS6i+4EGWEEexkWD019DxZOjiRveL3RD+/xSLM=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-arm64.tar.gz
+          targets:
+            - cpu: arm64
+              os: linux
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-nOVyhEUBaynkmtCY96M2Bhql93DRd9knJ4vCb9Ym5kM=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-ppc64le.tar.gz
+          targets:
+            - cpu: ppc64le
+              os: linux
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-cZea6xw4W8jugxANODo7HsClIC4D35+ZanBAMwnK/7U=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-s390x.tar.gz
+          targets:
+            - cpu: s390x
+              os: linux
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-myUNKdariuON0jAZ4sBKbWspFqsdrXIcX24dorKQHGo=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-x64-musl.tar.gz
+          targets:
+            - cpu: x64
+              os: linux
+              libc: musl
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-62co53xXajUWLBIsRcyt8iTYn/AKvI2uRswol8YALXw=
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-x64.tar.gz
+          targets:
+            - cpu: x64
+              os: linux
+        - resolution:
+            archive: zip
+            bin:
+              node: node.exe
+            integrity: sha256-oMgHMZ/t4kxKDY+EVkyCphm9MTsWsQwAfDg8JgnpkXE=
+            prefix: node-v24.22.1-win-arm64
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-win-arm64.zip
+          targets:
+            - cpu: arm64
+              os: win32
+        - resolution:
+            archive: zip
+            bin:
+              node: node.exe
+            integrity: sha256-0gRtKMLD3NIRrFFFwL8w4gR++d+zBmk8jG4uzNi5X6U=
+            prefix: node-v24.22.1-win-x64
+            type: binary
+            url: https://nodejs.org/download/release/v24.22.1/node-v24.22.1-win-x64.zip
+          targets:
+            - cpu: x64
+              os: win32
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-glQSWCWj5eg0vYomDatMgwP3IEZKdBUG7CeYm5uhdps=
+            type: binary
+            url: https://unofficial-builds.nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-arm64-musl.tar.gz
+          targets:
+            - cpu: arm64
+              os: linux
+              libc: musl
+        - resolution:
+            archive: tarball
+            bin:
+              node: bin/node
+            integrity: sha256-Cp7dzi0ujzrdvpT6RtdRMlstdPf9HOYylhZNNrbfxuU=
+            type: binary
+            url: https://unofficial-builds.nodejs.org/download/release/v24.22.1/node-v24.22.1-linux-x64-musl.tar.gz
+          targets:
+            - cpu: x64
+              os: linux
+              libc: musl
+    version: 24.22.1
+    hasBin: true
 
   normalize-package-data@2.5.0:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
@@ -13836,6 +14012,10 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@prosopo/native-bundle-payload@0.1.0': {}
+
+  '@prosopo/result@0.1.0': {}
+
   '@protobufjs/aspromise@1.1.2': {}
 
   '@protobufjs/base64@1.1.2': {}
@@ -17584,6 +17764,8 @@ snapshots:
       url: 0.11.4
       util: 0.12.5
       vm-browserify: 1.1.2
+
+  node@runtime:24.22.1: {}
 
   normalize-package-data@2.5.0:
     dependencies:

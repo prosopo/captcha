@@ -45,7 +45,9 @@ import {
 } from "../api/sanitise.js";
 import {
 	type CaptchaType,
-	DecisionMachineCaptchaTypeSchema,
+	ChallengeCaptchaTypeSchema,
+	type ConcreteCaptchaType,
+	type InteractiveCaptchaType,
 } from "../client/captchaType/captchaType.js";
 import { ClientSettingsSchema, Tier } from "../client/index.js";
 import { ModeEnum } from "../config/mode.js";
@@ -398,6 +400,8 @@ export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.signature]: {
 		[ApiParams.provider]: RequestHashSignature;
 	};
+	/** Whether the widget may offer to go back to the puzzle this image replaced. */
+	[ApiParams.puzzleSwitchAvailable]?: boolean;
 }
 
 // Widget-controlled metadata sent alongside the captcha solution. `hp` is only
@@ -450,7 +454,9 @@ export const CaptchaSolutionBody = object({
 			[ApiParams.requestHash]: boundedString(INPUT_LIMITS.TOKEN),
 		}),
 	}),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	// Compact encoded SimdReadings produced by @prosopo/catcher's
 	// simdReadingsCodec — opaque at this layer; the provider decodes and
 	// persists on the captcha record. Collection-only, no scoring.
@@ -593,12 +599,7 @@ export type AudioCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	[ApiParams.captchaType]:
-		| CaptchaType.pow
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.iconOrder
-		| CaptchaType.authenticated;
+	[ApiParams.captchaType]: ConcreteCaptchaType | CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -620,10 +621,7 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]:
-		| CaptchaType.image
-		| CaptchaType.puzzle
-		| CaptchaType.iconOrder;
+	[ApiParams.captchaType]: InteractiveCaptchaType;
 	[ApiParams.sessionId]: string;
 }
 
@@ -727,7 +725,9 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.nonce]: number(),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
@@ -781,20 +781,34 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// it clears the IP-binding check.
 	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	// The sessionId whose challenge the user asked to replace with the
-	// refresh control. Client-reported, so it can only ever make the next
-	// challenge harder (see `switchTypeAfterRefreshes`): a client that omits
-	// it is treated as a fresh visit, exactly as a page reload already is.
+	// refresh control. Only followed when that session belongs to the same
+	// user, IP and site; the chain's length and timing are then read from the
+	// provider's own records (see `resolveRefreshLineage`). A client that
+	// omits it is treated as a fresh visit, exactly as a page reload already is.
 	[ApiParams.refreshOf]: boundedString(INPUT_LIMITS.ID).optional(),
+	// The challenge of the puzzle the user just answered wrongly, when this
+	// session replaces it. Only followed when that puzzle was submitted and
+	// failed, belongs to the same user, site and IP, and was served to the same
+	// client (user agent and TLS fingerprint). Each failed puzzle can be
+	// followed once. See `resolveRetrySolveDevice`.
+	[ApiParams.retryOf]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	// The user pressed the puzzle's switch-to-image control rather than plain
 	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
-	// on a site with the switch enabled, and only ever moves puzzle to image.
+	// on a site with the switch enabled.
 	[ApiParams.switchToImage]: boolean().optional(),
+	// The user pressed the switch-back control on an image they had switched
+	// to. Drops their image choice, so the routing decides as it would for
+	// any refresh; it never overrides an image the routing chose itself.
+	[ApiParams.switchToPuzzle]: boolean().optional(),
 	// Encoded proof of fingerprint. Sent here so every session carries the
 	// device bucket whichever captcha type it is served, not only PoW.
 	[ApiParams.fingerprintProof]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	// Which of the page's widgets for this site key is asking, so each one is
 	// deduplicated onto its own session instead of all sharing the first.
 	[ApiParams.widgetSlot]: number().int().min(0).max(MAX_WIDGET_SLOT).optional(),
+	// A site bypass key read from the page's cookie. Never stored: the provider
+	// hashes it and only the hash is compared with the site's Allow rules.
+	[ApiParams.bypassKey]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -912,7 +926,9 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
@@ -978,7 +994,9 @@ export const SubmitAudioCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
@@ -1029,7 +1047,9 @@ export const SubmitIconOrderCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
@@ -1089,8 +1109,7 @@ export const UpdateDecisionMachineBody = object({
 	).optional(),
 	[ApiParams.decisionMachineName]: safeLine(INPUT_LIMITS.NAME).optional(),
 	[ApiParams.decisionMachineVersion]: boundedString(INPUT_LIMITS.ID).optional(),
-	[ApiParams.decisionMachineCaptchaType]:
-		DecisionMachineCaptchaTypeSchema.optional(),
+	[ApiParams.decisionMachineCaptchaType]: ChallengeCaptchaTypeSchema.optional(),
 	[ApiParams.decisionMachineKind]: nativeEnum(DecisionMachineKind).optional(),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID).optional(),
 });
@@ -1132,7 +1151,7 @@ export const DecisionMachineSummarySchema = object({
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
 	name: string().nullish(),
 	version: string().nullish(),
-	captchaType: DecisionMachineCaptchaTypeSchema.nullish(),
+	captchaType: ChallengeCaptchaTypeSchema.nullish(),
 	createdAt: string(),
 	updatedAt: string(),
 });

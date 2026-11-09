@@ -1,0 +1,23 @@
+{
+	"name": "@prosopo/oo-compose",
+	"version": "1.1.0",
+	"description": "Compose stack for the OpenObserve instances",
+	"engines": {
+		"node": "^24"
+	},
+	"type": "module",
+	"scripts": {
+		"lint:docker": "node ../lint-bundle.mjs"
+	},
+	"prosopo": {
+		"publish": [
+			"gh-release:docker-compose.oo.production.yml,docker-compose.oo.staging.yml,docker-compose.oo.yml,docker-compose.oo1.yml,docker-compose.oo2.yml,oo1.Caddyfile,oo2.Caddyfile"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "docker/oo"
+	},
+	"private": true
+}

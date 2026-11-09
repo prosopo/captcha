@@ -17,6 +17,7 @@
 		"IMAGE_DIALOG_LABEL": "Attēlu uzdevums",
 		"CANNOT_LOAD": "Neizdevās ielādēt CAPTCHA",
 		"RELOAD": "Ielādēt vēlreiz",
+		"SWITCH_TO_PUZZLE": "Pārslēgties uz puzles uzdevumu",
 		"VERIFIED_AGENT": "Verificēts aģents",
 		"TRUSTED_REQUEST": "Uzticams pieprasījums",
 		"LOADING": "Ielādē",

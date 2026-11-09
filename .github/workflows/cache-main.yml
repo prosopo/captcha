@@ -1,0 +1,60 @@
+# Keeps main's pnpm store cache entry restored and rebuilt for PR jobs.
+# What it does and why each entry is restored for real:
+# https://github.com/prosopo/github_actions (.github/workflows/cache-main.yml).
+#
+# Cron at minute 17, every 3 hours: GitHub delays or drops top-of-hour
+# schedules, and 3 hours keeps entries far inside the 7-day eviction window.
+
+name: cache-main
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cache-main
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  runner:
+    # Hosted vs self-hosted for the cache job (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: hosted runners are free here.
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: cache-main
+      runner: ${{ inputs.runner || 'auto' }}
+
+  cache:
+    permissions:
+      contents: read
+      actions: write
+    needs: runner
+    uses: prosopo/github_actions/.github/workflows/cache-main.yml@b78b377faefa672d167a28764f04c66b575320f8  # main
+    with:
+      actions-ref: b78b377faefa672d167a28764f04c66b575320f8
+      runs-on: ${{ needs.runner.outputs.default }}
+      submodules: recursive
+      node-version-file: .nvmrc
+    secrets:
+      checkout-token: ${{ secrets.PROSOPONATOR_PAT }}

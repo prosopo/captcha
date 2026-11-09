@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { IncomingHttpHeaders } from "node:http";
+import { parseInteger } from "@prosopo/util";
 
 // Request bodies can be up to the express.json limit (1MB) and carry tokens,
 // signatures and other client secrets, so logs get a bounded, redacted
@@ -31,6 +32,11 @@ export type RequestBodySummary = {
 	bytes?: number;
 	keys?: string[];
 	keyCount?: number;
+	/**
+	 * Length of each top-level string field, so an oversized field shows up
+	 * even when it is redacted or falls past the end of the preview.
+	 */
+	lengths?: Record<string, number>;
 	preview: string;
 };
 
@@ -69,8 +75,9 @@ const redact = (value: unknown, depth: number): unknown => {
 };
 
 const contentLength = (headers: IncomingHttpHeaders): number | undefined => {
-	const bytes = Number(headers["content-length"]);
-	return Number.isFinite(bytes) ? bytes : undefined;
+	// Number("") is 0 and Number("1e3") is 1000; neither is a byte count.
+	const bytes = parseInteger(headers["content-length"], { min: 0 });
+	return bytes.ok ? bytes.value : undefined;
 };
 
 export const summariseRequestBody = (req: {
@@ -89,11 +96,16 @@ export const summariseRequestBody = (req: {
 		return { type, ...(bytes !== undefined && { bytes }), preview };
 	}
 	const keys = Object.keys(body);
+	const lengths: Record<string, number> = {};
+	for (const [key, value] of Object.entries(body).slice(0, MAX_KEYS)) {
+		if (typeof value === "string") lengths[key] = value.length;
+	}
 	return {
 		type,
 		...(bytes !== undefined && { bytes }),
 		keys: keys.slice(0, MAX_KEYS),
 		keyCount: keys.length,
+		lengths,
 		preview,
 	};
 };

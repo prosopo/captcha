@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "Képes feladat",
 		"CANNOT_LOAD": "A CAPTCHA nem tölthető be",
 		"RELOAD": "Újratöltés",
+		"SWITCH_TO_PUZZLE": "Váltás kirakós feladatra",
 		"VERIFIED_AGENT": "Ellenőrzött ügynök",
 		"TRUSTED_REQUEST": "Megbízható kérés",
 		"LOADING": "Betöltés",

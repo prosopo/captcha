@@ -107,6 +107,16 @@ describe("getRawTlsSignals", () => {
 		expect(result.tcpWscale).toBe(7);
 	});
 
+	it("rejects values with trailing junk or a fraction", () => {
+		const headers: IncomingHttpHeaders = {
+			"x-tls-tcp-mss": "1460abc",
+			"x-tls-tcp-wscale": "7.5",
+		};
+		const result = getRawTlsSignals(headers, mockLogger());
+		expect(result.tcpMss).toBeUndefined();
+		expect(result.tcpWscale).toBeUndefined();
+	});
+
 	it("takes the first value when the header is repeated (string[])", () => {
 		const headers: IncomingHttpHeaders = {
 			"x-tls-tcp-mss": ["1452", "1460"],
@@ -357,6 +367,39 @@ describe("getRawTlsSignals — whole-SYN fields from the 104-byte record", () =>
 		expect(result.tcpOptsOrder).toBe(202818);
 		expect(result.tcpOptsKinds).toBeUndefined();
 		expect(result.tcpOptsPresent).toBeUndefined();
+	});
+});
+
+describe("getRawTlsSignals — TLS handshake round trip", () => {
+	it("reads the handshake round trip alongside the TCP one it is compared with", () => {
+		const headers: IncomingHttpHeaders = {
+			"x-tls-synack-ns": "1000000000",
+			"x-tls-ack-ns": "1021900000",
+			"x-tls-handshake-rtt-us": "1250000",
+		};
+		const signals = getRawTlsSignals(headers, mockLogger());
+		expect(signals.synackNs).toBe(1_000_000_000);
+		expect(signals.ackNs).toBe(1_021_900_000);
+		expect(signals.tlsHandshakeRttUs).toBe(1_250_000);
+	});
+
+	it("ignores a malformed or negative round trip", () => {
+		for (const raw of ["-5", "12.5", "fast", "4294967296"]) {
+			const headers: IncomingHttpHeaders = { "x-tls-handshake-rtt-us": raw };
+			expect(getRawTlsSignals(headers, mockLogger()).tlsHandshakeRttUs).toBe(
+				undefined,
+			);
+		}
+	});
+
+	it("is carried from the request onto the session record", () => {
+		const signals = getRawTlsSignals(
+			{ "x-tls-handshake-rtt-us": "21900" },
+			mockLogger(),
+		);
+		expect(rawTlsSignalsFromRecord(signals)).toEqual({
+			tlsHandshakeRttUs: 21_900,
+		});
 	});
 });
 

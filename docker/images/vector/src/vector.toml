@@ -958,9 +958,40 @@ scrape_interval_secs = 60
 
 # Transform: Add host and environment tags to cAdvisor metrics
 # Enables container-level monitoring and resource tracking
+[transforms.cadvisor_metrics_block_devices]
+type = "filter"
+inputs = ["cadvisor_metrics"]
+# cadvisor reports about 38 tmpfs, bind and overlay mounts per host for each of its 17 container_fs_* metrics,
+# which is 23x the volume of the cpu metrics. Only real disks are worth keeping.
+condition = '!starts_with(string(.name) ?? "", "container_fs_") || starts_with(string(.tags.device) ?? "", "/dev/")'
+
 [transforms.cadvisor_metrics_format]
 type = "remap"
-inputs = ["cadvisor_metrics"]
+inputs = ["cadvisor_metrics_block_devices"]
+source = '''
+.tags.host=get_env_var!("OO_HOST")
+.tags.env=get_env_var!("NODE_ENV")
+'''
+
+# =============================================================================
+# VECTOR INTERNAL METRICS
+# =============================================================================
+
+# Source: Collect Vector's own internal metrics
+[sources.vector_metrics]
+type = "internal_metrics"
+scrape_interval_secs = 60
+
+# An allowlist, because the full set's histogram buckets created about 1,000 low-value streams.
+# These counters are the ones that show a sink failing or events being dropped.
+[transforms.vector_metrics_health]
+type = "filter"
+inputs = ["vector_metrics"]
+condition = 'includes(["component_errors_total", "component_discarded_events_total", "buffer_discarded_events_total", "http_client_responses_total"], .name)'
+
+[transforms.vector_metrics_format]
+type = "remap"
+inputs = ["vector_metrics_health"]
 source = '''
 .tags.host=get_env_var!("OO_HOST")
 .tags.env=get_env_var!("NODE_ENV")
@@ -1034,7 +1065,7 @@ source = '''
 # Uses Prometheus Remote Write protocol for efficient metric transmission
 [sinks.oo_metrics]
 type = "prometheus_remote_write"
-inputs = ["host_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo.prosopo.io/api/dev_organization_29569_u24VnjrjN7XrP35/prometheus/api/v1/write"
 
 [sinks.oo_metrics.auth]
@@ -1064,7 +1095,7 @@ when_full = "drop_newest"
 # Backup destination for metrics redundancy and disaster recovery
 [sinks.oo2_metrics]
 type = "prometheus_remote_write"
-inputs = ["host_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
+inputs = ["host_metrics_format", "vector_metrics_format", "cadvisor_metrics_format", "mongodb_metrics_format", "redis_metrics_format", "caddy_metrics_format"]
 endpoint = "https://oo2.prosopo.io/api/default/prometheus/api/v1/write"
 
 [sinks.oo2_metrics.auth]
@@ -1090,3 +1121,70 @@ type = "memory"
 max_events = 10000
 when_full = "drop_newest"
 
+
+# =============================================================================
+# UNIT TESTS
+# =============================================================================
+#
+# Run by `pnpm --filter @prosopo/vector-docker test` via `vector test`, which
+# feeds these events straight into the transform; the docker_logs sources and
+# the sinks are not started. Vector ignores [[tests]] when running the config.
+# OO_HOST is the dummy value that script sets: dummy_oo_host.
+
+[[tests]]
+name = "provider_format lifts JSON log fields and adds container metadata"
+
+[[tests.inputs]]
+insert_at = "provider_format"
+type = "log"
+
+[tests.inputs.log_fields]
+message = '{"level":"info","msg":"captcha served","requestId":"abc123"}'
+container_name = "provider"
+image = "prosopo/provider:3.0.0"
+stream = "stdout"
+source_type = "docker_logs"
+
+[[tests.outputs]]
+extract_from = "provider_format"
+
+[[tests.outputs.conditions]]
+type = "vrl"
+source = '''
+assert_eq!(.level, "info")
+assert_eq!(.msg, "captcha served")
+assert_eq!(.requestId, "abc123")
+assert_eq!(.host, "dummy_oo_host")
+assert_eq!(.container_name, "provider")
+assert_eq!(.image, "prosopo/provider:3.0.0")
+assert_eq!(.stream, "stdout")
+assert_eq!(.source_type, "docker_logs")
+assert!(!exists(.message))
+'''
+
+[[tests]]
+name = "provider_format keeps a non-JSON line as the message"
+
+[[tests.inputs]]
+insert_at = "provider_format"
+type = "log"
+
+[tests.inputs.log_fields]
+message = '{"level":"info", truncated'
+container_name = "provider"
+image = "prosopo/provider:3.0.0"
+stream = "stderr"
+source_type = "docker_logs"
+
+[[tests.outputs]]
+extract_from = "provider_format"
+
+[[tests.outputs.conditions]]
+type = "vrl"
+source = '''
+assert_eq!(.message, "{\"level\":\"info\", truncated")
+assert_eq!(.host, "dummy_oo_host")
+assert_eq!(.container_name, "provider")
+assert_eq!(.stream, "stderr")
+assert!(!exists(.level))
+'''

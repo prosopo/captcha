@@ -35,8 +35,10 @@ import type {
 	GetFrictionlessCaptchaResponse,
 	ProcaptchaClientConfigOutput,
 	ProviderSelectRetryContext,
+	RefreshSwitchTarget,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
+import { readBypassKeyCookie } from "./bypassKeyCookie.js";
 import {
 	DetectorLoaderFromScript,
 	type DetectorOptions,
@@ -223,8 +225,9 @@ const customDetectBot: BotDetectionFunction = async (
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
 	refreshOf?: string,
-	switchToImage?: boolean,
+	switchTo?: RefreshSwitchTarget,
 	widgetSlot?: number,
+	retryOf?: string,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
 		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
@@ -372,9 +375,11 @@ const customDetectBot: BotDetectionFunction = async (
 				fallbackIframeUrl,
 				clientSessionId,
 				refreshOf,
-				switchToImage,
+				switchTo,
 				fallbackFingerprintProof,
 				widgetSlot,
+				retryOf,
+				readBypassKeyCookie(),
 			),
 			10000,
 		);
@@ -427,9 +432,11 @@ const customDetectBot: BotDetectionFunction = async (
 		iframeUrl,
 		clientSessionId,
 		refreshOf,
-		switchToImage,
+		switchTo,
 		fingerprintProof,
 		widgetSlot,
+		retryOf,
+		readBypassKeyCookie(),
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

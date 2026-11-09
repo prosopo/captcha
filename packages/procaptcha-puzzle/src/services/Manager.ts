@@ -15,6 +15,7 @@
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoError, toPublicError } from "@prosopo/common";
+import { toCallbackError } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -282,17 +283,15 @@ export const Manager = (
 				// forward, and the doomed round trip only delays it.
 				const challengeSessionId = frictionlessState?.sessionId;
 				if (spentSession.isSpent(challengeSessionId)) {
-					updateState({
-						loading: false,
-						error: toPublicError(
-							new ProsopoError({
-								code: "NO_SESSION_FOUND",
-								errorSite: "PUZZ-6",
-							}),
-							"FRONTEND_ERROR",
-						),
-					});
-					events.onError(new Error("No session found"));
+					const error = toPublicError(
+						new ProsopoError({
+							code: "NO_SESSION_FOUND",
+							errorSite: "PUZZ-6",
+						}),
+						"FRONTEND_ERROR",
+					);
+					updateState({ loading: false, error });
+					events.onError(toCallbackError(undefined, error));
 					return;
 				}
 

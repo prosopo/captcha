@@ -19,6 +19,7 @@ import {
 	encodePiece,
 } from "@prosopo/puzzle-assets";
 import { compositeIcons, renderLegend } from "./compose.js";
+import { LEGEND_ICON_SIZE } from "./markup.js";
 import { placeIcons } from "./place.js";
 import type {
 	IconOrderGeometry,
@@ -30,6 +31,7 @@ export { GLYPH_KINDS, GlyphKind, glyphPath } from "./glyphs.js";
 export { placeIcons } from "./place.js";
 export type { IconLayout } from "./place.js";
 export { compositeIcons, renderLegend } from "./compose.js";
+export { LEGEND_ICON_SIZE } from "./markup.js";
 export type {
 	IconOrderGeometry,
 	IconOrderRenderSettings,
@@ -54,9 +56,6 @@ export const DEFAULT_RENDER_SETTINGS: IconOrderRenderSettings = {
 	backgroundClutter: 8,
 };
 
-/** Fixed because the widget lays the legend out against its own header. */
-export const LEGEND_ICON_SIZE = 26;
-
 /**
  * The background is drawn fresh per call and never reused: two layouts on the
  * same background could be diffed to read both answers. The returned
@@ -65,8 +64,9 @@ export const LEGEND_ICON_SIZE = 26;
 export const renderIconOrder = async (
 	geometry: IconOrderGeometry = DEFAULT_GEOMETRY,
 	settings: IconOrderRenderSettings = DEFAULT_RENDER_SETTINGS,
+	seed: Buffer = createSeed(),
 ): Promise<RenderedIconOrder> => {
-	const prng = createPrng(createSeed());
+	const prng = createPrng(seed);
 	const { targets, decoys } = placeIcons(
 		prng,
 		geometry,
@@ -91,6 +91,7 @@ export const renderIconOrder = async (
 		legend: legendWebp,
 		legendIconSize: LEGEND_ICON_SIZE,
 		targets,
+		seed: seed.toString("hex"),
 	};
 };
 

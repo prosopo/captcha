@@ -235,3 +235,20 @@ describe("solution submit routes reject a bad signature as a client error", () =
 		});
 	}
 });
+
+describe("image submit route rejects a malformed timestamp as a client error", () => {
+	for (const bad of ["12abc", "abc", "-1", "1.5"]) {
+		it(`timestamp ${JSON.stringify(bad)} -> 400`, async () => {
+			const res = await fetch(`${baseUrl}/image`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({
+					...body("image", validSignatures("image")),
+					timestamp: bad,
+				}),
+			});
+			expect(res.status).toBe(400);
+			expect(await res.text()).toContain("INVALID_REQUEST");
+		});
+	}
+});

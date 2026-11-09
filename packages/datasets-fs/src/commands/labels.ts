@@ -20,6 +20,7 @@ import {
 	InputOutputArgsSchema,
 	InputOutputCliCommand,
 } from "../utils/inputOutput.js";
+import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = InputOutputArgsSchema.extend({});
 export type ArgsSchemaType = typeof ArgsSchema;
@@ -54,8 +55,7 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
 		}
 
 		const labelled: LabelledItem[] = file
-			? LabelledDataSchema.parse(JSON.parse(fs.readFileSync(file, "utf8")))
-					.items
+			? LabelledDataSchema.parse(readJsonFile(file)).items
 			: [];
 
 		const labels = new Set<string>();

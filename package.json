@@ -1,7 +1,6 @@
 {
 	"name": "@prosopo/captcha",
 	"packageManager": "pnpm@11.27.1",
-	"version": "3.10.2",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -11,6 +10,7 @@
 	"scripts": {
 		"hostid": "dig +short ${HOSTNAME}.prosopo.io | tail -n1 | tee /dev/tty | nslookup | cut -d = -f 2 | head -n1 | cut -d ' ' -f 2 | sed 's/\\.*$//g'",
 		"build:all": "turbo run build",
+		"build:self-hosted": "turbo run build --filter=@prosopo/procaptcha-bundle... --filter=@prosopo/keyring... --filter=@prosopo/logger... --filter=@prosopo/workspace...",
 		"build:all:tsc": "turbo run build:tsc",
 		"build:all:cjs": "turbo run build:cjs",
 		"build:docker:all": "node ./docker/bake.mjs",
@@ -40,6 +40,7 @@
 		"serve:bundle": "pnpm --filter @prosopo/procaptcha-bundle run serve",
 		"populate-data": "pnpm --filter @prosopo/provider run populate-data",
 		"test:all": "turbo run test --concurrency=1",
+		"test:scripts": "node --test .github/scripts/*.test.mjs",
 		"typecheck": "turbo run typecheck",
 		"lint:license": "pnpm --filter @prosopo/lint run start license --pkg $(pwd) --ignore @prosopo/fingerprintjs",
 		"lint-fix:license": "pnpm run --silent lint:license --fix",
@@ -55,6 +56,7 @@
 		"lint:workflowNames": "pnpm --filter @prosopo/lint run start workflowNames --root $(pwd)",
 		"lint:tsconfigIncludes": "pnpm --filter @prosopo/lint run start tsconfigIncludes --pkg $(pwd)/package.json",
 		"lint-fix:tsconfigIncludes": "pnpm run --silent lint:tsconfigIncludes --fix",
+		"lint:docker": "turbo run lint:docker",
 		"lint:json": "pnpm --filter @prosopo/lint run start json --pkg $(pwd)/package.json",
 		"depcheck": "pnpm -r exec depcheck --ignores vite,vitest,@vitest/coverage-v8,del-cli,concurrently,npm-run-all,tslib,typescript,tsx",
 		"esbuild": "0.28.2",
@@ -73,6 +75,13 @@
 	"engines": {
 		"node": "^24",
 		"pnpm": "^11"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "24.22.1",
+			"onFail": "download"
+		}
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",

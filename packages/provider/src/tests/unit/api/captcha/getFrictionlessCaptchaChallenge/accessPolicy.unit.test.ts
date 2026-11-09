@@ -29,9 +29,7 @@ const buildInput = () => {
 			updateScore: vi.fn(),
 			setMatchedRule: vi.fn(),
 			registerBlockedSession: vi.fn(),
-			sendImageCaptcha: vi.fn().mockResolvedValue({ kind: "image" }),
-			sendPowCaptcha: vi.fn().mockResolvedValue({ kind: "pow" }),
-			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ kind: "puzzle" }),
+			sendAccessRuleCaptcha: vi.fn().mockResolvedValue({ kind: "rule" }),
 		},
 	};
 	return {
@@ -102,7 +100,7 @@ describe("handleAccessPolicy", () => {
 		expect(tasks.frictionlessManager.registerBlockedSession).toHaveBeenCalled();
 	});
 
-	it("dispatches to sendImageCaptcha for image-typed policies", async () => {
+	it("serves the image type an image-typed policy names", async () => {
 		const { tasks, input } = buildInput();
 		input.userAccessPolicy = {
 			type: AccessPolicyType.Restrict,
@@ -112,12 +110,14 @@ describe("handleAccessPolicy", () => {
 		const res = buildRes();
 		const r = await handleAccessPolicy(input as never, res as never);
 		expect(r.handled).toBe(true);
-		const args = tasks.frictionlessManager.sendImageCaptcha.mock.calls[0]?.[0];
+		const [captchaType, args] =
+			tasks.frictionlessManager.sendAccessRuleCaptcha.mock.calls[0] ?? [];
+		expect(captchaType).toBe(CaptchaType.image);
 		// Clamped to clientRecord.settings.imageMaxRounds (=5).
 		expect(args.solvedImagesCount).toBe(5);
 	});
 
-	it("dispatches to sendPowCaptcha for pow-typed policies", async () => {
+	it("serves the pow type a pow-typed policy names", async () => {
 		const { tasks, input } = buildInput();
 		input.userAccessPolicy = {
 			type: AccessPolicyType.Restrict,
@@ -126,10 +126,26 @@ describe("handleAccessPolicy", () => {
 		const res = buildRes();
 		const r = await handleAccessPolicy(input as never, res as never);
 		expect(r.handled).toBe(true);
-		expect(tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+		expect(
+			tasks.frictionlessManager.sendAccessRuleCaptcha,
+		).toHaveBeenCalledWith(CaptchaType.pow, expect.anything());
 	});
 
-	it("dispatches to sendPuzzleCaptcha for puzzle-typed policies", async () => {
+	it("serves the icon-order type a icon-order-typed policy names", async () => {
+		const { tasks, input } = buildInput();
+		input.userAccessPolicy = {
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.iconOrder,
+		};
+		const res = buildRes();
+		const r = await handleAccessPolicy(input as never, res as never);
+		expect(r.handled).toBe(true);
+		expect(
+			tasks.frictionlessManager.sendAccessRuleCaptcha,
+		).toHaveBeenCalledWith(CaptchaType.iconOrder, expect.anything());
+	});
+
+	it("serves the puzzle type a puzzle-typed policy names", async () => {
 		const { tasks, input } = buildInput();
 		input.userAccessPolicy = {
 			type: AccessPolicyType.Restrict,
@@ -138,7 +154,9 @@ describe("handleAccessPolicy", () => {
 		const res = buildRes();
 		const r = await handleAccessPolicy(input as never, res as never);
 		expect(r.handled).toBe(true);
-		expect(tasks.frictionlessManager.sendPuzzleCaptcha).toHaveBeenCalled();
+		expect(
+			tasks.frictionlessManager.sendAccessRuleCaptcha,
+		).toHaveBeenCalledWith(CaptchaType.puzzle, expect.anything());
 	});
 
 	// Every outcome below writes a session somewhere downstream, and each one
@@ -164,8 +182,9 @@ describe("handleAccessPolicy", () => {
 			const r = await handleAccessPolicy(input as never, res as never);
 
 			expect(r.handled).toBe(true);
-			const args =
-				tasks.frictionlessManager.sendImageCaptcha.mock.calls[0]?.[0];
+			const [captchaType, args] =
+				tasks.frictionlessManager.sendAccessRuleCaptcha.mock.calls[0] ?? [];
+			expect(captchaType).toBe(CaptchaType.image);
 			expect(args.solvedImagesCount).toBe(2);
 			// Served, not blocked.
 			expect(
@@ -262,8 +281,7 @@ describe("handleAccessPolicy", () => {
 		// Repro: site has autoBanScoreThreshold=1.1, session arrives at
 		// access policy with botScore=1.0. The access-policy bump adds
 		// +0.1 → 1.1, which meets the threshold. Pre-fix the access
-		// policy short-circuited to sendImageCaptcha / sendPuzzleCaptcha /
-		// sendPowCaptcha and the later autoBan check in runDecisionMachine
+		// policy short-circuited to sendAccessRuleCaptcha and the later autoBan check in runDecisionMachine
 		// never ran. Each route must now register AUTO_BAN_SCORE and 401.
 		const withAutoBanInput = (
 			captchaType:
@@ -295,10 +313,13 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.image,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
-			expect(tasks.frictionlessManager.sendImageCaptcha).not.toHaveBeenCalled();
+			expect(
+				tasks.frictionlessManager.sendAccessRuleCaptcha,
+			).not.toHaveBeenCalled();
 		});
 
 		it("fires when pow-typed access policy bump crosses threshold", async () => {
@@ -309,10 +330,13 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.pow,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
-			expect(tasks.frictionlessManager.sendPowCaptcha).not.toHaveBeenCalled();
+			expect(
+				tasks.frictionlessManager.sendAccessRuleCaptcha,
+			).not.toHaveBeenCalled();
 		});
 
 		it("fires when puzzle-typed access policy bump crosses threshold", async () => {
@@ -323,11 +347,12 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).toHaveBeenCalledWith(
+				CaptchaType.puzzle,
 				expect.objectContaining({ reason: "AUTO_BAN_SCORE" }),
 			);
 			expect(res.status).toHaveBeenCalledWith(401);
 			expect(
-				tasks.frictionlessManager.sendPuzzleCaptcha,
+				tasks.frictionlessManager.sendAccessRuleCaptcha,
 			).not.toHaveBeenCalled();
 		});
 
@@ -339,7 +364,9 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).not.toHaveBeenCalled();
-			expect(tasks.frictionlessManager.sendPuzzleCaptcha).toHaveBeenCalled();
+			expect(
+				tasks.frictionlessManager.sendAccessRuleCaptcha,
+			).toHaveBeenCalledWith(CaptchaType.puzzle, expect.anything());
 		});
 
 		it("does nothing when autoBanScoreThreshold is undefined", async () => {
@@ -354,7 +381,9 @@ describe("handleAccessPolicy", () => {
 			expect(
 				tasks.frictionlessManager.registerBlockedSession,
 			).not.toHaveBeenCalled();
-			expect(tasks.frictionlessManager.sendPuzzleCaptcha).toHaveBeenCalled();
+			expect(
+				tasks.frictionlessManager.sendAccessRuleCaptcha,
+			).toHaveBeenCalledWith(CaptchaType.puzzle, expect.anything());
 		});
 	});
 });

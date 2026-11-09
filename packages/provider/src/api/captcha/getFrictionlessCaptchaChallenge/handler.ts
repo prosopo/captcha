@@ -17,14 +17,17 @@ import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import {
 	ApiParams,
 	CaptchaType,
+	type ConcreteCaptchaType,
 	GetFrictionlessCaptchaChallengeRequestBody,
 	ModeEnum,
 	type ScoreComponents,
+	isConcreteCaptchaType,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
+	hashBypassKey,
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
 import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
@@ -39,7 +42,7 @@ import {
 import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
-	derivePlatform,
+	deriveDevice,
 	deriveTrafficPolicies,
 } from "../../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
@@ -67,6 +70,7 @@ import {
 import { handleAccessPolicy } from "./accessPolicy.js";
 import {
 	isPuzzleImageSwitchAvailable,
+	isRefreshLimitSwitchEnabled,
 	resolveScoreLadder,
 	resolveSiteAllowedCaptchaTypes,
 } from "./constants.js";
@@ -74,9 +78,10 @@ import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import {
-	isImageSwitchRequestValid,
+	isUserImageChoiceActive,
 	resolveRefreshLineage,
 } from "./refreshLineage.js";
+import { resolveRetrySolveDevice } from "./retrySolveDevice.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import {
 	runConfiguredCaptchaTypeShortCircuit,
@@ -116,10 +121,14 @@ export default (
 				iframeUrl: reportedIframeUrl,
 				clientSessionId,
 				refreshOf,
+				retryOf,
 				switchToImage,
+				switchToPuzzle,
 				fingerprintProof,
 				widgetSlot,
+				bypassKey,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			const bypassKeyHash = bypassKey ? hashBypassKey(bypassKey) : undefined;
 
 			// Recorded on the session and copied onto whichever captcha record it
 			// leads to, so the device bucket exists for image and puzzle solves
@@ -273,6 +282,7 @@ export default (
 			);
 			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
 				clientRecord.settings,
+				clientRecord.tier,
 			);
 			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
 
@@ -333,10 +343,6 @@ export default (
 					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 						? req.ipInfo.asnNumber
 						: undefined;
-				const dedupIsMobile =
-					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-						? req.ipInfo.isMobile
-						: undefined;
 				const dedupFlatHeaders = flatten(req.headers);
 				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
 				const dedupTrafficPolicies = deriveTrafficPolicies(
@@ -352,6 +358,7 @@ export default (
 					dedupCountryCode,
 					dedupAsn,
 					verifiedSignerUrl,
+					bypassKeyHash,
 				);
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
@@ -386,11 +393,7 @@ export default (
 				// behave identically. One that mixes per-request signals with
 				// session-derived ones gets the request-time view of every
 				// input that's available without re-decrypting the payload.
-				const cachedCaptchaType = dedup.captchaType as
-					| CaptchaType.image
-					| CaptchaType.pow
-					| CaptchaType.puzzle
-					| CaptchaType.iconOrder;
+				const cachedCaptchaType = dedup.captchaType as ConcreteCaptchaType;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -408,17 +411,13 @@ export default (
 								ip: normalizedIp,
 								...(dedupCountryCode && { countryCode: dedupCountryCode }),
 								score: dedup.session.score,
-								platform: derivePlatform(
-									dedupUserAgent,
-									dedup.session.webView,
-									{
-										headers: dedupFlatHeaders,
-										...(typeof dedupIsMobile === "boolean" && {
-											carrierNetwork: dedupIsMobile,
-										}),
-										...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
-									},
-								),
+								platform: deriveDevice({
+									userAgent: dedupUserAgent,
+									headers: dedupFlatHeaders,
+									ipInfo: req.ipInfo,
+									tcpMss: req.tcpMss,
+									webView: dedup.session.webView,
+								}).platform,
 								// Session-derived, like `score` and `webView` above:
 								// the replay never re-decrypts a payload.
 								...(dedup.session.d !== undefined && {
@@ -473,7 +472,10 @@ export default (
 					: { captchaType: cachedCaptchaType };
 				// Compared after coercion, as `sendCaptcha` would mint it, so a router
 				// that keeps asking for a disallowed type doesn't evict every reuse.
+				// A rule that names the type overrules the router here too, as it
+				// does when the session is first minted.
 				const dedupConflictsWithRouting =
+					!isConcreteCaptchaType(dedupAccessPolicy?.captchaType) &&
 					coerceToEnabledCaptchaType(
 						dedupRouted.captchaType,
 						allowedCaptchaTypes,
@@ -599,11 +601,7 @@ export default (
 					recordFrictionlessDecision("reuse_session");
 					attachHoneypot(res, clientRecord);
 					return res.json({
-						[ApiParams.captchaType]: dedup.captchaType as
-							| CaptchaType.image
-							| CaptchaType.pow
-							| CaptchaType.puzzle
-							| CaptchaType.iconOrder,
+						[ApiParams.captchaType]: dedup.captchaType as ConcreteCaptchaType,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						...dnsBeaconUrls(dedup.sessionId),
@@ -625,6 +623,41 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.asnNumber
 					: undefined;
+
+			// Ahead of the short-circuits, so a site pinned to puzzle can still be
+			// switched to image and still has its refreshes recorded.
+			const refresh = await resolveRefreshLineage(
+				tasks.db,
+				refreshOf,
+				dapp,
+				userSitekeyIpHash,
+				new Date(),
+			);
+			// A retry that cannot be checked is served as a fresh session.
+			const retry = await resolveRetrySolveDevice(tasks.db, {
+				retryOf,
+				siteKey: dapp,
+				userAccount: user,
+				ipAddress,
+				userAgent: String(req.headers["user-agent"] ?? ""),
+				ja4: req.ja4,
+			}).catch((err: unknown) => {
+				req.logger.warn(() => ({
+					err,
+					msg: "Failed to resolve the puzzle a retry replaces",
+				}));
+				return undefined;
+			});
+			tasks.frictionlessManager.setImageSwitchRequested(
+				isUserImageChoiceActive(
+					{ switchToImage, switchToPuzzle },
+					refresh,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				),
+			);
+			tasks.frictionlessManager.setRefreshLimitSwitchEnabled(
+				isRefreshLimitSwitchEnabled(clientRecord.settings),
+			);
 
 			const shortCircuitInput = {
 				tasks,
@@ -651,23 +684,9 @@ export default (
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 				}),
 				...rawTlsSignalsForSession(req),
+				...(refresh && { refresh: refresh.lineage }),
+				...(retry && { retry }),
 			};
-
-			// Ahead of the short-circuits, so a site pinned to puzzle can still be
-			// switched to image.
-			const refresh = await resolveRefreshLineage(
-				tasks.db,
-				refreshOf,
-				dapp,
-				new Date(),
-			);
-			tasks.frictionlessManager.setImageSwitchRequested(
-				isImageSwitchRequestValid(
-					switchToImage,
-					refresh,
-					isPuzzleImageSwitchAvailable(clientRecord.settings),
-				),
-			);
 
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
@@ -679,6 +698,7 @@ export default (
 				countryCode,
 				asn,
 				verifiedSignerUrl,
+				bypassKeyHash,
 			);
 			const lookupAccessPolicies = () =>
 				tasks.frictionlessManager.getPrioritisedAccessPolicies(
@@ -691,8 +711,9 @@ export default (
 			// Authenticated fast-path. Fires when any non-deferToVerify Allow
 			// rule matches the userScope — the qualifier can be a verified
 			// Web Bot Auth agent, an IP CIDR, a JA4 fingerprint, a UA
-			// substring, an ASN, a country, or any combination. Web Bot Auth
-			// is one of the ways to qualify, not the only one.
+			// substring, an ASN, a country, a site bypass key, or any
+			// combination. Web Bot Auth is one of the ways to qualify, not the
+			// only one.
 			//
 			// Skips decrypt/detect/decision-machine entirely, mints an
 			// authenticated session with `serverChecked: false`, and the
@@ -956,6 +977,7 @@ export default (
 				...(clientSessionId && { clientMetaData: { clientSessionId } }),
 				...(fingerprintSummary && { fingerprintSummary }),
 				...refresh?.lineage,
+				...retry,
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
@@ -965,10 +987,6 @@ export default (
 				...rawTlsSignalsForSession(req),
 			});
 
-			const ipInfoMobile =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.isMobile
-					: undefined;
 			// `userAgent` is hashed and only meaningful to
 			// `runUserAgentMismatchCheck`; passing it here left `isApple` and any
 			// UA classification permanently false. The dedup replay above already
@@ -980,6 +998,7 @@ export default (
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
+				tier: clientRecord.tier,
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,
@@ -987,16 +1006,22 @@ export default (
 				imageMinRounds: clientRecord.settings.imageMinRounds,
 				baseImageRounds: env.config.captchas.solved.count,
 				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
-				platform: derivePlatform(requestUserAgent, webView, {
+				platform: deriveDevice({
+					userAgent: requestUserAgent,
 					headers: flatHeaders,
-					...(typeof ipInfoMobile === "boolean" && {
-						carrierNetwork: ipInfoMobile,
-					}),
-					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
-				}),
+					ipInfo: req.ipInfo,
+					tcpMss: req.tcpMss,
+					webView,
+				}).platform,
 				// Straight from the payload this request arrived with — the
 				// session record is written from the same value.
 				...(d !== undefined && { d }),
+				...(refresh && {
+					refresh: {
+						count: refresh.lineage.refreshCount,
+						afterMs: refresh.lineage.refreshedAfterMs,
+					},
+				}),
 				raw: {
 					headers: flatHeaders,
 					userAgent: requestUserAgent,

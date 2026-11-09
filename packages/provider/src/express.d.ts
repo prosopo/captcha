@@ -60,6 +60,7 @@ export interface AugmentedRequest {
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
 	tcpProbe?: TcpProbeRecord;
+	tlsHandshakeRttUs?: number;
 }
 
 declare global {
@@ -97,6 +98,7 @@ declare global {
 			tcpOptsFlags?: number;
 			tcpOptsOrder?: number;
 			tcpProbe?: TcpProbeRecord;
+			tlsHandshakeRttUs?: number;
 		}
 		interface Locals {
 			padBytes?: number;

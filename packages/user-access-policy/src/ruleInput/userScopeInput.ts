@@ -14,9 +14,11 @@
 
 import crypto from "node:crypto";
 import type { AllKeys } from "@prosopo/common";
+import { stripTrailingSlashes } from "@prosopo/util";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 import { type ZodType, z } from "zod";
+import { BYPASS_KEY_HASH_PATTERN } from "#policy/bypassKey.js";
 import type { UserAttributes, UserIp, UserScope } from "#policy/rule.js";
 import type { UserAttributesRecord, UserIpRecord } from "#policy/ruleRecord.js";
 
@@ -31,7 +33,7 @@ function normaliseSignatureAgentUrl(raw: string): string {
 	url.hostname = url.hostname.toLowerCase();
 	url.protocol = url.protocol.toLowerCase();
 	if (url.pathname === "/") url.pathname = "";
-	return url.toString().replace(/\/$/, "");
+	return stripTrailingSlashes(url.toString());
 }
 
 const userAttributesSchema = z.object({
@@ -65,6 +67,7 @@ const userAttributesSchema = z.object({
 		.url()
 		.transform(normaliseSignatureAgentUrl)
 		.optional(),
+	bypassKeyHash: z.string().regex(BYPASS_KEY_HASH_PATTERN).optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z

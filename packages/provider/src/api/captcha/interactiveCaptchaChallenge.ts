@@ -298,7 +298,6 @@ export const interactiveChallengeHandler =
 					session: sessionId,
 				},
 			}));
-			res.locals.padBytes = trafficVerdict.padBytes;
 			recordCaptchaIssued(captchaType);
 			return res.json(response);
 		} catch (err) {

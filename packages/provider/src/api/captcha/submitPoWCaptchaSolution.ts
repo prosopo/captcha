@@ -23,11 +23,13 @@ import {
 	type FrictionlessReason,
 	type IFrictionlessTypes,
 	type IPuzzleSettings,
+	type InteractiveCaptchaType,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	imageMaxRoundsDefault,
+	isInteractiveCaptchaType,
 	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -38,8 +40,10 @@ import { coerceToEnabledCaptchaType } from "../../tasks/captchaTypeSelection.js"
 import { samplePuzzleDifficulty } from "../../tasks/puzzle/puzzleDifficulty.js";
 import { Tasks } from "../../tasks/tasks.js";
 import {
-	derivePlatform,
+	type DeviceVerdict,
+	deriveDevice,
 	deriveTrafficPolicies,
+	solveDeviceSignals,
 } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import {
@@ -163,17 +167,15 @@ export default (env: ProviderEnvironment) =>
 			);
 
 			tasks.powCaptchaManager.setPostPowContext({
+				tier: clientRecord.tier,
 				ip: req.ip || "",
 				countryCode,
-				// `false` here is a placeholder — `runPostPowRouting` overrides
-				// isWebView with the value recorded on the originating session.
-				platform: derivePlatform(userAgent, false, {
+				device: {
+					userAgent,
 					headers: flatHeaders,
-					...(req.ipInfo &&
-						"isValid" in req.ipInfo &&
-						req.ipInfo.isValid && { carrierNetwork: req.ipInfo.isMobile }),
-					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
-				}),
+					ipInfo: req.ipInfo,
+					tcpMss: req.tcpMss,
+				},
 				raw: {
 					headers: flatHeaders,
 					userAgent,
@@ -251,6 +253,7 @@ export default (env: ProviderEnvironment) =>
 				{
 					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
 						clientRecord.settings,
+						clientRecord.tier,
 					),
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
 					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
@@ -259,7 +262,7 @@ export default (env: ProviderEnvironment) =>
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
-				// the follow-up image/puzzle challenge before we hand them a token.
+				// the follow-up interactive challenge before we hand them a token.
 				verified: escalation ? false : result.verified,
 				...(escalation && { escalation }),
 			};
@@ -294,7 +297,11 @@ export default (env: ProviderEnvironment) =>
  */
 export const buildEscalation = async (
 	tasks: Tasks,
-	result: { verified: boolean; routingOutput?: { captchaType: CaptchaType } },
+	result: {
+		verified: boolean;
+		routingOutput?: { captchaType: CaptchaType };
+		device?: DeviceVerdict;
+	},
 	challenge: string,
 	// Per-connection signals (TLS handshake timings + raw TCP handshake
 	// signals) come from the CURRENT PoW-submit request, not from
@@ -316,8 +323,7 @@ export const buildEscalation = async (
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
-	const routedType = result.routingOutput.captchaType;
-	if (routedType !== CaptchaType.image && routedType !== CaptchaType.puzzle) {
+	if (!isInteractiveCaptchaType(result.routingOutput.captchaType)) {
 		return undefined;
 	}
 
@@ -329,8 +335,23 @@ export const buildEscalation = async (
 	);
 	if (!originSession) return undefined;
 
+	const solveDevice = solveDeviceSignals(powRecord.behavioralDataPacked);
+	// Routing judged the device already; size the escalation on that same
+	// verdict. Only an escalation routing never ran for (missing coordinates,
+	// a changed IP) lacks one, and it is judged here by the same function.
+	const device =
+		result.device ??
+		deriveDevice({
+			userAgent: originSession.headers?.["user-agent"] ?? "",
+			headers: originSession.headers,
+			ipInfo: originSession.ipInfo,
+			tcpMss: originSession.tcpMss,
+			webView: originSession.webView,
+			solve: solveDevice,
+		});
+
 	const routed = result.routingOutput as {
-		captchaType: CaptchaType.image | CaptchaType.puzzle;
+		captchaType: InteractiveCaptchaType;
 		solvedImagesCount?: number;
 		powDifficulty?: number;
 		reason?: string;
@@ -368,29 +389,7 @@ export const buildEscalation = async (
 		  }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
-		// This is the one point in the flow where the behavioural signals are
-		// in hand: the solve the user just submitted carries the client's own
-		// touch-support reading and its touch events, both persisted on the
-		// PoW record before routing ran.
-		const { isMobile } = derivePlatform(
-			originSession.headers?.["user-agent"] ?? "",
-			originSession.webView,
-			{
-				...(originSession.headers && { headers: originSession.headers }),
-				...(originSession.ipInfo?.isValid && {
-					carrierNetwork: originSession.ipInfo.isMobile,
-				}),
-				...(originSession.tcpMss !== undefined && {
-					tcpMss: originSession.tcpMss,
-				}),
-				...(powRecord.deviceCapability !== undefined && {
-					deviceCapability: powRecord.deviceCapability,
-				}),
-				...(powRecord.behavioralDataPacked?.c2 !== undefined && {
-					touchEventCount: powRecord.behavioralDataPacked.c2.length,
-				}),
-			},
-		);
+		const { isMobile } = device.platform;
 		const level = severityToPuzzleDifficulty(
 			routed.solvedImagesCount ?? originSession.solvedImagesCount,
 			tasks.config.captchas.solved.count,
@@ -469,6 +468,9 @@ export const buildEscalation = async (
 		// fire-and-forget, races the escalation read), dnsEvent (set by the DNS
 		// sidecar on the origin's TLS connection only).
 		originSessionId: originSession.sessionId,
+		// Two summaries of the solve, not the behavioural data itself, so a
+		// challenge issued for this session judges the same device.
+		...(solveDevice && { solveDevice }),
 		// Raw signals for the current PoW-submit TCP connection — not the
 		// origin's. The escalation session belongs on this hop's fingerprint.
 		tcpToChelloUs: perConnectionSignals?.tcpToChelloUs,

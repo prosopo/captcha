@@ -12,76 +12,105 @@ on:
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+      - converted_to_draft
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: read
   pull-requests: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ inputs.runner }}
   cancel-in-progress: true
 
 defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: changesets
+      runner: ${{ inputs.runner || 'auto' }}
+
   check:
     name: changesets
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
-    # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
-    # Skip if PR title starts with "Release v"
-    if: ${{ !startsWith(github.event.pull_request.title, 'Release v') }}
+    timeout-minutes: 60
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
+    # Skip release PRs (create_release_pr titles them "Release cli-v<version>")
+    if: ${{ ((!startsWith(github.event.pull_request.title, 'Release cli-v')) && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        timeout-minutes: 5
+        uses: prosopo/github_actions/.github/actions/print_contexts@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
           VARS_CONTEXT: ${{ toJson(vars) }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: 'recursive'
           fetch-depth: 0 # required for comparing changesets to the base branch
 
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-
-      - uses: actions/setup-node@v7
+      - name: Setup node and pnpm
+        timeout-minutes: 30
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: '24.22.1'
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile --prefer-offline
+          node-version-file: .nvmrc
+          node-cache: ''
+          store-path: ''
+          # changeset status reads package.json files and .changeset/ only, so
+          # the workspace install would be wasted.
+          run-install: 'false'
+          restore-store-cache: 'false'
 
       # checkout the base and head refs
       # ensures we have history for both
       # Branch names are attacker-chosen: pass them through env, never
       # interpolate them into the script.
       - name: Checkout base ref
+        timeout-minutes: 5
         env:
           BASE_REF: ${{ github.base_ref }}
-        run: git fetch origin "$BASE_REF" && git checkout "$BASE_REF"
+        run: timeout 4m git fetch origin "$BASE_REF" && git checkout "$BASE_REF"
 
       - name: Checkout head ref
+        timeout-minutes: 5
         env:
           HEAD_REF: ${{ github.head_ref }}
-        run: git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
+        run: timeout 4m git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
 
       # if this fails, you need to run `pnpm run changesets:add` (preferred!) or `pnpm run changesets:empty` for an empty changeset (avoid if possible)
       - name: check changesets
+        timeout-minutes: 5
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
 
           # check that the changesets are present for each package which has been modified
-          pnpm run changesets --since "$BASE_REF"
+          version=$(node -p 'require("./package.json").devDependencies["@changesets/cli"]')
+          timeout 240 pnpm --package="@changesets/cli@$version" dlx changeset status --verbose --since "$BASE_REF"

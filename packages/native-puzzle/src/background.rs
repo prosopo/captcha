@@ -134,8 +134,7 @@ pub fn generate_background(prng: &mut Prng, width: usize, height: usize) -> Vec<
             for blob in &blobs {
                 let dx = xf - blob.x;
                 let dy = yf - blob.y;
-                let a = blob.alpha
-                    * (-(dx * dx + dy * dy) / (2.0 * blob.sigma * blob.sigma)).exp();
+                let a = blob.alpha * (-(dx * dx + dy * dy) / (2.0 * blob.sigma * blob.sigma)).exp();
                 r += (blob.colour.r - r) * a;
                 g += (blob.colour.g - g) * a;
                 b += (blob.colour.b - b) * a;
@@ -181,7 +180,12 @@ pub fn generate_background_separable(prng: &mut Prng, width: usize, height: usiz
         let x = prng.range(-0.15, 1.15) * width as f64;
         let y = prng.range(-0.15, 1.15) * height as f64;
         let sigma = prng.range(0.26, 0.48) * min_dimension;
-        points.push(MeshPoint { x, y, colour: *colour, sigma });
+        points.push(MeshPoint {
+            x,
+            y,
+            colour: *colour,
+            sigma,
+        });
     }
 
     let blob_count = prng.int(2, 4) as usize;
@@ -192,7 +196,13 @@ pub fn generate_background_separable(prng: &mut Prng, width: usize, height: usiz
         let y = prng.range(0.1, 0.9) * height as f64;
         let sigma = prng.range(0.18, 0.38) * min_dimension;
         let alpha = prng.range(0.16, 0.32);
-        blobs.push(Blob { x, y, sigma, colour, alpha });
+        blobs.push(Blob {
+            x,
+            y,
+            sigma,
+            colour,
+            alpha,
+        });
     }
 
     // axis[field][coord] = exp(-(coord - centre)² / 2σ²)

@@ -1,23 +1,28 @@
+# Publishes packages after release commits land on main, so releases need no manual steps.
+# Shared actions: https://github.com/prosopo/github_actions. Runners: https://github.com/prosopo/gh-runner.
 name: publish_release
 
+# A push to main tags every package whose version changed (tag-versions), and
+# publishes when that created a cli-v<version> tag: create_release_pr names
+# each release after @prosopo/cli. Tagging and publishing stay in this one
+# file because npm trusted publishing is bound to its filename.
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [main]
   workflow_dispatch:
     inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
       version:
-        description: 'Version to publish (e.g., 1.2.3)'
+        description: '@prosopo/cli version to re-publish from its cli-v<version> tag (e.g., 1.2.3)'
         required: true
         type: string
 
 permissions:
-  contents: write
-  packages: write
-  # Required so pnpm can mint an OIDC token for trusted publishing.
-  # Without this, `pnpm publish` falls back to legacy NPM_TOKEN auth.
-  # See https://docs.npmjs.com/trusted-publishers
-  id-token: write
+  contents: read
 
 defaults:
   run:
@@ -30,58 +35,133 @@ env:
   CARGO_PROFILE_DEV_DEBUG: line-tables-only
   NODE_ENV: "production"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ inputs.version || github.sha }}
+  cancel-in-progress: false
+
 jobs:
-  publish:
-    name: Publish Release
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
     # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: publish_release
+      runner: ${{ inputs.runner || 'auto' }}
+
+  tag:
+    name: Tag changed versions
+    if: ${{ github.event_name == 'push' }}
+    timeout-minutes: 60
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
+    permissions:
+      contents: write
+    outputs:
+      cli-version: ${{ steps.cli.outputs.version }}
     steps:
       - name: Get token for gh app
+        timeout-minutes: 5
         id: app_token
-        uses: peter-murray/workflow-application-token-action@dad2b81e50ce3edeb5f3b7ffbd79f731368bd668 # v5
+        uses: prosopo/github_actions/.github/actions/app-token@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          application_id: ${{ vars.PROSOPONATOR_APP_ID }}
-          application_private_key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+          application-id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application-private-key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
+        with:
+          token: ${{ steps.app_token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Git config
+        timeout-minutes: 1
+        run: |
+          git config user.name "prosoponator[bot]"
+          git config user.email "dev@prosopo.io"
+
+      - id: tags
+        timeout-minutes: 3
+        uses: prosopo/github_actions/.github/actions/tag-versions@610dcc91a6beee73d462b7ebe38b408ab2c02bcc  # main
+        with:
+          before: ${{ github.event.before }}
+          after: ${{ github.sha }}
+
+      - id: cli
+        name: Pick out the cli tag
+        timeout-minutes: 1
+        env:
+          TAGS: ${{ steps.tags.outputs.tags }}
+        run: |
+          echo "tags: $TAGS"
+          version=$(jq -r '.[] | select(startswith("cli-v")) | ltrimstr("cli-v")' <<<"$TAGS")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish Release
+    needs: [runner, tag]
+    if: ${{ !cancelled() && needs.runner.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.tag.outputs.cli-version != '') }}
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      packages: write
+      # Required so pnpm can mint an OIDC token for trusted publishing.
+      # Without this, `pnpm publish` falls back to legacy NPM_TOKEN auth.
+      # See https://docs.npmjs.com/trusted-publishers
+      id-token: write
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
+    steps:
+      - name: Get token for gh app
+        timeout-minutes: 5
+        id: app_token
+        uses: prosopo/github_actions/.github/actions/app-token@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
+        with:
+          application-id: ${{ vars.PROSOPONATOR_APP_ID }}
+          application-private-key: ${{ secrets.PROSOPONATOR_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 30
         with:
           submodules: 'recursive'
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
-          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', inputs.version) || github.ref }}
+          ref: refs/tags/cli-v${{ inputs.version || needs.tag.outputs.cli-version }}
 
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-
-      - uses: actions/setup-node@v7
+      - name: Setup node and pnpm
+        timeout-minutes: 30
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: '24.22.1'
-          cache: 'pnpm'
+          node-version-file: .nvmrc
+          node-cache: 'pnpm'
+          store-path: ''
+          run-install: 'false'
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        timeout-minutes: 30
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f  # v4.6.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Get version from tag or input
+        timeout-minutes: 5
         id: version
+        env:
+          VERSION: ${{ inputs.version || needs.tag.outputs.cli-version }}
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            version="${{ inputs.version }}"
-          else
-            version=${GITHUB_REF#refs/tags/v}
-          fi
-          echo "version=$version" >> $GITHUB_OUTPUT
+          version="$VERSION"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Version: $version"
 
       - name: Preflight publishability check
+        timeout-minutes: 30
         # Runs before the install and build because it needs neither, and a
         # release that cannot publish should fail in seconds rather than after
         # three minutes of building artifacts nobody will ship.
@@ -96,21 +176,25 @@ jobs:
         # workspace package leaked into a published package's runtime deps.
         run: node .github/scripts/check-publishable.mjs
 
-      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+      - run: timeout 29m pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+        timeout-minutes: 30
 
       - name: Build packages
+        timeout-minutes: 30
         run: |
           echo "Building all packages in production mode"
-          NODE_ENV=production pnpm run build:all:tsc
-          NODE_ENV=production pnpm run build:all
-          NODE_ENV=production pnpm run build:all:cjs
+          timeout 29m pnpm run build:all:tsc
+          timeout 29m pnpm run build:all
+          timeout 29m pnpm run build:all:cjs
 
       - name: Bundle the production provider CLI
+        timeout-minutes: 30
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="production" pnpm --filter @prosopo/cli run bundle
+          timeout 29m pnpm --filter @prosopo/cli run bundle
 
       - name: Verify production build
+        timeout-minutes: 30
         run: |
           echo "Verifying production builds..."
           if grep -r "@emotion/react/jsx-runtime" integration/frameworks/react/react-procaptcha-wrapper/dist/ 2>/dev/null; then
@@ -124,6 +208,7 @@ jobs:
           echo "✅ Build verification passed"
 
       - name: Publish to npm
+        timeout-minutes: 30
         # Trusted publishing: pnpm auto-exchanges the GitHub OIDC token
         # (granted via `id-token: write` above) for a short-lived registry
         # token. No NPM_TOKEN secret required. Each workspace package must
@@ -162,7 +247,7 @@ jobs:
           # error still fails the job.
           set -o pipefail
           echo "Publishing changed packages via @changesets/cli"
-          if pnpm exec changeset publish 2>&1 | tee /tmp/changeset-publish.log; then
+          if timeout 29m pnpm exec changeset publish 2>&1 | tee /tmp/changeset-publish.log; then
             exit 0
           fi
           if grep -q "Cannot publish over previously staged version" /tmp/changeset-publish.log; then
@@ -172,31 +257,40 @@ jobs:
           exit 1
 
       - name: Publish production image to Docker Hub
+        timeout-minutes: 30
         run: |
           echo "Publishing production provider image to Docker Hub"
-          NODE_ENV="production" pnpm --filter @prosopo/cli run build:docker
-          NODE_ENV="production" pnpm --filter @prosopo/cli run publish:docker
+          timeout 29m pnpm --filter @prosopo/cli run build:docker
+          timeout 29m pnpm --filter @prosopo/cli run publish:docker
 
       - name: Bundle the staging provider CLI
+        timeout-minutes: 30
+        env:
+          NODE_ENV: "staging"
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="staging" pnpm --filter @prosopo/cli run bundle
+          timeout 29m pnpm --filter @prosopo/cli run bundle
 
       - name: Publish production image to Docker Hub
+        timeout-minutes: 30
+        env:
+          NODE_ENV: "staging"
         run: |
           echo "Publishing staging provider image to Docker Hub"
-          NODE_ENV="staging" pnpm --filter @prosopo/cli run build:docker
-          NODE_ENV="staging" pnpm --filter @prosopo/cli run publish:docker
+          timeout 29m pnpm --filter @prosopo/cli run build:docker
+          timeout 29m pnpm --filter @prosopo/cli run publish:docker
 
       - name: Create GitHub Release
+        timeout-minutes: 5
         env:
           GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          gh release create "v${{ steps.version.outputs.version }}" \
-            --title "Release v${{ steps.version.outputs.version }}" \
+          timeout 4m gh release create "cli-v${{ steps.version.outputs.version }}" \
+            --title "Release cli-v${{ steps.version.outputs.version }}" \
             --generate-notes
 
       - name: Open the private release PR
+        timeout-minutes: 5
         # The release is not finished when this repo's packages are out: the
         # private repo still has to move its captcha submodule to the new tag,
         # cascade the version bumps through its own packages and repoint the
@@ -217,21 +311,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
         run: |
-          gh api repos/prosopo/captcha-private/dispatches \
+          timeout 4m gh api repos/prosopo/captcha-private/dispatches \
             --method POST \
             --field event_type=captcha_released \
             --field 'client_payload[version]=${{ steps.version.outputs.version }}'
 
       - name: Send success notification
+        timeout-minutes: 5
         if: success()
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\": \"Release v${{ steps.version.outputs.version }} published successfully\"}" \
+          timeout 4m curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"Release cli-v${{ steps.version.outputs.version }} published successfully\"}" \
             "${{ secrets.SLACKBOT_DEVOPS }}"
 
       - name: Send failure notification
+        timeout-minutes: 5
         if: failure()
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\": \"Release v${{ steps.version.outputs.version }} failed to publish\"}" \
+          timeout 4m curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"Release cli-v${{ steps.version.outputs.version }} failed to publish\"}" \
             "${{ secrets.SLACKBOT_DEVOPS }}"

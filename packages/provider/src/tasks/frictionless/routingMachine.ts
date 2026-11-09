@@ -24,6 +24,8 @@ import type {
 	RoutingMachinePhase,
 	RoutingMachinePlatform,
 	RoutingMachineRawSignals,
+	RoutingMachineRefresh,
+	Tier,
 } from "@prosopo/types";
 import type {
 	CounterIncrement,
@@ -34,6 +36,7 @@ import type { DecisionMachineRunner } from "../decisionMachine/decisionMachineRu
 export interface RoutingContext {
 	dappAccount: string;
 	userAccount: string;
+	tier?: Tier;
 	ip: string;
 	countryCode?: string;
 	score: number;
@@ -42,6 +45,8 @@ export interface RoutingContext {
 	// Everything the detector reported, forwarded to the machine as
 	// `input.d`. See RoutingMachineInputBase.d.
 	d?: DetectorData;
+	// Forwarded as `input.refresh`. See RoutingMachineInputBase.refresh.
+	refresh?: RoutingMachineRefresh;
 	// The sitekey's image-round bounds, so a router-supplied
 	// `solvedImagesCount` can be held to the same floor and ceiling every
 	// other path respects. Optional because the dedup replay only asks the
@@ -81,6 +86,7 @@ export const applyRouter = async (
 			phase,
 			dappAccount: ctx.dappAccount,
 			userAccount: ctx.userAccount,
+			...(ctx.tier !== undefined && { tier: ctx.tier }),
 			ip: ctx.ip,
 			countryCode: ctx.countryCode,
 			baseline,
@@ -88,6 +94,7 @@ export const applyRouter = async (
 			platform: ctx.platform,
 			raw: ctx.raw,
 			...(ctx.d !== undefined && { d: ctx.d }),
+			...(ctx.refresh !== undefined && { refresh: ctx.refresh }),
 		};
 
 		const specs = await runner.getRequiredCounters(partial, logger);

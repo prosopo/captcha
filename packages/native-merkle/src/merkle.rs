@@ -67,7 +67,7 @@ pub fn build_layers(leaves: &[String]) -> Vec<Vec<String>> {
     let mut current: Vec<String> = leaves.to_vec();
     layers.push(current.clone());
     while current.len() > 1 {
-        let mut next: Vec<String> = Vec::with_capacity((current.len() + 1) / 2);
+        let mut next: Vec<String> = Vec::with_capacity(current.len().div_ceil(2));
         let mut i = 0;
         while i < current.len() {
             let left = &current[i];
@@ -86,8 +86,9 @@ pub fn build_layers(leaves: &[String]) -> Vec<Vec<String>> {
     layers
 }
 
-/// Convenience: just the root, for callers that don't need the intermediate
-/// layers (proof-free use cases).
+/// Just the root, so the tests can check roots against the JS test vectors.
+/// Test-only: the napi wrapper uses `build_layers`.
+#[cfg(test)]
 pub fn build_root(leaves: &[String]) -> Option<String> {
     build_layers(leaves)
         .last()
@@ -215,18 +216,10 @@ mod tests {
         let id = test_id(1);
         let cid = test_cid(1);
         let salt = test_salt(1);
-        let out_unsorted = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["b".to_string(), "a".to_string()],
-            &salt,
-        );
-        let out_presorted = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["a".to_string(), "b".to_string()],
-            &salt,
-        );
+        let out_unsorted =
+            compute_captcha_solution_hash(&id, &cid, &["b".to_string(), "a".to_string()], &salt);
+        let out_presorted =
+            compute_captcha_solution_hash(&id, &cid, &["a".to_string(), "b".to_string()], &salt);
         assert_eq!(out_unsorted, out_presorted);
         assert!(out_unsorted.starts_with("0x"));
         assert_eq!(out_unsorted.len(), 66);
@@ -240,12 +233,8 @@ mod tests {
         let cid = test_cid(1);
         let salt = test_salt(1);
         let expected = hex_hash(&format!("{id}{cid}a,b{salt}"));
-        let got = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["b".to_string(), "a".to_string()],
-            &salt,
-        );
+        let got =
+            compute_captcha_solution_hash(&id, &cid, &["b".to_string(), "a".to_string()], &salt);
         assert_eq!(got, expected);
     }
 
@@ -257,12 +246,8 @@ mod tests {
         let cid = test_cid(2);
         let salt = test_salt(2);
         let expected = hex_hash(&format!("{id}{cid}a0,b0{salt}"));
-        let got = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["b0".to_string(), "a0".to_string()],
-            &salt,
-        );
+        let got =
+            compute_captcha_solution_hash(&id, &cid, &["b0".to_string(), "a0".to_string()], &salt);
         assert_eq!(got, expected);
     }
 }

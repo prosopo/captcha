@@ -1,5 +1,158 @@
 # @prosopo/scripts
 
+## 3.1.228
+### Patch Changes
+
+- Updated dependencies [7a4767d]
+- Updated dependencies [624db1a]
+  - @prosopo/provider@5.29.2
+  - @prosopo/types@5.28.2
+  - @prosopo/env@3.6.95
+  - @prosopo/cli@3.10.10
+  - @prosopo/types-env@2.12.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.26
+  - @prosopo/keyring@2.10.26
+
+## 3.1.227
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+- Updated dependencies [4693a20]
+  - @prosopo/types@5.28.1
+  - @prosopo/provider@5.29.1
+  - @prosopo/cli@3.10.9
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.25
+  - @prosopo/env@3.6.94
+  - @prosopo/keyring@2.10.25
+  - @prosopo/types-env@2.12.4
+
+## 3.1.226
+### Patch Changes
+
+- Updated dependencies [af1b2d3]
+- Updated dependencies [2732f63]
+- Updated dependencies [196f2c0]
+- Updated dependencies [6b8a477]
+- Updated dependencies [fc89f02]
+  - @prosopo/cli@3.10.8
+  - @prosopo/provider@5.29.0
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/datasets@3.2.24
+  - @prosopo/keyring@2.10.24
+  - @prosopo/logger@2.1.11
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.93
+  - @prosopo/types-env@2.12.3
+  - @prosopo/dotenv@3.0.68
+
+## 3.1.225
+### Patch Changes
+
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [213678a]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/provider@5.28.1
+  - @prosopo/util@3.6.1
+  - @prosopo/util-crypto@13.6.5
+  - @prosopo/cli@3.10.7
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.23
+  - @prosopo/env@3.6.92
+  - @prosopo/keyring@2.10.23
+  - @prosopo/types-env@2.12.2
+  - @prosopo/logger@2.1.10
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.67
+
+## 3.1.224
+### Patch Changes
+
+- Updated dependencies [65d87f2]
+- Updated dependencies [65d87f2]
+- Updated dependencies [65d87f2]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/provider@5.28.0
+  - @prosopo/cli@3.10.6
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/env@3.6.91
+  - @prosopo/types-env@2.12.1
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.22
+  - @prosopo/keyring@2.10.22
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 3.1.223
+### Patch Changes
+
+- 223ec85: Self-hosting no longer needs a Rust toolchain. The guide used `pnpm run build:all`, which also compiles the provider's Rust addons and fails without `cargo`, even though the provider runs from the prebuilt image and nothing built on the host uses those addons. The new `pnpm run build:self-hosted` builds only what the env script and the widget need. `build:all` is unchanged.
+  
+  `docker-compose.self-hosted.yml` now sets `platform: linux/amd64` on the provider and Caddy, because those images are only published for amd64; the guide says ARM hosts run them under emulation. Its default Caddy image moves from 2.5.9 to 2.5.12: `docker/provider.Caddyfile` uses `crawler_list`, which 2.5.9 does not have, so Caddy would not start.
+  
+  The `@prosopo/datasets-fs` `cli` script pointed at `dist/esm/cli.js`, which the build never writes. It now runs `dist/tsc/cli.js`, the file `build:tsc` writes, and the guide and the package README build and run the CLI that way.
+  
+  Other corrections in the guide: the detector example runs `bundle` (`detector-botd` has no `build` script), and the expected startup log line is `bundle pool loaded {"count":0}`.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/provider@5.27.0
+  - @prosopo/types@5.25.0
+  - @prosopo/types-env@2.12.0
+  - @prosopo/cli@3.10.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.21
+  - @prosopo/env@3.6.90
+  - @prosopo/keyring@2.10.21
+
+## 3.1.222
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [f9a2e30]
+- Updated dependencies [cc3436f]
+- Updated dependencies [04b6f70]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/provider@5.26.2
+  - @prosopo/types@5.24.0
+  - @prosopo/cli@3.10.4
+  - @prosopo/datasets@3.2.20
+  - @prosopo/logger@2.1.8
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/keyring@2.10.20
+  - @prosopo/types-env@2.11.35
+  - @prosopo/dotenv@3.0.65
+
+## 3.1.221
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/provider@5.26.1
+  - @prosopo/types@5.23.1
+  - @prosopo/cli@3.10.3
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.19
+  - @prosopo/env@3.6.88
+  - @prosopo/keyring@2.10.19
+  - @prosopo/types-env@2.11.34
+
 ## 3.1.220
 ### Patch Changes
 

@@ -3,6 +3,16 @@ packages:
   - packages/*
   - demos/*
   - integration/*
+  # Compose bundles, versioned so deploys can pin them. Not docker/*: the
+  # docker/images wrappers stay out of the workspace (see docker/bake.mjs),
+  # except vector, whose config tests run in CI via `pnpm run test:all`.
+  - docker/provider
+  - docker/provider-mock
+  - docker/oo
+  - docker/client-example-server
+  - docker/redis
+  - docker/mongo
+  - docker/images/vector
 
 overrides:
   "@types/express-serve-static-core": 5.1.3
@@ -34,6 +44,10 @@ verifyDepsBeforeRun: false
 # import it and `lint:refs` rightly rejects a dependency nothing imports.
 publicHoistPattern:
   - "sharp"
+  # packages/cli/vite.config.ts resolves the napi binaries to copy them beside
+  # the bundle, but only @prosopo/provider depends on them, so they have to be
+  # reachable from the cli too.
+  - "@prosopo/native-*"
 
 savePrefix: ""
 maxSockets: 10
@@ -47,8 +61,11 @@ fetchRetryFactor: 2
 # publish provenance than an earlier release of the same package.
 blockExoticSubdeps: true
 minimumReleaseAge: 10080
-# Already-locked versions that fall within the window at the time of writing.
+# Our own releases are consumed straight after publishing; the rest are
+# already-locked versions that fall within the window at the time of writing.
 minimumReleaseAgeExclude:
+  - "@prosopo/native-bundle-payload@0.1.0"
+  - "@prosopo/result@0.1.0"
   - "undici@6.29.0"
 trustPolicy: no-downgrade
 # Published before these packages started attaching provenance, so they read

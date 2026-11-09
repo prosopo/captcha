@@ -21,13 +21,15 @@ import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
 	CaptchaType,
+	type ChallengeCaptchaType,
 	ProcaptchaOutputSchema,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
 	type VerificationResponse,
 	decodeProcaptchaOutput,
+	isChallengeCaptchaType,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
+import { parseInteger, u8aToHex } from "@prosopo/util";
 import { translate } from "./translate.js";
 
 // Detect which section of the provider list the token's `providerUrl`
@@ -153,64 +155,80 @@ export class ProsopoServer {
 		const signatureHex = u8aToHex(dappUserSignature);
 		const providerApi = this.getProviderApi(providerUrl);
 
-		if (captchaType === CaptchaType.iconOrder) {
-			const iconOrderTimeout = this.config.timeouts.iconOrder.cachedTimeout;
-			if (!this.isRecent(timestamp, iconOrderTimeout, "IconOrder")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.submitIconOrderCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-				clientSessionId,
-			);
-		}
+		const verifiers: Record<
+			ChallengeCaptchaType,
+			{ label: string; verify: () => Promise<VerificationResponse> }
+		> = {
+			[CaptchaType.image]: {
+				label: "Image",
+				verify: () =>
+					providerApi.verifyDappUser(
+						token,
+						signatureHex,
+						user,
+						timeouts.image.cachedTimeout,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.pow]: {
+				label: "PoW",
+				verify: () =>
+					providerApi.submitPowCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.puzzle]: {
+				label: "Puzzle",
+				verify: () =>
+					providerApi.submitPuzzleCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.iconOrder]: {
+				label: "IconOrder",
+				verify: () =>
+					providerApi.submitIconOrderCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.audio]: {
+				label: "Audio",
+				verify: () =>
+					providerApi.submitAudioCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+		};
 
-		if (captchaType === CaptchaType.puzzle) {
-			const puzzleTimeout = this.config.timeouts.puzzle.cachedTimeout;
-			if (!this.isRecent(timestamp, puzzleTimeout, "Puzzle")) {
+		if (isChallengeCaptchaType(captchaType)) {
+			const { label, verify } = verifiers[captchaType];
+			const timeout = this.config.timeouts[captchaType].cachedTimeout;
+			if (!this.isRecent(timestamp, timeout, label)) {
 				return this.notRecentResponse();
 			}
-			return await providerApi.submitPuzzleCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-				clientSessionId,
-			);
-		}
-
-		if (captchaType === CaptchaType.audio) {
-			const audioTimeout = this.config.timeouts.audio.cachedTimeout;
-			if (!this.isRecent(timestamp, audioTimeout, "Audio")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.submitAudioCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-				clientSessionId,
-			);
-		}
-
-		if (captchaType === CaptchaType.pow) {
-			const powTimeout = this.config.timeouts.pow.cachedTimeout;
-			if (!this.isRecent(timestamp, powTimeout, "PoW")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.submitPowCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-				clientSessionId,
-			);
+			return await verify();
 		}
 
 		if (captchaType === CaptchaType.authenticated) {
@@ -230,22 +248,6 @@ export class ProsopoServer {
 				token,
 				signatureHex,
 				user,
-				ip,
-				email,
-				clientSessionId,
-			);
-		}
-
-		if (captchaType === CaptchaType.image) {
-			const imageTimeout = this.config.timeouts.image.cachedTimeout;
-			if (!this.isRecent(timestamp, imageTimeout, "Image")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.verifyDappUser(
-				token,
-				signatureHex,
-				user,
-				timeouts.image.cachedTimeout,
 				ip,
 				email,
 				clientSessionId,
@@ -370,11 +372,21 @@ export class ProsopoServer {
 					status: translate("API.USER_NOT_VERIFIED"),
 				};
 			}
+			// Number() would sign "" as 0 and "abc" as NaN; a token whose
+			// timestamp isn't an integer is malformed.
+			const parsedTimestamp = parseInteger(timestamp, { min: 0 });
+			if (!parsedTimestamp.ok) {
+				throw new ProsopoError({
+					code: "INVALID_TIMESTAMP",
+					errorSite: "SRVR-2",
+					cause: parsedTimestamp.error,
+				});
+			}
 			const verificationResponse = await this.verifyProvider(
 				token,
 				this.config.timeouts,
 				provider.url,
-				Number(timestamp),
+				parsedTimestamp.value,
 				user,
 				challenge,
 				ip,

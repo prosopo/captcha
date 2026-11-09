@@ -1,5 +1,115 @@
 # @prosopo/client-example-server
 
+## 2.7.199
+### Patch Changes
+
+- Updated dependencies [7a4767d]
+- Updated dependencies [624db1a]
+  - @prosopo/database@4.6.6
+  - @prosopo/types@5.28.2
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.26
+  - @prosopo/server@2.14.15
+
+## 2.7.198
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.5
+  - @prosopo/keyring@2.10.25
+  - @prosopo/server@2.14.14
+
+## 2.7.197
+### Patch Changes
+
+- Updated dependencies [2732f63]
+- Updated dependencies [fc89f02]
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/database@4.6.4
+  - @prosopo/keyring@2.10.24
+  - @prosopo/logger@2.1.11
+  - @prosopo/server@2.14.13
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.68
+
+## 2.7.196
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/database@4.6.3
+  - @prosopo/server@2.14.12
+  - @prosopo/util@3.6.1
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.23
+  - @prosopo/logger@2.1.10
+  - @prosopo/dotenv@3.0.67
+
+## 2.7.195
+### Patch Changes
+
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/database@4.6.2
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/server@2.14.11
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 2.7.194
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/database@4.6.1
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.21
+  - @prosopo/server@2.14.10
+
+## 2.7.193
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [f31105a]
+- Updated dependencies [7c58be4]
+- Updated dependencies [c12d199]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/database@4.6.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/server@2.14.9
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.20
+  - @prosopo/dotenv@3.0.65
+
+## 2.7.192
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.5.1
+  - @prosopo/keyring@2.10.19
+  - @prosopo/server@2.14.8
+
 ## 2.7.191
 ### Patch Changes
 

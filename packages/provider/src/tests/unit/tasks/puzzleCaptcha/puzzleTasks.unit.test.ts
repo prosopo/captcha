@@ -14,10 +14,13 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
+import type { IIpInfoService } from "@prosopo/ipinfo";
 import {
 	CaptchaStatus,
 	CaptchaType,
 	type ClientMetaData,
+	type CounterSpec,
+	DecisionMachineDecision,
 	FrictionlessReason,
 	type KeyringPair,
 	POW_SEPARATOR,
@@ -26,6 +29,7 @@ import {
 	type RequestHeaders,
 	ResultReason,
 	type Session,
+	encodeCounterKey,
 } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -39,8 +43,67 @@ import type { DecisionMachineRunner } from "../../../../tasks/decisionMachine/de
 import { checkPowSignature } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 import { PuzzleCaptchaManager } from "../../../../tasks/puzzleCaptcha/puzzleTasks.js";
 import { validatePuzzleSolution } from "../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js";
+import {
+	type CounterIncrement,
+	UsageCounters,
+} from "../../../../util/usageCounters.js";
 
 type DecideFn = DecisionMachineRunner["decide"];
+
+// Counters held in memory, with writes applied at once so a test can submit
+// in sequence and read its own misses back.
+class InMemoryUsageCounters extends UsageCounters {
+	readonly counts = new Map<string, number>();
+	available = true;
+
+	constructor() {
+		super(
+			{ isReady: () => false } as unknown as ConstructorParameters<
+				typeof UsageCounters
+			>[0],
+			{
+				warn: vi.fn(),
+				error: vi.fn(),
+			} as unknown as ConstructorParameters<typeof UsageCounters>[1],
+		);
+	}
+
+	override async incr(
+		dappAccount: string,
+		spec: CounterSpec,
+		value: string,
+	): Promise<number | null> {
+		const key = encodeCounterKey(dappAccount, spec, value);
+		const next = (this.counts.get(key) ?? 0) + 1;
+		this.counts.set(key, next);
+		return next;
+	}
+
+	override incrManyAsync(
+		dappAccount: string,
+		increments: CounterIncrement[],
+	): void {
+		for (const { spec, value } of increments) {
+			const key = encodeCounterKey(dappAccount, spec, value);
+			this.counts.set(key, (this.counts.get(key) ?? 0) + 1);
+		}
+	}
+
+	override async batchGet(
+		dappAccount: string,
+		reads: CounterIncrement[],
+	): Promise<Record<string, number> | null> {
+		if (!this.available) {
+			return null;
+		}
+		const out: Record<string, number> = {};
+		for (const { spec, value } of reads) {
+			const key = encodeCounterKey(dappAccount, spec, value);
+			out[key] = this.counts.get(key) ?? 0;
+		}
+		return out;
+	}
+}
 
 // PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored. The tests
 // only care about a small subset of the stored fields; this helper widens
@@ -82,9 +145,19 @@ vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),
 }));
 
-vi.mock("../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js", () => ({
-	validatePuzzleSolution: vi.fn(),
-}));
+vi.mock(
+	"../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js",
+	async (importOriginal) => {
+		const actual =
+			await importOriginal<
+				typeof import("../../../../tasks/puzzleCaptcha/puzzleTasksUtils.js")
+			>();
+		return {
+			...actual,
+			validatePuzzleSolution: vi.fn(),
+		};
+	},
+);
 
 describe("PuzzleCaptchaManager", () => {
 	let db: IProviderDatabase;
@@ -231,6 +304,33 @@ describe("PuzzleCaptchaManager", () => {
 			expect(result).toBe(false);
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
+
+		it.each(["12abc", "", "-1", "1.5"])(
+			"rejects a challenge whose timestamp is %j instead of verifying against NaN",
+			async (timestamp) => {
+				const a = buildArgs();
+				const challenge =
+					`${timestamp}${POW_SEPARATOR}${a.userAccount}${POW_SEPARATOR}${a.dappAccount}${POW_SEPARATOR}1` as PoWChallengeId;
+
+				await expect(
+					puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+						challenge,
+						a.providerSignature,
+						100,
+						100,
+						[],
+						1000,
+						a.userSignature,
+						a.ipAddress,
+						a.headers,
+					),
+				).rejects.toMatchObject({
+					code: "INVALID_TIMESTAMP",
+					errorSite: "PROV-97",
+				});
+				expect(db.getPuzzleCaptchaRecordByChallenge).not.toHaveBeenCalled();
+			},
+		);
 
 		it("refuses re-submission of an already-submitted challenge (replay guard)", async () => {
 			const a = buildArgs();
@@ -746,6 +846,91 @@ describe("PuzzleCaptchaManager", () => {
 		});
 	});
 
+	describe("far-miss counters", () => {
+		const userAccount = "user";
+		const dappAccount = "dapp";
+		const ipAddress = getIPAddress("1.1.1.1");
+		let counters: InMemoryUsageCounters;
+		let manager: PuzzleCaptchaManager;
+		let nonce = 0;
+
+		beforeEach(() => {
+			counters = new InMemoryUsageCounters();
+			manager = new PuzzleCaptchaManager(
+				db,
+				pair,
+				mockEnv.config,
+				undefined,
+				counters,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			// Grade by distance, as the real check does.
+			vi.mocked(validatePuzzleSolution).mockImplementation(
+				(finalX, finalY, targetX, targetY, tolerance) =>
+					Math.hypot(finalX - targetX, finalY - targetY) <= tolerance,
+			);
+		});
+
+		// One submission dropped at (x, y) against a target at (100, 100).
+		const submit = async (x: number, y: number): Promise<boolean> => {
+			nonce += 1;
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}${POW_SEPARATOR}${nonce}`;
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount,
+					targetX: 100,
+					targetY: 100,
+					tolerance: 15,
+					ipAddress: getCompositeIpAddress(ipAddress),
+					result: { status: CaptchaStatus.pending },
+				}),
+			);
+			return manager.verifyPuzzleCaptchaSolution(
+				challenge,
+				"0xprov",
+				x,
+				y,
+				[],
+				1000,
+				"0xuser",
+				ipAddress,
+				{} as RequestHeaders,
+			);
+		};
+
+		const count = (
+			kind: CounterSpec["kind"],
+			dimension: "ip" | "userAccount",
+		): number =>
+			counters.counts.get(
+				encodeCounterKey(
+					dappAccount,
+					{ kind, captchaType: CaptchaType.puzzle, dimension, window: "10m" },
+					dimension === "ip" ? "1.1.1.1" : userAccount,
+				),
+			) ?? 0;
+
+		it("counts a miss well away from the slot as a far miss, by account and address", async () => {
+			expect(await submit(200, 100)).toBe(false);
+			expect(count("farMiss", "userAccount")).toBe(1);
+			expect(count("farMiss", "ip")).toBe(1);
+		});
+
+		it("does not count a near miss", async () => {
+			expect(await submit(130, 100)).toBe(false);
+			expect(count("farMiss", "userAccount")).toBe(0);
+		});
+
+		it("counts a right answer as solved, never as a far miss", async () => {
+			await submit(200, 100);
+			expect(await submit(102, 101)).toBe(true);
+			expect(count("solved", "userAccount")).toBe(1);
+			expect(count("farMiss", "userAccount")).toBe(1);
+		});
+	});
+
 	describe("serverVerifyPuzzleCaptchaSolution", () => {
 		const dappAccount = "dappAccount";
 		const challenge = "1234567___user___dappAccount___1";
@@ -927,6 +1112,141 @@ describe("PuzzleCaptchaManager", () => {
 				);
 
 			expect(result.verified).toBe(false);
+		});
+
+		describe("what the decision machine asks for", () => {
+			const farMissesByAccount: CounterSpec = {
+				kind: "farMiss",
+				captchaType: CaptchaType.puzzle,
+				dimension: "userAccount",
+				window: "10m",
+			};
+			const farMissesByIp: CounterSpec = {
+				...farMissesByAccount,
+				dimension: "ip",
+			};
+			let counters: InMemoryUsageCounters;
+			let manager: PuzzleCaptchaManager;
+			let decide: ReturnType<typeof vi.fn<DecideFn>>;
+			let accountSighting: ReturnType<
+				typeof vi.fn<IIpInfoService["accountSighting"]>
+			>;
+
+			const runnerOf = (target: PuzzleCaptchaManager) =>
+				target as unknown as {
+					decisionMachineRunner: {
+						decide: DecideFn;
+						getDecisionRequirements: DecisionMachineRunner["getDecisionRequirements"];
+					};
+				};
+
+			beforeEach(() => {
+				counters = new InMemoryUsageCounters();
+				manager = new PuzzleCaptchaManager(
+					db,
+					pair,
+					mockEnv.config,
+					undefined,
+					counters,
+				);
+				decide = vi
+					.fn<DecideFn>()
+					.mockResolvedValue({ decision: DecisionMachineDecision.Allow });
+				runnerOf(manager).decisionMachineRunner.decide = decide;
+				accountSighting = vi
+					.fn<IIpInfoService["accountSighting"]>()
+					.mockResolvedValue({ userAgents7d: 2, deviceTypes: ["Windows"] });
+				(
+					mockEnv as unknown as {
+						ipInfoService: Pick<IIpInfoService, "lookup" | "accountSighting">;
+					}
+				).ipInfoService.accountSighting = accountSighting;
+				vi.mocked(verifyRecency).mockImplementation(() => true);
+				vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+					asPuzzleRecord({
+						challenge,
+						dappAccount,
+						userAccount: "user",
+						ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+						result: { status: CaptchaStatus.approved },
+						serverChecked: false,
+						headers: { a: "1" },
+					}),
+				);
+			});
+
+			const requiring = (
+				requirements: Awaited<
+					ReturnType<DecisionMachineRunner["getDecisionRequirements"]>
+				>,
+			) => {
+				runnerOf(manager).decisionMachineRunner.getDecisionRequirements = vi
+					.fn<DecisionMachineRunner["getDecisionRequirements"]>()
+					.mockResolvedValue(requirements);
+			};
+
+			const verify = () =>
+				manager.serverVerifyPuzzleCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+				);
+
+			it("reads the counters and account sighting the machine declared", async () => {
+				counters.incrManyAsync(dappAccount, [
+					{ spec: farMissesByAccount, value: "user" },
+					{ spec: farMissesByAccount, value: "user" },
+					{ spec: farMissesByIp, value: "1.1.1.1" },
+				]);
+				requiring({
+					counters: [farMissesByAccount, farMissesByIp],
+					accountSighting: true,
+				});
+
+				await verify();
+
+				const input = decide.mock.lastCall?.[0];
+				expect(input?.counters).toEqual({
+					[encodeCounterKey(dappAccount, farMissesByAccount, "user")]: 2,
+					[encodeCounterKey(dappAccount, farMissesByIp, "1.1.1.1")]: 1,
+				});
+				expect(input?.accountSighting).toEqual({
+					userAgents7d: 2,
+					deviceTypes: ["Windows"],
+				});
+				expect(accountSighting).toHaveBeenCalledWith(dappAccount, "user");
+			});
+
+			it("reads nothing for a machine that asks for nothing", async () => {
+				requiring({ counters: [], accountSighting: false });
+
+				await verify();
+
+				const input = decide.mock.lastCall?.[0];
+				expect(input).not.toHaveProperty("counters");
+				expect(input).not.toHaveProperty("accountSighting");
+				expect(accountSighting).not.toHaveBeenCalled();
+			});
+
+			it("leaves out what cannot be read rather than passing zeros", async () => {
+				counters.available = false;
+				accountSighting.mockResolvedValue(undefined);
+				requiring({ counters: [farMissesByAccount], accountSighting: true });
+
+				await verify();
+
+				const input = decide.mock.lastCall?.[0];
+				expect(input).not.toHaveProperty("counters");
+				expect(input).not.toHaveProperty("accountSighting");
+			});
+
+			it("refuses the answer when the machine denies on them", async () => {
+				requiring({ counters: [farMissesByAccount], accountSighting: true });
+				decide.mockResolvedValue({ decision: DecisionMachineDecision.Deny });
+
+				expect((await verify()).verified).toBe(false);
+			});
 		});
 
 		it("returns verified:false when the decision machine denies", async () => {
@@ -1175,6 +1495,48 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.currentUrl).toBe(sessionRecord.currentUrl);
 			expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
 			expect(typeof input.score).toBe("number");
+		});
+
+		it("forwards the puzzle's origin, target and tolerance into the decide() input", async () => {
+			const puzzleEvents = [
+				{ x: 41, y: 77, t: 1000 },
+				{ x: 203, y: 118, t: 1350 },
+			];
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					originX: 41,
+					originY: 77,
+					targetX: 207,
+					targetY: 121,
+					tolerance: 11,
+					puzzleEvents,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			const decideSpy = vi
+				.fn()
+				.mockResolvedValue({ decision: "allow" } as const);
+			mockDecisionMachine(decideSpy);
+
+			await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(decideSpy).toHaveBeenCalledOnce();
+			const input = decideSpy.mock.calls[0]?.[0];
+			expect(input.puzzleOrigin).toEqual({ x: 41, y: 77 });
+			expect(input.puzzleTarget).toEqual({ x: 207, y: 121 });
+			expect(input.puzzleTolerance).toBe(11);
+			expect(input.puzzleEvents).toEqual(puzzleEvents);
 		});
 	});
 

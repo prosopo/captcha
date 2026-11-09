@@ -1,5 +1,30 @@
 # @prosopo/logger
 
+## 2.1.11
+### Patch Changes
+
+- Updated dependencies [2732f63]
+  - @prosopo/util@3.7.0
+
+## 2.1.10
+### Patch Changes
+
+- Updated dependencies [a191c21]
+  - @prosopo/util@3.6.1
+
+## 2.1.9
+### Patch Changes
+
+- Updated dependencies [1ba238e]
+  - @prosopo/util@3.6.0
+
+## 2.1.8
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [cdea91f]
+  - @prosopo/util@3.5.0
+
 ## 2.1.7
 ### Patch Changes
 

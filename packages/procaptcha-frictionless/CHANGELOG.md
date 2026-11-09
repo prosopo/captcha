@@ -1,5 +1,171 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.25.2
+### Patch Changes
+
+- Updated dependencies [624db1a]
+  - @prosopo/types@5.28.2
+  - @prosopo/api@4.10.2
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.17
+  - @prosopo/procaptcha-audio@0.3.6
+  - @prosopo/procaptcha-common@2.23.6
+  - @prosopo/procaptcha-icon-order@0.3.6
+  - @prosopo/procaptcha-pow@2.14.14
+  - @prosopo/procaptcha-puzzle@2.18.6
+  - @prosopo/procaptcha-react@2.14.25
+
+## 2.25.1
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/api@4.10.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.16
+  - @prosopo/procaptcha-audio@0.3.5
+  - @prosopo/procaptcha-common@2.23.5
+  - @prosopo/procaptcha-icon-order@0.3.5
+  - @prosopo/procaptcha-pow@2.14.13
+  - @prosopo/procaptcha-puzzle@2.18.5
+  - @prosopo/procaptcha-react@2.14.24
+
+## 2.25.0
+### Minor Changes
+
+- fc89f02: Site bypass keys: a browser carrying a site's bypass key skips the CAPTCHA on that site.
+  
+  The widget reads a `prosopo_bypass_key` cookie from the page and sends it with the frictionless request. The provider
+  hashes it (SHA-256) and adds the hash to the request's user scope as `bypassKeyHash`, a new access-rule field. A
+  site-scoped Allow rule carrying that hash then takes the existing authenticated fast path, so the visitor gets an
+  `authenticated` token without a challenge, and verification still requires the visitor's IP. Rules only ever hold the
+  hash, never the key.
+  
+  A reused frictionless session is now also evicted when an Allow rule matches and the cached session is not already
+  authenticated, so a visitor who loaded the page before adding a key, or before an IP Allow rule was created, is not
+  left on the old challenge.
+
+### Patch Changes
+
+- Updated dependencies [fc89f02]
+  - @prosopo/types@5.28.0
+  - @prosopo/api@4.10.0
+  - @prosopo/locale@3.14.3
+  - @prosopo/procaptcha-audio@0.3.4
+  - @prosopo/procaptcha-common@2.23.4
+  - @prosopo/procaptcha-icon-order@0.3.4
+  - @prosopo/procaptcha-pow@2.14.12
+  - @prosopo/procaptcha-puzzle@2.18.4
+  - @prosopo/procaptcha-react@2.14.23
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.15
+
+## 2.24.3
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [213678a]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+  - @prosopo/types@5.27.0
+  - @prosopo/procaptcha-pow@2.14.11
+  - @prosopo/api@4.9.2
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.14
+  - @prosopo/procaptcha-audio@0.3.3
+  - @prosopo/procaptcha-common@2.23.3
+  - @prosopo/procaptcha-icon-order@0.3.3
+  - @prosopo/procaptcha-puzzle@2.18.3
+  - @prosopo/procaptcha-react@2.14.22
+  - @prosopo/locale@3.14.2
+  - @prosopo/widget-skeleton@2.10.5
+
+## 2.24.2
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/api@4.9.1
+  - @prosopo/procaptcha-common@2.23.2
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.13
+  - @prosopo/procaptcha-audio@0.3.2
+  - @prosopo/procaptcha-icon-order@0.3.2
+  - @prosopo/procaptcha-pow@2.14.10
+  - @prosopo/procaptcha-puzzle@2.18.2
+  - @prosopo/procaptcha-react@2.14.21
+  - @prosopo/locale@3.14.1
+
+## 2.24.1
+### Patch Changes
+
+- 007f43c: A puzzle served after a wrong answer is now judged on the device the failed solve showed, and an escalation's solve readings are no longer dropped.
+  
+  - After a wrong puzzle answer, the widget names the failed challenge in a new `retryOf` field on the next `/frictionless` request. `BotDetectionFunction` and `ProviderApi.getFrictionlessCaptcha` take it as a new trailing argument.
+  - The provider carries the failed solve's device readings onto the new session only when its own record of that puzzle shows the same client: same site, user account and exact IP address, identical user agent and TLS fingerprint, and a solve that was submitted and failed. The readings come from that solve's own behavioural payload, and each failed puzzle can be followed once (`claimPuzzleCaptchaRetry`). Anything else is ignored.
+  - `createSession` now persists `solveDevice`. It was missing from the session's field list, so a PoW escalation's solve readings never reached the challenge they were meant to size.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/procaptcha-puzzle@2.18.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.12
+  - @prosopo/procaptcha-audio@0.3.1
+  - @prosopo/procaptcha-common@2.23.1
+  - @prosopo/procaptcha-icon-order@0.3.1
+  - @prosopo/procaptcha-pow@2.14.9
+  - @prosopo/procaptcha-react@2.14.20
+
+## 2.24.0
+### Minor Changes
+
+- ec4ed10: A site's error-callback now gets an Error that also has `code` and `errorId`, so sites can branch on the code and log the id. `message` still works as before.
+
+### Patch Changes
+
+- 7c58be4: Finish the puzzle refresh and switch-to-image work.
+  
+  - A user who switched their puzzle to an image now keeps the image when they refresh it. Before, a plain refresh handed the puzzle straight back.
+  - That image now has a puzzle-piece button to go back to the puzzle. It is only offered on an image the user chose themselves, and only while going back would not run into the three-refresh limit. Going back only drops the user's choice: if routing would serve an image anyway, they still get the image.
+  - A refresh only extends a chain started by the same user, IP and site, so nobody can borrow someone else's refresh count or switch.
+  - Sites pinned to puzzle now record refreshes too. The three-refresh switch to image applies to them only when the superadmin puzzle-to-image switch is on, since they chose puzzle on purpose.
+  - Routing machines now receive `input.refresh` (`count` and `afterMs`) on a refresh, so rules can act on how often and how fast a user refreshes.
+  - New widget string `WIDGET.SWITCH_TO_PUZZLE`, translated into every locale. The puzzle's switch button is now a shared `mountChallengeSwitchButton` with an image or puzzle icon.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/api@4.8.7
+  - @prosopo/procaptcha-common@2.23.0
+  - @prosopo/procaptcha-puzzle@2.18.0
+  - @prosopo/procaptcha-react@2.14.19
+  - @prosopo/locale@3.14.0
+  - @prosopo/procaptcha-audio@0.3.0
+  - @prosopo/procaptcha-icon-order@0.3.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.11
+  - @prosopo/procaptcha-pow@2.14.8
+
+## 2.23.2
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.10
+  - @prosopo/procaptcha-audio@0.2.18
+  - @prosopo/procaptcha-common@2.22.5
+  - @prosopo/procaptcha-icon-order@0.2.18
+  - @prosopo/procaptcha-pow@2.14.7
+  - @prosopo/procaptcha-puzzle@2.17.17
+  - @prosopo/procaptcha-react@2.14.18
+
 ## 2.23.1
 ### Patch Changes
 

@@ -1,5 +1,27 @@
 # @prosopo/util
 
+## 3.7.0
+### Minor Changes
+
+- 2732f63: Traffic filter name lists now match provider names whatever their punctuation, spacing or accents. An allowlist entry of `Example Hosting,Inc.` used to miss IPs that upstream reports as `Example Hosting , Inc.`, so users on one range of a provider were let through while users on another range of the same provider were still blocked. Names are now reduced to their letters and digits before comparing, with accents and full-width characters folded, so both spellings match. Names in non-Latin scripts still compare as before.
+  
+  `@prosopo/util` now exports `normaliseForMatching`, the helper that does this, so other code that compares free-text names can use the same rules.
+
+## 3.6.1
+### Patch Changes
+
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+
+## 3.6.0
+### Minor Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+
+## 3.5.0
+### Minor Changes
+
+- cdea91f: Add `parseJson`, `stringifyJson`, `parseInteger`, `parseNumber`, `parseBigInt` and `parseDate`. Each returns a `@prosopo/result` `Result` instead of throwing or quietly producing `NaN`, an Invalid Date or a rounded number. `parseJson` keeps integers past 2^53 exact as `bigint`, and `stringifyJson` writes bigints as strings instead of throwing.
+
 ## 3.4.0
 ### Minor Changes
 

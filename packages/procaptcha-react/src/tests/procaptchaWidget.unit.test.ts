@@ -748,6 +748,57 @@ describe("theming", () => {
 	});
 });
 
+describe("the switch back to a puzzle", () => {
+	const PUZZLE_SWITCH = `${SURFACE_SELECTOR} [data-cy="puzzle-switch-button"]`;
+	const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+
+	const withChallenge = async (
+		puzzleSwitchAvailable: boolean,
+		overrides: Partial<ProcaptchaProps> = { onReload },
+	): Promise<void> => {
+		render(overrides);
+		await setState({
+			showModal: true,
+			challenge: challengeResponse(
+				puzzleSwitchAvailable ? { puzzleSwitchAvailable: true } : {},
+			),
+			solutions: [[]],
+		});
+	};
+
+	test("is offered when the provider says the user switched to this image", async () => {
+		await withChallenge(true);
+		expect(document.querySelector(PUZZLE_SWITCH)).not.toBeNull();
+	});
+
+	test("is not offered otherwise", async () => {
+		await withChallenge(false);
+		expect(document.querySelector(PUZZLE_SWITCH)).toBeNull();
+	});
+
+	test("is not offered without a wrapper to mint the puzzle", async () => {
+		await withChallenge(true, {});
+		expect(document.querySelector(PUZZLE_SWITCH)).toBeNull();
+	});
+
+	test("reloads through the manager, asking for the puzzle", async () => {
+		await withChallenge(true);
+		const control = document.querySelector(PUZZLE_SWITCH);
+		if (!control) throw new Error("expected a switch to a puzzle");
+		fire(control, "click");
+		expect(reload).toHaveBeenCalledWith({ switchToPuzzle: true });
+	});
+
+	test("is passed on to the wrapper as a refresh", () => {
+		render({ onReload });
+		managerArgs[0]?.[6]?.(120, 340, { switchToPuzzle: true });
+		expect(onReload).toHaveBeenCalledWith(120, 340, {
+			refresh: true,
+			switchToPuzzle: true,
+		});
+	});
+});
+
 describe("the manager itself", () => {
 	test("is built once, so the click coordinates survive a re-render", async () => {
 		// Rebuilding it loses the (x, y) captured on start, which is why every

@@ -25,52 +25,84 @@ on:
       - opened
       - synchronize
       - reopened
+      - ready_for_review
+      - converted_to_draft
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ inputs.runner }}
   cancel-in-progress: true
 
 defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: locales
+      runner: ${{ inputs.runner || 'auto' }}
+
   check:
+    if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     name: locales
     # Hosted, as in lint.yml: this repository is public, so a fork PR must not
     # run on the self-hosted fleet.
     # Runs on drafts too: it is cheap, and translators iterate on drafts.
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           submodules: "recursive"
 
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Setup node and pnpm
+        timeout-minutes: 30
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: '24.22.1'
-          cache: 'pnpm'
-
-      - run: pnpm install --frozen-lockfile --prefer-offline
+          node-version-file: .nvmrc
+          node-cache: 'pnpm'
+          store-path: ''
 
       # vite.test.config.ts imports the built @prosopo/config and needs an
       # .env.test, and the type tests resolve locale's other workspace
       # dependencies (such as @prosopo/util) through their dist/types.
-      - run: pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
+      - run: timeout 29m pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
+        timeout-minutes: 30
 
-      - run: cp dev/scripts/env.test .env.test
+      - run: node .github/scripts/setup-env-files.mjs --mode test --only .
+        timeout-minutes: 30
 
       - name: Catalogue tests
+        timeout-minutes: 30
         working-directory: packages/locale
         run: >-
-          pnpm exec vitest run --config ./vite.test.config.ts
+          timeout 29m pnpm exec vitest run --config ./vite.test.config.ts
           src/tests/locales.unit.test.ts
           src/tests/localePlaceholders.unit.test.ts
           src/tests/translations.unit.test.ts

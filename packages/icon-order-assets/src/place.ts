@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Prng } from "@prosopo/puzzle-assets";
+import type { Prng } from "@prosopo/puzzle-assets/browser";
 import { GLYPH_KINDS, type GlyphKind } from "./glyphs.js";
 import { shuffle } from "./shuffle.js";
 import type { IconOrderGeometry, IconPlacement } from "./types.js";

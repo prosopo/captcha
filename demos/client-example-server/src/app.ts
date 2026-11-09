@@ -23,7 +23,7 @@ import { loadEnv } from "@prosopo/dotenv";
 import { getLogger } from "@prosopo/logger";
 import { getServerConfig } from "@prosopo/server";
 import type { ProsopoServerConfigOutput } from "@prosopo/types";
-import { at, isMain } from "@prosopo/util";
+import { at, isMain, parseInteger } from "@prosopo/util";
 import { packageDir } from "@prosopo/util/node";
 import cors from "cors";
 import express from "express";
@@ -101,16 +101,20 @@ export const createApp = (): express.Express => {
 export const DEFAULT_PORT = 9228;
 
 /**
- * The port is the last segment of the configured server URL. A URL without
- * one used to yield NaN, which node turns into an arbitrary free port — the
- * server came up on an address nothing was configured to talk to.
+ * The port is the last segment of the configured server URL, ignoring any
+ * path after it. A URL without one, or with one that is not a whole port
+ * number, gets DEFAULT_PORT. It used to yield NaN, which node turns into an
+ * arbitrary free port — the server came up on an address nothing was
+ * configured to talk to.
  */
 export const resolvePort = (config: ProsopoServerConfigOutput): number => {
 	if (!config.serverUrl) return DEFAULT_PORT;
 	const segments = config.serverUrl.split(":");
 	if (segments.length < 3) return DEFAULT_PORT;
-	const port = Number.parseInt(at(segments, 2));
-	return Number.isNaN(port) ? DEFAULT_PORT : port;
+	// Drop any path after the port. The rest must be a whole valid port:
+	// parseInt read "9228abc" as 9228 and passed -1 or 99999 on to listen.
+	const [portText = ""] = at(segments, 2).split("/");
+	return parseInteger(portText, { min: 0, max: 65535 }).unwrapOr(DEFAULT_PORT);
 };
 
 /**

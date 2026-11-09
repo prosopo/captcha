@@ -69,18 +69,19 @@ describe("PowChallengeIdSchema", () => {
 		expect(PowChallengeIdSchema.safeParse("").success).toBe(false);
 	});
 
-	it("does not check that the timestamp is numeric", () => {
-		// the parseInt result is discarded and parseInt never throws, so the
-		// validator only counts segments
-		expect(
-			PowChallengeIdSchema.safeParse(challenge(["notanumber", "u", "d", "0"]))
-				.success,
-		).toBe(true);
-	});
+	it.each(["notanumber", "12abc", "-1", "1.5", ""])(
+		"rejects a non-integer timestamp %s",
+		(timestamp) => {
+			expect(
+				PowChallengeIdSchema.safeParse(challenge([timestamp, "u", "d", "0"]))
+					.success,
+			).toBe(false);
+		},
+	);
 
-	it("accepts empty segments", () => {
+	it("accepts empty segments after the timestamp", () => {
 		expect(
-			PowChallengeIdSchema.safeParse(challenge(["", "", "", ""])).success,
+			PowChallengeIdSchema.safeParse(challenge(["1", "", "", ""])).success,
 		).toBe(true);
 	});
 

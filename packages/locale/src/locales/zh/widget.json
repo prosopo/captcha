@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "图片验证",
 		"CANNOT_LOAD": "无法加载验证码",
 		"RELOAD": "重新加载",
+		"SWITCH_TO_PUZZLE": "切换到拼图验证",
 		"VERIFIED_AGENT": "已验证的代理",
 		"TRUSTED_REQUEST": "受信任的请求",
 		"LOADING": "加载中",

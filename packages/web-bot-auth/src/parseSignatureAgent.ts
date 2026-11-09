@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { stripTrailingSlashes } from "@prosopo/util";
 
 // Two Signature-Agent header forms are seen in production today:
 //
@@ -37,7 +38,7 @@ export const normaliseSignatureAgentUrl = (raw: string): string => {
 	url.hostname = url.hostname.toLowerCase();
 	url.protocol = url.protocol.toLowerCase();
 	if (url.pathname === "/") url.pathname = "";
-	return url.toString().replace(/\/$/, "");
+	return stripTrailingSlashes(url.toString());
 };
 
 export const parseSignatureAgentHeader = (raw: string): string | null => {

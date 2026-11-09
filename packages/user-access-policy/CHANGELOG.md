@@ -1,5 +1,113 @@
 # @prosopo/user-access-policy
 
+## 3.16.2
+### Patch Changes
+
+- Updated dependencies [624db1a]
+  - @prosopo/types@5.28.2
+  - @prosopo/api@4.10.2
+  - @prosopo/common@3.3.2
+
+## 3.16.1
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/api@4.10.1
+  - @prosopo/common@3.3.2
+
+## 3.16.0
+### Minor Changes
+
+- fc89f02: Site bypass keys: a browser carrying a site's bypass key skips the CAPTCHA on that site.
+  
+  The widget reads a `prosopo_bypass_key` cookie from the page and sends it with the frictionless request. The provider
+  hashes it (SHA-256) and adds the hash to the request's user scope as `bypassKeyHash`, a new access-rule field. A
+  site-scoped Allow rule carrying that hash then takes the existing authenticated fast path, so the visitor gets an
+  `authenticated` token without a challenge, and verification still requires the visitor's IP. Rules only ever hold the
+  hash, never the key.
+  
+  A reused frictionless session is now also evicted when an Allow rule matches and the cached session is not already
+  authenticated, so a visitor who loaded the page before adding a key, or before an IP Allow rule was created, is not
+  left on the old challenge.
+
+### Patch Changes
+
+- Updated dependencies [2732f63]
+- Updated dependencies [fc89f02]
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/api@4.10.0
+  - @prosopo/logger@2.1.11
+  - @prosopo/common@3.3.2
+  - @prosopo/api-route@2.6.71
+  - @prosopo/redis-client@1.0.48
+
+## 3.15.19
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util@3.6.1
+  - @prosopo/api@4.9.2
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.10
+  - @prosopo/api-route@2.6.70
+  - @prosopo/redis-client@1.0.47
+
+## 3.15.18
+### Patch Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/common@3.3.2
+  - @prosopo/logger@2.1.9
+  - @prosopo/api-route@2.6.69
+  - @prosopo/redis-client@1.0.46
+
+## 3.15.17
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/common@3.3.2
+
+## 3.15.16
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/api@4.8.7
+  - @prosopo/logger@2.1.8
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/api-route@2.6.68
+  - @prosopo/redis-client@1.0.45
+
+## 3.15.15
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+
 ## 3.15.14
 ### Patch Changes
 

@@ -17,6 +17,7 @@ import {
 	type IFrictionlessThreshold,
 	type IFrictionlessTypes,
 	type IUserSettings,
+	type Tier,
 	frictionlessPuzzleThresholdDefault,
 	isWidgetFeatureEnabled,
 	resolveAllowedCaptchaTypes,
@@ -51,14 +52,18 @@ export const resolveSiteAllowedCaptchaTypes = (
 		Partial<IUserSettings>,
 		"captchaType" | "frictionlessTypes" | "captchaTypeFeatureFlags"
 	>,
+	tier?: Tier,
 ): IFrictionlessTypes =>
-	resolveAllowedCaptchaTypes({
-		captchaTypeFeatureFlags: settings.captchaTypeFeatureFlags,
-		...((!settings.captchaType ||
-			settings.captchaType === CaptchaType.frictionless) && {
-			frictionlessTypes: settings.frictionlessTypes,
-		}),
-	});
+	resolveAllowedCaptchaTypes(
+		{
+			captchaTypeFeatureFlags: settings.captchaTypeFeatureFlags,
+			...((!settings.captchaType ||
+				settings.captchaType === CaptchaType.frictionless) && {
+				frictionlessTypes: settings.frictionlessTypes,
+			}),
+		},
+		tier,
+	);
 
 /**
  * Whether a user on this site may swap a puzzle for an image challenge: the
@@ -75,6 +80,17 @@ export const isPuzzleImageSwitchAvailable = (
 ): boolean =>
 	isWidgetFeatureEnabled("puzzleImageSwitch", settings.widgetFeatureFlags) &&
 	resolveSiteAllowedCaptchaTypes(settings).image;
+
+/**
+ * Whether the refresh limit may turn a puzzle into an image challenge. A site
+ * pinned to puzzle chose it deliberately, so there it takes the same switch
+ * that lets users swap the puzzle for an image themselves.
+ */
+export const isRefreshLimitSwitchEnabled = (
+	settings: Parameters<typeof isPuzzleImageSwitchAvailable>[0],
+): boolean =>
+	CaptchaType.puzzle !== settings.captchaType ||
+	isPuzzleImageSwitchAvailable(settings);
 
 /**
  * Image rounds served when the detector payload could not be decrypted.

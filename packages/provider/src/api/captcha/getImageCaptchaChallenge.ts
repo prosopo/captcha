@@ -42,6 +42,8 @@ import { errorCodeForReason } from "../errorCodeForReason.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { isPuzzleImageSwitchAvailable } from "./getFrictionlessCaptchaChallenge/constants.js";
+import { isPuzzleSwitchBackAvailable } from "./getFrictionlessCaptchaChallenge/refreshLineage.js";
 import { localiseTarget } from "./localiseTarget.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { getSealedAssetsResolver } from "./sealedAssetsResolver.js";
@@ -362,6 +364,10 @@ export default (
 						[ApiParams.requestHash]: taskData.signedRequestHash,
 					},
 				},
+				...(isPuzzleSwitchBackAvailable(
+					sessionRecord,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				) && { [ApiParams.puzzleSwitchAvailable]: true }),
 			};
 			req.logger.info(() => ({
 				msg: "Image captcha challenge issued",

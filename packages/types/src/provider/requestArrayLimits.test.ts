@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import type { ZodIssue } from "zod";
+import type { ZodIssue, ZodTypeAny } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import {
 	CaptchaRequestBody,
 	CaptchaSolutionBody,
 	MAX_ICON_CLICKS,
 	SubmitAudioCaptchaSolutionBody,
 	SubmitIconOrderCaptchaSolutionBody,
+	SubmitPowCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
 } from "./api.js";
 
@@ -73,6 +75,15 @@ const solutionBody = (captchas: unknown[]): object => ({
 		user: { timestamp: "0x01" },
 		provider: { requestHash: "0x02" },
 	},
+});
+
+const powBody = (): object => ({
+	challenge: `1700000000000___${USER}___${DAPP}___1`,
+	difficulty: 4,
+	signature: { user: { timestamp: "0x01" }, provider: { challenge: "0x02" } },
+	user: USER,
+	dapp: DAPP,
+	nonce: 1,
 });
 
 const issues = (result: {
@@ -193,4 +204,35 @@ describe("request array caps", () => {
 		expect(huge.success).toBe(false);
 		expect(JSON.stringify(issues(huge)).length).toBeLessThan(2_000);
 	});
+});
+
+describe("behavioural data cap", () => {
+	// A full widget buffer encrypts to roughly 340 KB; anything near the old
+	// 128 KB token limit was a real visitor whose answer was rejected.
+	const fullBuffer = "x".repeat(340_000);
+	const bodies: [string, ZodTypeAny, object][] = [
+		["image", CaptchaSolutionBody, solutionBody([captcha(["0x05"])])],
+		["pow", SubmitPowCaptchaSolutionBody, powBody()],
+		["puzzle", SubmitPuzzleCaptchaSolutionBody, puzzleBody([])],
+		["icon-order", SubmitIconOrderCaptchaSolutionBody, iconOrderBody([], [])],
+		["audio", SubmitAudioCaptchaSolutionBody, audioBody([])],
+	];
+
+	it.each(bodies)("%s accepts a full behavioural buffer", (_, schema, body) => {
+		expect(
+			schema.safeParse({ ...body, behavioralData: fullBuffer }).success,
+		).toBe(true);
+	});
+
+	it.each(bodies)(
+		"%s rejects behavioural data over the cap",
+		(_, schema, body) => {
+			const result = schema.safeParse({
+				...body,
+				behavioralData: "x".repeat(INPUT_LIMITS.BEHAVIOURAL_DATA + 1),
+			});
+			expect(result.success).toBe(false);
+			expect(issues(result)[0]?.path).toEqual(["behavioralData"]);
+		},
+	);
 });

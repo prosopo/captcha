@@ -77,6 +77,7 @@
 		"IMAGE_DIALOG_LABEL": "Zadanie z obrazkami",
 		"CANNOT_LOAD": "Nie można załadować CAPTCHA",
 		"RELOAD": "Załaduj ponownie",
+		"SWITCH_TO_PUZZLE": "Przełącz na zadanie z układanką",
 		"VERIFIED_AGENT": "Zweryfikowany agent",
 		"TRUSTED_REQUEST": "Zaufane żądanie",
 		"LOADING": "Ładowanie",

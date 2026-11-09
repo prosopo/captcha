@@ -26,3 +26,16 @@ export const validatePuzzleSolution = (
 	const distance = Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2);
 	return distance <= tolerance;
 };
+
+/** A wrong answer at least this far from the target is not a near miss. */
+export const FAR_PUZZLE_MISS_DISTANCE = 50;
+
+/** Whether a dropped piece landed at least [FAR_PUZZLE_MISS_DISTANCE] from the target. */
+export const isFarPuzzleMiss = (
+	finalX: number,
+	finalY: number,
+	targetX: number,
+	targetY: number,
+): boolean =>
+	Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2) >=
+	FAR_PUZZLE_MISS_DISTANCE;

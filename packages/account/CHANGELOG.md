@@ -1,5 +1,95 @@
 # @prosopo/account
 
+## 2.8.129
+### Patch Changes
+
+- Updated dependencies [624db1a]
+  - @prosopo/types@5.28.2
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.17
+  - @prosopo/keyring@2.10.26
+
+## 2.8.128
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.16
+  - @prosopo/keyring@2.10.25
+
+## 2.8.127
+### Patch Changes
+
+- Updated dependencies [2732f63]
+- Updated dependencies [fc89f02]
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/keyring@2.10.24
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.15
+
+## 2.8.126
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util@3.6.1
+  - @prosopo/util-crypto@13.6.5
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.14
+  - @prosopo/keyring@2.10.23
+
+## 2.8.125
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.13
+  - @prosopo/keyring@2.10.22
+
+## 2.8.124
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.12
+  - @prosopo/keyring@2.10.21
+
+## 2.8.123
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.11
+  - @prosopo/keyring@2.10.20
+
+## 2.8.122
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.10
+  - @prosopo/keyring@2.10.19
+
 ## 2.8.121
 ### Patch Changes
 

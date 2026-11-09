@@ -3,7 +3,7 @@ services:
     database:
         image: mongo:6.0.28
         ports:
-            - '27017:27017'
+            - '127.0.0.1:27017:27017'
         environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=$MONGO_INITDB_ROOT_PASSWORD
@@ -15,7 +15,6 @@ services:
                 max-size: '100m'
                 max-file: '1'
     provider:
-        # TODO update provider image
         image: prosopo/provider:v1.0.5
         environment:
             - NODE_ENV=production
