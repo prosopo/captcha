@@ -43,9 +43,11 @@ export const normaliseSignatureAgentUrl = (raw: string): string => {
 
 export const parseSignatureAgentHeader = (raw: string): string | null => {
 	const trimmed = raw.trim();
-	const bare = BARE_QUOTED.exec(trimmed);
-	if (bare?.[1]) return normaliseSignatureAgentUrl(bare[1]);
-	const dict = DICT_ENTRY.exec(trimmed);
-	if (dict?.[1]) return normaliseSignatureAgentUrl(dict[1]);
-	return null;
+	const url = BARE_QUOTED.exec(trimmed)?.[1] ?? DICT_ENTRY.exec(trimmed)?.[1];
+	if (!url) return null;
+	try {
+		return normaliseSignatureAgentUrl(url);
+	} catch {
+		return null;
+	}
 };
