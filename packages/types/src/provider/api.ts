@@ -454,7 +454,9 @@ export const CaptchaSolutionBody = object({
 			[ApiParams.requestHash]: boundedString(INPUT_LIMITS.TOKEN),
 		}),
 	}),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	// Compact encoded SimdReadings produced by @prosopo/catcher's
 	// simdReadingsCodec — opaque at this layer; the provider decodes and
 	// persists on the captcha record. Collection-only, no scoring.
@@ -723,7 +725,9 @@ export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.nonce]: number(),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
@@ -922,7 +926,9 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
@@ -988,7 +994,9 @@ export const SubmitAudioCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
@@ -1039,7 +1047,9 @@ export const SubmitIconOrderCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),

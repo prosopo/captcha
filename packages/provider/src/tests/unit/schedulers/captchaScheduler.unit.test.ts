@@ -60,9 +60,13 @@ vi.mock("../../../tasks/tasks.js", () => ({
 }));
 
 vi.mock("cron", () => ({
-	CronJob: vi.fn().mockImplementation(function (cronTime, onTick) {
+	CronJob: vi.fn().mockImplementation(function (
+		cronTime: string,
+		onTick: () => Promise<void>,
+	) {
 		return {
 			start: vi.fn().mockImplementation(onTick),
+			onTick,
 		};
 	}),
 }));
@@ -105,5 +109,40 @@ describe("storeCaptchasExternally", () => {
 		expect(logObj).toMatchObject({
 			msg: "StoreCommitmentsExternal task running: false",
 		});
+	});
+
+	it("does not start a second sweep while one is still running in this process", async () => {
+		let finishSweep: () => void = () => {};
+		const storeCommitmentsExternal = vi
+			.fn((): Promise<void> => Promise.resolve())
+			.mockImplementationOnce(
+				(): Promise<void> =>
+					new Promise<void>((resolve) => {
+						finishSweep = resolve;
+					}),
+			);
+		vi.mocked(Tasks).mockImplementationOnce(function () {
+			return {
+				clientTaskManager: { storeCommitmentsExternal },
+			} as unknown as Tasks;
+		});
+
+		await storeCaptchasExternally(mockPair, "0 * * * *", mockConfig);
+		const job = vi.mocked(CronJob).mock.results.at(-1)?.value as {
+			start: ReturnType<typeof vi.fn>;
+			onTick: () => Promise<void>;
+		};
+		const firstTick = job.start.mock.results[0]?.value as Promise<void>;
+		await vi.waitFor(() =>
+			expect(storeCommitmentsExternal).toHaveBeenCalledTimes(1),
+		);
+
+		await job.onTick();
+		expect(storeCommitmentsExternal).toHaveBeenCalledTimes(1);
+
+		finishSweep();
+		await firstTick;
+		await job.onTick();
+		expect(storeCommitmentsExternal).toHaveBeenCalledTimes(2);
 	});
 });

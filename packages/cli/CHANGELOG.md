@@ -1,5 +1,39 @@
 # @prosopo/cli
 
+## 3.10.9
+### Patch Changes
+
+- b2e3f27: Accept behavioural data up to 512 KB on captcha answers. The cap was 128 KB. A visitor who moves around the page for a while fills the widget's behaviour buffers, and the encrypted data then goes over 128 KB. Their image answer was rejected with a 400, and the widget started a new challenge straight away. They could not get past the captcha. On 9 Nov, 502 of the 537 rejected image answers in 24 hours were over the old cap. A full buffer is about 340 KB, so the new cap leaves room to spare.
+  
+  The provider now also logs refused captcha answers at info, with the error site and the length of each field, so the next cause like this shows up in the logs.
+- 4693a20: Download the provider image's GeoLite2 databases from the publisher's `download` branch on raw.githubusercontent.com instead of via git.io, which redirects to GitHub release assets. Those returned 504 for hours on 8 Nov and broke the provider image build. The files are the same.
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/provider@5.29.1
+  - @prosopo/api@4.10.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.94
+  - @prosopo/keyring@2.10.25
+
+## 3.10.8
+### Patch Changes
+
+- af1b2d3: Stop CI depending on GitHub release downloads, which returned 504 for hours on 8 Nov and failed every PR. The actionlint check is removed. gitleaks and hadolint are now copied out of their official Docker Hub images, pinned by digest, instead of downloaded from GitHub releases.
+- Updated dependencies [2732f63]
+- Updated dependencies [196f2c0]
+- Updated dependencies [6b8a477]
+- Updated dependencies [fc89f02]
+  - @prosopo/provider@5.29.0
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/api@4.10.0
+  - @prosopo/keyring@2.10.24
+  - @prosopo/locale@3.14.3
+  - @prosopo/logger@2.1.11
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.93
+  - @prosopo/dotenv@3.0.68
+
 ## 3.10.7
 ### Patch Changes
 

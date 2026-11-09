@@ -22,11 +22,14 @@ on:
 
 permissions:
   contents: read
-  actions: write
 
 concurrency:
   group: cache-main
   cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   runner:
@@ -43,12 +46,15 @@ jobs:
       runner: ${{ inputs.runner || 'auto' }}
 
   cache:
+    permissions:
+      contents: read
+      actions: write
     needs: runner
-    uses: prosopo/github_actions/.github/workflows/cache-main.yml@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
+    uses: prosopo/github_actions/.github/workflows/cache-main.yml@b78b377faefa672d167a28764f04c66b575320f8  # main
     with:
-      actions-ref: 0f332e76cb54093f6130fa9bdee5b54a9f870de9
+      actions-ref: b78b377faefa672d167a28764f04c66b575320f8
       runs-on: ${{ needs.runner.outputs.default }}
       submodules: recursive
-      node-version: "24.22.1"
+      node-version-file: .nvmrc
     secrets:
       checkout-token: ${{ secrets.PROSOPONATOR_PAT }}

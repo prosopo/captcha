@@ -1,5 +1,50 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.25.1
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/api@4.10.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.16
+  - @prosopo/procaptcha-audio@0.3.5
+  - @prosopo/procaptcha-common@2.23.5
+  - @prosopo/procaptcha-icon-order@0.3.5
+  - @prosopo/procaptcha-pow@2.14.13
+  - @prosopo/procaptcha-puzzle@2.18.5
+  - @prosopo/procaptcha-react@2.14.24
+
+## 2.25.0
+### Minor Changes
+
+- fc89f02: Site bypass keys: a browser carrying a site's bypass key skips the CAPTCHA on that site.
+  
+  The widget reads a `prosopo_bypass_key` cookie from the page and sends it with the frictionless request. The provider
+  hashes it (SHA-256) and adds the hash to the request's user scope as `bypassKeyHash`, a new access-rule field. A
+  site-scoped Allow rule carrying that hash then takes the existing authenticated fast path, so the visitor gets an
+  `authenticated` token without a challenge, and verification still requires the visitor's IP. Rules only ever hold the
+  hash, never the key.
+  
+  A reused frictionless session is now also evicted when an Allow rule matches and the cached session is not already
+  authenticated, so a visitor who loaded the page before adding a key, or before an IP Allow rule was created, is not
+  left on the old challenge.
+
+### Patch Changes
+
+- Updated dependencies [fc89f02]
+  - @prosopo/types@5.28.0
+  - @prosopo/api@4.10.0
+  - @prosopo/locale@3.14.3
+  - @prosopo/procaptcha-audio@0.3.4
+  - @prosopo/procaptcha-common@2.23.4
+  - @prosopo/procaptcha-icon-order@0.3.4
+  - @prosopo/procaptcha-pow@2.14.12
+  - @prosopo/procaptcha-puzzle@2.18.4
+  - @prosopo/procaptcha-react@2.14.23
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.15
+
 ## 2.24.3
 ### Patch Changes
 

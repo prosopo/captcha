@@ -71,14 +71,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         timeout-minutes: 5
       - name: Every tracked Dockerfile is listed in DOCKERFILES
-        timeout-minutes: 2
+        timeout-minutes: 5
         run: diff <(git ls-files '*Dockerfile' '*Dockerfile.*' | grep -v '\.dockerignore$' | sort) <(tr ' ' '\n' <<<"$DOCKERFILES" | sort)
       - name: Install hadolint
         timeout-minutes: 5
+        # From the Docker Hub image, not the GitHub release: github.com release
+        # downloads 504'd for hours on 2026-11-08 and failed every PR.
         run: |
-          timeout 2m curl -fsSL --retry 5 -o "$RUNNER_TEMP/hadolint" https://github.com/hadolint/hadolint/releases/download/v2.14.0/hadolint-linux-x86_64
+          id=$(timeout 5m docker create hadolint/hadolint:v2.14.0@sha256:27086352fd5e1907ea2b934eb1023f217c5ae087992eb59fde121dce9c9ff21e)
+          timeout 2m docker cp "$id:/bin/hadolint" "$RUNNER_TEMP/hadolint"
+          timeout 1m docker rm "$id"
           echo "6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47  $RUNNER_TEMP/hadolint" | sha256sum -c -
-          chmod +x "$RUNNER_TEMP/hadolint"
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
       # Rules and their reasons live in .hadolint.yaml, which hadolint reads from the working directory.
       - name: hadolint
@@ -113,7 +116,7 @@ jobs:
       # and so does a manual run.
       - name: Did this PR change the Dockerfile
         id: changed
-        timeout-minutes: 3
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}

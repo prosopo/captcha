@@ -1,5 +1,10 @@
 # @prosopo/native-merkle
 
+## 0.0.10
+### Patch Changes
+
+- ef8cd40: CI now runs `cargo fmt --check` and `cargo clippy -D warnings` on the native Rust crates. The existing code is reformatted to pass, and the merkle crate's test-only `build_root` helper is now compiled only for tests. No behaviour change.
+
 ## 0.0.9
 ### Patch Changes
 

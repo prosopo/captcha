@@ -26,7 +26,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ inputs.runner }}
   cancel-in-progress: true
 
 defaults:
@@ -58,8 +58,8 @@ jobs:
     timeout-minutes: 60
     needs: runner
     runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
-    # Skip if PR title starts with "Release v"
-    if: ${{ ((!startsWith(github.event.pull_request.title, 'Release v')) && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    # Skip release PRs (create_release_pr titles them "Release cli-v<version>")
+    if: ${{ ((!startsWith(github.event.pull_request.title, 'Release cli-v')) && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
         timeout-minutes: 5
@@ -80,7 +80,7 @@ jobs:
         timeout-minutes: 30
         uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: '24.22.1'
+          node-version-file: .nvmrc
           node-cache: ''
           store-path: ''
           # changeset status reads package.json files and .changeset/ only, so
