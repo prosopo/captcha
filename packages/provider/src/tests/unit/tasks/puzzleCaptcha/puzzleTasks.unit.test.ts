@@ -190,6 +190,7 @@ describe("PuzzleCaptchaManager", () => {
 			getPuzzleCaptchaRecordByChallenge: vi.fn(),
 			updatePuzzleCaptchaRecord: vi.fn(),
 			markPuzzleCaptchaRecordChecked: vi.fn().mockResolvedValue(true),
+			claimPuzzleCaptchaSubmission: vi.fn().mockResolvedValue(true),
 			updatePuzzleCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
@@ -347,6 +348,7 @@ describe("PuzzleCaptchaManager", () => {
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
 				asPuzzleRecord(challengeRecord),
 			);
+			vi.mocked(db.claimPuzzleCaptchaSubmission).mockResolvedValue(false);
 
 			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
 				a.challenge,
@@ -361,6 +363,42 @@ describe("PuzzleCaptchaManager", () => {
 			);
 
 			expect(result).toBe(false);
+			expect(validatePuzzleSolution).not.toHaveBeenCalled();
+			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
+		});
+
+		it("grades nothing when a concurrent submission has already claimed an unsubmitted record", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+			};
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(db.claimPuzzleCaptchaSubmission).mockResolvedValue(false);
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+				a.challenge,
+				a.providerSignature,
+				100,
+				100,
+				[],
+				1000,
+				a.userSignature,
+				a.ipAddress,
+				a.headers,
+			);
+
+			expect(result).toBe(false);
+			expect(db.claimPuzzleCaptchaSubmission).toHaveBeenCalledWith(a.challenge);
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
