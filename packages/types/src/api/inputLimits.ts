@@ -35,6 +35,13 @@ export const INPUT_LIMITS = {
 	TEXT: 16384,
 	/** Longer freetext: messages, descriptions, decision-machine source. */
 	LONG_TEXT: 65536,
-	/** Tokens, signatures, base64 payloads, behavioural/simd readings. */
+	/** Tokens, signatures, base64 payloads, simd readings. */
 	TOKEN: 131072,
+	/**
+	 * Encrypted behavioural data. The widget keeps up to 2,200 pointer, touch,
+	 * press and scroll points, and the payload is base64-encoded twice, so a
+	 * full buffer is around 340 KB. A visitor who moves around the page for a
+	 * while fills it, and every answer they sent was rejected at TOKEN's size.
+	 */
+	BEHAVIOURAL_DATA: 524288,
 } as const;
