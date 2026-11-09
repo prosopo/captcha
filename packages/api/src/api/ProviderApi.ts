@@ -46,6 +46,7 @@ import {
 	type IconOrderEvent,
 	type ImageVerificationResponse,
 	type ModeEnum,
+	PUZZLE_KEY_HEADER,
 	type PowCaptchaSolutionResponse,
 	type ProcaptchaToken,
 	type Provider,
@@ -335,6 +336,7 @@ export default class ProviderApi
 		dapp: string,
 		sessionId?: string,
 		simdReadings?: string,
+		maskedPiece?: boolean,
 	): Promise<GetPuzzleCaptchaResponse> {
 		return this.getInteractiveCaptchaChallenge(
 			ClientApiPaths.GetPuzzleCaptchaChallenge,
@@ -342,6 +344,7 @@ export default class ProviderApi
 			dapp,
 			sessionId,
 			simdReadings,
+			maskedPiece,
 		);
 	}
 
@@ -384,12 +387,14 @@ export default class ProviderApi
 		dapp: string,
 		sessionId?: string,
 		simdReadings?: string,
+		maskedPiece?: boolean,
 	): Promise<TResponse> {
 		const body: GetPuzzleCaptchaChallengeRequestBodyType = {
 			[ApiParams.user]: user.toString(),
 			[ApiParams.dapp]: dapp.toString(),
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(maskedPiece && { [ApiParams.maskedPiece]: true }),
 		};
 		return this.dedupedPost<
 			TResponse,
@@ -677,7 +682,12 @@ export default class ProviderApi
 		// Re-attach to the returned object so downstream code (widget,
 		// FrictionlessState) consumes it identically to before.
 		const hp = headers.get("x-prosopo-meta");
-		return hp ? { ...data, [ApiParams.hp]: hp } : data;
+		const puzzleKey = headers.get(PUZZLE_KEY_HEADER);
+		return {
+			...data,
+			...(hp && { [ApiParams.hp]: hp }),
+			...(puzzleKey && { [ApiParams.puzzleKey]: puzzleKey }),
+		};
 	}
 
 	public submitUserEvents(

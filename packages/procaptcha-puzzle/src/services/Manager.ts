@@ -35,7 +35,6 @@ import {
 	ApiParams,
 	CaptchaType,
 	type FrictionlessState,
-	type GetPuzzleCaptchaResponse,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
@@ -46,12 +45,17 @@ import {
 } from "@prosopo/types";
 import { embedData, sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
+import {
+	type PuzzleChallengeWithPiece,
+	canLiftPiece,
+	liftChallengePiece,
+} from "./pieceMask.js";
 
 interface PuzzleManagerHandle {
 	start: (
 		x?: number,
 		y?: number,
-	) => Promise<GetPuzzleCaptchaResponse | undefined>;
+	) => Promise<PuzzleChallengeWithPiece | undefined>;
 	submitSolution: (
 		finalX: number,
 		finalY: number,
@@ -78,7 +82,7 @@ export const Manager = (
 	const events = getDefaultEvents(callbacks);
 
 	// Closure variables to share state between start and submitSolution
-	let storedChallengeResponse: GetPuzzleCaptchaResponse | undefined;
+	let storedChallengeResponse: PuzzleChallengeWithPiece | undefined;
 	let storedProviderApi: ProviderApi | undefined;
 	let storedProviderUrl: string | undefined;
 	let storedUser: Account | undefined;
@@ -191,7 +195,7 @@ export const Manager = (
 	const start = async (
 		x = 0,
 		y = 0,
-	): Promise<GetPuzzleCaptchaResponse | undefined> => {
+	): Promise<PuzzleChallengeWithPiece | undefined> => {
 		await providerRetry(
 			async () => {
 				if (state.loading) {
@@ -305,6 +309,7 @@ export const Manager = (
 					getDappAccount(),
 					challengeSessionId,
 					simdReadingsOnChallenge,
+					canLiftPiece(),
 				);
 				// The provider answered, so it has seen the id and consumed it —
 				// a challenge and a 4xx mean the same thing here. Marked after
@@ -323,8 +328,27 @@ export const Manager = (
 					return;
 				}
 
+				// A piece that will not unscramble means the key came from a
+				// different network; only a fresh session carries a usable one.
+				const withPiece = await liftChallengePiece(
+					challenge,
+					frictionlessState?.puzzleKey,
+				);
+				if (!withPiece) {
+					const error = toPublicError(
+						new ProsopoError({
+							code: "NO_SESSION_FOUND",
+							errorSite: "PUZZ-10",
+						}),
+						"FRONTEND_ERROR",
+					);
+					updateState({ loading: false, error });
+					events.onError(toCallbackError(undefined, error));
+					return;
+				}
+
 				// Store closure state for submitSolution
-				storedChallengeResponse = challenge;
+				storedChallengeResponse = withPiece;
 				storedProviderApi = providerApi;
 				storedProviderUrl = providerUrl;
 				storedUser = user;

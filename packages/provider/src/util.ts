@@ -141,6 +141,14 @@ export const isSameSubscriberNetwork = (
 	return a.mask(prefix) === b.mask(prefix);
 };
 
+/** Names the subscriber network `isSameSubscriberNetwork` groups an address into. */
+export const subscriberNetwork = (address: IPAddress): string => {
+	const a = unmapIpv4(address);
+	return a.v4
+		? `4:${a.mask(SAME_NETWORK_PREFIX_V4)}`
+		: `6:${a.mask(SAME_NETWORK_PREFIX_V6)}`;
+};
+
 export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
 	try {
 		if (ipAddressBigInt > 4228250626n) {

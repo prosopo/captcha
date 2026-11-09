@@ -41,7 +41,7 @@ interface Blob {
  * boundary — a perfectly smooth gradient would hand the target over to a Canny
  * filter. Too high and the image looks like TV static, so it stays subtle.
  */
-const GRAIN_AMPLITUDE = 5;
+export const GRAIN_AMPLITUDE = 5;
 
 const VIGNETTE_STRENGTH = 0.16;
 

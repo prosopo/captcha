@@ -628,6 +628,7 @@ export const mountProcaptchaFrictionless = (
 					encryptBehavioralData: result.encryptBehavioralData,
 					getSimdReadings: result.getSimdReadings,
 					hp: result.hp,
+					puzzleKey: result.puzzleKey,
 					agent: result.agent,
 				};
 

@@ -45,6 +45,7 @@ import {
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { Manager } from "../services/Manager.js";
+import type { PuzzleChallengeWithPiece } from "../services/pieceMask.js";
 import { type PuzzleCanvasProps, mountPuzzleCanvas } from "./puzzleCanvas.js";
 
 // Wrong answers and refreshes in a row before the switch to an image
@@ -72,7 +73,7 @@ export const mountProcaptchaPuzzleWidget = (
 	const store: ProcaptchaStateHandle = createProcaptchaState();
 	let loading = false;
 	let puzzlePhase: PuzzlePhase = "checkbox";
-	let challengeData: GetPuzzleCaptchaResponse | null = null;
+	let challengeData: PuzzleChallengeWithPiece | null = null;
 	// A re-mint after a wrong answer builds a brand new widget, so the miss is
 	// only still on screen if the wrapper hands it back to us.
 	let showRetry = true === props.startShowRetry;
@@ -224,7 +225,7 @@ export const mountProcaptchaPuzzleWidget = (
 	};
 
 	const puzzleProps = (
-		challenge: GetPuzzleCaptchaResponse,
+		challenge: PuzzleChallengeWithPiece,
 	): PuzzleCanvasProps => ({
 		originX: challenge.originX,
 		originY: challenge.originY,
@@ -448,7 +449,7 @@ export const mountProcaptchaPuzzleWidget = (
 		lastCoords = coords ?? null;
 		scheduler.schedule();
 		manager.start(coords?.x ?? 0, coords?.y ?? 0).then(
-			(challenge: GetPuzzleCaptchaResponse | undefined) => {
+			(challenge: PuzzleChallengeWithPiece | undefined) => {
 				if (challenge) {
 					challengeData = challenge;
 					puzzlePhase = "dragging";

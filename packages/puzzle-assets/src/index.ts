@@ -15,6 +15,7 @@
 import { generateBackground } from "./background.js";
 import { PUZZLE_RENDERER_VERSION, drawPuzzle } from "./draw.js";
 import { encodeBackground, encodePiece } from "./encode.js";
+import { pieceMask, placePiece } from "./placement.js";
 import { createPrng, createSeed } from "./prng.js";
 import type {
 	NotchPlacement,
@@ -22,6 +23,7 @@ import type {
 	PuzzleRenderSettings,
 	PuzzleRendererVersion,
 	RenderedPuzzle,
+	RenderedPuzzleBoard,
 	RgbaImage,
 } from "./types.js";
 
@@ -57,8 +59,10 @@ export type {
 	PuzzleRenderSettings,
 	PuzzleRendererVersion,
 	RenderedPuzzle,
+	RenderedPuzzleBoard,
 	RgbaImage,
 } from "./types.js";
+export { pieceMask, placePiece } from "./placement.js";
 
 /**
  * Matches the widget's container. Kept here so the generator and the provider
@@ -128,6 +132,41 @@ export const renderPuzzle = async (
 	return {
 		background: backgroundWebp,
 		piece: pieceWebp,
+		pieceSize,
+		seed,
+		rendererVersion,
+	};
+};
+
+/**
+ * Cut a notch at `placement`, draw the piece back onto the board centred on
+ * `start`, and encode the board. The piece leaves as its mask alone; the
+ * widget lifts the piece's pixels out of the board with it.
+ *
+ * The background is consumed (mutated) by this call.
+ */
+export const renderPuzzleBoard = async (
+	background: RgbaImage,
+	placement: NotchPlacement,
+	start: { x: number; y: number },
+	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
+	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
+	seed: Buffer = createSeed(),
+	rendererVersion: PuzzleRendererVersion = PUZZLE_RENDERER_VERSION,
+): Promise<RenderedPuzzleBoard> => {
+	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
+	const { background: board, piece } = drawPuzzle(
+		background,
+		placement,
+		pieceSize,
+		settings,
+		createPrng(seed),
+		rendererVersion,
+	);
+	placePiece(board, piece, start.x, start.y);
+	return {
+		board: await encodeBackground(board),
+		mask: pieceMask(piece),
 		pieceSize,
 		seed,
 		rendererVersion,

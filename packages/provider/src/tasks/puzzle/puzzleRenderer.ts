@@ -20,6 +20,7 @@ import {
 	type PuzzleRenderSettings,
 	type PuzzleRendererVersion,
 	renderPuzzle,
+	renderPuzzleBoard,
 	toDataUri,
 } from "@prosopo/puzzle-assets";
 import {
@@ -182,6 +183,48 @@ export const renderPuzzleImages = async (
 	return {
 		background: toDataUri(rendered.background),
 		piece: toDataUri(rendered.piece),
+		pieceSize: rendered.pieceSize,
+		backgroundSeed: background.seed.toString("hex"),
+		renderSeed: rendered.seed.toString("hex"),
+		rendererVersion: rendered.rendererVersion,
+	};
+};
+
+export interface RenderedPuzzleBoardImages {
+	/** Board with the notch cut and the piece drawn at its start, data URI. */
+	background: string;
+	/** The piece's alpha, one byte per pixel. */
+	mask: Buffer;
+	pieceSize: number;
+	backgroundSeed: string;
+	renderSeed: string;
+	rendererVersion: PuzzleRendererVersion;
+}
+
+export const renderPuzzleBoardImages = async (
+	placement: NotchPlacement,
+	start: { x: number; y: number },
+	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
+	pieceSize?: number,
+): Promise<RenderedPuzzleBoardImages> => {
+	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
+	const background = buffer.take();
+
+	const rendered = await measureSync("puzzle_render", () =>
+		renderPuzzleBoard(
+			background.image,
+			placement,
+			start,
+			pieceSize !== undefined
+				? { ...DEFAULT_GEOMETRY, pieceSize }
+				: DEFAULT_GEOMETRY,
+			settings,
+		),
+	);
+
+	return {
+		background: toDataUri(rendered.board),
+		mask: rendered.mask,
 		pieceSize: rendered.pieceSize,
 		backgroundSeed: background.seed.toString("hex"),
 		renderSeed: rendered.seed.toString("hex"),

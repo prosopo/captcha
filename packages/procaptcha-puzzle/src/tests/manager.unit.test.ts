@@ -419,6 +419,7 @@ describe("start: getting to a challenge", () => {
 			SITE_KEY,
 			"session-1",
 			"prefetched",
+			true,
 		);
 		expect(getSimdReadings).toHaveBeenCalledWith(0);
 	});
@@ -431,6 +432,7 @@ describe("start: getting to a challenge", () => {
 			SITE_KEY,
 			undefined,
 			undefined,
+			true,
 		);
 	});
 

@@ -140,6 +140,7 @@ const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
 		json: vi.fn(async (v: unknown) => v),
 		status: vi.fn().mockReturnThis(),
 		on: vi.fn().mockReturnThis(),
+		setHeader: vi.fn().mockReturnThis(),
 		statusCode: 200,
 		locals: {},
 	} as unknown as MockRes;

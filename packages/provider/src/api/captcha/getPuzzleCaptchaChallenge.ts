@@ -23,12 +23,18 @@ import {
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
 import {
 	MAX_DECOY_COVERAGE,
 	MAX_DECOY_COVERAGE_TOUCH,
 	capDecoyCountForCoverage,
 } from "../../tasks/puzzle/puzzleDifficulty.js";
 import {
+	networkPuzzleKey,
+	scramblePieceMask,
+} from "../../tasks/puzzle/puzzleKey.js";
+import {
+	renderPuzzleBoardImages,
 	renderPuzzleImages,
 	resolvePuzzlePieceScaleRange,
 	resolvePuzzleRenderSettings,
@@ -52,6 +58,7 @@ export const issuePuzzleChallenge = async ({
 	clientSettings,
 	sessionRecord,
 	trafficVerdict,
+	maskedPiece,
 	provenance,
 }: ChallengeIssueContext): Promise<
 	IssuedChallenge<GetPuzzleCaptchaResponse>
@@ -162,14 +169,36 @@ export const issuePuzzleChallenge = async ({
 	// before it is expressed in pixels, so a crash between the two
 	// cannot leave a challenge the user can see but the server cannot
 	// score. Imagery is derived from the same target that was persisted.
-	const images = await renderPuzzleImages(
-		{
-			targetX: challenge.targetX,
-			targetY: challenge.targetY,
-		},
-		renderedPuzzleSettings,
-		effectivePieceSize,
-	);
+	const placement = {
+		targetX: challenge.targetX,
+		targetY: challenge.targetY,
+	};
+	const images = maskedPiece
+		? await renderPuzzleBoardImages(
+				placement,
+				{ x: challenge.originX, y: challenge.originY },
+				renderedPuzzleSettings,
+				effectivePieceSize,
+			)
+		: await renderPuzzleImages(
+				placement,
+				renderedPuzzleSettings,
+				effectivePieceSize,
+			);
+	const pieceFields = (() => {
+		if (!("mask" in images)) {
+			return { [ApiParams.piece]: images.piece };
+		}
+		const scrambled = scramblePieceMask(
+			images.mask,
+			networkPuzzleKey(getIpAddressFromComposite(provenance.ipAddress)),
+			challenge.challenge,
+		);
+		return {
+			[ApiParams.pieceMask]: scrambled.mask,
+			[ApiParams.pieceMaskCheck]: scrambled.check,
+		};
+	})();
 
 	// A second write rather than an argument to storePuzzleCaptchaRecord: the
 	// sampled piece size and the seeds only exist once the render has run, and
@@ -219,7 +248,7 @@ export const issuePuzzleChallenge = async ({
 			[ApiParams.status]: "ok",
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.background]: images.background,
-			[ApiParams.piece]: images.piece,
+			...pieceFields,
 			[ApiParams.pieceSize]: images.pieceSize,
 			[ApiParams.originX]: challenge.originX,
 			[ApiParams.originY]: challenge.originY,

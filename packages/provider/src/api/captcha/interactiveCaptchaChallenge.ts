@@ -57,6 +57,8 @@ export interface ChallengeIssueContext {
 	clientSettings: ClientRecord;
 	sessionRecord: ProjectedSession | undefined;
 	trafficVerdict: RequestTimeTrafficVerdict;
+	/** The widget can lift a piece out of the board with a scrambled mask. */
+	maskedPiece?: boolean;
 	/** Request provenance to persist on the challenge record. */
 	provenance: {
 		ipAddress: CompositeIpAddress;
@@ -118,7 +120,7 @@ export const interactiveChallengeHandler =
 			);
 		}
 
-		const { user, dapp, sessionId, simdReadings } = parsed;
+		const { user, dapp, sessionId, simdReadings, maskedPiece } = parsed;
 
 		validateSiteKey(dapp);
 		validateAddr(user);
@@ -275,6 +277,7 @@ export const interactiveChallengeHandler =
 				clientSettings,
 				sessionRecord,
 				trafficVerdict,
+				maskedPiece: maskedPiece === true,
 				provenance: {
 					ipAddress: getCompositeIpAddress(normalizedIp),
 					headers: flatten(req.headers),

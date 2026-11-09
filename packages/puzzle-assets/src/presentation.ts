@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { GRAIN_AMPLITUDE } from "./background.js";
 import type { Prng } from "./prng.js";
 import type { RgbaImage } from "./types.js";
 
@@ -371,6 +372,38 @@ export const applyEffects = (
 				image.data[i] = clamp255(Math.round(r));
 				image.data[i + 1] = clamp255(Math.round(g));
 				image.data[i + 2] = clamp255(Math.round(b));
+			}
+		}
+	}
+};
+
+const median9 = (values: number[]): number =>
+	values.sort((a, b) => a - b)[4] ?? 0;
+
+/**
+ * Swap the board's grain for fresh grain of the same strength: a 3x3 median
+ * takes the original out, keeping edges, then new noise goes back in. The
+ * piece keeps the grain it was cut with, which then appears nowhere on the
+ * board. Mutates `image`.
+ */
+export const regrain = (image: RgbaImage, prng: Prng): void => {
+	const { width, height } = image;
+	const source = Buffer.from(image.data);
+	const window: number[] = [];
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			const i = (y * width + x) * 4;
+			const noise = (prng.next() - 0.5) * 2 * GRAIN_AMPLITUDE;
+			for (let c = 0; c < 3; c++) {
+				window.length = 0;
+				for (let dy = -1; dy <= 1; dy++) {
+					const sy = Math.min(height - 1, Math.max(0, y + dy));
+					for (let dx = -1; dx <= 1; dx++) {
+						const sx = Math.min(width - 1, Math.max(0, x + dx));
+						window.push(source[(sy * width + sx) * 4 + c] ?? 0);
+					}
+				}
+				image.data[i + c] = clamp255(Math.round(median9(window) + noise));
 			}
 		}
 	}

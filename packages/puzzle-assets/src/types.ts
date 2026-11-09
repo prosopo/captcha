@@ -47,6 +47,17 @@ export interface RenderedPuzzle {
 	rendererVersion: PuzzleRendererVersion;
 }
 
+export interface RenderedPuzzleBoard {
+	/** Board with the notch cut and the piece drawn at its start position, WebP. */
+	board: Buffer;
+	/** The piece's alpha, one byte per pixel, row-major, `pieceSize` square. */
+	mask: Buffer;
+	pieceSize: number;
+	/** See `RenderedPuzzle.seed`. */
+	seed: Buffer;
+	rendererVersion: PuzzleRendererVersion;
+}
+
 export interface PuzzleGeometry {
 	width: number;
 	height: number;
