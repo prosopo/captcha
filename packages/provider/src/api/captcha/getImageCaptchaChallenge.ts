@@ -215,12 +215,12 @@ export default (
 			// block at verify" pattern deferToVerify is meant to enable.
 			// Mirrors blockMiddleware's own deferToVerify filter.
 			const accessPolicies =
-				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
+				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				);
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				});
 			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
 			// A deferred rule must never reject at request time, so it is
 			// kept out of `isValidRequest` above. It does still carry the

@@ -436,23 +436,30 @@ export type GetPrioritisedAccessRuleOptions = {
 	skipCache?: boolean;
 };
 
-export const getPrioritisedAccessRule = async (
-	userAccessRulesStorage: AccessRulesStorage,
-	userScope: UserScope | UserScopeRecord,
-	clientId: string | undefined,
+export type GetPrioritisedAccessRuleArgs = GetPrioritisedAccessRuleOptions & {
+	userAccessRulesStorage: AccessRulesStorage;
+	userScope: UserScope | UserScopeRecord;
+	clientId?: string;
 	// Raw request headers (lower-cased name → value) for the in-code header
 	// condition check. Required, with no default: the negated header operators
 	// treat a missing header as "does not match", so a lookup that silently
 	// ran with an empty header map would make every allow-list rule fire on
 	// every request. Callers with nothing but a scope must say so explicitly.
-	requestHeaders: Record<string, string>,
-	options?: GetPrioritisedAccessRuleOptions,
-): Promise<AccessRule[]> => {
+	requestHeaders: Record<string, string>;
+};
+
+export const getPrioritisedAccessRule = async ({
+	userAccessRulesStorage,
+	userScope,
+	clientId,
+	requestHeaders,
+	...options
+}: GetPrioritisedAccessRuleArgs): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
-	const blockOnly = options?.blockOnly ?? false;
-	const includeDeferred = options?.includeDeferred ?? false;
-	const skipCache = options?.skipCache ?? false;
-	const requestMemoHost = options?.requestMemoHost as
+	const blockOnly = options.blockOnly ?? false;
+	const includeDeferred = options.includeDeferred ?? false;
+	const skipCache = options.skipCache ?? false;
+	const requestMemoHost = options.requestMemoHost as
 		| RequestWithMemo
 		| undefined;
 
@@ -640,9 +647,9 @@ export class BlacklistRequestInspector {
 			const countryCode = ipInfo?.isValid ? ipInfo.countryCode : undefined;
 			const asn = ipInfo?.isValid ? ipInfo.asnNumber : undefined;
 
-			const accessPolicies = await getPrioritisedAccessRule(
-				this.userAccessRulesStorage,
-				getRequestUserScope({
+			const accessPolicies = await getPrioritisedAccessRule({
+				userAccessRulesStorage: this.userAccessRulesStorage,
+				userScope: getRequestUserScope({
 					requestHeaders,
 					ja4,
 					ip: rawIp,
@@ -651,15 +658,10 @@ export class BlacklistRequestInspector {
 					asn,
 				}),
 				clientId,
-				normalizeHeadersForMatching(requestHeaders),
-				// Request-time middleware only ever fires on Block policies
-				// (Restrict rules flow through and let the captcha-creation
-				// path decorate the response). Restrict the Redis-side
-				// candidate pool so the SERVER_SIDE_RANK_TOP_N cap can't
-				// crowd out hard-block rules in clients with dense Restrict
-				// rule populations.
-				{ blockOnly: true, requestMemoHost },
-			);
+				requestHeaders: normalizeHeadersForMatching(requestHeaders),
+				blockOnly: true,
+				requestMemoHost,
+			});
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from
 			// `checkForHardBlock` inside each captcha task's verify path —

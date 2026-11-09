@@ -381,12 +381,12 @@ export default (
 				// prematurely eject a user whose frictionless flow should
 				// complete normally before the block fires downstream.
 				const dedupAccessPolicy = (
-					await tasks.frictionlessManager.getPrioritisedAccessPolicies(
+					await tasks.frictionlessManager.getPrioritisedAccessPolicies({
 						userAccessRulesStorage,
-						dapp,
-						dedupUserScope,
-						normalizeHeadersForMatching(req.headers),
-					)
+						clientId: dapp,
+						userScope: dedupUserScope,
+						requestHeaders: normalizeHeadersForMatching(req.headers),
+					})
 				).find((p) => !p.deferToVerify);
 				// A request that now matches an Allow rule gets a fresh authenticated
 				// session instead of its old challenge.
@@ -719,12 +719,12 @@ export default (
 				bypassKeyHash,
 			});
 			const lookupAccessPolicies = () =>
-				tasks.frictionlessManager.getPrioritisedAccessPolicies(
+				tasks.frictionlessManager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				);
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				});
 
 			// Authenticated fast-path. Fires when any non-deferToVerify Allow
 			// rule matches the userScope — the qualifier can be a verified

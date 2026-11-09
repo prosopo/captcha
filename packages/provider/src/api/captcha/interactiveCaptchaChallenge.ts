@@ -197,12 +197,12 @@ export const interactiveChallengeHandler =
 			// Skip deferToVerify policies at request time — see
 			// getImageCaptchaChallenge for the full rationale.
 			const userAccessPolicy = (
-				await manager.getPrioritisedAccessPolicies(
+				await manager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				)
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				})
 			).find((p) => !p.deferToVerify);
 
 			const {

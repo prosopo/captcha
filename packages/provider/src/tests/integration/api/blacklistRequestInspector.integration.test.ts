@@ -166,15 +166,15 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash1,
 					userAgent: userAgent1,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			// One query, matchingFieldsOnly=true engages server-side
 			// specificity rank in FT.AGGREGATE — every returned rule
@@ -213,15 +213,15 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash1,
 					userAgent: userAgent1,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			// matchingFieldsOnly=true: the strict AND-of-disjunctions
 			// filter already excludes this rule at the Redis side
@@ -269,15 +269,15 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					numericIp: BigInt(16843009),
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(spy).toHaveBeenCalledTimes(1);
 
@@ -304,15 +304,15 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			]);
 			const spy = vi.spyOn(accessRulesStorage, "findRules");
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					numericIp: BigInt(16843009),
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(spy).toHaveBeenCalledTimes(1);
 
@@ -320,15 +320,14 @@ describe("blacklistRequestInspector Integration Tests", () => {
 			expect(result).toStrictEqual([accessRule1, accessRule2]);
 
 			// check non-client result
-			const nonClientResult = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const nonClientResult = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					numericIp: BigInt(16843009),
 				},
-				undefined,
-				{},
-			);
+				requestHeaders: {},
+			});
 			expect(nonClientResult.length).toBe(0);
 		});
 
@@ -347,16 +346,16 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIp: BigInt(17843009),
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result.length).toBe(0);
 		});
@@ -377,16 +376,16 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					ip: getIPAddressFromBigInt(numericIp).address,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result.length).toBe(1);
 		});
@@ -406,16 +405,16 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					ip: "1.1.1.2",
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 			expect(result).toEqual([]);
 			expect(result.length).toBe(0);
 		});
@@ -435,16 +434,16 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIp: BigInt(16843010),
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 			expect(result.length).toBe(0);
 		});
 
@@ -463,17 +462,17 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					ja4Hash: ja4Hash2,
 					userAgent: userAgent1,
 					numericIpMaskMin: BigInt(16843010),
 					numericIpMaskMax: BigInt(16843010),
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 			expect(result.length).toBe(0);
 		});
 
@@ -490,14 +489,14 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					headHash: headHash1,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result).toHaveLength(1);
 			expect(result[0]?.headHash).toBe(headHash1);
@@ -517,14 +516,14 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					headHash: headHash2,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result).toHaveLength(0);
 		});
@@ -542,14 +541,14 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					coords: coords1,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result).toHaveLength(1);
 			expect(result[0]?.coords).toBe(coords1);
@@ -569,14 +568,14 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					coords: coords2,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result).toHaveLength(0);
 		});
@@ -596,15 +595,15 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					headHash: headHash1,
 					coords: coords1,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result).toHaveLength(1);
 			expect(result[0]?.headHash).toBe(headHash1);
@@ -628,16 +627,16 @@ describe("blacklistRequestInspector Integration Tests", () => {
 				},
 			]);
 
-			const result = await getPrioritisedAccessRule(
-				accessRulesStorage,
-				{
+			const result = await getPrioritisedAccessRule({
+				userAccessRulesStorage: accessRulesStorage,
+				userScope: {
 					headHash: headHash1,
 					coords: coords1,
 					ip: getIPAddressFromBigInt(numericIp).address,
 				},
-				siteKey,
-				{},
-			);
+				clientId: siteKey,
+				requestHeaders: {},
+			});
 
 			expect(result).toHaveLength(1);
 			expect(result[0]?.type).toBe(AccessPolicyType.Block);

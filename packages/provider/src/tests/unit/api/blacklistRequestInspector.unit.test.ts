@@ -1525,34 +1525,44 @@ describe("getPrioritisedAccessRule — request headers", () => {
 	const scope: UserScope = { ja4Hash: "ja4-header-verdict", headerMatch: "1" };
 
 	it("lets a request whose header is on the allow-list through", async () => {
-		const ranked = await getPrioritisedAccessRule(
-			storage,
-			scope,
-			"site",
-			{ "x-app": "ios" },
-			{ skipCache: true },
-		);
+		const ranked = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: { "x-app": "ios" },
+			skipCache: true,
+		});
 		expect(ranked).toEqual([]);
 	});
 
 	it("blocks a request that omits the header", async () => {
-		const ranked = await getPrioritisedAccessRule(
-			storage,
-			scope,
-			"site",
-			{},
-			{ skipCache: true },
-		);
+		const ranked = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: {},
+			skipCache: true,
+		});
 		expect(ranked).toEqual([allowList]);
 	});
 
 	it("ranks against each request's own headers even when the candidate fetch is cached", async () => {
 		// Same scope, same cache key. The candidate list is shared; the header
 		// verdict must not be.
-		const allowed = await getPrioritisedAccessRule(storage, scope, "site", {
-			"x-app": "android",
+		const allowed = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: {
+				"x-app": "android",
+			},
 		});
-		const blocked = await getPrioritisedAccessRule(storage, scope, "site", {});
+		const blocked = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: {},
+		});
 		expect(allowed).toEqual([]);
 		expect(blocked).toEqual([allowList]);
 	});

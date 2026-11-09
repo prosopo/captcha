@@ -150,12 +150,12 @@ export default (
 			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE
 			// fires when a deferToVerify Block rule leaks into isValidRequest).
 			const accessPolicies =
-				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
+				await tasks.powCaptchaManager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				);
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				});
 			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
 			// A deferred rule must never reject at request time, so it is
 			// kept out of the validation above — but it still carries the

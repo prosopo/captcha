@@ -45,10 +45,9 @@ import {
 	AccessPolicyType,
 	type AccessRule,
 	type AccessRulesStorage,
-	type UserScope,
-	type UserScopeRecord,
 } from "@prosopo/user-access-policy";
 import {
+	type GetPrioritisedAccessRuleArgs,
 	getPrioritisedAccessRule,
 	getRequestUserScope,
 	normalizeHeadersForMatching,
@@ -865,31 +864,11 @@ export class CaptchaManager {
 	}
 
 	async getPrioritisedAccessPolicies(
-		userAccessRulesStorage: AccessRulesStorage,
-		clientId: string,
-		userScope: UserScope | UserScopeRecord,
-		// Raw request headers for header-restriction rules — see
-		// getPrioritisedAccessRule for why this has no default.
-		requestHeaders: Record<string, string>,
-		options?: {
-			blockOnly?: boolean;
-			// Widen a blockOnly pool to admit deferred rules of any type
-			// — see AccessRulesFilter.includeDeferred.
-			includeDeferred?: boolean;
-			// When a caller has an Express request in scope (e.g. the
-			// verify handler), passing it here shares the per-request memo
-			// with the block middleware — a duplicate lookup within one
-			// request collapses to zero extra Redis round-trips.
-			requestMemoHost?: object;
+		args: Omit<GetPrioritisedAccessRuleArgs, "skipCache"> & {
+			clientId: string;
 		},
 	) {
-		return getPrioritisedAccessRule(
-			userAccessRulesStorage,
-			userScope,
-			clientId,
-			requestHeaders,
-			options,
-		);
+		return getPrioritisedAccessRule(args);
 	}
 
 	/**
@@ -1101,27 +1080,14 @@ export class CaptchaManager {
 			asn,
 		});
 
-		const accessPolicies = await this.getPrioritisedAccessPolicies(
+		const accessPolicies = await this.getPrioritisedAccessPolicies({
 			userAccessRulesStorage,
-			challengeRecord.dappAccount,
+			clientId: challengeRecord.dappAccount,
 			userScope,
-			// Raw headers for the in-code header-condition check. Available
-			// on the verify path too, so header rules fire there (e.g. an
-			// allow-list rule marked deferToVerify).
-			normalizeHeadersForMatching(headers),
-			// Hard-block lookup only — restrict the Redis-side candidate
-			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
-			// hard-block out of the top-N with routing-Block
-			// (captchaType-scoped) or plain Restrict entries.
-			//
-			// `includeDeferred` widens that pool to
-			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
-			// is skipped at request time and enforced here, so it is a
-			// valid hard block whatever its type — findHardBlockPolicy
-			// below already accepts one (case c), but a Block-only pool
-			// meant a deferred Restrict was never fetched to be found.
-			{ blockOnly: true, includeDeferred: true },
-		);
+			requestHeaders: normalizeHeadersForMatching(headers),
+			blockOnly: true,
+			includeDeferred: true,
+		});
 
 		return findHardBlockPolicy(accessPolicies);
 	}

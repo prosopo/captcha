@@ -267,45 +267,45 @@ export class ClientTaskManager {
 				sweepStartedAt.getTime() - INTERACTIVE_RESYNC_WINDOW_MS,
 			);
 			const onlyUpdated = Boolean(lastTask?.updated);
-			const processedPuzzleRecords = await this.resyncInteractiveRecords(
-				CaptchaType.puzzle,
-				(afterId) =>
+			const processedPuzzleRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.puzzle,
+				fetchBatch: (afterId) =>
 					this.providerDB.getUnstoredPuzzleCaptchaRecords(
 						BATCH_SIZE,
 						afterId,
 						interactiveSince,
 					),
-				(batch) => captchaDB.saveCaptchas([], [], [], batch),
+				save: (batch) => captchaDB.saveCaptchas([], [], [], batch),
 				sweepStartedAt,
 				onlyUpdated,
-				BATCH_SIZE,
-			);
-			const processedIconOrderRecords = await this.resyncInteractiveRecords(
-				CaptchaType.iconOrder,
-				(afterId) =>
+				batchSize: BATCH_SIZE,
+			});
+			const processedIconOrderRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.iconOrder,
+				fetchBatch: (afterId) =>
 					this.providerDB.getUnstoredIconOrderCaptchaRecords(
 						BATCH_SIZE,
 						afterId,
 						interactiveSince,
 					),
-				(batch) => captchaDB.saveCaptchas([], [], [], [], batch),
+				save: (batch) => captchaDB.saveCaptchas([], [], [], [], batch),
 				sweepStartedAt,
 				onlyUpdated,
-				BATCH_SIZE,
-			);
-			const processedAudioRecords = await this.resyncInteractiveRecords(
-				CaptchaType.audio,
-				(afterId) =>
+				batchSize: BATCH_SIZE,
+			});
+			const processedAudioRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.audio,
+				fetchBatch: (afterId) =>
 					this.providerDB.getUnstoredAudioCaptchaRecords(
 						BATCH_SIZE,
 						afterId,
 						interactiveSince,
 					),
-				(batch) => captchaDB.saveCaptchas([], [], [], [], [], batch),
+				save: (batch) => captchaDB.saveCaptchas([], [], [], [], [], batch),
 				sweepStartedAt,
 				onlyUpdated,
-				BATCH_SIZE,
-			);
+				batchSize: BATCH_SIZE,
+			});
 
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -681,14 +681,21 @@ export class ClientTaskManager {
 	 */
 	private async resyncInteractiveRecords<
 		T extends PuzzleCaptchaRecord | IconOrderCaptchaRecord | AudioCaptchaRecord,
-	>(
-		captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio,
-		fetchBatch: (afterId?: unknown) => Promise<T[]>,
-		save: (batch: T[]) => Promise<void>,
-		sweepStartedAt: Date,
-		onlyUpdated: boolean,
-		batchSize: number,
-	): Promise<number> {
+	>({
+		captchaType,
+		fetchBatch,
+		save,
+		sweepStartedAt,
+		onlyUpdated,
+		batchSize,
+	}: {
+		captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio;
+		fetchBatch: (afterId?: unknown) => Promise<T[]>;
+		save: (batch: T[]) => Promise<void>;
+		sweepStartedAt: Date;
+		onlyUpdated: boolean;
+		batchSize: number;
+	}): Promise<number> {
 		let processed = 0;
 		await this.processBatchesWithCursor(
 			fetchBatch,
