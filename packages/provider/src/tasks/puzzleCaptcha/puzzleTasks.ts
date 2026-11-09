@@ -80,10 +80,8 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 		);
 	}
 
-	protected async claimSubmission(
-		record: PuzzleCaptchaRecord,
-	): Promise<boolean> {
-		return !record.userSubmitted;
+	protected claimSubmission(record: PuzzleCaptchaRecord): Promise<boolean> {
+		return this.db.claimPuzzleCaptchaSubmission(record.challenge);
 	}
 
 	protected markRecordChecked(challenge: PoWChallengeId): Promise<boolean> {
