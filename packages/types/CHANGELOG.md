@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 5.28.2
+### Patch Changes
+
+- 624db1a: Puzzle, icon-order and audio challenges are no longer padded.
+
 ## 5.28.1
 ### Patch Changes
 
