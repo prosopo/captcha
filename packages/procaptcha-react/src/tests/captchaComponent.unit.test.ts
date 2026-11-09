@@ -221,6 +221,29 @@ describe("the controls", () => {
 		expect(buttonLabelled("WIDGET.SUBMIT")).toBe(next);
 	});
 
+	test("no control in the panel can be found by the text of its label", () => {
+		const lowerCased =
+			"translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')";
+		const controlsContaining = (word: string): number =>
+			document.evaluate(
+				`.//button[contains(${lowerCased}, '${word}')] | .//div[@role="button" and contains(${lowerCased}, '${word}')]`,
+				mounted.container,
+				null,
+				XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+				null,
+			).snapshotLength;
+		const challenge = twoRoundChallenge();
+
+		for (const index of [0, 1]) {
+			render({ challenge, index, solutions: [[], []] });
+			for (const word of ["cancel", "next", "submit"]) {
+				expect(controlsContaining(word)).toBe(0);
+			}
+		}
+		expect(buttonLabelled("WIDGET.CANCEL")).toBeDefined();
+		expect(buttonLabelled("WIDGET.SUBMIT")).toBeDefined();
+	});
+
 	test("a synthetic click on cancel is ignored", () => {
 		render();
 		fire(buttonLabelled("WIDGET.CANCEL"), "click", { trusted: false });

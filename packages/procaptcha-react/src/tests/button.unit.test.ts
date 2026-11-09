@@ -76,6 +76,51 @@ const renderAs = (
 	}
 };
 
+/** The shadow roots attached while rendering, which a closed root keeps from
+ * the element itself. */
+const renderWithLabel = (
+	overrides: Parameters<typeof props>[0] = {},
+): { element: HTMLElement; shadows: ShadowRoot[] } => {
+	const shadows: ShadowRoot[] = [];
+	const attach = Element.prototype.attachShadow;
+	const spy = vi
+		.spyOn(Element.prototype, "attachShadow")
+		.mockImplementation(function (
+			this: Element,
+			init: ShadowRootInit,
+		): ShadowRoot {
+			const shadow = attach.call(this, init);
+			shadows.push(shadow);
+			return shadow;
+		});
+	try {
+		return { element: render(overrides), shadows };
+	} finally {
+		spy.mockRestore();
+	}
+};
+
+const textNodesIn = (element: HTMLElement): string[] => {
+	const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+	const found: string[] = [];
+	while (walker.nextNode()) {
+		found.push(walker.currentNode.nodeValue ?? "");
+	}
+	return found;
+};
+
+const LOWER_CASED =
+	"translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')";
+
+const textXPathMatches = (word: string): number =>
+	document.evaluate(
+		`.//button[contains(${LOWER_CASED}, '${word}')] | .//div[@role="button" and contains(${LOWER_CASED}, '${word}')]`,
+		mounted.container,
+		null,
+		XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+		null,
+	).snapshotLength;
+
 beforeEach(() => {
 	vi.clearAllMocks();
 	process.env.NODE_ENV = "test";
@@ -98,16 +143,68 @@ describe("what the button renders", () => {
 	});
 
 	test("shows its text and labels itself with it", () => {
-		const element = render({ text: "Submit" });
-		expect(element.textContent).toBe("Submit");
+		const { element, shadows } = renderWithLabel({ text: "Submit" });
+		expect(shadows.map((shadow: ShadowRoot) => shadow.textContent)).toEqual([
+			"Submit",
+		]);
+		expect(element.getAttribute("aria-label")).toBe("Submit");
+		expect(element.getAttribute("aria-labelledby")).toBeNull();
+	});
+
+	test("keeps its label in a closed shadow root", () => {
+		const { element, shadows } = renderWithLabel({ text: "Submit" });
+		expect(shadows.map((shadow: ShadowRoot) => shadow.mode)).toEqual([
+			"closed",
+		]);
+		expect(element.firstElementChild?.shadowRoot).toBeNull();
+	});
+
+	test.each(["button", "generic"] as const)(
+		"as a %s, holds no text of its own",
+		(kind: "button" | "generic") => {
+			const element = renderAs(kind, { text: "Submit" });
+			expect(element.textContent).toBe("");
+			expect(textNodesIn(element)).toEqual([]);
+		},
+	);
+
+	test.each(["button", "generic"] as const)(
+		"as a %s, is not matched by a text XPath for its label",
+		(kind: "button" | "generic") => {
+			for (const text of ["Next", "Submit", "Cancel"]) {
+				renderAs(kind, { text });
+				expect(textXPathMatches(text.toLowerCase())).toBe(0);
+			}
+		},
+	);
+
+	test("the text XPath does match a control that holds its label as text", () => {
+		const plain = document.createElement("button");
+		plain.textContent = "Next";
+		mounted.container.appendChild(plain);
+		expect(textXPathMatches("next")).toBe(1);
+	});
+
+	test("relabels in place when the text changes", () => {
+		const { element, shadows } = renderWithLabel({ text: "Next" });
+		const label = element.firstElementChild;
+		render({ text: "Submit" });
+		expect(element.firstElementChild).toBe(label);
+		expect(element.childNodes).toHaveLength(1);
+		expect(shadows.map((shadow: ShadowRoot) => shadow.textContent)).toEqual([
+			"Submit",
+		]);
 		expect(element.getAttribute("aria-label")).toBe("Submit");
 	});
 
 	test("renders an empty label without falling over", () => {
 		// The translations may not have loaded yet, in which case the widget
 		// would rather show nothing than a raw translation key.
-		const element = render({ text: "" });
+		const { element, shadows } = renderWithLabel({ text: "" });
 		expect(element.textContent).toBe("");
+		expect(shadows.map((shadow: ShadowRoot) => shadow.textContent)).toEqual([
+			"",
+		]);
 	});
 
 	test("carries the test hook naming its role", () => {
@@ -270,6 +367,22 @@ describe("clicking", () => {
 		fire(element, "click");
 		fire(element, "click");
 		expect(onClick).toHaveBeenCalledTimes(2);
+	});
+
+	test.each(["button", "generic"] as const)(
+		"as a %s, can take keyboard focus",
+		(kind: "button" | "generic") => {
+			const element = renderAs(kind);
+			element.focus();
+			expect(document.activeElement).toBe(element);
+		},
+	);
+
+	test("Enter and Space on a button arrive as a click and call the handler", () => {
+		// A browser turns either key on a focused button into a click with no
+		// press count, which jsdom does not synthesise.
+		fire(renderAs("button"), "click", { detail: 0 });
+		expect(onClick).toHaveBeenCalledTimes(1);
 	});
 
 	test("Enter and Space call the handler when it is not a button", () => {
