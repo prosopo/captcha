@@ -75,6 +75,39 @@ afterEach(async () => {
 	});
 });
 
+type RouteLayer = {
+	name: string;
+	route?: { path: string; methods: Record<string, boolean>; stack: unknown[] };
+};
+
+describe("the route table", () => {
+	test("pins each route, its method and its handler count, in order", () => {
+		// express types its stack as ILayer, which does not describe route.methods.
+		const layers: RouteLayer[] = getRoutes(
+			connection,
+			serverConfig(),
+			VERIFY_ENDPOINT,
+			"api",
+		).stack.map((layer: unknown): RouteLayer => layer as RouteLayer);
+		expect(
+			layers.map((layer) =>
+				layer.route
+					? `${Object.keys(layer.route.methods).join(",").toUpperCase()} ${layer.route.path} handlers=${layer.route.stack.length}`
+					: `use ${layer.name}`,
+			),
+		).toMatchInlineSnapshot(`
+			[
+			  "POST /login handlers=1",
+			  "POST /signup handlers=1",
+			  "GET /private handlers=1",
+			  "GET /public handlers=1",
+			  "GET /health handlers=1",
+			  "use <anonymous>",
+			]
+		`);
+	});
+});
+
 describe("the router", () => {
 	test("serves the public resource without any authentication", async () => {
 		const base = await listen();
