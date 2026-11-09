@@ -365,12 +365,16 @@ export class ClientTaskManager {
 				await this.providerDB.updateClientRecords(newClientRecords);
 			}
 
+			const revokedSiteKeys = await clientDB.getRevokedSiteKeys();
+			await this.providerDB.removeClientRecords(revokedSiteKeys);
+
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
 						clientRecords: newClientRecords.length,
+						revokedClientRecords: revokedSiteKeys.length,
 					},
 				},
 			);

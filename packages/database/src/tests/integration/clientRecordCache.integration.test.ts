@@ -115,6 +115,17 @@ describe("ProviderDatabase.getClientRecord cache", () => {
 		expect(await db.getClientRecord(ACCOUNT)).toBeUndefined();
 	});
 
+	it("keeps the cache when none of the removed sites were stored", async () => {
+		await db.updateClientRecords([record("first.example")]);
+		await db.getClientRecord(ACCOUNT);
+		await writeBehindTheCache("second.example");
+
+		await db.removeClientRecords(["never-registered"]);
+
+		const cached = await db.getClientRecord(ACCOUNT);
+		expect(cached?.settings.domains).toEqual(["first.example"]);
+	});
+
 	it("does not remember that a site was missing", async () => {
 		expect(await db.getClientRecord(ACCOUNT)).toBeUndefined();
 
