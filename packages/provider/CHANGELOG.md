@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 5.29.1
+### Patch Changes
+
+- b2e3f27: Accept behavioural data up to 512 KB on captcha answers. The cap was 128 KB. A visitor who moves around the page for a while fills the widget's behaviour buffers, and the encrypted data then goes over 128 KB. Their image answer was rejected with a 400, and the widget started a new challenge straight away. They could not get past the captcha. On 9 Nov, 502 of the 537 rejected image answers in 24 hours were over the old cap. A full buffer is about 340 KB, so the new cap leaves room to spare.
+  
+  The provider now also logs refused captcha answers at info, with the error site and the length of each field, so the next cause like this shows up in the logs.
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/api@4.10.1
+  - @prosopo/api-express-router@3.3.17
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.5
+  - @prosopo/datasets@3.2.25
+  - @prosopo/env@3.6.94
+  - @prosopo/fingerprint@2.8.16
+  - @prosopo/ipinfo@0.7.3
+  - @prosopo/keyring@2.10.25
+  - @prosopo/load-balancer@2.11.29
+  - @prosopo/types-database@5.18.3
+  - @prosopo/types-env@2.12.4
+  - @prosopo/user-access-policy@3.16.1
+
 ## 5.29.0
 ### Minor Changes
 
