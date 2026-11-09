@@ -1283,7 +1283,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			status: isApproved ? ResultReason.USER_VERIFIED : failureStatus,
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
-			...(score && { score }),
+			...(Number.isFinite(score) && { score }),
 			...(solution.sessionId && { sessionId: solution.sessionId }),
 		};
 	}
