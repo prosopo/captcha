@@ -221,6 +221,28 @@ describe("the controls", () => {
 		expect(buttonLabelled("WIDGET.SUBMIT")).toBe(next);
 	});
 
+	test("no control in the panel holds its label as text", () => {
+		const controlTexts = (): string[] =>
+			Array.from(
+				mounted.container.querySelectorAll<HTMLElement>(
+					'button, [role="button"]',
+				),
+				(control: HTMLElement) => control.textContent ?? "",
+			);
+		const challenge = twoRoundChallenge();
+
+		for (const index of [0, 1]) {
+			render({ challenge, index, solutions: [[], []] });
+			for (const label of ["WIDGET.CANCEL", "WIDGET.NEXT", "WIDGET.SUBMIT"]) {
+				expect(
+					controlTexts().filter((text: string) => text.includes(label)),
+				).toEqual([]);
+			}
+		}
+		expect(buttonLabelled("WIDGET.CANCEL")).toBeDefined();
+		expect(buttonLabelled("WIDGET.SUBMIT")).toBeDefined();
+	});
+
 	test("a synthetic click on cancel is ignored", () => {
 		render();
 		fire(buttonLabelled("WIDGET.CANCEL"), "click", { trusted: false });
