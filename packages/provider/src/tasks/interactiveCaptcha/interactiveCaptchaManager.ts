@@ -302,12 +302,12 @@ export abstract class InteractiveCaptchaManager<
 			if (kind) {
 				this.usageCounters.incrManyAsync(
 					dappAccount,
-					buildAllWindowIncrements(
+					buildAllWindowIncrements({
 						kind,
-						this.captchaType,
-						submission.ipAddress.address,
+						captchaType: this.captchaType,
+						ip: submission.ipAddress.address,
 						userAccount,
-					),
+					}),
 				);
 			}
 		}
@@ -778,14 +778,14 @@ export abstract class InteractiveCaptchaManager<
 			});
 
 			if (ipValidationRules?.enabled === true) {
-				const ipValidation = await deepValidateIpAddress(
+				const ipValidation = await deepValidateIpAddress({
 					ip,
 					challengeIpAddress,
 					logger,
-					env.ipInfoService,
+					ipInfoService: env.ipInfoService,
 					ipValidationRules,
-					enrichedDnsEvent?.peerIp,
-				);
+					dnsPeerIp: enrichedDnsEvent?.peerIp,
+				});
 
 				if (!ipValidation.isValid) {
 					logger.error(() => ({

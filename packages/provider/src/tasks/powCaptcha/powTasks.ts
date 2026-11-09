@@ -378,14 +378,13 @@ export class PowCaptchaManager extends CaptchaManager {
 			const dappAccount = at(challengeSplit, 2);
 			this.usageCounters.incrManyAsync(
 				dappAccount,
-				buildAllWindowIncrements(
-					"solved",
-					CaptchaType.pow,
-					ipAddress.address,
+				buildAllWindowIncrements({
+					kind: "solved",
+					captchaType: CaptchaType.pow,
+					ip: ipAddress.address,
 					userAccount,
-					undefined,
-					fingerprintSummary?.bucketId,
-				),
+					deviceBucket: fingerprintSummary?.bucketId,
+				}),
 			);
 		}
 
@@ -677,14 +676,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			powDifficulty: challengeRecord.difficulty,
 		};
 
-		const routingOutput = await applyRouter(
-			this.decisionMachineRunner,
-			this.usageCounters,
+		const routingOutput = await applyRouter({
+			runner: this.decisionMachineRunner,
+			counters: this.usageCounters,
 			baseline,
 			ctx,
-			this.logger,
-			"postPow",
-		);
+			logger: this.logger,
+			phase: "postPow",
+		});
 		return { routingOutput, device };
 	}
 
@@ -1036,14 +1035,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			powRecordUpdates.providedIp = getCompositeIpAddress(ip);
 
 			if (ipValidationRules?.enabled === true) {
-				const ipValidation = await deepValidateIpAddress(
+				const ipValidation = await deepValidateIpAddress({
 					ip,
 					challengeIpAddress,
 					logger,
-					env.ipInfoService,
+					ipInfoService: env.ipInfoService,
 					ipValidationRules,
-					enrichedDnsEvent?.peerIp,
-				);
+					dnsPeerIp: enrichedDnsEvent?.peerIp,
+				});
 
 				if (!ipValidation.isValid) {
 					logger.error(() => ({

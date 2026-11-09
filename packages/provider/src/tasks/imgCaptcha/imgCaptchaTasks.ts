@@ -1074,14 +1074,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 			commitmentUpdates.providedIp = getCompositeIpAddress(ip);
 
 			if (!failStatus && ipValidationRules?.enabled === true) {
-				const ipValidation = await deepValidateIpAddress(
+				const ipValidation = await deepValidateIpAddress({
 					ip,
-					solutionIpAddress,
+					challengeIpAddress: solutionIpAddress,
 					logger,
-					env.ipInfoService,
+					ipInfoService: env.ipInfoService,
 					ipValidationRules,
-					enrichedDnsEvent?.peerIp,
-				);
+					dnsPeerIp: enrichedDnsEvent?.peerIp,
+				});
 
 				if (!ipValidation.isValid) {
 					logger.error(() => ({
@@ -1113,13 +1113,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const ipValue = ip ?? "";
 			this.usageCounters.incrManyAsync(
 				solution.dappAccount,
-				buildAllWindowIncrements(
-					"solved",
-					CaptchaType.image,
-					ipValue,
-					solution.userAccount,
-					enrichedDnsEvent?.peerIp,
-				),
+				buildAllWindowIncrements({
+					kind: "solved",
+					captchaType: CaptchaType.image,
+					ip: ipValue,
+					userAccount: solution.userAccount,
+					peerIp: enrichedDnsEvent?.peerIp,
+				}),
 			);
 		}
 
