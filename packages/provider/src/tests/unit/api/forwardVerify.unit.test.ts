@@ -42,10 +42,11 @@ vi.mock("@prosopo/api", () => ({
 	}),
 }));
 
-const mockEnv = (): ProviderEnvironment =>
+const mockEnv = (host?: string): ProviderEnvironment =>
 	({
 		defaultEnvironment: "development",
 		pair: { address: SELF_ADDRESS },
+		config: { host },
 	}) as unknown as ProviderEnvironment;
 
 describe("forwardVerifyIfNotIssuer", () => {
@@ -88,6 +89,49 @@ describe("forwardVerifyIfNotIssuer", () => {
 		});
 		expect(result).toBeNull();
 		expect(forwardVerify).not.toHaveBeenCalled();
+	});
+
+	it("verifies a token this node minted without loading the provider list", async () => {
+		getProviders.mockRejectedValue(new Error("list endpoint down"));
+
+		for (const providerUrl of [
+			SELF_URL,
+			"https://ipv4.self.provider",
+			"https://SELF.provider/",
+		]) {
+			const result = await forwardVerifyIfNotIssuer({
+				env: mockEnv("self.provider"),
+				logger,
+				path: ClientApiPaths.VerifyPowCaptchaSolution,
+				providerUrl,
+				dapp: "dapp",
+				user: "user",
+				body: {},
+			});
+			expect(result).toBeNull();
+		}
+
+		expect(getProviders).not.toHaveBeenCalled();
+		expect(forwardVerify).not.toHaveBeenCalled();
+		expect(logger.warn).not.toHaveBeenCalled();
+	});
+
+	it("still forwards another provider's token when this node's host is known", async () => {
+		const response = { status: "ok", verified: true };
+		forwardVerify.mockResolvedValue(response);
+
+		const result = await forwardVerifyIfNotIssuer({
+			env: mockEnv("self.provider"),
+			logger,
+			path: ClientApiPaths.VerifyPowCaptchaSolution,
+			providerUrl: OTHER_URL,
+			dapp: "dapp",
+			user: "user",
+			body: {},
+		});
+
+		expect(result).toBe(response);
+		expect(getProviders).toHaveBeenCalledTimes(1);
 	});
 
 	it("returns null when the providerUrl is not a known provider (SSRF guard)", async () => {
