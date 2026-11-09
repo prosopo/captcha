@@ -462,6 +462,7 @@ type AccountRecord = mongoose.Document & {
 	tierRequestQuota: number;
 	marketCountries?: string[];
 	marketingPreferences: boolean;
+	accountDisabled?: boolean;
 	users: User[];
 	sites: {
 		name: string;
@@ -484,6 +485,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 	tierRequestQuota: Number,
 	marketCountries: { type: [String], default: undefined },
 	marketingPreferences: Boolean,
+	accountDisabled: Boolean,
 	users: [
 		{
 			email: String,
@@ -526,4 +528,5 @@ export interface IClientDatabase extends IDatabase {
 	// Plain objects built from the portal's account documents, not mongoose
 	// Documents — `IUserDataSlim` is what this actually returns.
 	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<IUserDataSlim[]>;
+	getRevokedSiteKeys(): Promise<string[]>;
 }

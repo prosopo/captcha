@@ -201,4 +201,137 @@ describe("ClientDatabase.getUpdatedClients", () => {
 			{ inMarket: true, action: TrafficFilterAction.Challenge },
 		]);
 	});
+
+	it("skips a disabled account even when its site is inside the window", async () => {
+		const db = await seed();
+		await db.tables.accounts.create({
+			signupEmail: "banned@example.com",
+			tier: Tier.Free,
+			accountDisabled: true,
+			users: [{ email: "banned@example.com", status: "active" }],
+			sites: [
+				{
+					name: "b",
+					siteKey: "bannedKey",
+					secretKey: "s",
+					settings: settingsFor("b.example.com"),
+					createdAt: 1,
+					updatedAt: 900,
+					active: true,
+				},
+			],
+		});
+
+		expect(await db.getUpdatedClients(100)).toHaveLength(0);
+	});
+
+	it("skips an inactive site on a live account", async () => {
+		const db = await seed();
+		await db.tables.accounts.create({
+			signupEmail: "deleted-site@example.com",
+			tier: Tier.Free,
+			users: [{ email: "deleted-site@example.com", status: "active" }],
+			sites: [
+				{
+					name: "gone",
+					siteKey: "deletedKey",
+					secretKey: "s1",
+					settings: settingsFor("gone.example.com"),
+					createdAt: 1,
+					updatedAt: 900,
+					active: false,
+				},
+				{
+					name: "live",
+					siteKey: "liveKey",
+					secretKey: "s2",
+					settings: settingsFor("live.example.com"),
+					createdAt: 1,
+					updatedAt: 900,
+					active: true,
+				},
+			],
+		});
+
+		const records = await db.getUpdatedClients(100);
+
+		expect(records.map((r) => r.account)).toEqual(["liveKey"]);
+	});
+});
+
+describe("ClientDatabase.getRevokedSiteKeys", () => {
+	let mongo: MongoMemoryServer;
+	let uri: string;
+
+	beforeAll(async () => {
+		mongo = await MongoMemoryServer.create();
+		uri = mongo.getUri();
+	});
+
+	afterAll(async () => {
+		await mongo.stop();
+	});
+
+	it("returns every site of a disabled account and inactive sites of live accounts", async () => {
+		const db = new ClientDatabase(uri, "prosopo", undefined, logger);
+		await db.connect();
+		await db.tables.accounts.deleteMany({});
+		await db.tables.accounts.create([
+			{
+				signupEmail: "banned@example.com",
+				tier: Tier.Free,
+				accountDisabled: true,
+				users: [{ email: "banned@example.com", status: "active" }],
+				sites: [
+					{ name: "a", siteKey: "bannedA", active: true, updatedAt: 1 },
+					{ name: "b", siteKey: "bannedB", active: true, updatedAt: 1 },
+				],
+			},
+			{
+				signupEmail: "live@example.com",
+				tier: Tier.Free,
+				accountDisabled: false,
+				users: [{ email: "live@example.com", status: "active" }],
+				sites: [
+					{ name: "c", siteKey: "deletedC", active: false, updatedAt: 1 },
+					{ name: "d", siteKey: "liveD", active: true, updatedAt: 1 },
+				],
+			},
+			{
+				signupEmail: "untouched@example.com",
+				tier: Tier.Free,
+				users: [{ email: "untouched@example.com", status: "active" }],
+				sites: [{ name: "e", siteKey: "liveE", active: true, updatedAt: 1 }],
+			},
+		]);
+
+		const revoked = await db.getRevokedSiteKeys();
+
+		expect(revoked.sort()).toEqual(["bannedA", "bannedB", "deletedC"]);
+	});
+
+	it("can run after getUpdatedClients on the same instance", async () => {
+		const db = new ClientDatabase(uri, "prosopo", undefined, logger);
+		await db.connect();
+		await db.tables.accounts.deleteMany({});
+		await db.tables.accounts.create({
+			signupEmail: "banned-late@example.com",
+			tier: Tier.Free,
+			accountDisabled: true,
+			users: [{ email: "banned-late@example.com", status: "active" }],
+			sites: [
+				{
+					name: "x",
+					siteKey: "bannedLate",
+					secretKey: "s",
+					settings: settingsFor("x.example.com"),
+					active: true,
+					updatedAt: 900,
+				},
+			],
+		});
+
+		expect(await db.getUpdatedClients(100)).toHaveLength(0);
+		expect(await db.getRevokedSiteKeys()).toEqual(["bannedLate"]);
+	});
 });
