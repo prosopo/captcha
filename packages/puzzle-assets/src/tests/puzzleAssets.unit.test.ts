@@ -28,6 +28,10 @@ import type { RgbaImage } from "../types.js";
 
 const SEED_A = Buffer.from("0123456789abcdef", "utf-8");
 const SEED_B = Buffer.from("fedcba9876543210", "utf-8");
+const decoyShape = createNotchShape(
+	createPrng(SEED_A),
+	DEFAULT_GEOMETRY.notchSize,
+);
 
 const meanLuma = (image: RgbaImage): number => {
 	let total = 0;
@@ -145,6 +149,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			placement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
+			true,
 		);
 
 		// Centre of the notch is darker than it was.
@@ -170,6 +175,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			placement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
+			true,
 		);
 
 		const half = Math.floor(geometry.notchSize / 2);
@@ -201,6 +207,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			overhangPlacement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
+			true,
 		);
 
 		const half = geometry.notchSize / 2;
@@ -243,6 +250,7 @@ describe("cutNotch", () => {
 			geometry.notchSize,
 			placement,
 			DEFAULT_RENDER_SETTINGS.holeDarken,
+			true,
 		);
 
 		const half = geometry.notchSize / 2;
@@ -331,6 +339,7 @@ describe("paintDecoys", () => {
 			bg,
 			createPrng(SEED_A),
 			0,
+			decoyShape,
 			DEFAULT_GEOMETRY.notchSize,
 			notch,
 			decoyEdgeDarkness,
@@ -347,6 +356,7 @@ describe("paintDecoys", () => {
 			bg,
 			createPrng(SEED_B),
 			3,
+			decoyShape,
 			DEFAULT_GEOMETRY.notchSize,
 			notch,
 			decoyEdgeDarkness,
@@ -363,6 +373,7 @@ describe("paintDecoys", () => {
 			bg1,
 			createPrng(SEED_B),
 			3,
+			decoyShape,
 			DEFAULT_GEOMETRY.notchSize,
 			notch,
 			decoyEdgeDarkness,
@@ -373,6 +384,7 @@ describe("paintDecoys", () => {
 			bg2,
 			createPrng(SEED_B),
 			3,
+			decoyShape,
 			DEFAULT_GEOMETRY.notchSize,
 			notch,
 			decoyEdgeDarkness,
@@ -396,7 +408,7 @@ describe("paintDecoys", () => {
 		// the pixels never reach exactly zero.
 		paintDecoyPiece(
 			bg,
-			createPrng(SEED_B),
+			decoyShape,
 			DEFAULT_GEOMETRY.notchSize,
 			cx,
 			cy,

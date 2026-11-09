@@ -165,6 +165,7 @@ describe("per-device puzzle floors at issuance", () => {
 			pieceSize: 60,
 			backgroundSeed: "seed",
 			renderSeed: "seed",
+			rendererVersion: 2,
 		});
 	});
 
@@ -276,6 +277,7 @@ describe("the floors need corroboration", () => {
 			pieceSize: 30,
 			backgroundSeed: "seed",
 			renderSeed: "seed",
+			rendererVersion: 2,
 		});
 	});
 
@@ -333,6 +335,7 @@ describe("the session's fingerprint summary at issuance", () => {
 			pieceSize: 60,
 			backgroundSeed: "seed",
 			renderSeed: "seed",
+			rendererVersion: 2,
 		});
 	});
 

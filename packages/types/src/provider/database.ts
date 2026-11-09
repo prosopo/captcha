@@ -1010,6 +1010,8 @@ export interface PuzzleRenderRecord {
 	backgroundSeed: string;
 	/** 128-bit hex. Drives decoy placement and the notch cut. */
 	renderSeed: string;
+	/** Drawing pipeline version. Absent on records drawn by version 1. */
+	renderer?: number;
 }
 
 /** Fields shared by the challenge records of the on-screen captcha types. */

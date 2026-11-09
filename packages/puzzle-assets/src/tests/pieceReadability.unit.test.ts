@@ -455,6 +455,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
+				true,
 			);
 
 			const { rim, core } = rimAndCore(piece, shape);
@@ -490,6 +491,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
+				true,
 			);
 
 			const { rim, core } = rimAndCore(piece, shape);
@@ -518,6 +520,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
+				true,
 			);
 
 			// Greyscale by luminance, then measure again. The cue is a luminance
@@ -567,6 +570,7 @@ describe("the piece's separation cue, swept over seeds", () => {
 				SIZE,
 				{ targetX: 120, targetY: 80 },
 				0.55,
+				true,
 			);
 			const { rim, core } = rimAndCore(piece, shape);
 			// Reconstruct greys at the measured luminances and simulate. Working

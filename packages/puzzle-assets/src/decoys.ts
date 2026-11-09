@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createNotchShape } from "./notch.js";
-import { coverageFromDistance } from "./notch.js";
+import {
+	type NotchShape,
+	coverageFromDistance,
+	createNotchShape,
+} from "./notch.js";
 import type { Prng } from "./prng.js";
 import type { NotchPlacement, RgbaImage } from "./types.js";
 
@@ -59,12 +62,11 @@ const DECOY_INNER_SHADOW = 0.35;
 
 /**
  * Composite a jigsaw-shaped decoration onto `background`, centred on
- * `(cx, cy)`. Mutates `background`. Runs the same signed-distance sampling
- * as the real cut, so the silhouette reads as the same family of shapes.
+ * `(cx, cy)`. Mutates `background`.
  */
 export const paintDecoyPiece = (
 	background: RgbaImage,
-	prng: Prng,
+	shape: NotchShape,
 	size: number,
 	cx: number,
 	cy: number,
@@ -72,7 +74,6 @@ export const paintDecoyPiece = (
 	bodyBrightness: number,
 	holeDarken: number,
 ): void => {
-	const shape = createNotchShape(prng, size);
 	const half = size / 2;
 	const left = Math.round(cx - half);
 	const top = Math.round(cy - half);
@@ -136,12 +137,14 @@ const COUNT_JITTER = 0.3;
  * hard-code the expected count. Decoys avoid only the real notch
  * placement (they may freely overlap each other). If a slot cannot be
  * placed after `PLACEMENT_ATTEMPTS`, it is silently dropped — decoys are
- * cosmetic, so an occasional miss is fine.
+ * cosmetic, so an occasional miss is fine. Every decoy takes `shape` when one
+ * is given; otherwise each draws its own.
  */
 export const paintDecoys = (
 	background: RgbaImage,
 	prng: Prng,
 	targetCount: number,
+	shape: NotchShape | undefined,
 	notchSize: number,
 	notch: NotchPlacement,
 	edgeDarkness: number,
@@ -177,7 +180,7 @@ export const paintDecoys = (
 			}
 			paintDecoyPiece(
 				background,
-				prng,
+				shape ?? createNotchShape(prng, notchSize),
 				notchSize,
 				cx,
 				cy,

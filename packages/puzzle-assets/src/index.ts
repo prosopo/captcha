@@ -13,15 +13,14 @@
 // limitations under the License.
 
 import { generateBackground } from "./background.js";
-import { cutNotch } from "./compose.js";
-import { paintDecoys } from "./decoys.js";
+import { PUZZLE_RENDERER_VERSION, drawPuzzle } from "./draw.js";
 import { encodeBackground, encodePiece } from "./encode.js";
-import { createNotchShape } from "./notch.js";
 import { createPrng, createSeed } from "./prng.js";
 import type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RenderedPuzzle,
 	RgbaImage,
 } from "./types.js";
@@ -45,6 +44,7 @@ export {
 	type Rgb,
 } from "./palette.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
+export { PUZZLE_RENDERER_VERSION } from "./draw.js";
 export {
 	encodeBackground,
 	encodePiece,
@@ -55,6 +55,7 @@ export type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RenderedPuzzle,
 	RgbaImage,
 } from "./types.js";
@@ -107,31 +108,16 @@ export const renderPuzzle = async (
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
 	seed: Buffer = createSeed(),
+	rendererVersion: PuzzleRendererVersion = PUZZLE_RENDERER_VERSION,
 ): Promise<RenderedPuzzle> => {
-	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	// Decoys go on first so the real cut sits on top of any overlap and
-	// always reads as the deepest, darkest region on the board. Decoys use
-	// the same size as the real piece so a solver can't key on scale to
-	// disambiguate the target.
-	paintDecoys(
+	const { background: cut, piece } = drawPuzzle(
 		background,
-		prng,
-		settings.decoyCount,
-		pieceSize,
 		placement,
-		settings.decoyEdgeDarkness,
-		settings.decoyBodyBrightness,
-		settings.decoyHoleDarken,
-	);
-	const shape = createNotchShape(prng, pieceSize);
-	const { background: cut, piece } = cutNotch(
-		prng,
-		background,
-		shape,
 		pieceSize,
-		placement,
-		settings.holeDarken,
+		settings,
+		createPrng(seed),
+		rendererVersion,
 	);
 
 	const [backgroundWebp, pieceWebp] = await Promise.all([
@@ -144,6 +130,7 @@ export const renderPuzzle = async (
 		piece: pieceWebp,
 		pieceSize,
 		seed,
+		rendererVersion,
 	};
 };
 
@@ -160,6 +147,7 @@ export const createPuzzle = async (
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
 	backgroundSeed: Buffer = createSeed(),
 	renderSeed: Buffer = createSeed(),
+	rendererVersion: PuzzleRendererVersion = PUZZLE_RENDERER_VERSION,
 ): Promise<RenderedPuzzle> =>
 	renderPuzzle(
 		createBackground(geometry, backgroundSeed),
@@ -167,4 +155,5 @@ export const createPuzzle = async (
 		geometry,
 		settings,
 		renderSeed,
+		rendererVersion,
 	);

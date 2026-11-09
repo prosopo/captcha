@@ -18,6 +18,7 @@ import {
 	DEFAULT_RENDER_SETTINGS,
 	type NotchPlacement,
 	type PuzzleRenderSettings,
+	type PuzzleRendererVersion,
 	renderPuzzle,
 	toDataUri,
 } from "@prosopo/puzzle-assets";
@@ -46,6 +47,7 @@ export interface RenderedPuzzleImages {
 	 */
 	backgroundSeed: string;
 	renderSeed: string;
+	rendererVersion: PuzzleRendererVersion;
 }
 
 /**
@@ -183,5 +185,6 @@ export const renderPuzzleImages = async (
 		pieceSize: rendered.pieceSize,
 		backgroundSeed: background.seed.toString("hex"),
 		renderSeed: rendered.seed.toString("hex"),
+		rendererVersion: rendered.rendererVersion,
 	};
 };

@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
+import { renderPuzzleToRgba } from "../browser.js";
 import {
 	DEFAULT_GEOMETRY,
 	DEFAULT_RENDER_SETTINGS,
@@ -23,6 +25,7 @@ import type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RenderedPuzzle,
 } from "../types.js";
 
@@ -47,6 +50,7 @@ const render = (overrides: {
 	placement?: NotchPlacement;
 	geometry?: PuzzleGeometry;
 	settings?: PuzzleRenderSettings;
+	rendererVersion?: PuzzleRendererVersion;
 }): Promise<RenderedPuzzle> => {
 	const geometry = overrides.geometry ?? DEFAULT_GEOMETRY;
 	return renderPuzzle(
@@ -55,6 +59,7 @@ const render = (overrides: {
 		geometry,
 		overrides.settings ?? DEFAULT_RENDER_SETTINGS,
 		overrides.renderSeed ?? RENDER_SEED,
+		overrides.rendererVersion,
 	);
 };
 
@@ -66,6 +71,39 @@ describe("render replay from the stored record", () => {
 		expect(replayed.background.equals(served.background)).toBe(true);
 		expect(replayed.piece.equals(served.piece)).toBe(true);
 		expect(replayed.pieceSize).toBe(served.pieceSize);
+	});
+
+	it("returns the renderer version it drew with, so the record can store it", async () => {
+		expect((await render({ rendererVersion: 1 })).rendererVersion).toBe(1);
+		expect((await render({ rendererVersion: 2 })).rendererVersion).toBe(2);
+	});
+
+	it("changes the imagery when only the renderer version differs", async () => {
+		const first = await render({ rendererVersion: 1 });
+		const second = await render({ rendererVersion: 2 });
+		expect(second.background.equals(first.background)).toBe(false);
+		expect(second.piece.equals(first.piece)).toBe(false);
+	});
+
+	// Pins renderer 1 to the pixels it produced before renderer 2 existed, so
+	// records stored without a version still replay as they were served.
+	it("redraws renderer 1 puzzles pixel for pixel", () => {
+		const geometry: PuzzleGeometry = { ...DEFAULT_GEOMETRY, pieceSize: 61 };
+		const { background, piece } = renderPuzzleToRgba(
+			createBackground(geometry, BACKGROUND_SEED),
+			PLACEMENT,
+			geometry,
+			DEFAULT_RENDER_SETTINGS,
+			RENDER_SEED,
+			1,
+		);
+		const digest = createHash("sha256")
+			.update(background.data)
+			.update(piece.data)
+			.digest("hex");
+		expect(digest).toBe(
+			"54bbed14ffcc8a9d3f161f6e9f3f3922794389ae946649fd62ca8e16312f391b",
+		);
 	});
 
 	it("returns the render seed it was given, so the record can store it", async () => {

@@ -162,6 +162,37 @@ const sampleBackground = (
 	return [image.data[i] ?? 0, image.data[i + 1] ?? 0, image.data[i + 2] ?? 0];
 };
 
+/** Radius of the box average a smoothed piece takes its colour from. */
+const PIECE_SOURCE_BLUR_RADIUS = 3;
+
+const sampleSmoothedBackground = (
+	image: RgbaImage,
+	x: number,
+	y: number,
+): [number, number, number] | null => {
+	if (x < 0 || y < 0 || x >= image.width || y >= image.height) {
+		return null;
+	}
+	let r = 0;
+	let g = 0;
+	let b = 0;
+	let n = 0;
+	const x0 = Math.max(0, x - PIECE_SOURCE_BLUR_RADIUS);
+	const x1 = Math.min(image.width - 1, x + PIECE_SOURCE_BLUR_RADIUS);
+	const y0 = Math.max(0, y - PIECE_SOURCE_BLUR_RADIUS);
+	const y1 = Math.min(image.height - 1, y + PIECE_SOURCE_BLUR_RADIUS);
+	for (let sy = y0; sy <= y1; sy++) {
+		for (let sx = x0; sx <= x1; sx++) {
+			const i = (sy * image.width + sx) * 4;
+			r += image.data[i] ?? 0;
+			g += image.data[i + 1] ?? 0;
+			b += image.data[i + 2] ?? 0;
+			n++;
+		}
+	}
+	return [r / n, g / n, b / n];
+};
+
 /**
  * Rim strength in [0, 1] for a signed distance: 1 on the plateau, tapering to 0
  * at the full width inside the silhouette, 0 beyond it.
@@ -251,6 +282,7 @@ export const cutNotch = (
 	size: number,
 	placement: NotchPlacement,
 	holeDarken: number,
+	smoothPieceSource: boolean,
 ): CutResult => {
 	const half = size / 2;
 	const left = Math.round(placement.targetX - half);
@@ -281,7 +313,9 @@ export const cutNotch = (
 				continue;
 			}
 
-			const sample = sampleBackground(background, left + lx, top + ly);
+			const sample = smoothPieceSource
+				? sampleSmoothedBackground(background, left + lx, top + ly)
+				: sampleBackground(background, left + lx, top + ly);
 			if (sample === null) {
 				// Piece extends past the frame — leave this pixel transparent
 				// so the overhang doesn't smear the edge colour outward.

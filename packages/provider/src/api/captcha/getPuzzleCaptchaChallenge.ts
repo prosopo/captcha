@@ -196,6 +196,7 @@ export const issuePuzzleChallenge = async ({
 				},
 				backgroundSeed: images.backgroundSeed,
 				renderSeed: images.renderSeed,
+				renderer: images.rendererVersion,
 			},
 		})
 		.catch((updateErr: unknown) => {

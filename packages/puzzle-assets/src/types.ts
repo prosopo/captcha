@@ -25,6 +25,12 @@ export interface NotchPlacement {
 	targetY: number;
 }
 
+/**
+ * Which drawing pipeline produced a puzzle. Stored with each challenge so a
+ * replay redraws it the way it was served.
+ */
+export type PuzzleRendererVersion = 1 | 2;
+
 export interface RenderedPuzzle {
 	/** Background with the notch cut into it, WebP. */
 	background: Buffer;
@@ -38,6 +44,7 @@ export interface RenderedPuzzle {
 	 * secrecy note in prng.ts before putting it anywhere else.
 	 */
 	seed: Buffer;
+	rendererVersion: PuzzleRendererVersion;
 }
 
 export interface PuzzleGeometry {
