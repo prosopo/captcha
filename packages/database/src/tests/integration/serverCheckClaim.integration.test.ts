@@ -258,5 +258,6 @@ describe("server-check claims are single-use under concurrency", () => {
 		);
 
 		expect(claims.filter(Boolean)).toHaveLength(1);
+		expect(await db.getPendingImageCommitment(requestHash)).toBeUndefined();
 	});
 });

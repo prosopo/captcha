@@ -1446,7 +1446,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingImageCaptchaRequest>;
+	): Promise<PendingImageCaptchaRequest | undefined>;
 
 	/**
 	 * Atomically flips a pending image request to not-pending. Resolves true

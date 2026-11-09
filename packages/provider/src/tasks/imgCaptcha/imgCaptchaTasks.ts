@@ -358,7 +358,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			userAccount,
 			unverifiedCaptchaIds,
 		);
-		if (pendingRequest) {
+		if (pendingRecord && pendingRequest) {
 			const { storedCaptchas, receivedCaptchas, captchaIds } =
 				await this.validateReceivedCaptchasAgainstStoredCaptchas(captchas);
 
@@ -670,7 +670,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	 */
 	async validateDappUserSolutionRequestIsPending(
 		requestHash: string,
-		pendingRecord: PendingImageCaptchaRequest,
+		pendingRecord: PendingImageCaptchaRequest | undefined,
 		userAccount: string,
 		captchaIds: string[],
 	): Promise<boolean> {
@@ -699,28 +699,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			return requestHash === pendingHashComputed;
 		}
 		return false;
-	}
-
-	/*
-	 * Get dapp user solution from database
-	 */
-	async getDappUserCommitmentById(
-		commitmentId: string,
-	): Promise<UserCommitment> {
-		const dappUserSolution =
-			await this.db.getDappUserCommitmentById(commitmentId);
-		if (!dappUserSolution) {
-			throw new ProsopoError({
-				code: "SOLUTION_NOT_FOUND",
-				errorSite: "PROV-68",
-				message: "Dapp user solution not found",
-				context: {
-					failedFuncName: this.getDappUserCommitmentById.name,
-					commitmentId: commitmentId,
-				},
-			});
-		}
-		return dappUserSolution;
 	}
 
 	async verifyImageCaptchaSolution(
@@ -775,7 +753,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		const solution = await this.getDappUserCommitmentById(commitmentId);
+		const solution = await this.db.getDappUserCommitmentById(commitmentId);
 
 		// No solution exists
 		if (!solution) {
