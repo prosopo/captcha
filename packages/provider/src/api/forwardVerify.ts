@@ -52,6 +52,20 @@ function normalizeProviderUrl(url: string): string {
 	}
 }
 
+// `config.host` is this node's bare hostname (e.g. `pronode4.prosopo.io`), the
+// same value `/healthz` hands to the widget to embed in the token.
+function isOwnProviderUrl(providerUrl: string, ownHost: string): boolean {
+	if (!ownHost) {
+		return false;
+	}
+	try {
+		const { hostname } = new URL(normalizeProviderUrl(providerUrl));
+		return hostname === ownHost.toLowerCase();
+	} catch {
+		return false;
+	}
+}
+
 export async function forwardVerifyIfNotIssuer(args: {
 	env: ProviderEnvironment;
 	logger: Logger;
@@ -76,6 +90,12 @@ export async function forwardVerifyIfNotIssuer(args: {
 	// No issuer url in the token → we can't forward; verify locally (this also
 	// preserves behaviour for any older tokens that omit providerUrl).
 	if (!providerUrl) {
+		return null;
+	}
+
+	// A token this node minted is verified here whatever the list says, so
+	// don't make the caller wait on fetching it.
+	if (isOwnProviderUrl(providerUrl, env.config.host)) {
 		return null;
 	}
 
