@@ -38,85 +38,153 @@ interface Blotch {
 	gain: number;
 }
 
-/** A brightness pattern laid over the board and, out of step, the piece. */
-export type BoardPattern =
-	| { kind: "none" }
+type Stroke = { x: number; y: number }[];
+
+/** A treatment laid over the board and, out of step, the piece. */
+export type BoardEffect =
 	| { kind: "stripes"; angle: number; period: number; amplitude: number }
 	| { kind: "dots"; spacing: number; radius: number; amplitude: number }
-	| { kind: "blotches"; blotches: Blotch[] };
+	| { kind: "blotches"; blotches: Blotch[] }
+	| {
+			kind: "rings";
+			x: number;
+			y: number;
+			period: number;
+			amplitude: number;
+	  }
+	| {
+			kind: "swirl";
+			x: number;
+			y: number;
+			/** Peak hue shift going round the centre. */
+			degreesPerTurn: number;
+			degreesPerPixel: number;
+	  }
+	| { kind: "scribbles"; strokes: Stroke[]; width: number; darkness: number };
 
 export interface Presentation {
 	recess: RecessStyle;
-	pattern: BoardPattern;
-	/** Where the piece's copy of the pattern starts, so it does not line up. */
+	effects: BoardEffect[];
+	/** Where the piece's copy of the effects starts, so it does not line up. */
 	pieceOffset: { x: number; y: number };
-	/** Radians. */
-	pieceRotation: number;
-	pieceScale: number;
 }
 
-const MAX_PIECE_ROTATION = (8 * Math.PI) / 180;
+const EFFECT_KINDS = [
+	"stripes",
+	"dots",
+	"blotches",
+	"rings",
+	"swirl",
+	"scribbles",
+] as const;
 
-/**
- * Rotating the piece pushes its corners outwards; this scale keeps a piece
- * rotated by up to `MAX_PIECE_ROTATION` inside its own bounding box.
- */
-const MAX_PIECE_SCALE =
-	1 / (Math.cos(MAX_PIECE_ROTATION) + Math.sin(MAX_PIECE_ROTATION));
+const sampleStroke = (prng: Prng, width: number, height: number): Stroke => {
+	const x0 = prng.range(-0.1, 1.1) * width;
+	const y0 = prng.range(-0.1, 1.1) * height;
+	const heading = prng.range(0, 2 * Math.PI);
+	const bend = prng.range(-0.04, 0.04);
+	const wobble = prng.range(0.05, 0.2);
+	const length = prng.range(0.5, 1.2) * width;
+	const points: { x: number; y: number }[] = [];
+	let x = x0;
+	let y = y0;
+	let angle = heading;
+	for (let travelled = 0; travelled <= length; travelled += 4) {
+		points.push({ x, y });
+		angle += bend + wobble * Math.sin(travelled / 17);
+		x += 4 * Math.cos(angle);
+		y += 4 * Math.sin(angle);
+	}
+	return points;
+};
 
-const samplePattern = (
+const sampleEffect = (
 	prng: Prng,
 	width: number,
 	height: number,
-): BoardPattern => {
-	const kind = prng.int(0, 3);
-	if (kind === 1) {
-		return {
-			kind: "stripes",
-			angle: prng.range(0, Math.PI),
-			period: prng.range(9, 18),
-			amplitude: prng.range(0.03, 0.06),
-		};
-	}
-	if (kind === 2) {
-		return {
-			kind: "dots",
-			spacing: prng.range(10, 16),
-			radius: prng.range(1.5, 3),
-			amplitude: prng.range(0.05, 0.1),
-		};
-	}
-	if (kind === 3) {
-		const count = prng.int(6, 14);
-		const blotches: Blotch[] = [];
-		for (let i = 0; i < count; i++) {
-			blotches.push({
+): BoardEffect => {
+	const kind = EFFECT_KINDS[prng.int(0, EFFECT_KINDS.length - 1)];
+	switch (kind) {
+		case "stripes":
+			return {
+				kind,
+				angle: prng.range(0, Math.PI),
+				period: prng.range(9, 18),
+				amplitude: prng.range(0.04, 0.08),
+			};
+		case "dots":
+			return {
+				kind,
+				spacing: prng.range(10, 16),
+				radius: prng.range(1.5, 3),
+				amplitude: prng.range(0.06, 0.12),
+			};
+		case "blotches": {
+			const blotches: Blotch[] = [];
+			const count = prng.int(6, 14);
+			for (let i = 0; i < count; i++) {
+				blotches.push({
+					x: prng.range(0, width),
+					y: prng.range(0, height),
+					sigma: prng.range(8, 25),
+					gain: prng.range(0.86, 1.12),
+				});
+			}
+			return { kind, blotches };
+		}
+		case "rings":
+			return {
+				kind,
 				x: prng.range(0, width),
 				y: prng.range(0, height),
-				sigma: prng.range(8, 25),
-				gain: prng.range(0.88, 1.1),
-			});
+				period: prng.range(7, 16),
+				amplitude: prng.range(0.08, 0.18),
+			};
+		case "swirl":
+			return {
+				kind,
+				x: prng.range(0, width),
+				y: prng.range(0, height),
+				degreesPerTurn: prng.range(-90, 90),
+				degreesPerPixel: prng.range(-0.8, 0.8),
+			};
+		default: {
+			const strokes: Stroke[] = [];
+			const count = prng.int(3, 7);
+			for (let i = 0; i < count; i++) {
+				strokes.push(sampleStroke(prng, width, height));
+			}
+			return {
+				kind: "scribbles",
+				strokes,
+				width: prng.range(1.2, 2.6),
+				darkness: prng.range(0.12, 0.28),
+			};
 		}
-		return { kind: "blotches", blotches };
 	}
-	return { kind: "none" };
 };
 
 export const samplePresentation = (
 	prng: Prng,
 	width: number,
 	height: number,
-): Presentation => ({
-	recess: {
+): Presentation => {
+	const recess: RecessStyle = {
 		lightAngle: prng.range(0, 2 * Math.PI),
 		lightBias: prng.range(0, 0.8),
 		desaturate: prng.next() < 0.5 ? 0 : prng.range(0.2, 0.6),
-	},
-	pattern: samplePattern(prng, width, height),
-	pieceOffset: { x: prng.range(0, width), y: prng.range(0, height) },
-	pieceRotation: prng.range(-MAX_PIECE_ROTATION, MAX_PIECE_ROTATION),
-	pieceScale: prng.range(MAX_PIECE_SCALE - 0.06, MAX_PIECE_SCALE),
-});
+	};
+	const effects: BoardEffect[] = [];
+	const count = prng.int(1, 2);
+	for (let i = 0; i < count; i++) {
+		effects.push(sampleEffect(prng, width, height));
+	}
+	return {
+		recess,
+		effects,
+		pieceOffset: { x: prng.range(0, width), y: prng.range(0, height) },
+	};
+};
 
 /**
  * Inner-shadow strength at a recess pixel, `(lx, ly)` from the top-left of a
@@ -136,33 +204,6 @@ export const recessShadow = (
 	return strength * (1 + d / 3) * (1 + style.lightBias * facing);
 };
 
-const patternGain = (pattern: BoardPattern, x: number, y: number): number => {
-	switch (pattern.kind) {
-		case "none":
-			return 1;
-		case "stripes": {
-			const along = x * Math.cos(pattern.angle) + y * Math.sin(pattern.angle);
-			return (
-				1 + pattern.amplitude * Math.sin((2 * Math.PI * along) / pattern.period)
-			);
-		}
-		case "dots": {
-			const dx = x - Math.round(x / pattern.spacing) * pattern.spacing;
-			const dy = y - Math.round(y / pattern.spacing) * pattern.spacing;
-			const fall = Math.max(0, 1 - Math.hypot(dx, dy) / pattern.radius);
-			return 1 - pattern.amplitude * fall;
-		}
-		case "blotches": {
-			let gain = 1;
-			for (const b of pattern.blotches) {
-				const r2 = (x - b.x) ** 2 + (y - b.y) ** 2;
-				gain *= 1 + (b.gain - 1) * Math.exp(-r2 / (2 * b.sigma * b.sigma));
-			}
-			return gain;
-		}
-	}
-};
-
 const clamp255 = (v: number): number => (v < 0 ? 0 : v > 255 ? 255 : v);
 
 /** Move a colour `amount` of the way to its own luma. */
@@ -180,70 +221,157 @@ export const towardsGrey = (
 	];
 };
 
-/** Multiply `image` by `pattern`, read from `(offsetX, offsetY)`. Mutates `image`. */
-export const applyPattern = (
-	image: RgbaImage,
-	pattern: BoardPattern,
-	offsetX: number,
-	offsetY: number,
-): void => {
-	if (pattern.kind === "none") return;
-	for (let y = 0; y < image.height; y++) {
-		for (let x = 0; x < image.width; x++) {
-			const i = (y * image.width + x) * 4;
-			if ((image.data[i + 3] ?? 0) === 0) continue;
-			const gain = patternGain(pattern, x + offsetX, y + offsetY);
-			image.data[i] = clamp255(Math.round((image.data[i] ?? 0) * gain));
-			image.data[i + 1] = clamp255(Math.round((image.data[i + 1] ?? 0) * gain));
-			image.data[i + 2] = clamp255(Math.round((image.data[i + 2] ?? 0) * gain));
+/** Brightness multiplier an effect applies at `(x, y)`; 1 where it does nothing. */
+const effectGain = (effect: BoardEffect, x: number, y: number): number => {
+	switch (effect.kind) {
+		case "stripes": {
+			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
+			return (
+				1 + effect.amplitude * Math.sin((2 * Math.PI * along) / effect.period)
+			);
 		}
+		case "dots": {
+			const dx = x - Math.round(x / effect.spacing) * effect.spacing;
+			const dy = y - Math.round(y / effect.spacing) * effect.spacing;
+			const fall = Math.max(0, 1 - Math.hypot(dx, dy) / effect.radius);
+			return 1 - effect.amplitude * fall;
+		}
+		case "blotches": {
+			let gain = 1;
+			for (const b of effect.blotches) {
+				const r2 = (x - b.x) ** 2 + (y - b.y) ** 2;
+				gain *= 1 + (b.gain - 1) * Math.exp(-r2 / (2 * b.sigma * b.sigma));
+			}
+			return gain;
+		}
+		case "rings": {
+			const r = Math.hypot(x - effect.x, y - effect.y);
+			return 1 + effect.amplitude * Math.sin((2 * Math.PI * r) / effect.period);
+		}
+		default:
+			return 1;
 	}
 };
 
-/**
- * Rotate and scale a square piece about its centre, keeping its box size.
- * Bilinear, on premultiplied colour so the anti-aliased edge stays clean.
- */
-export const posePiece = (
-	piece: RgbaImage,
-	rotation: number,
-	scale: number,
-): RgbaImage => {
-	const { width, height, data } = piece;
-	const out = Buffer.alloc(width * height * 4);
-	const cx = (width - 1) / 2;
-	const cy = (height - 1) / 2;
-	const cos = Math.cos(rotation);
-	const sin = Math.sin(rotation);
-	const at = (x: number, y: number, c: number): number => {
-		if (x < 0 || y < 0 || x >= width || y >= height) return 0;
-		const i = (y * width + x) * 4;
-		const alpha = (data[i + 3] ?? 0) / 255;
-		return c === 3 ? alpha : (data[i + c] ?? 0) * alpha;
-	};
-	for (let y = 0; y < height; y++) {
-		for (let x = 0; x < width; x++) {
-			const ox = x - cx;
-			const oy = y - cy;
-			const sx = (cos * ox + sin * oy) / scale + cx;
-			const sy = (-sin * ox + cos * oy) / scale + cy;
-			const x0 = Math.floor(sx);
-			const y0 = Math.floor(sy);
-			const fx = sx - x0;
-			const fy = sy - y0;
-			const sample = (c: number): number =>
-				at(x0, y0, c) * (1 - fx) * (1 - fy) +
-				at(x0 + 1, y0, c) * fx * (1 - fy) +
-				at(x0, y0 + 1, c) * (1 - fx) * fy +
-				at(x0 + 1, y0 + 1, c) * fx * fy;
-			const alpha = sample(3);
-			const o = (y * width + x) * 4;
-			if (alpha <= 0) continue;
-			out[o] = clamp255(Math.round(sample(0) / alpha));
-			out[o + 1] = clamp255(Math.round(sample(1) / alpha));
-			out[o + 2] = clamp255(Math.round(sample(2) / alpha));
-			out[o + 3] = clamp255(Math.round(alpha * 255));
+/** Distance from each pixel to the nearest stroke centreline, capped at `cap`. */
+const strokeDistances = (
+	strokes: Stroke[],
+	width: number,
+	height: number,
+	offsetX: number,
+	offsetY: number,
+	cap: number,
+): Float32Array => {
+	const distance = new Float32Array(width * height).fill(cap);
+	for (const stroke of strokes) {
+		for (let s = 1; s < stroke.length; s++) {
+			const a = stroke[s - 1];
+			const b = stroke[s];
+			if (!a || !b) continue;
+			const ax = a.x - offsetX;
+			const ay = a.y - offsetY;
+			const bx = b.x - offsetX;
+			const by = b.y - offsetY;
+			const x0 = Math.max(0, Math.floor(Math.min(ax, bx) - cap));
+			const x1 = Math.min(width - 1, Math.ceil(Math.max(ax, bx) + cap));
+			const y0 = Math.max(0, Math.floor(Math.min(ay, by) - cap));
+			const y1 = Math.min(height - 1, Math.ceil(Math.max(ay, by) + cap));
+			const vx = bx - ax;
+			const vy = by - ay;
+			const len2 = vx * vx + vy * vy || 1;
+			for (let y = y0; y <= y1; y++) {
+				for (let x = x0; x <= x1; x++) {
+					const t = Math.max(
+						0,
+						Math.min(1, ((x - ax) * vx + (y - ay) * vy) / len2),
+					);
+					const d = Math.hypot(x - (ax + t * vx), y - (ay + t * vy));
+					const i = y * width + x;
+					if (d < (distance[i] ?? cap)) distance[i] = d;
+				}
+			}
 		}
 	}
-	return { data: out, width, height };
+	return distance;
+};
+
+/** Rotate a colour's hue by `degrees` about the grey axis. */
+const rotateHue = (
+	r: number,
+	g: number,
+	b: number,
+	degrees: number,
+): [number, number, number] => {
+	const a = (degrees * Math.PI) / 180;
+	const cos = Math.cos(a);
+	const sin = Math.sin(a);
+	const k = (1 - cos) / 3;
+	const s = Math.sqrt(1 / 3) * sin;
+	return [
+		r * (cos + k) + g * (k - s) + b * (k + s),
+		r * (k + s) + g * (cos + k) + b * (k - s),
+		r * (k - s) + g * (k + s) + b * (cos + k),
+	];
+};
+
+/**
+ * Lay `effects` over `image`, read as if the image's top-left sat at
+ * `(offsetX, offsetY)`. Transparent pixels are left alone. Mutates `image`.
+ */
+export const applyEffects = (
+	image: RgbaImage,
+	effects: readonly BoardEffect[],
+	offsetX: number,
+	offsetY: number,
+): void => {
+	for (const effect of effects) {
+		const strokeDistance =
+			effect.kind === "scribbles"
+				? strokeDistances(
+						effect.strokes,
+						image.width,
+						image.height,
+						offsetX,
+						offsetY,
+						effect.width + 1,
+					)
+				: undefined;
+		for (let y = 0; y < image.height; y++) {
+			for (let x = 0; x < image.width; x++) {
+				const i = (y * image.width + x) * 4;
+				if ((image.data[i + 3] ?? 0) === 0) continue;
+				let r = image.data[i] ?? 0;
+				let g = image.data[i + 1] ?? 0;
+				let b = image.data[i + 2] ?? 0;
+				const px = x + offsetX;
+				const py = y + offsetY;
+				if (effect.kind === "swirl") {
+					const angle = Math.atan2(py - effect.y, px - effect.x);
+					const reach = Math.hypot(px - effect.x, py - effect.y);
+					[r, g, b] = rotateHue(
+						r,
+						g,
+						b,
+						Math.sin(angle) * effect.degreesPerTurn +
+							reach * effect.degreesPerPixel,
+					);
+				} else if (effect.kind === "scribbles" && strokeDistance) {
+					const d = strokeDistance[y * image.width + x] ?? effect.width + 1;
+					const coverage = Math.max(0, Math.min(1, effect.width / 2 + 0.5 - d));
+					const ink = coverage * effect.darkness;
+					r *= 1 - ink;
+					g *= 1 - ink;
+					b *= 1 - ink;
+				} else {
+					const gain = effectGain(effect, px, py);
+					r *= gain;
+					g *= gain;
+					b *= gain;
+				}
+				image.data[i] = clamp255(Math.round(r));
+				image.data[i + 1] = clamp255(Math.round(g));
+				image.data[i + 2] = clamp255(Math.round(b));
+			}
+		}
+	}
 };

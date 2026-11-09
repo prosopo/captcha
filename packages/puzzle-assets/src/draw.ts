@@ -15,7 +15,7 @@
 import { cutNotch } from "./compose.js";
 import { paintDecoys } from "./decoys.js";
 import { createNotchShape } from "./notch.js";
-import { applyPattern, posePiece, samplePresentation } from "./presentation.js";
+import { applyEffects, samplePresentation } from "./presentation.js";
 import type { Prng } from "./prng.js";
 import type {
 	NotchPlacement,
@@ -77,15 +77,8 @@ export const drawPuzzle = (
 	);
 	if (!presentation) return cut;
 
-	const { pattern, pieceOffset } = presentation;
-	applyPattern(cut.background, pattern, 0, 0);
-	applyPattern(cut.piece, pattern, pieceOffset.x, pieceOffset.y);
-	return {
-		background: cut.background,
-		piece: posePiece(
-			cut.piece,
-			presentation.pieceRotation,
-			presentation.pieceScale,
-		),
-	};
+	const { effects, pieceOffset } = presentation;
+	applyEffects(cut.background, effects, 0, 0);
+	applyEffects(cut.piece, effects, pieceOffset.x, pieceOffset.y);
+	return cut;
 };
