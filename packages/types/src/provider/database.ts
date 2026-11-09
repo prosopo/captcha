@@ -124,6 +124,8 @@ export interface CompositeIpAddress {
 	type: IpAddressType;
 }
 
+const U64_MAX = 2 ** 64;
+
 export const CompositeIpAddressSchema = object({
 	lower: bigint(),
 	upper: bigint().optional(),
@@ -609,7 +611,11 @@ export const SessionSchema = object({
 	blocked: boolean().optional(),
 	// See Session.ruleHash — populated on synthetic blocked-session records.
 	ruleHash: string().max(INPUT_LIMITS.ID).optional(),
-	ruleType: string().max(INPUT_LIMITS.NAME).array().max(INPUT_LIMITS.ARRAY).optional(),
+	ruleType: string()
+		.max(INPUT_LIMITS.NAME)
+		.array()
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
 	ruleDescription: string().max(INPUT_LIMITS.TOKEN).optional(),
 	// See Session.matchedRule.
 	matchedRule: MatchedAccessRuleSchema.optional(),
@@ -660,9 +666,10 @@ export const SessionSchema = object({
 	// time. Undefined on sessions that came in without the tcp-probe
 	// pipeline (pre-rollout traffic, dev, or requests through a
 	// non-chaddy front).
-	synNs: number().safe().optional(),
-	synackNs: number().safe().optional(),
-	ackNs: number().safe().optional(),
+	// u64 nanoseconds from the eBPF probe: real values exceed MAX_SAFE_INTEGER.
+	synNs: number().min(0).max(U64_MAX).optional(),
+	synackNs: number().min(0).max(U64_MAX).optional(),
+	ackNs: number().min(0).max(U64_MAX).optional(),
 	observedTtl: number().min(0).max(255).optional(),
 	tcpMss: number().min(0).max(65535).optional(),
 	tcpWscale: number().min(0).max(255).optional(),
