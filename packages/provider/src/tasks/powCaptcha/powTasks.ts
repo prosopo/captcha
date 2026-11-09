@@ -767,14 +767,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoError({
-				code: "INVALID_SOLUTION",
-				errorSite: "PROV-73",
-				context: {
-					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
-					challenge,
-				},
-			});
+			return notVerified("CAPTCHA.INVALID_SOLUTION", challengeRecord.sessionId);
 		}
 
 		if (challengeRecord.serverChecked)
@@ -1270,7 +1263,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		return {
 			verified: true,
-			...(score ? { score } : {}),
+			...(Number.isFinite(score) && { score }),
 			...(challengeRecord.sessionId && {
 				sessionId: challengeRecord.sessionId,
 			}),
