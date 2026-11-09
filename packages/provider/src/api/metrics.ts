@@ -102,6 +102,7 @@ interface ProviderMetrics {
 	frictionlessRoutedTotal: Counter<"decision">;
 	botScore: Histogram<never>;
 	detectorTriggeredTotal: Counter<"detector">;
+	detectorOutOfRangeIdsTotal: Counter<never>;
 	blockedRequestsTotal: Counter<"reason">;
 	domainValidationTotal: Counter<"result">;
 	spamEmailTotal: Counter<"result">;
@@ -169,6 +170,11 @@ const buildMetrics = (): ProviderMetrics => {
 		name: `${PREFIX}detector_triggered_total`,
 		help: "Count of times each bot detector was triggered",
 		labelNames: ["detector"] as const,
+		registers: [registry],
+	});
+	const detectorOutOfRangeIdsTotal = new Counter({
+		name: `${PREFIX}detector_out_of_range_ids_total`,
+		help: "Triggered-detector ids dropped for lying outside the detector catalogue",
 		registers: [registry],
 	});
 	const blockedRequestsTotal = new Counter({
@@ -259,6 +265,7 @@ const buildMetrics = (): ProviderMetrics => {
 		frictionlessRoutedTotal,
 		botScore,
 		detectorTriggeredTotal,
+		detectorOutOfRangeIdsTotal,
 		blockedRequestsTotal,
 		domainValidationTotal,
 		spamEmailTotal,
@@ -327,6 +334,11 @@ export const recordDetectorTriggered = (
 	for (const detector of detectors) {
 		m.detectorTriggeredTotal.inc({ detector: String(detector) });
 	}
+};
+
+export const recordOutOfRangeDetectorIds = (count: number): void => {
+	if (!metricsEnabled()) return;
+	getMetrics().detectorOutOfRangeIdsTotal.inc(count);
 };
 
 export const recordBlockedRequest = (reason: string): void => {
