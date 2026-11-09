@@ -32,7 +32,7 @@ export const providerValidateDataset = async (
 	}
 
 	const solutions = datasetRaw.captchas
-		.map((captcha): number => (captcha.solution ? 1 : 0))
+		.map((captcha): number => (captcha.solution?.length ? 1 : 0))
 		.reduce((partialSum, b) => partialSum + b, 0);
 
 	// Check enough solved captchas
