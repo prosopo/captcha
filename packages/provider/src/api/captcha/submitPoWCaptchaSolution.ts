@@ -478,6 +478,7 @@ export const buildEscalation = async (
 		...rawTlsSignalsFromRecord(perConnectionSignals),
 		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
 		puzzle: escalationPuzzleOverrides?.puzzle,
+		puzzleLevel: escalationPuzzleOverrides?.puzzleLevel,
 		// The escalated session is the same render as the origin, so it answers
 		// to the same session id the verify call will correlate against.
 		clientMetaData: originSession.clientMetaData,
