@@ -17,10 +17,11 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { removeDecisionMachineRoute } from "@prosopo/api-route/contracts";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
-	RemoveDecisionMachineBody,
+	type RemoveDecisionMachineBody,
 	RemoveDecisionMachineResponse,
 	type RemoveDecisionMachineResponseType,
 } from "@prosopo/types";
@@ -77,7 +78,7 @@ class ApiRemoveDecisionMachineEndpoint
 	}
 
 	public getRequestArgsSchema(): RemoveDecisionMachineBodyType {
-		return RemoveDecisionMachineBody;
+		return removeDecisionMachineRoute.requestSchema;
 	}
 }
 

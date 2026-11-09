@@ -17,11 +17,12 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { replaceDetectorPoolRoute } from "@prosopo/api-route/contracts";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
+import type {
 	ReplaceDetectorPoolBody,
-	type ReplaceDetectorPoolData,
+	ReplaceDetectorPoolData,
 } from "@prosopo/types";
 import type { z } from "zod";
 import {
@@ -77,7 +78,7 @@ class ApiReplaceDetectorPoolEndpoint
 	}
 
 	public getRequestArgsSchema(): ReplaceDetectorPoolBodyType {
-		return ReplaceDetectorPoolBody;
+		return replaceDetectorPoolRoute.requestSchema;
 	}
 }
 

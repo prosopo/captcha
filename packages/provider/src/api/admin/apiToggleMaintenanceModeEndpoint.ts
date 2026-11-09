@@ -17,9 +17,10 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { toggleMaintenanceModeRoute } from "@prosopo/api-route/contracts";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
-	type MaintenanceModeData,
+import type {
+	MaintenanceModeData,
 	ToggleMaintenanceModeBody,
 } from "@prosopo/types";
 import type { z } from "zod";
@@ -154,7 +155,7 @@ class ApiToggleMaintenanceModeEndpoint
 	}
 
 	public getRequestArgsSchema(): ToggleMaintenanceModeBodyType {
-		return ToggleMaintenanceModeBody;
+		return toggleMaintenanceModeRoute.requestSchema;
 	}
 }
 

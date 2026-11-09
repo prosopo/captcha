@@ -17,11 +17,12 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { updateDecisionMachineRoute } from "@prosopo/api-route/contracts";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
+import type {
 	UpdateDecisionMachineBody,
-	type UpdateDecisionMachineData,
+	UpdateDecisionMachineData,
 } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
@@ -96,7 +97,7 @@ class ApiUpdateDecisionMachineEndpoint
 	}
 
 	public getRequestArgsSchema(): UpdateDecisionMachineBodyType {
-		return UpdateDecisionMachineBody;
+		return updateDecisionMachineRoute.requestSchema;
 	}
 }
 

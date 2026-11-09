@@ -17,9 +17,10 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { getSessionRoute } from "@prosopo/api-route/contracts";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { GetSessionBody, type GetSessionData } from "@prosopo/types";
+import type { GetSessionBody, GetSessionData } from "@prosopo/types";
 import type { z } from "zod";
 import type { Tasks } from "../../tasks/index.js";
 
@@ -87,7 +88,7 @@ class ApiGetSessionEndpoint
 	}
 
 	public getRequestArgsSchema(): GetSessionBodyType {
-		return GetSessionBody;
+		return getSessionRoute.requestSchema;
 	}
 }
 

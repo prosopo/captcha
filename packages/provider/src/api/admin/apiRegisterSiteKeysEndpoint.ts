@@ -17,8 +17,12 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { registerSiteKeysRoute } from "@prosopo/api-route/contracts";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { ClientSettingsSchema, RegisterSitekeysBody } from "@prosopo/types";
+import {
+	ClientSettingsSchema,
+	type RegisterSitekeysBody,
+} from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
@@ -62,7 +66,7 @@ class ApiRegisterSiteKeysEndpoint
 	}
 
 	public getRequestArgsSchema(): RegisterSitekeysBodyType {
-		return RegisterSitekeysBody;
+		return registerSiteKeysRoute.requestSchema;
 	}
 }
 

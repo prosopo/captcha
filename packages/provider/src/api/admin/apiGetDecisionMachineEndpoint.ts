@@ -17,10 +17,11 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { getDecisionMachineRoute } from "@prosopo/api-route/contracts";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
-	GetDecisionMachineBody,
+	type GetDecisionMachineBody,
 	GetDecisionMachineResponse,
 	type GetDecisionMachineResponseType,
 } from "@prosopo/types";
@@ -74,7 +75,7 @@ class ApiGetDecisionMachineEndpoint
 	}
 
 	public getRequestArgsSchema(): GetDecisionMachineBodyType {
-		return GetDecisionMachineBody;
+		return getDecisionMachineRoute.requestSchema;
 	}
 }
 

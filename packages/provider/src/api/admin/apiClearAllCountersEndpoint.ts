@@ -17,10 +17,11 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { clearAllCountersRoute } from "@prosopo/api-route/contracts";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
-	ClearAllCountersBody,
+	type ClearAllCountersBody,
 	ClearAllCountersResponse,
 	type ClearAllCountersResponseType,
 } from "@prosopo/types";
@@ -96,7 +97,7 @@ class ApiClearAllCountersEndpoint
 	}
 
 	public getRequestArgsSchema(): ClearAllCountersBodyType {
-		return ClearAllCountersBody;
+		return clearAllCountersRoute.requestSchema;
 	}
 }
 

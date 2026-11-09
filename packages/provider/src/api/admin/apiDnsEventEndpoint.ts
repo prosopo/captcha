@@ -17,12 +17,13 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { dnsEventRoute } from "@prosopo/api-route/contracts";
 import type { IIpInfoService } from "@prosopo/ipinfo";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type DnsEvent,
 	type DnsEventData,
-	DnsEventIngestBatchSchema,
+	type DnsEventIngestBatchSchema,
 	DnsEventSchema,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -137,7 +138,7 @@ class ApiDnsEventEndpoint
 	}
 
 	public getRequestArgsSchema(): DnsEventBatchSchemaType {
-		return DnsEventIngestBatchSchema;
+		return dnsEventRoute.requestSchema;
 	}
 
 	private async recomputeDnsAsymmetry(

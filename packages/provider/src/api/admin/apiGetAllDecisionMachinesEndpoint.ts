@@ -17,6 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
+import { getAllDecisionMachinesRoute } from "@prosopo/api-route/contracts";
 import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
@@ -24,7 +25,6 @@ import {
 	GetAllDecisionMachinesResponse,
 	type GetAllDecisionMachinesResponseType,
 } from "@prosopo/types";
-import { object } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
 
 type GetAllDecisionMachinesBodyType = typeof GetAllDecisionMachinesBody;
@@ -84,7 +84,7 @@ class ApiGetAllDecisionMachinesEndpoint
 	}
 
 	public getRequestArgsSchema(): GetAllDecisionMachinesBodyType {
-		return object({});
+		return getAllDecisionMachinesRoute.requestSchema;
 	}
 }
 
