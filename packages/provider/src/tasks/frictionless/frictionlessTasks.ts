@@ -395,16 +395,26 @@ export class FrictionlessManager extends CaptchaManager {
 	 * to solve, no bot score to compute and no routing to run. Consumed only by
 	 * `/client/authenticated/verify`.
 	 */
-	async createAuthenticatedSession(
-		token: string,
-		ipAddress: CompositeIpAddress,
-		webBotAuthAgent: string | undefined,
-		siteKey: string,
-		userSitekeyIpHash?: string,
-		headers?: RequestHeaders,
-		ipInfo?: IPInfoResponse,
-		clientSessionId?: string,
-	): Promise<Session> {
+	async createAuthenticatedSession({
+		token,
+		ipAddress,
+		webBotAuthAgent,
+		siteKey,
+		userSitekeyIpHash,
+		headers,
+		ipInfo,
+		clientSessionId,
+	}: {
+		token: string;
+		ipAddress: CompositeIpAddress;
+		siteKey: string;
+		/** Unset when the allow rule matched on something other than a verified signer. */
+		webBotAuthAgent?: string;
+		userSitekeyIpHash?: string;
+		headers?: RequestHeaders;
+		ipInfo?: IPInfoResponse;
+		clientSessionId?: string;
+	}): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),

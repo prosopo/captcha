@@ -90,12 +90,12 @@ describe("authenticated session verify is single-use under concurrency", () => {
 	}, 60_000);
 
 	it(`verifies exactly one of ${CONCURRENCY} simultaneous verifies of one token`, async () => {
-		const session = await manager.createAuthenticatedSession(
-			"token",
-			getCompositeIpAddress(SESSION_IP),
-			"agent.example",
-			"siteKey",
-		);
+		const session = await manager.createAuthenticatedSession({
+			token: "token",
+			ipAddress: getCompositeIpAddress(SESSION_IP),
+			webBotAuthAgent: "agent.example",
+			siteKey: "siteKey",
+		});
 
 		const results: { verified: boolean; status: string }[] = await Promise.all(
 			Array.from({ length: CONCURRENCY }, () =>
@@ -120,12 +120,12 @@ describe("authenticated session verify is single-use under concurrency", () => {
 	});
 
 	it("leaves the token redeemable after a rejected verify", async () => {
-		const session = await manager.createAuthenticatedSession(
-			"token-2",
-			getCompositeIpAddress(SESSION_IP),
-			"agent.example",
-			"siteKey",
-		);
+		const session = await manager.createAuthenticatedSession({
+			token: "token-2",
+			ipAddress: getCompositeIpAddress(SESSION_IP),
+			webBotAuthAgent: "agent.example",
+			siteKey: "siteKey",
+		});
 
 		const wrongIp = await manager.verifyAuthenticatedSession(
 			session.sessionId,

@@ -759,22 +759,23 @@ export default (
 						);
 				if (!allowingPolicy) return null;
 				const authenticatedSession =
-					await tasks.frictionlessManager.createAuthenticatedSession(
-						sessionToken,
+					await tasks.frictionlessManager.createAuthenticatedSession({
+						token: sessionToken,
 						ipAddress,
 						// Undefined when the Allow was matched by IP / JA4 / UA
 						// instead of webBotAuthAgent. The session field stays
 						// unset in that case so verify-side observability
 						// distinguishes "verified signer" from "trusted IP".
-						verifiedSignerUrl,
-						dapp,
+						webBotAuthAgent: verifiedSignerUrl,
+						siteKey: dapp,
 						userSitekeyIpHash,
-						flatHeaders,
-						req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-							? req.ipInfo
-							: undefined,
+						headers: flatHeaders,
+						ipInfo:
+							req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+								? req.ipInfo
+								: undefined,
 						clientSessionId,
-					);
+					});
 				req.logger.info(() => ({
 					msg: "Frictionless decision",
 					data: {
