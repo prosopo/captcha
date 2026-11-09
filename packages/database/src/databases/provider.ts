@@ -1619,6 +1619,15 @@ export class ProviderDatabase
 		}
 	}
 
+	async claimPuzzleCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.claimInteractiveCaptchaSubmission(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+		);
+	}
+
 	async claimIconOrderCaptchaSubmission(
 		challenge: PoWChallengeId,
 	): Promise<boolean> {
