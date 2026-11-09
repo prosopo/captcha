@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoError } from "@prosopo/common";
 import type { IIpInfoService } from "@prosopo/ipinfo";
 import {
 	CaptchaStatus,
@@ -987,7 +986,7 @@ describe("PuzzleCaptchaManager", () => {
 			expect(result.verified).toBe(false);
 		});
 
-		it("throws when the stored result is not approved", async () => {
+		it("returns verified:false when the stored result is not approved", async () => {
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
 				asPuzzleRecord({
 					challenge,
@@ -997,17 +996,23 @@ describe("PuzzleCaptchaManager", () => {
 						reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 					},
 					serverChecked: false,
+					sessionId: "unapproved-session",
 				}),
 			);
 
-			await expect(
-				puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+			const result =
+				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
 					dappAccount,
 					challenge,
 					1000,
 					mockEnv,
-				),
-			).rejects.toBeInstanceOf(ProsopoError);
+				);
+
+			expect(result).toEqual({
+				verified: false,
+				sessionId: "unapproved-session",
+			});
+			expect(db.markPuzzleCaptchaRecordChecked).not.toHaveBeenCalled();
 		});
 
 		it("returns verified:false when the solution has already been server-checked", async () => {
@@ -1117,6 +1122,51 @@ describe("PuzzleCaptchaManager", () => {
 			expect(result.verified).toBe(true);
 			// Records that the solution has been server-checked, gating reuse.
 			expect(db.markPuzzleCaptchaRecordChecked).toHaveBeenCalledWith(challenge);
+		});
+
+		it("returns a score of exactly 0 rather than dropping it", async () => {
+			const sessionId = "zero-score-session";
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					sessionId,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				captchaType: CaptchaType.puzzle,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "h".repeat(16),
+			};
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({ decision: "allow" } as const),
+			);
+
+			const result =
+				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+				);
+
+			expect(result).toEqual({ verified: true, score: 0, sessionId });
 		});
 
 		it("returns verified:false when a concurrent verify already claimed the record", async () => {
