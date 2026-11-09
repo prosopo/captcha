@@ -14,6 +14,12 @@
 	],
 	"references": [
 		{
+			"path": "../../packages/api-route"
+		},
+		{
+			"path": "../../packages/api-express-router"
+		},
+		{
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{

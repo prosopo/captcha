@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import type { IncomingHttpHeaders } from "node:http";
+import { registerApiRoute } from "@prosopo/api-express-router";
+import { verifyImageCaptchaSolutionRoute } from "@prosopo/api-route/contracts";
 import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import { getJA4 } from "@prosopo/provider";
 import {
-	ClientApiPaths,
 	type ProcaptchaOutput,
 	type ProcaptchaToken,
 	VerifySolutionBody,
@@ -26,6 +27,7 @@ import {
 import type { VerifySolutionBodyTypeOutput } from "@prosopo/types";
 import express, { type RequestHandler, type Router } from "express";
 import { rateLimit } from "express-rate-limit";
+import { testRoute } from "./contracts.js";
 import { JA4Database, type JA4Store } from "./db.js";
 import { verifyProcaptchaOutput } from "./verify.js";
 
@@ -197,14 +199,16 @@ export const toRequestHandler = (
 export function prosopoRouter(deps: RouterDeps = defaultRouterDeps()): Router {
 	const router = express.Router();
 
-	router.post(
-		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+	registerApiRoute(
+		router,
+		verifyImageCaptchaSolutionRoute,
 		verifyRateLimit(),
 		toRequestHandler(createVerifyHandler(deps)),
 	);
 
-	router.get(
-		"/test",
+	registerApiRoute(
+		router,
+		testRoute,
 		verifyRateLimit(),
 		toRequestHandler(createTestHandler(deps)),
 	);

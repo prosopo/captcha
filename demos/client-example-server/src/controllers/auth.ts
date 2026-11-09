@@ -24,7 +24,6 @@ import {
 	ApiParams,
 	CaptchaType,
 	type KeyringPair,
-	ProcaptchaResponse,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
 } from "@prosopo/types";
@@ -32,18 +31,10 @@ import { at } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import type { Connection } from "mongoose";
-import { z } from "zod";
 import type { UserInterface } from "../models/user.js";
+import { SubscribeBodySpec } from "../routes/contracts.js";
 
 const logger = getLogger("info", "client-example-server:auth");
-
-const SubscribeBodySpec = ProcaptchaResponse.merge(
-	z.object({
-		email: z.string().email(),
-		password: z.string(),
-		siteKey: z.string(),
-	}),
-);
 
 function hashPassword(password: string): string {
 	return u8aToHex(blake2b(utf8ToBytes(password)));

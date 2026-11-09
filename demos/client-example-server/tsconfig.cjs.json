@@ -8,6 +8,12 @@
 	"include": ["src", "src/**/*.json"],
 	"references": [
 		{
+			"path": "../../packages/api-route/tsconfig.cjs.json"
+		},
+		{
+			"path": "../../packages/api-express-router/tsconfig.cjs.json"
+		},
+		{
 			"path": "../../dev/config/tsconfig.cjs.json"
 		},
 		{

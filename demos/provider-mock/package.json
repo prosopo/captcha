@@ -32,18 +32,20 @@
 	},
 	"dependencies": {
 		"@prosopo/api-express-router": "workspace:*",
+		"@prosopo/api-route": "workspace:*",
 		"@prosopo/common": "workspace:*",
-		"@prosopo/logger": "workspace:*",
 		"@prosopo/database": "workspace:*",
 		"@prosopo/dotenv": "workspace:*",
 		"@prosopo/locale": "workspace:*",
+		"@prosopo/logger": "workspace:*",
 		"@prosopo/provider": "workspace:*",
 		"@prosopo/types": "workspace:*",
 		"@prosopo/types-database": "workspace:*",
 		"cors": "2.8.6",
 		"express": "4.22.2",
 		"express-rate-limit": "7.4.0",
-		"mongoose": "9.10.3"
+		"mongoose": "9.10.3",
+		"zod": "3.23.8"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",

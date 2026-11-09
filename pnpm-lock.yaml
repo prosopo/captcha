@@ -140,6 +140,12 @@ importers:
       '@polkadot/util-crypto':
         specifier: 14.0.3
         version: 14.0.3(@polkadot/util@14.0.3)
+      '@prosopo/api-express-router':
+        specifier: workspace:*
+        version: link:../../packages/api-express-router
+      '@prosopo/api-route':
+        specifier: workspace:*
+        version: link:../../packages/api-route
       '@prosopo/common':
         specifier: workspace:*
         version: link:../../packages/common
@@ -313,6 +319,9 @@ importers:
       '@prosopo/api-express-router':
         specifier: workspace:*
         version: link:../../packages/api-express-router
+      '@prosopo/api-route':
+        specifier: workspace:*
+        version: link:../../packages/api-route
       '@prosopo/common':
         specifier: workspace:*
         version: link:../../packages/common
@@ -349,6 +358,9 @@ importers:
       mongoose:
         specifier: 9.10.3
         version: 9.10.3
+      zod:
+        specifier: 3.23.8
+        version: 3.23.8
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*

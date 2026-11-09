@@ -1,5 +1,3 @@
-import type { ProsopoServerConfigOutput } from "@prosopo/types";
-import express from "express";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +11,18 @@ import express from "express";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { registerApiRoute } from "@prosopo/api-express-router";
+import type { ProsopoServerConfigOutput } from "@prosopo/types";
+import express from "express";
 import type { Connection } from "mongoose";
 import { isAuth, login, signup } from "../controllers/auth.js";
+import {
+	healthRoute,
+	loginRoute,
+	privateRoute,
+	publicRoute,
+	signupRoute,
+} from "./contracts.js";
 
 function getRoutes(
 	mongoose: Connection,
@@ -27,23 +35,25 @@ function getRoutes(
 	// so every request ran the first call's bound config.
 	const router = express.Router();
 
-	router.post(
-		"/login",
+	registerApiRoute(
+		router,
+		loginRoute,
 		login.bind(null, mongoose, config, verifyEndpoint, verifyType),
 	);
 
-	router.post(
-		"/signup",
+	registerApiRoute(
+		router,
+		signupRoute,
 		signup.bind(null, mongoose, config, verifyEndpoint, verifyType),
 	);
 
-	router.get("/private", isAuth);
+	registerApiRoute(router, privateRoute, isAuth);
 
-	router.get("/public", (req, res) => {
+	registerApiRoute(router, publicRoute, (req, res) => {
 		res.status(200).json({ message: "here is your public resource" });
 	});
 
-	router.get("/health", (req, res) => {
+	registerApiRoute(router, healthRoute, (req, res) => {
 		res.status(200).json({ status: "ok" });
 	});
 
