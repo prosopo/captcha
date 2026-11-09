@@ -166,17 +166,67 @@ export const PROVIDER_LIST_TTL_MS = 5 * 60 * 1000;
 // able to turn every request into a fresh fetch of the list.
 export const PROVIDER_LIST_MISS_RELOAD_MS = 10 * 1000;
 
+// How long a failed refresh keeps serving the last good list before the next
+// refresh is attempted.
+export const PROVIDER_LIST_FAILED_REFRESH_RETRY_MS = 30 * 1000;
+
 interface ProviderListEntry {
 	providers: Promise<HardcodedProvider[]>;
 	loadedAt: number;
+	lastGood?: HardcodedProvider[];
+	refreshing: boolean;
 }
 
-// Cached, in-flight provider-list load per env + ipMode. The list rarely
-// changes, so a single fetch is shared across callers rather than re-fetching
-// the provider-list JSON on every verify decision. Keyed the same way as the
-// pin cache: the `ipv4`/`ipv6` sections carry different urls to the dual-stack
-// default, so they cannot share an entry.
+// Cached provider list per env + ipMode. The list rarely changes, so a single
+// fetch is shared across callers rather than re-fetching the provider-list JSON
+// on every verify decision. Keyed the same way as the pin cache: the
+// `ipv4`/`ipv6` sections carry different urls to the dual-stack default, so
+// they cannot share an entry.
+//
+// Once a list has loaded, callers are never made to wait on the network again:
+// an expired list is refreshed in the background while the last good list
+// keeps being served, and a failed refresh keeps serving it too. Only the very
+// first load can be awaited, and only that load's failure reaches the caller.
 const providerListCache: Map<CacheKey, ProviderListEntry> = new Map();
+
+const isFresh = (entry: ProviderListEntry, maxAgeMs: number): boolean =>
+	Date.now() - entry.loadedAt < maxAgeMs;
+
+const loadProviders = (
+	key: CacheKey,
+	env: EnvironmentTypes,
+	ipMode: IpMode | undefined,
+	lastGood: HardcodedProvider[] | undefined,
+): Promise<HardcodedProvider[]> => {
+	const entry: ProviderListEntry = {
+		loadedAt: Date.now(),
+		lastGood,
+		refreshing: true,
+		providers: loadBalancer(env, ipMode).then(
+			(providers) => {
+				entry.lastGood = providers;
+				entry.refreshing = false;
+				return providers;
+			},
+			(err: unknown) => {
+				entry.refreshing = false;
+				if (lastGood) {
+					entry.loadedAt =
+						Date.now() -
+						PROVIDER_LIST_TTL_MS +
+						PROVIDER_LIST_FAILED_REFRESH_RETRY_MS;
+					return lastGood;
+				}
+				if (providerListCache.get(key) === entry) {
+					providerListCache.delete(key);
+				}
+				throw err;
+			},
+		),
+	};
+	providerListCache.set(key, entry);
+	return entry.providers;
+};
 
 /**
  * Returns the full (cached) list of active providers for an environment.
@@ -189,21 +239,16 @@ export const getProviders = async (
 ): Promise<HardcodedProvider[]> => {
 	const key = cacheKey(env, ipMode);
 	const cached = providerListCache.get(key);
-	if (cached && Date.now() - cached.loadedAt < PROVIDER_LIST_TTL_MS) {
+	if (!cached) {
+		return loadProviders(key, env, ipMode, undefined);
+	}
+	if (!cached.lastGood) {
 		return cached.providers;
 	}
-
-	const providers = loadBalancer(env, ipMode).catch((err) => {
-		// Don't cache failures — a transient fetch error shouldn't poison the
-		// cache for the lifetime of the process. Only evict this entry: a
-		// later load may already have replaced it.
-		if (providerListCache.get(key)?.providers === providers) {
-			providerListCache.delete(key);
-		}
-		throw err;
-	});
-	providerListCache.set(key, { providers, loadedAt: Date.now() });
-	return providers;
+	if (!cached.refreshing && !isFresh(cached, PROVIDER_LIST_TTL_MS)) {
+		void loadProviders(key, env, ipMode, cached.lastGood);
+	}
+	return cached.lastGood;
 };
 
 /**
@@ -231,12 +276,11 @@ export const findProvider = async (
 
 	const key = cacheKey(env, ipMode);
 	const cached = providerListCache.get(key);
-	if (cached && Date.now() - cached.loadedAt < PROVIDER_LIST_MISS_RELOAD_MS) {
+	if (cached && isFresh(cached, PROVIDER_LIST_MISS_RELOAD_MS)) {
 		return undefined;
 	}
-	providerListCache.delete(key);
 
-	const reloaded = await getProviders(env, ipMode);
+	const reloaded = await loadProviders(key, env, ipMode, cached?.lastGood);
 	return reloaded.find((p) => p.url === providerUrl);
 };
 
