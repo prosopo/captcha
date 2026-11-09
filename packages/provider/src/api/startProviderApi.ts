@@ -20,6 +20,7 @@ import {
 	apiExpressRouterFactory,
 	authMiddleware,
 	createApiExpressDefaultEndpointAdapter,
+	handleErrors,
 	requestLoggerMiddleware,
 } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/env";
@@ -468,6 +469,10 @@ export async function startProviderApi(
 	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
+
+	// Routers answer their own errors, but app-level middleware such as the
+	// body parsers above pass theirs past every router to here.
+	apiApp.use(handleErrors);
 
 	// Check if certificates exist and create HTTPS server if available
 	const tls = tlsFiles();
