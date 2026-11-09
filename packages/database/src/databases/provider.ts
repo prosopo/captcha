@@ -358,7 +358,7 @@ export class ProviderDatabase
 			throw new ProsopoError({
 				code: "DB_UNAVAILABLE",
 				errorSite: "DBSE-7",
-				message: "Redis access rules connection undefined",
+				message: "Redis connection undefined",
 			});
 		}
 
