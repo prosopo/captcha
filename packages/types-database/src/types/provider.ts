@@ -1828,6 +1828,37 @@ export interface IProviderDatabase extends IDatabase {
 		asOfTimestamp?: Date,
 	): Promise<void>;
 
+	/**
+	 * Keyset-paginated sweep of pending interactive captcha records. `since`
+	 * bounds the first page by insert time. See
+	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 */
+	getUnstoredPuzzleCaptchaRecords(
+		limit?: number,
+		afterId?: unknown,
+		since?: Date,
+	): Promise<PuzzleCaptchaRecord[]>;
+
+	/** Same contract as {@link getUnstoredPuzzleCaptchaRecords}. */
+	getUnstoredIconOrderCaptchaRecords(
+		limit?: number,
+		afterId?: unknown,
+		since?: Date,
+	): Promise<IconOrderCaptchaRecord[]>;
+
+	/** Same contract as {@link getUnstoredPuzzleCaptchaRecords}. */
+	getUnstoredAudioCaptchaRecords(
+		limit?: number,
+		afterId?: unknown,
+		since?: Date,
+	): Promise<AudioCaptchaRecord[]>;
+
+	markInteractiveCaptchaRecordsStored(
+		captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio,
+		challenges: string[],
+		asOfTimestamp?: Date,
+	): Promise<void>;
+
 	getUserAccessRulesStorage(): AccessRulesStorage;
 
 	upsertDecisionMachineArtifact(
