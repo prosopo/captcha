@@ -19,6 +19,7 @@ import {
 	type ModeEnum,
 	type RequestHeaders,
 	type ScoreComponents,
+	type SolveDeviceSignals,
 	type TcpProbeRecord,
 	clampImageRounds,
 	isConcreteCaptchaType,
@@ -65,6 +66,7 @@ export type ShortCircuitInput = {
 	// Carried onto the session so a puzzle retry on a site pinned to a captcha
 	// type is judged on the failed solve's device, as it is everywhere else.
 	retry?: ResolvedRetry;
+	solveDevice?: SolveDeviceSignals;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -109,6 +111,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		...(bundleId && { bundleId }),
 		...input.refresh,
 		...input.retry,
+		...(input.solveDevice && { solveDevice: input.solveDevice }),
 		...(input.tcpToChelloUs !== undefined && {
 			tcpToChelloUs: input.tcpToChelloUs,
 		}),

@@ -20,6 +20,7 @@
  */
 
 import { widgetLanguageHeaders } from "@prosopo/locale";
+import type { BehavioralDataSource } from "@prosopo/procaptcha-common";
 import type { AssignDetectorBundleResponse } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -52,6 +53,10 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 		],
 	),
 	stopPageBehaviourCapture: vi.fn(),
+	encryptBehavioralDataForSubmit: vi.fn(
+		async (_source?: BehavioralDataSource): Promise<string | undefined> =>
+			undefined,
+	),
 	widgetRequestHeaders: (
 		siteLanguage: string | undefined,
 	): Record<string, string> => widgetLanguageHeaders(siteLanguage),

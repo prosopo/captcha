@@ -567,6 +567,7 @@ describe("getFrictionlessCaptcha", () => {
 			undefined, // widgetSlot
 			undefined, // retryOf
 			"pbk_example",
+			"encrypted-behaviour",
 		);
 		expect(body()).toMatchObject({
 			[ApiParams.mode]: ModeEnum.invisible,
@@ -575,6 +576,7 @@ describe("getFrictionlessCaptcha", () => {
 			[ApiParams.iframeUrl]: "https://iframe.example",
 			[ApiParams.clientSessionId]: "bumblebee-abc",
 			[ApiParams.bypassKey]: "pbk_example",
+			[ApiParams.behavioralData]: "encrypted-behaviour",
 		});
 	});
 

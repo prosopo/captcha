@@ -69,6 +69,7 @@ type MockTasks = {
 		updateScore: MockFn;
 		setMatchedRule: MockFn;
 		resolveBundleByDetectorSession: MockFn;
+		decryptBehavioralData: MockFn;
 		updateSessionRecordWithCache: MockFn;
 	};
 	db: {
@@ -241,6 +242,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					updateScore: vi.fn(),
 					setMatchedRule: vi.fn(),
 					resolveBundleByDetectorSession: vi.fn().mockResolvedValue(undefined),
+					decryptBehavioralData: vi.fn().mockResolvedValue(null),
 					updateSessionRecordWithCache: vi.fn().mockResolvedValue(undefined),
 				},
 				db: {
@@ -334,6 +336,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			updateScore: vi.fn(),
 			setMatchedRule: vi.fn(),
 			resolveBundleByDetectorSession: vi.fn().mockResolvedValue(undefined),
+			decryptBehavioralData: vi.fn().mockResolvedValue(null),
 			updateSessionRecordWithCache: vi.fn().mockResolvedValue(undefined),
 		},
 		db: {
@@ -750,6 +753,76 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		).toHaveBeenCalledWith(
 			expect.not.objectContaining({ refreshOf: expect.anything() }),
 		);
+	});
+
+	describe("behavioural data", () => {
+		const send = async (behavioralData?: string) => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteBd",
+				settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+				payload(false),
+			);
+			const { req, res, next } = buildReqRes({
+				token: "tBd",
+				headHash: "hhBd",
+				dapp: "siteBd",
+				user: "u",
+				detectorSessionId: "det-bd",
+				...(behavioralData !== undefined && { behavioralData }),
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			return {
+				next,
+				params:
+					tasksInstance.frictionlessManager.setSessionParams.mock.calls[0]?.[0],
+			};
+		};
+
+		it("puts the device readings on the session", async () => {
+			tasksInstance.frictionlessManager.decryptBehavioralData.mockResolvedValue(
+				{
+					collector1: [],
+					collector2: [{ x: 1, y: 1, timestamp: 1 }],
+					collector3: [],
+					deviceCapability: "mobile",
+					timestamp: 0,
+				},
+			);
+
+			const { params } = await send("encrypted");
+
+			expect(
+				tasksInstance.frictionlessManager.decryptBehavioralData,
+			).toHaveBeenCalledWith("encrypted", undefined);
+			expect(params?.solveDevice).toEqual({
+				deviceCapability: "mobile",
+				touchEventCount: 1,
+			});
+		});
+
+		it("serves the request without readings when the data cannot be read", async () => {
+			tasksInstance.frictionlessManager.decryptBehavioralData.mockRejectedValue(
+				new Error("boom"),
+			);
+
+			const { next, params } = await send("encrypted");
+
+			expect(next).not.toHaveBeenCalled();
+			expect(params).toBeDefined();
+			expect(params).not.toHaveProperty("solveDevice");
+		});
+
+		it("puts nothing on the session when none was sent", async () => {
+			const { params } = await send();
+
+			expect(
+				tasksInstance.frictionlessManager.decryptBehavioralData,
+			).not.toHaveBeenCalled();
+			expect(params).not.toHaveProperty("solveDevice");
+		});
 	});
 
 	describe("proof of fingerprint", () => {

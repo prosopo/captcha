@@ -751,6 +751,11 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.headHash]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.mode]: nativeEnum(ModeEnum).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	// The behavioural readings gathered so far, in the solve-time format, so
+	// the first challenge can be sized for the device the user is on.
+	[ApiParams.behavioralData]: boundedString(
+		INPUT_LIMITS.BEHAVIOURAL_DATA,
+	).optional(),
 	// Identifies the provider-assigned pool bundle the detector ran from; the
 	// provider resolves the exact keypair/inner-config for decryption from it.
 	[ApiParams.detectorSessionId]: boundedString(INPUT_LIMITS.ID).optional(),

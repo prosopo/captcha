@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { widgetLanguageHeaders } from "@prosopo/locale";
+import type { BehavioralDataSource } from "@prosopo/procaptcha-common";
 import {
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -58,6 +59,10 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 		],
 	),
 	stopPageBehaviourCapture: vi.fn(),
+	encryptBehavioralDataForSubmit: vi.fn(
+		async (_source?: BehavioralDataSource): Promise<string | undefined> =>
+			undefined,
+	),
 	widgetRequestHeaders: (
 		siteLanguage: string | undefined,
 	): Record<string, string> => widgetLanguageHeaders(siteLanguage),
