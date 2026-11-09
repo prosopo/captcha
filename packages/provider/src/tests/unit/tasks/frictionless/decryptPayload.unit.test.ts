@@ -96,13 +96,12 @@ describe("decryptPayload", () => {
 			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
 		} as unknown as RedisWriteQueue;
 
-		const frictionlessTaskManager = new FrictionlessManager(
+		const frictionlessTaskManager = new FrictionlessManager({
 			db,
 			pair,
 			config,
-			undefined,
 			writeQueue,
-		);
+		});
 
 		const result = await frictionlessTaskManager.decryptPayload(
 			"payload",
@@ -159,13 +158,12 @@ describe("decryptPayload", () => {
 			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
 		} as unknown as RedisWriteQueue;
 
-		const frictionlessTaskManager = new FrictionlessManager(
+		const frictionlessTaskManager = new FrictionlessManager({
 			db,
 			pair,
 			config,
-			undefined,
 			writeQueue,
-		);
+		});
 
 		const result = await frictionlessTaskManager.decryptPayload(
 			"payload",
@@ -230,7 +228,11 @@ describe("decryptPayload", () => {
 		).FrictionlessManager;
 
 		// No writeQueue / no detectorSessionId ⇒ no bundle ⇒ no decrypt attempt.
-		const frictionlessTaskManager = new FrictionlessManager(db, pair, config);
+		const frictionlessTaskManager = new FrictionlessManager({
+			db,
+			pair,
+			config,
+		});
 
 		const result = await frictionlessTaskManager.decryptPayload(
 			"payload",

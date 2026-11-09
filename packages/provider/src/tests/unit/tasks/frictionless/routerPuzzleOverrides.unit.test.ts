@@ -90,7 +90,7 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 			lRules: { en: 1 },
 		} as unknown as ProsopoConfigOutput;
 
-		manager = new FrictionlessManager(db, pair, config);
+		manager = new FrictionlessManager({ db, pair, config });
 		manager.setSessionParams({
 			token: "tok",
 			score: 0.9,

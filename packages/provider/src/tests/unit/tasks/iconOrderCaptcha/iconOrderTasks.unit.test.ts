@@ -113,7 +113,7 @@ describe("IconOrderCaptchaManager", () => {
 		} as unknown as KeyringPair;
 
 		mockEnv = { config: {} } as unknown as ProviderEnvironment;
-		manager = new IconOrderCaptchaManager(db, pair, mockEnv.config);
+		manager = new IconOrderCaptchaManager({ db, pair, config: mockEnv.config });
 
 		vi.clearAllMocks();
 		vi.mocked(u8aToHex).mockReturnValue("0xsigned");

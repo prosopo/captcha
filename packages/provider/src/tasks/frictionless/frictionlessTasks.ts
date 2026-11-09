@@ -17,7 +17,6 @@ import {
 	resolveMaxEscalationLevel,
 	severityToPuzzleDifficulty,
 } from "@prosopo/captcha-severity";
-import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
@@ -30,11 +29,9 @@ import {
 	type IFrictionlessTypes,
 	type IPInfoResponse,
 	type ImageRoundsBounds,
-	type KeyringPair,
 	NO_MEASUREMENT_REASONS,
 	OPEN_DETECTOR_FORMAT,
 	type OpenDetectorFormat,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
 	type RoutingMachineOutput,
@@ -46,7 +43,6 @@ import {
 	isConcreteCaptchaType,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { dnsBeaconUrls } from "../../api/dnsEventUrl.js";
@@ -59,7 +55,7 @@ import {
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { offersAudioAlternative } from "../audioAlternative.js";
-import { CaptchaManager } from "../captchaManager.js";
+import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
 import {
 	coerceToEnabledCaptchaType,
 	switchTypeAfterRefreshes,
@@ -120,16 +116,16 @@ export class FrictionlessManager extends CaptchaManager {
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: import("@prosopo/database").RedisWriteQueue | null,
-		decisionMachineRunner?: DecisionMachineRunner,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger, writeQueue);
+	constructor({
+		decisionMachineRunner,
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & {
+		decisionMachineRunner?: DecisionMachineRunner;
+		usageCounters?: UsageCounters | null;
+	}) {
+		super(deps);
+		const { db, config } = deps;
 		this.config = config;
 		this.decisionMachineRunner =
 			decisionMachineRunner ?? new DecisionMachineRunner(db);

@@ -215,7 +215,12 @@ describe("ImgCaptchaManager", () => {
 			unsolved: { count: 4 },
 		};
 
-		imgCaptchaManager = new ImgCaptchaManager(db, pair, captchaConfig, logger);
+		imgCaptchaManager = new ImgCaptchaManager({
+			db,
+			pair,
+			config: captchaConfig,
+			logger,
+		});
 
 		mockEnv = {
 			config: {

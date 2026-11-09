@@ -14,13 +14,11 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
-import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
-import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type BehavioralDataPacked,
@@ -37,10 +35,8 @@ import {
 	type IPAddress,
 	type IPInfoResponse,
 	type ImageVerificationResponse,
-	type KeyringPair,
 	type PendingImageCaptchaRequest,
 	type ProsopoCaptchaCountConfigSchemaOutput,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
 	type Session,
@@ -48,7 +44,6 @@ import {
 	type UserCommitment,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
 import { describeMatchedRule } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
@@ -77,6 +72,7 @@ import {
 import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import {
 	CaptchaManager,
+	type CaptchaManagerDeps,
 	type VerificationResponseArgs,
 } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
@@ -116,15 +112,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 	private decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: RedisWriteQueue | null,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger, writeQueue);
+	constructor({
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & { usageCounters?: UsageCounters | null }) {
+		super(deps);
+		const { db, config } = deps;
 		this.config = config;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;

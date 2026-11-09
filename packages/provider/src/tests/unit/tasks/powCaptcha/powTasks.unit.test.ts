@@ -173,7 +173,11 @@ describe("PowCaptchaManager", () => {
 			},
 		} as unknown as ProviderEnvironment;
 
-		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
+		powCaptchaManager = new PowCaptchaManager({
+			db,
+			pair,
+			config: mockEnv.config,
+		});
 
 		vi.clearAllMocks();
 	});

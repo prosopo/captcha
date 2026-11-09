@@ -119,13 +119,13 @@ describe("CaptchaManager", () => {
 			getDetectorBundle: vi.fn().mockResolvedValue(null),
 		} as unknown as RedisWriteQueue;
 
-		captchaManager = new CaptchaManager(
+		captchaManager = new CaptchaManager({
 			db,
 			pair,
-			mockEnv.config,
+			config: mockEnv.config,
 			logger,
-			mockWriteQueue,
-		);
+			writeQueue: mockWriteQueue,
+		});
 
 		vi.clearAllMocks();
 	});
@@ -1199,13 +1199,13 @@ describe("CaptchaManager", () => {
 		});
 
 		it("should not throw when writeQueue is null and session is consumed", async () => {
-			const managerWithoutRedis = new CaptchaManager(
+			const managerWithoutRedis = new CaptchaManager({
 				db,
 				pair,
-				mockEnv.config,
+				config: mockEnv.config,
 				logger,
-				null,
-			);
+				writeQueue: null,
+			});
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({

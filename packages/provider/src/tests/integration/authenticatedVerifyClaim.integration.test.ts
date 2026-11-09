@@ -80,7 +80,7 @@ describe("authenticated session verify is single-use under concurrency", () => {
 			account: { secret: SECRET },
 			authAccount: { secret: SECRET },
 		});
-		manager = new FrictionlessManager(db, getPair(SECRET), config);
+		manager = new FrictionlessManager({ db, pair: getPair(SECRET), config });
 	}, 180_000);
 
 	afterAll(async () => {

@@ -14,9 +14,6 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
-import type { RedisWriteQueue } from "@prosopo/database";
-import type { Logger } from "@prosopo/logger";
-import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
 	CaptchaType,
 	DecisionMachineDecision,
@@ -45,10 +42,7 @@ import {
 	type Tier,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PoWCaptchaRecord,
-} from "@prosopo/types-database";
+import type { PoWCaptchaRecord } from "@prosopo/types-database";
 import { describeMatchedRule } from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
@@ -79,7 +73,7 @@ import {
 	deriveTrafficPolicies,
 	solveDeviceSignals,
 } from "../../utils/devicePlatform.js";
-import { CaptchaManager } from "../captchaManager.js";
+import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -152,16 +146,12 @@ export class PowCaptchaManager extends CaptchaManager {
 	private readonly usageCounters: UsageCounters | null;
 	private postPowContext?: PostPowRoutingContext;
 
-	constructor(
-		db: IProviderDatabase,
-
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: RedisWriteQueue | null,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger, writeQueue);
+	constructor({
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & { usageCounters?: UsageCounters | null }) {
+		super(deps);
+		const { db } = deps;
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;

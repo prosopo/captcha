@@ -112,7 +112,11 @@ describe("AudioCaptchaManager", () => {
 			config: {},
 		} as unknown as ProviderEnvironment;
 
-		audioCaptchaManager = new AudioCaptchaManager(db, pair, mockEnv.config);
+		audioCaptchaManager = new AudioCaptchaManager({
+			db,
+			pair,
+			config: mockEnv.config,
+		});
 
 		vi.clearAllMocks();
 		vi.mocked(db.claimAudioCaptchaSubmission).mockResolvedValue(true);

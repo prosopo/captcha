@@ -140,6 +140,14 @@ export interface VerificationResponseArgs {
 	sessionId?: string;
 }
 
+export type CaptchaManagerDeps = {
+	db: IProviderDatabase;
+	pair: KeyringPair;
+	config: ProsopoConfigOutput;
+	logger?: Logger;
+	writeQueue?: RedisWriteQueue | null;
+};
+
 export class CaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
@@ -147,13 +155,7 @@ export class CaptchaManager {
 	logger: Logger;
 	writeQueue: RedisWriteQueue | null;
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: RedisWriteQueue | null,
-	) {
+	constructor({ db, pair, config, logger, writeQueue }: CaptchaManagerDeps) {
 		this.pair = pair;
 		this.db = db;
 		this.config = config;
