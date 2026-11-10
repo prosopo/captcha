@@ -219,7 +219,7 @@ describe("redisRulesReader ranked-path benchmark", () => {
 				userScope: { ja4Hash: "warmup" },
 				userScopeMatch: FilterScopeMatch.Greedy,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		const samples: number[] = [];
@@ -233,7 +233,7 @@ describe("redisRulesReader ranked-path benchmark", () => {
 					userScope: scope,
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 			samples.push(performance.now() - start);
 		}
@@ -270,7 +270,7 @@ describe("redisRulesReader ranked-path benchmark", () => {
 				userScope: scope,
 				userScopeMatch: FilterScopeMatch.Greedy,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 		// Must return something for a fully-populated request.
 		expect(results.length).toBeGreaterThan(0);
@@ -298,7 +298,7 @@ describe("redisRulesReader ranked-path benchmark", () => {
 				userScope: scope,
 				userScopeMatch: FilterScopeMatch.Greedy,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		expect(ranked.length).toBeGreaterThan(0);
@@ -321,7 +321,7 @@ describe("redisRulesReader ranked-path benchmark", () => {
 				userScope: scope,
 				userScopeMatch: FilterScopeMatch.Greedy,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		if (results.length === 0) return;
