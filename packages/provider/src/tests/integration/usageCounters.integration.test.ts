@@ -137,12 +137,12 @@ describe("UsageCounters integration (live Redis)", () => {
 	});
 
 	it("incrManyAsync writes all increments", async () => {
-		const increments = buildAllWindowIncrements(
-			"served",
-			CaptchaType.pow,
-			IP,
-			USER,
-		);
+		const increments = buildAllWindowIncrements({
+			kind: "served",
+			captchaType: CaptchaType.pow,
+			ip: IP,
+			userAccount: USER,
+		});
 		counters.incrManyAsync(DAPP, increments);
 		// Allow Promise queue to flush
 		await new Promise((r) => setTimeout(r, 200));

@@ -74,7 +74,7 @@ describe("DetectorBundlePool", () => {
 		});
 
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 
 		expect(pool.size()).toBe(2);
 		expect(pool.get("bundle-0")).toEqual({
@@ -91,7 +91,7 @@ describe("DetectorBundlePool", () => {
 		writeBundle(dir, "ok", "JS", { privateKey: "PK", innerConfig: "C" });
 
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 
 		expect(pool.size()).toBe(1);
 		expect(pool.get("ok")).toBeDefined();
@@ -104,7 +104,7 @@ describe("DetectorBundlePool", () => {
 		writeBundle(dir, "good", "JS", { privateKey: "PK", innerConfig: "C" });
 
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 
 		expect(pool.size()).toBe(1);
 		expect(pool.get("good")).toBeDefined();
@@ -115,13 +115,13 @@ describe("DetectorBundlePool", () => {
 		writeBundle(dir, "b", "JS", { privateKey: "PK", innerConfig: "C" });
 
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 		expect(pool.size()).toBe(1);
 	});
 
 	it("yields an empty pool for a missing directory", () => {
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(join(dir, "does-not-exist"));
+		pool.loadFromDir({ dir: join(dir, "does-not-exist") });
 		expect(pool.size()).toBe(0);
 		expect(() => pool.at(0)).toThrow(/empty/);
 	});
@@ -134,7 +134,7 @@ describe("DetectorBundlePool", () => {
 			});
 		}
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 
 		const seen = new Set<string>();
 		for (let i = 0; i < 500; i++) {
@@ -150,7 +150,7 @@ describe("DetectorBundlePool", () => {
 	it("replace hot-swaps the pool", () => {
 		writeBundle(dir, "old", "JS", { privateKey: "PK", innerConfig: "C" });
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 		expect(pool.get("old")).toBeDefined();
 
 		pool.replace(
@@ -163,7 +163,7 @@ describe("DetectorBundlePool", () => {
 
 	it("initialises and exposes the global singleton", () => {
 		writeBundle(dir, "b", "JS", { privateKey: "PK", innerConfig: "C" });
-		const pool = initDetectorBundlePool(dir);
+		const pool = initDetectorBundlePool({ dir });
 		expect(getDetectorBundlePool()).toBe(pool);
 		expect(getDetectorBundlePool()?.size()).toBe(1);
 	});
@@ -179,7 +179,7 @@ describe("DetectorBundlePool", () => {
 			release: "3.6.10",
 		});
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir, {}, "3.6.64");
+		pool.loadFromDir({ dir, logger: {}, expectedRelease: "3.6.64" });
 		expect(pool.get("match")).toBeDefined();
 		expect(pool.get("stale")).toBeUndefined();
 		expect(pool.size()).toBe(1);
@@ -193,7 +193,7 @@ describe("DetectorBundlePool", () => {
 		});
 		writeBundle(dir, "b", "JS", { privateKey: "PK", innerConfig: "C" });
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 		expect(pool.size()).toBe(2);
 	});
 
@@ -201,12 +201,12 @@ describe("DetectorBundlePool", () => {
 		// Pools built before stamping existed still load — warned about, not dropped.
 		writeBundle(dir, "legacy", "JS", { privateKey: "PK", innerConfig: "C" });
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir, {}, "3.6.64");
+		pool.loadFromDir({ dir, logger: {}, expectedRelease: "3.6.64" });
 		expect(pool.get("legacy")).toBeDefined();
 	});
 
 	it("persists a pushed pool so it reloads after a restart", () => {
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 		const { count, persisted } = replaceDetectorBundlePool(
 			new Map([
 				[
@@ -225,7 +225,7 @@ describe("DetectorBundlePool", () => {
 
 		// Simulate a restart: fresh pool, same directory.
 		const reloaded = new DetectorBundlePool();
-		reloaded.loadFromDir(dir);
+		reloaded.loadFromDir({ dir });
 		expect(reloaded.get("pushed")?.js).toBe("PJS");
 		expect(reloaded.get("pushed")?.privateKey).toBe("PPK");
 		expect(reloaded.get("pushed")?.release).toBe("3.6.64");
@@ -240,7 +240,7 @@ describe("DetectorBundlePool", () => {
 			payloadLayout: "TFY=",
 		});
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 		expect(pool.get("laid-out")?.payloadLayout).toBe("TFY=");
 
 		const persistDir = mkdtempSync(join(tmpdir(), "pool-persist-"));
@@ -260,7 +260,7 @@ describe("DetectorBundlePool", () => {
 				persistDir,
 			);
 			const reloaded = new DetectorBundlePool();
-			reloaded.loadFromDir(persistDir);
+			reloaded.loadFromDir({ dir: persistDir });
 			expect(reloaded.get("laid-out")?.payloadLayout).toBe("TFY=");
 		} finally {
 			rmSync(persistDir, { recursive: true, force: true });
@@ -276,7 +276,7 @@ describe("DetectorBundlePool", () => {
 			keyMap: "S00=",
 		});
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 		expect(pool.get("mapped")?.keyMap).toBe("S00=");
 
 		const persistDir = mkdtempSync(join(tmpdir(), "pool-persist-"));
@@ -296,7 +296,7 @@ describe("DetectorBundlePool", () => {
 				persistDir,
 			);
 			const reloaded = new DetectorBundlePool();
-			reloaded.loadFromDir(persistDir);
+			reloaded.loadFromDir({ dir: persistDir });
 			expect(reloaded.get("mapped")?.keyMap).toBe("S00=");
 		} finally {
 			rmSync(persistDir, { recursive: true, force: true });
@@ -306,7 +306,7 @@ describe("DetectorBundlePool", () => {
 	it("loads a bundle with no payload layout, which decodes canonically", () => {
 		writeBundle(dir, "legacy", "JS", { privateKey: "PK", innerConfig: "C" });
 		const pool = new DetectorBundlePool();
-		pool.loadFromDir(dir);
+		pool.loadFromDir({ dir });
 		expect(pool.get("legacy")?.payloadLayout).toBeUndefined();
 	});
 
@@ -321,7 +321,7 @@ describe("DetectorBundlePool", () => {
 		);
 		expect(statSync(dir).ino).toBe(before);
 		const reloaded = new DetectorBundlePool();
-		reloaded.loadFromDir(dir);
+		reloaded.loadFromDir({ dir });
 		expect(reloaded.get("b")?.js).toBe("JS");
 	});
 
@@ -340,7 +340,7 @@ describe("DetectorBundlePool", () => {
 			dir,
 		);
 		const reloaded = new DetectorBundlePool();
-		reloaded.loadFromDir(dir);
+		reloaded.loadFromDir({ dir });
 		expect(reloaded.get("old")).toBeUndefined();
 		expect(reloaded.size()).toBe(1);
 	});
@@ -355,7 +355,7 @@ describe("DetectorBundlePool", () => {
 			writeBundle(dir, "sealed", "JS", { privateKey: "PK", innerConfig: "C" });
 
 			const pool = new DetectorBundlePool();
-			pool.loadFromDir(dir);
+			pool.loadFromDir({ dir });
 
 			expect(pool.get("open")).toBeUndefined();
 			expect(pool.get("sealed")).toBeDefined();
@@ -366,7 +366,7 @@ describe("DetectorBundlePool", () => {
 			writeBundle(dir, "open", "JS", { privateKey: "PK", format: "open-v1" });
 
 			const pool = new DetectorBundlePool();
-			pool.loadFromDir(dir);
+			pool.loadFromDir({ dir });
 
 			expect(pool.get("open")).toEqual({
 				js: "JS",
@@ -380,7 +380,7 @@ describe("DetectorBundlePool", () => {
 			writeBundle(dir, "sealed", "JS", { privateKey: "PK" });
 
 			const pool = new DetectorBundlePool();
-			pool.loadFromDir(dir);
+			pool.loadFromDir({ dir });
 
 			expect(pool.size()).toBe(0);
 		});
@@ -390,13 +390,13 @@ describe("DetectorBundlePool", () => {
 			writeBundle(dir, "future", "JS", { privateKey: "PK", format: "open-v2" });
 
 			const pool = new DetectorBundlePool();
-			pool.loadFromDir(dir);
+			pool.loadFromDir({ dir });
 
 			expect(pool.size()).toBe(0);
 		});
 
 		it("are dropped from a push to a node that has not opted in", () => {
-			initDetectorBundlePool(dir);
+			initDetectorBundlePool({ dir });
 
 			const { count } = replaceDetectorBundlePool(
 				new Map([
@@ -418,7 +418,7 @@ describe("DetectorBundlePool", () => {
 			);
 
 			const reloaded = new DetectorBundlePool();
-			reloaded.loadFromDir(dir);
+			reloaded.loadFromDir({ dir });
 
 			expect(reloaded.get("open")?.format).toBe("open-v1");
 		});

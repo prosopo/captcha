@@ -173,7 +173,11 @@ describe("PowCaptchaManager", () => {
 			},
 		} as unknown as ProviderEnvironment;
 
-		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
+		powCaptchaManager = new PowCaptchaManager({
+			db,
+			pair,
+			config: mockEnv.config,
+		});
 
 		vi.clearAllMocks();
 	});
@@ -292,17 +296,16 @@ describe("PowCaptchaManager", () => {
 
 			const updatePowCaptchaRecordArgs: Parameters<
 				typeof db.updatePowCaptchaRecordResult
-			> = [
+			>[0] = {
 				challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
 				userSignature,
-				undefined, // coords (optional)
-			];
+			};
 
 			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
-				...updatePowCaptchaRecordArgs,
+				updatePowCaptchaRecordArgs,
 			);
 		});
 
@@ -464,17 +467,19 @@ describe("PowCaptchaManager", () => {
 			});
 
 			expect(result.verified).toBe(false);
-			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SALT,
 				},
-				false, // serverChecked
-				true, // userSubmitted
-				timestampSignature,
-				undefined, // coords must NOT be the bad value
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: timestampSignature,
+			});
+			const [{ coords }] = vi.mocked(db.updatePowCaptchaRecordResult).mock
+				.calls[0] ?? [{}];
+			expect(coords).toBeUndefined();
 			expect(verifyRecency).not.toHaveBeenCalled();
 			expect(validateSolution).not.toHaveBeenCalled();
 		});
