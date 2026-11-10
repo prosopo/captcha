@@ -41,6 +41,8 @@ export const INPUT_LIMITS = {
 	ARRAY: 10000,
 	/** Keys in a record. */
 	RECORD_KEYS: 10000,
+	/** Hashes in one level of a dataset merkle tree; prod datasets hold 20,000 leaves. */
+	DATASET_TREE_LEVEL: 100000,
 	/**
 	 * Encrypted behavioural data. The widget keeps up to 2,200 pointer, touch,
 	 * press and scroll points, and the payload is base64-encoded twice, so a

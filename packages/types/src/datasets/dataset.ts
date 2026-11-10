@@ -61,12 +61,12 @@ export const DatasetSchema = object({
 	captchas: CaptchasSchema,
 	format: nativeEnum(CaptchaTypes),
 	solutionTree: array(
-		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.ARRAY),
+		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.DATASET_TREE_LEVEL),
 	)
 		.max(INPUT_LIMITS.ARRAY)
 		.optional(),
 	contentTree: array(
-		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.ARRAY),
+		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.DATASET_TREE_LEVEL),
 	)
 		.max(INPUT_LIMITS.ARRAY)
 		.optional(),
@@ -83,12 +83,12 @@ export const DatasetWithIdsSchema = object({
 	captchas: array(SelectAllCaptchaSchema).max(INPUT_LIMITS.ARRAY),
 	format: nativeEnum(CaptchaTypes),
 	solutionTree: array(
-		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.ARRAY),
+		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.DATASET_TREE_LEVEL),
 	)
 		.max(INPUT_LIMITS.ARRAY)
 		.optional(),
 	contentTree: array(
-		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.ARRAY),
+		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.DATASET_TREE_LEVEL),
 	)
 		.max(INPUT_LIMITS.ARRAY)
 		.optional(),
@@ -96,9 +96,9 @@ export const DatasetWithIdsSchema = object({
 
 export const DatasetWithIdsAndTreeSchema = DatasetWithIdsSchema.extend({
 	solutionTree: array(
-		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.ARRAY),
+		array(string().max(INPUT_LIMITS.LONG_TEXT)).max(INPUT_LIMITS.DATASET_TREE_LEVEL),
 	).max(INPUT_LIMITS.ARRAY),
 	contentTree: array(
-		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.ARRAY),
+		array(string().max(INPUT_LIMITS.TOKEN)).max(INPUT_LIMITS.DATASET_TREE_LEVEL),
 	).max(INPUT_LIMITS.ARRAY),
 });
