@@ -101,7 +101,7 @@ const main = async (): Promise<void> => {
 
 	const challenges: string[] = [];
 	for (let i = 0; i < args.count; i++) {
-		const challenge = renderAudioChallenge(settings);
+		const challenge = renderAudioChallenge({ settings });
 		const name = `challenge-${String(i).padStart(2, "0")}.wav`;
 		writeFileSync(join(outDir, name), challenge.wav);
 		challenges.push(

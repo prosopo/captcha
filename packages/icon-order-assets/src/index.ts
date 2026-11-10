@@ -61,11 +61,15 @@ export const DEFAULT_RENDER_SETTINGS: IconOrderRenderSettings = {
  * same background could be diffed to read both answers. The returned
  * `targets` are the answer and must never be serialised into a response.
  */
-export const renderIconOrder = async (
-	geometry: IconOrderGeometry = DEFAULT_GEOMETRY,
-	settings: IconOrderRenderSettings = DEFAULT_RENDER_SETTINGS,
-	seed: Buffer = createSeed(),
-): Promise<RenderedIconOrder> => {
+export const renderIconOrder = async ({
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+}: {
+	geometry?: IconOrderGeometry;
+	settings?: IconOrderRenderSettings;
+	seed?: Buffer;
+} = {}): Promise<RenderedIconOrder> => {
 	const prng = createPrng(seed);
 	const { targets, decoys } = placeIcons(
 		prng,
