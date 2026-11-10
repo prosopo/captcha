@@ -28,10 +28,10 @@ const main = async (): Promise<void> => {
 	await mkdir(outDir, { recursive: true });
 
 	for (let i = 0; i < 4; i++) {
-		const challenge = await renderIconOrder(
-			DEFAULT_GEOMETRY,
-			DEFAULT_RENDER_SETTINGS,
-		);
+		const challenge = await renderIconOrder({
+			geometry: DEFAULT_GEOMETRY,
+			settings: DEFAULT_RENDER_SETTINGS,
+		});
 		const background = await sharp(challenge.background)
 			.ensureAlpha()
 			.raw()
