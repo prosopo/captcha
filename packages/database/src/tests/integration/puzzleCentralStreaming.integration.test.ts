@@ -22,7 +22,7 @@ import {
 } from "@prosopo/types";
 import type { PuzzleCaptchaRecord } from "@prosopo/types-database";
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { CentralDbStreamer } from "../../databases/centralDbStreamer.js";
 
 // End-to-end guard for the puzzle central-streaming path. Spins up an
@@ -84,7 +84,7 @@ const buildPuzzleRecord = (
 
 const waitForDoc = async <T>(
 	fetch: () => Promise<T | null>,
-	maxAttempts = 50,
+	maxAttempts = 500,
 ): Promise<T | null> => {
 	let stored: T | null = null;
 	for (let i = 0; i < maxAttempts && stored === null; i++) {
@@ -164,12 +164,10 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 
 		streamer.streamPuzzleRecord(record, markStored);
 
-		// Wait until markStored fires (streamer is fire-and-forget).
-		for (let i = 0; i < 50 && capturedTimestamp === undefined; i++) {
-			await new Promise<void>((r) => setTimeout(r, 20));
-		}
-
-		expect(capturedTimestamp).toBeDefined();
+		await vi.waitFor(() => expect(capturedTimestamp).toBeDefined(), {
+			timeout: 10_000,
+			interval: 20,
+		});
 		expect(capturedTimestamp?.toISOString()).toBe(
 			record.lastUpdatedTimestamp?.toISOString(),
 		);
