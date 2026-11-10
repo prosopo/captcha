@@ -116,6 +116,47 @@ describe("applyEffects", () => {
 		expect(image.data[(2 * 20 + 10) * 4]).toBe(200);
 	});
 
+	it("bends wave stripes so one stripe does not keep a constant brightness", () => {
+		const straight = solidSquare(60, 0);
+		const wavy = solidSquare(60, 0);
+		const stripes: BoardEffect = {
+			kind: "stripes",
+			angle: 0,
+			period: 12,
+			amplitude: 0.1,
+		};
+		const waves: BoardEffect = {
+			...stripes,
+			kind: "waves",
+			wavelength: 40,
+			sway: 6,
+		};
+		applyEffects(straight, [stripes], 0, 0);
+		applyEffects(wavy, [waves], 0, 0);
+		const redDownColumn = (image: RgbaImage, x: number): Set<number> => {
+			const seen = new Set<number>();
+			for (let y = 0; y < 60; y++) seen.add(image.data[(y * 60 + x) * 4] ?? 0);
+			return seen;
+		};
+		expect(redDownColumn(straight, 5).size).toBe(1);
+		expect(redDownColumn(wavy, 5).size).toBeGreaterThan(1);
+	});
+
+	it("ramps sawtooth stripes up slowly and drops them at once", () => {
+		const image = solidSquare(40, 0);
+		const sawtooth: BoardEffect = {
+			kind: "sawtooth",
+			angle: 0,
+			period: 20,
+			amplitude: 0.1,
+		};
+		applyEffects(image, [sawtooth], 0, 0);
+		const red = (x: number): number => image.data[x * 4] ?? 0;
+		for (let x = 1; x < 20; x++)
+			expect(red(x)).toBeGreaterThanOrEqual(red(x - 1));
+		expect(red(20)).toBeLessThan(red(19) - 30);
+	});
+
 	it("reads the effect from the offset it is given", () => {
 		const atOrigin = solidSquare(20, 0);
 		const shifted = solidSquare(20, 0);

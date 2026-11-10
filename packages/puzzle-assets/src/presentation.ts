@@ -44,6 +44,17 @@ type Stroke = { x: number; y: number }[];
 /** A treatment laid over the board and, out of step, the piece. */
 export type BoardEffect =
 	| { kind: "stripes"; angle: number; period: number; amplitude: number }
+	| {
+			kind: "waves";
+			angle: number;
+			period: number;
+			amplitude: number;
+			/** Distance along the stripes over which they snake once. */
+			wavelength: number;
+			/** How far the stripes swing either side, in px. */
+			sway: number;
+	  }
+	| { kind: "sawtooth"; angle: number; period: number; amplitude: number }
 	| { kind: "dots"; spacing: number; radius: number; amplitude: number }
 	| { kind: "blotches"; blotches: Blotch[] }
 	| {
@@ -72,6 +83,8 @@ export interface Presentation {
 
 const EFFECT_KINDS = [
 	"stripes",
+	"waves",
+	"sawtooth",
 	"dots",
 	"blotches",
 	"rings",
@@ -111,6 +124,22 @@ const sampleEffect = (
 				kind,
 				angle: prng.range(0, Math.PI),
 				period: prng.range(9, 18),
+				amplitude: prng.range(0.04, 0.08),
+			};
+		case "waves":
+			return {
+				kind,
+				angle: prng.range(0, Math.PI),
+				period: prng.range(9, 18),
+				amplitude: prng.range(0.05, 0.1),
+				wavelength: prng.range(40, 110),
+				sway: prng.range(4, 14),
+			};
+		case "sawtooth":
+			return {
+				kind,
+				angle: prng.range(0, Math.PI),
+				period: prng.range(10, 22),
 				amplitude: prng.range(0.04, 0.08),
 			};
 		case "dots":
@@ -230,6 +259,21 @@ const effectGain = (effect: BoardEffect, x: number, y: number): number => {
 			return (
 				1 + effect.amplitude * Math.sin((2 * Math.PI * along) / effect.period)
 			);
+		}
+		case "waves": {
+			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
+			const across = -x * Math.sin(effect.angle) + y * Math.cos(effect.angle);
+			const swayed =
+				along +
+				effect.sway * Math.sin((2 * Math.PI * across) / effect.wavelength);
+			return (
+				1 + effect.amplitude * Math.sin((2 * Math.PI * swayed) / effect.period)
+			);
+		}
+		case "sawtooth": {
+			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
+			const phase = along / effect.period - Math.floor(along / effect.period);
+			return 1 + effect.amplitude * (2 * phase - 1);
 		}
 		case "dots": {
 			const dx = x - Math.round(x / effect.spacing) * effect.spacing;
