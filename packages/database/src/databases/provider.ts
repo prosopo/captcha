@@ -360,7 +360,7 @@ export class ProviderDatabase
 			throw new ProsopoError({
 				code: "DB_UNAVAILABLE",
 				errorSite: "DBSE-7",
-				message: "Redis access rules connection undefined",
+				message: "Redis connection undefined",
 			});
 		}
 
@@ -2921,6 +2921,8 @@ export class ProviderDatabase
 		// that supplied a session id — a token replay reported on solves that
 		// were earned in exactly the session they claimed.
 		clientMetaData: 1,
+		// The verify-time hard-block check scopes its rule lookup by it.
+		ja4: 1,
 	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 
 	/**
