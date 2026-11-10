@@ -320,9 +320,8 @@ const ruleSpecificity = (
 // than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow,
 // so every pow rule previously scored at the bottom of its tier regardless of
 // difficulty.
-// Image and puzzle both keep `solvedImagesCount` — it is the severity
-// currency they share, which the provider maps onto a puzzle difficulty
-// level via `severityToPuzzleDifficulty` rather than a literal round count.
+// Puzzle rules rank on `severity`, falling back to `solvedImagesCount` for
+// rules written before `severity` existed.
 //
 // `deferToVerify` doesn't affect this ordering: it controls *when* a Block
 // fires (request-time vs verify-time), not how severe it is. The flag

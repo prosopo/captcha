@@ -200,6 +200,35 @@ describe("captchaPolicySeverity — intra-tier axes", () => {
 		);
 	});
 
+	it("ranks puzzle by severity ahead of solvedImagesCount", () => {
+		expect(
+			captchaPolicySeverity({
+				captchaType: "puzzle",
+				severity: 9,
+				solvedImagesCount: 2,
+			}),
+		).toBe(
+			captchaPolicySeverity({ captchaType: "puzzle", solvedImagesCount: 9 }),
+		);
+		expect(
+			captchaPolicySeverity({ captchaType: "puzzle", severity: 9 }),
+		).toBeGreaterThan(
+			captchaPolicySeverity({ captchaType: "puzzle", severity: 2 }),
+		);
+	});
+
+	it("does not rank image by severity", () => {
+		expect(
+			captchaPolicySeverity({
+				captchaType: "image",
+				severity: 9,
+				solvedImagesCount: 2,
+			}),
+		).toBe(
+			captchaPolicySeverity({ captchaType: "image", solvedImagesCount: 2 }),
+		);
+	});
+
 	it("treats an unset setting as the bottom of its tier", () => {
 		expect(captchaPolicySeverity({ captchaType: "image" })).toBe(
 			captchaPolicySeverity({ captchaType: "image", solvedImagesCount: 0 }),
