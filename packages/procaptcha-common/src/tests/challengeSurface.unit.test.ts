@@ -15,7 +15,6 @@
 import { describe, expect, it } from "vitest";
 import { computeFloatPosition } from "../components/challengeSurface.js";
 
-const VIEWPORT_WIDTH = 1000;
 const VIEWPORT_HEIGHT = 800;
 
 // jsdom gives every element a zero rect, so rects are built by hand.
@@ -44,7 +43,8 @@ const place = (
 	panelHeight = PANEL_HEIGHT,
 	scrollX = 0,
 	scrollY = 0,
-) => computeFloatPosition(anchor, panelHeight, scrollX, scrollY);
+) =>
+	computeFloatPosition(anchor, panelHeight, scrollX, scrollY, VIEWPORT_HEIGHT);
 
 describe("computeFloatPosition", () => {
 	it("sits directly above the anchor", () => {
@@ -79,8 +79,8 @@ describe("computeFloatPosition", () => {
 		// The same widget, seen after scrolling 200px: its viewport rect moves
 		// up by exactly what the scroll offset gains, so the document position
 		// is unchanged and the panel does not drift.
-		const unscrolled = place(rect(100, 300, 300, 78), PANEL_HEIGHT, 0, 0);
-		const scrolled = place(rect(100, 100, 300, 78), PANEL_HEIGHT, 0, 200);
+		const unscrolled = place(rect(100, 500, 300, 78), PANEL_HEIGHT, 0, 0);
+		const scrolled = place(rect(100, 300, 300, 78), PANEL_HEIGHT, 0, 200);
 
 		expect(scrolled).toEqual(unscrolled);
 	});
@@ -94,10 +94,30 @@ describe("computeFloatPosition", () => {
 		expect(short.top + 100).toBe(tall.top + 400);
 	});
 
-	it("clamps to the top of the document rather than going out of reach", () => {
+	it("goes below the anchor when it would start above the visible area", () => {
+		// Scrolled well down the page, the widget sits near the top of the
+		// screen: above would put the panel's header out of sight.
+		const anchor = rect(100, 120, 300, 78);
+
+		const { top } = place(anchor, PANEL_HEIGHT, 0, 1500);
+
+		expect(top).toBe(1500 + anchor.bottom + 8);
+		expect(top - 1500).toBeGreaterThanOrEqual(0);
+		expect(top - 1500 + PANEL_HEIGHT).toBeLessThanOrEqual(VIEWPORT_HEIGHT);
+	});
+
+	it("starts at the top of the visible area when it fits on neither side", () => {
+		const anchor = rect(100, 300, 300, 78);
+
+		const { top } = place(anchor, 500, 0, 1500);
+
+		expect(top).toBe(1500);
+	});
+
+	it("is never placed above the top of the document", () => {
 		const anchor = rect(100, 20, 300, 78);
 
-		const { top } = place(anchor, PANEL_HEIGHT);
+		const { top } = place(anchor, 900, 0, -40);
 
 		expect(top).toBe(0);
 	});
