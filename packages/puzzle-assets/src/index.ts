@@ -90,10 +90,13 @@ export const DEFAULT_RENDER_SETTINGS: PuzzleRenderSettings = {
  * attacker diff the two composites and read both targets straight off. The
  * caller's buffer is responsible for enforcing consume-once.
  */
-export const createBackground = (
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	seed: Buffer = createSeed(),
-): RgbaImage =>
+export const createBackground = ({
+	geometry = DEFAULT_GEOMETRY,
+	seed = createSeed(),
+}: {
+	geometry?: PuzzleGeometry;
+	seed?: Buffer;
+} = {}): RgbaImage =>
 	generateBackground(createPrng(seed), geometry.width, geometry.height);
 
 /**
@@ -101,38 +104,44 @@ export const createBackground = (
  *
  * The background is consumed (mutated) by this call.
  */
-export const renderPuzzle = async (
-	background: RgbaImage,
-	placement: NotchPlacement,
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	seed: Buffer = createSeed(),
-): Promise<RenderedPuzzle> => {
+export const renderPuzzle = async ({
+	background,
+	placement,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	seed?: Buffer;
+}): Promise<RenderedPuzzle> => {
 	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
 	// Decoys go on first so the real cut sits on top of any overlap and
 	// always reads as the deepest, darkest region on the board. Decoys use
 	// the same size as the real piece so a solver can't key on scale to
 	// disambiguate the target.
-	paintDecoys(
+	paintDecoys({
 		background,
 		prng,
-		settings.decoyCount,
-		pieceSize,
-		placement,
-		settings.decoyEdgeDarkness,
-		settings.decoyBodyBrightness,
-		settings.decoyHoleDarken,
-	);
+		targetCount: settings.decoyCount,
+		notchSize: pieceSize,
+		notch: placement,
+		edgeDarkness: settings.decoyEdgeDarkness,
+		bodyBrightness: settings.decoyBodyBrightness,
+		holeDarken: settings.decoyHoleDarken,
+	});
 	const shape = createNotchShape(prng, pieceSize);
-	const { background: cut, piece } = cutNotch(
+	const { background: cut, piece } = cutNotch({
 		prng,
 		background,
 		shape,
-		pieceSize,
+		size: pieceSize,
 		placement,
-		settings.holeDarken,
-	);
+		holeDarken: settings.holeDarken,
+	});
 
 	const [backgroundWebp, pieceWebp] = await Promise.all([
 		encodeBackground(cut),
@@ -154,17 +163,23 @@ export const renderPuzzle = async (
  * challenge byte for byte — the background seed and the render seed are
  * independent and both are required.
  */
-export const createPuzzle = async (
-	placement: NotchPlacement,
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	backgroundSeed: Buffer = createSeed(),
-	renderSeed: Buffer = createSeed(),
-): Promise<RenderedPuzzle> =>
-	renderPuzzle(
-		createBackground(geometry, backgroundSeed),
+export const createPuzzle = async ({
+	placement,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	backgroundSeed = createSeed(),
+	renderSeed = createSeed(),
+}: {
+	placement: NotchPlacement;
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	backgroundSeed?: Buffer;
+	renderSeed?: Buffer;
+}): Promise<RenderedPuzzle> =>
+	renderPuzzle({
+		background: createBackground({ geometry, seed: backgroundSeed }),
 		placement,
 		geometry,
 		settings,
-		renderSeed,
-	);
+		seed: renderSeed,
+	});
