@@ -11,4 +11,4 @@ Three decoys copy the real hole's outline and the rest have their own shapes, so
 
 The decoy cap no longer raises a small decoy count up to its minimum; it only ever lowers it.
 
-Three new board patterns join the existing ones: wavy stripes, sawtooth stripes that ramp up gradually and drop sharply, and tangent stripes that stay flat through the middle and steepen towards a sharp seam.
+Four new board patterns join the existing ones: wavy stripes, sawtooth stripes that ramp up gradually and drop sharply, tangent stripes that stay flat through the middle and steepen towards a sharp seam, and stripes shaped by a random polynomial drawn for each puzzle.

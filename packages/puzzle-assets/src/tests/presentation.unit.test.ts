@@ -174,6 +174,44 @@ describe("applyEffects", () => {
 		expect(red(39)).toBeLessThanOrEqual(Math.round(200 * 1.1));
 	});
 
+	it("keeps a random polynomial profile inside the effect's amplitude", () => {
+		let checked = 0;
+		for (let seed = 0; seed < 200; seed++) {
+			const prng = createPrng(Buffer.alloc(16, seed));
+			const presentation = samplePresentation(prng, 60, 40);
+			const polynomial = presentation.effects.find(
+				(e) => e.kind === "polynomial",
+			);
+			if (!polynomial) continue;
+			checked++;
+			const image = solidSquare(60, 0);
+			applyEffects(image, [polynomial], 0, 0);
+			for (let i = 0; i < image.data.length; i += 4) {
+				expect(image.data[i]).toBeGreaterThanOrEqual(Math.floor(200 * 0.91));
+				expect(image.data[i]).toBeLessThanOrEqual(Math.ceil(200 * 1.09));
+			}
+		}
+		expect(checked).toBeGreaterThan(5);
+	});
+
+	it("shapes stripes by the polynomial it is given", () => {
+		const image = solidSquare(40, 0);
+		const parabola: BoardEffect = {
+			kind: "polynomial",
+			angle: 0,
+			period: 40,
+			amplitude: 0.1,
+			coefficients: [0, 0, 1],
+			mid: 0.5,
+			halfRange: 0.5,
+		};
+		applyEffects(image, [parabola], 0, 0);
+		const red = (x: number): number => image.data[x * 4] ?? 0;
+		expect(red(0)).toBe(180);
+		expect(red(20)).toBeLessThan(red(30));
+		expect(red(30) - red(20)).toBeLessThan(red(39) - red(30));
+	});
+
 	it("reads the effect from the offset it is given", () => {
 		const atOrigin = solidSquare(20, 0);
 		const shifted = solidSquare(20, 0);

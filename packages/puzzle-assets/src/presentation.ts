@@ -56,6 +56,17 @@ export type BoardEffect =
 	  }
 	| { kind: "sawtooth"; angle: number; period: number; amplitude: number }
 	| {
+			kind: "polynomial";
+			angle: number;
+			period: number;
+			amplitude: number;
+			/** Lowest order first, over a stripe's phase in [0, 1). */
+			coefficients: number[];
+			/** Maps the polynomial's range over [0, 1] onto [-1, 1]. */
+			mid: number;
+			halfRange: number;
+	  }
+	| {
 			kind: "tangent";
 			angle: number;
 			period: number;
@@ -94,6 +105,7 @@ const EFFECT_KINDS = [
 	"waves",
 	"sawtooth",
 	"tangent",
+	"polynomial",
 	"dots",
 	"blotches",
 	"rings",
@@ -119,6 +131,36 @@ const sampleStroke = (prng: Prng, width: number, height: number): Stroke => {
 		y += 4 * Math.sin(angle);
 	}
 	return points;
+};
+
+const evaluatePolynomial = (coefficients: number[], t: number): number => {
+	let value = 0;
+	for (let k = coefficients.length - 1; k >= 0; k--) {
+		value = value * t + (coefficients[k] ?? 0);
+	}
+	return value;
+};
+
+const POLYNOMIAL_RANGE_SAMPLES = 64;
+
+const samplePolynomialProfile = (
+	prng: Prng,
+): { coefficients: number[]; mid: number; halfRange: number } => {
+	const degree = prng.int(2, 5);
+	const coefficients: number[] = [];
+	for (let k = 0; k <= degree; k++) coefficients.push(prng.range(-1, 1));
+	let min = Number.POSITIVE_INFINITY;
+	let max = Number.NEGATIVE_INFINITY;
+	for (let i = 0; i <= POLYNOMIAL_RANGE_SAMPLES; i++) {
+		const v = evaluatePolynomial(coefficients, i / POLYNOMIAL_RANGE_SAMPLES);
+		min = Math.min(min, v);
+		max = Math.max(max, v);
+	}
+	return {
+		coefficients,
+		mid: (max + min) / 2,
+		halfRange: Math.max((max - min) / 2, 1e-6),
+	};
 };
 
 const sampleEffect = (
@@ -150,6 +192,14 @@ const sampleEffect = (
 				angle: prng.range(0, Math.PI),
 				period: prng.range(10, 22),
 				amplitude: prng.range(0.04, 0.08),
+			};
+		case "polynomial":
+			return {
+				kind,
+				angle: prng.range(0, Math.PI),
+				period: prng.range(14, 30),
+				amplitude: prng.range(0.05, 0.09),
+				...samplePolynomialProfile(prng),
 			};
 		case "tangent":
 			return {
@@ -291,6 +341,14 @@ const effectGain = (effect: BoardEffect, x: number, y: number): number => {
 			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
 			const phase = along / effect.period - Math.floor(along / effect.period);
 			return 1 + effect.amplitude * (2 * phase - 1);
+		}
+		case "polynomial": {
+			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
+			const phase = along / effect.period - Math.floor(along / effect.period);
+			const shaped =
+				(evaluatePolynomial(effect.coefficients, phase) - effect.mid) /
+				effect.halfRange;
+			return 1 + effect.amplitude * Math.max(-1, Math.min(1, shaped));
 		}
 		case "tangent": {
 			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
