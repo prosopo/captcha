@@ -13,7 +13,7 @@
 // limitations under the License.
 import { SubmitPuzzleCaptchaSolutionBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { flatten, getIPAddress } from "@prosopo/util";
+import { getIPAddress } from "@prosopo/util";
 import { interactiveSolutionHandler } from "./interactiveCaptchaSolution.js";
 
 export default (env: ProviderEnvironment) =>
@@ -21,19 +21,18 @@ export default (env: ProviderEnvironment) =>
 		label: "puzzle",
 		parse: (body) => SubmitPuzzleCaptchaSolutionBody.parse(body),
 		verify: (tasks, body, submitWindowMs, req) =>
-			tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				body.challenge,
-				body.signature.provider.challenge,
-				body.finalX,
-				body.finalY,
-				body.puzzleEvents,
-				submitWindowMs,
-				body.signature.user.timestamp,
-				getIPAddress(req.ip || ""),
-				flatten(req.headers),
-				body.behavioralData,
-				body.salt,
-				body.simdReadings,
-				body.clientMetaData,
-			),
+			tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: body.challenge,
+				providerChallengeSignature: body.signature.provider.challenge,
+				finalX: body.finalX,
+				finalY: body.finalY,
+				puzzleEvents: body.puzzleEvents,
+				timeout: submitWindowMs,
+				userTimestampSignature: body.signature.user.timestamp,
+				ipAddress: getIPAddress(req.ip || ""),
+				behavioralData: body.behavioralData,
+				salt: body.salt,
+				simdReadings: body.simdReadings,
+				clientMetaData: body.clientMetaData,
+			}),
 	});

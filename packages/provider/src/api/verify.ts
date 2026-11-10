@@ -292,20 +292,16 @@ const interactiveVerifyHandler =
 
 			const captchaManager = manager(tasks);
 			const { verified, score, sessionId } =
-				await captchaManager.serverVerifyInteractiveCaptchaSolution(
-					dapp,
+				await captchaManager.serverVerifyInteractiveCaptchaSolution({
+					dappAccount: dapp,
 					challenge,
-					clientRecord.settings.verifiedTimeout,
 					env,
+					settings: clientRecord.settings,
 					ip,
-					userAccessRulesStorage,
 					email,
-					clientRecord.settings.spamEmailDomainCheckEnabled,
-					clientRecord.settings.spamFilter,
-					clientRecord.settings.trafficFilter,
-					clientRecord.settings.storeMetadata,
 					clientSessionId,
-				);
+					userAccessRulesStorage,
+				});
 
 			const verificationResponse: VerificationResponse =
 				captchaManager.getVerificationResponse(
@@ -704,21 +700,16 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				}
 
 				const { verified, score, reason, sessionId } =
-					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
-						dapp,
+					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution({
+						dappAccount: dapp,
 						challenge,
-						clientRecord.settings.verifiedTimeout,
 						env,
+						settings: clientRecord.settings,
 						ip,
-						userAccessRulesStorage,
 						email,
-						clientRecord.settings.spamEmailDomainCheckEnabled,
-						clientRecord.settings.spamFilter,
-						clientRecord.settings.trafficFilter,
-						clientRecord.settings.storeMetadata,
 						clientSessionId,
-						clientRecord.settings.ipValidationRules,
-					);
+						userAccessRulesStorage,
+					});
 
 				const verificationResponse: VerificationResponse =
 					tasks.powCaptchaManager.getVerificationResponse(
