@@ -106,7 +106,9 @@ export const createAudioChallengeBuffer = (
 	const topUp = (limit: number): void => {
 		for (const variant of variants.values()) {
 			for (let i = 0; i < limit && variant.ready.length < capacity; i++) {
-				variant.ready.push(renderAudioChallenge(variant.settings));
+				variant.ready.push(
+					renderAudioChallenge({ settings: variant.settings }),
+				);
 			}
 		}
 	};
@@ -125,7 +127,7 @@ export const createAudioChallengeBuffer = (
 			const challenge = variant.ready.pop();
 			if (!challenge) {
 				starved++;
-				return renderAudioChallenge(settings);
+				return renderAudioChallenge({ settings });
 			}
 			return challenge;
 		},
