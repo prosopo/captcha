@@ -99,20 +99,29 @@ export interface FloatPosition {
  * Document coordinates rather than viewport ones, because the panel is
  * `position: absolute`: the page carries it while scrolling instead of the
  * panel being recomputed against a moving viewport, which is what made it
- * drift. Always above, never flipped, so the challenge does not jump to the
- * other side of the widget as the page moves.
+ * drift. Nothing repositions on scroll, so it never hops sides as the page
+ * moves.
+ *
+ * Below, or failing that the top of the visible area, is only used when
+ * above would start off-screen: inside a fixed dialog or a scroll-locked
+ * page the user cannot scroll up to reach the panel's header.
  */
 export const computeFloatPosition = (
 	anchorRect: DOMRect,
 	panelHeight: number,
 	scrollX: number,
 	scrollY: number,
-): FloatPosition => ({
-	// Clamped at the top of the document so a widget near the top of the page
-	// cannot push the panel out of reach.
-	top: Math.max(0, anchorRect.top + scrollY - panelHeight - FLOAT_GAP_PX),
-	left: anchorRect.left + scrollX,
-});
+	viewportHeight: number,
+): FloatPosition => {
+	const above = anchorRect.top - panelHeight - FLOAT_GAP_PX;
+	const below = anchorRect.bottom + FLOAT_GAP_PX;
+	const viewportTop =
+		above >= 0 ? above : below + panelHeight <= viewportHeight ? below : 0;
+	return {
+		top: Math.max(0, viewportTop + scrollY),
+		left: anchorRect.left + scrollX,
+	};
+};
 
 /**
  * Each branch below clears the other's declarations before writing its own, so
@@ -264,6 +273,7 @@ export const mountChallengeSurface = (
 			content.getBoundingClientRect().height,
 			window.scrollX,
 			window.scrollY,
+			window.innerHeight,
 		);
 		if (
 			floatPosition &&
