@@ -54,6 +54,12 @@ export interface PuzzleDifficultyBand {
 	decoyHoleDarken: PuzzleDifficultyRange;
 	/** Dark inner rim amplitude on each decoy, 0-255. Higher is harder. */
 	decoyEdgeDarkness: PuzzleDifficultyRange;
+	/**
+	 * Decoys that copy the real piece's outline; the rest each draw their own.
+	 * None leaves the piece matching only the real hole, which a person finds
+	 * at a glance and so does a shape-matching solver. More is harder.
+	 */
+	lookalikeDecoys: PuzzleDifficultyRange;
 	/** Piece size as a fraction of background width. Smaller is harder. */
 	pieceScale: PuzzleDifficultyRange;
 }
@@ -154,10 +160,11 @@ export const PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL = 2;
  * decoyHoleDarken 0.84, tolerance 15, pieceScale 0.15-0.45) so a site that
  * never escalates sees no change in behaviour.
  *
- * Every decoy shares the real piece's outline, so the only thing telling a
- * human which hole is real is that it is the darkest. L0 and L1 therefore keep
- * decoys well clear of `holeDarken` and few in number; only L2 and above, which
- * only suspected sessions reach, close that gap.
+ * L0 and L1 give every decoy its own outline, so the piece fits only the real
+ * hole: easy for a person, and no harder for a solver than a darkness search
+ * already makes it. From L2, which only suspected sessions reach, some decoys
+ * copy the real outline, and among those the real hole is told apart only by
+ * being the darkest — so decoy darkness closes in on `holeDarken` gradually.
  *
  * The numbers above L0 are STARTING POINTS, not calibrated values. They need
  * validating against observed human first-attempt solve rate per level,
@@ -171,6 +178,7 @@ export const PUZZLE_DIFFICULTY_LEVELS: readonly PuzzleDifficultyBand[] = [
 		decoyCount: { min: 2, max: 4 },
 		decoyHoleDarken: { min: 0.8, max: 0.88 },
 		decoyEdgeDarkness: { min: 10, max: 14 },
+		lookalikeDecoys: { min: 0, max: 0 },
 		pieceScale: { min: 0.15, max: 0.45 },
 	},
 	{
@@ -179,22 +187,25 @@ export const PUZZLE_DIFFICULTY_LEVELS: readonly PuzzleDifficultyBand[] = [
 		decoyCount: { min: 3, max: 7 },
 		decoyHoleDarken: { min: 0.72, max: 0.82 },
 		decoyEdgeDarkness: { min: 14, max: 19 },
+		lookalikeDecoys: { min: 0, max: 0 },
 		pieceScale: { min: 0.14, max: 0.4 },
 	},
 	{
 		level: 2,
 		tolerance: { min: 10, max: 13 },
 		decoyCount: { min: 7, max: 16 },
-		decoyHoleDarken: { min: 0.64, max: 0.68 },
+		decoyHoleDarken: { min: 0.68, max: 0.74 },
 		decoyEdgeDarkness: { min: 22, max: 27 },
+		lookalikeDecoys: { min: 1, max: 2 },
 		pieceScale: { min: 0.12, max: 0.34 },
 	},
 	{
 		level: 3,
 		tolerance: { min: 8, max: 11 },
 		decoyCount: { min: 16, max: 26 },
-		decoyHoleDarken: { min: 0.62, max: 0.66 },
+		decoyHoleDarken: { min: 0.64, max: 0.7 },
 		decoyEdgeDarkness: { min: 25, max: 30 },
+		lookalikeDecoys: { min: 2, max: 3 },
 		pieceScale: { min: 0.1, max: 0.28 },
 	},
 	{
@@ -203,6 +214,7 @@ export const PUZZLE_DIFFICULTY_LEVELS: readonly PuzzleDifficultyBand[] = [
 		decoyCount: { min: 26, max: 40 },
 		decoyHoleDarken: { min: 0.6, max: 0.64 },
 		decoyEdgeDarkness: { min: 28, max: 34 },
+		lookalikeDecoys: { min: 3, max: 5 },
 		pieceScale: { min: 0.09, max: 0.22 },
 	},
 ];

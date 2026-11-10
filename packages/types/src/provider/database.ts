@@ -1005,6 +1005,8 @@ export interface PuzzleRenderRecord {
 		decoyBodyBrightness: number;
 		holeDarken: number;
 		decoyHoleDarken: number;
+		/** Absent on records drawn before it was stored: none. */
+		lookalikeDecoys?: number;
 	};
 	/** 128-bit hex. Regenerates the clean background. */
 	backgroundSeed: string;

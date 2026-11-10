@@ -204,6 +204,7 @@ export const issuePuzzleChallenge = async ({
 					decoyBodyBrightness: renderedPuzzleSettings.decoyBodyBrightness,
 					holeDarken: renderedPuzzleSettings.holeDarken,
 					decoyHoleDarken: renderedPuzzleSettings.decoyHoleDarken,
+					lookalikeDecoys: renderedPuzzleSettings.lookalikeDecoys,
 				},
 				backgroundSeed: images.backgroundSeed,
 				renderSeed: images.renderSeed,

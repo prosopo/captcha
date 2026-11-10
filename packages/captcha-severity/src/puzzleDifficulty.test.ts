@@ -42,6 +42,9 @@ describe("PUZZLE_DIFFICULTY_LEVELS table", () => {
 				prev.decoyEdgeDarkness.max,
 			);
 			expect(cur.pieceScale.max).toBeLessThan(prev.pieceScale.max);
+			expect(cur.lookalikeDecoys.min).toBeGreaterThanOrEqual(
+				prev.lookalikeDecoys.min,
+			);
 		}
 	});
 
@@ -54,6 +57,16 @@ describe("PUZZLE_DIFFICULTY_LEVELS table", () => {
 			if (!prev || !cur) throw new Error("missing level");
 			expect(cur.decoyCount.min).toBeLessThanOrEqual(prev.decoyCount.max);
 			expect(cur.tolerance.max).toBeGreaterThanOrEqual(prev.tolerance.min);
+		}
+	});
+
+	it("gives decoys their own outlines until only suspected sessions are served", () => {
+		const [l0, l1] = PUZZLE_DIFFICULTY_LEVELS;
+		expect(l0?.lookalikeDecoys.max).toBe(0);
+		expect(l1?.lookalikeDecoys.max).toBe(0);
+		for (const band of PUZZLE_DIFFICULTY_LEVELS.slice(2)) {
+			expect(band.lookalikeDecoys.min).toBeGreaterThan(0);
+			expect(band.lookalikeDecoys.max).toBeLessThanOrEqual(band.decoyCount.min);
 		}
 	});
 

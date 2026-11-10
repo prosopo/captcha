@@ -44,14 +44,13 @@ const NOTCH_CLEARANCE = 0;
 const PLACEMENT_ATTEMPTS = 8;
 
 /**
- * How a renderer that shares the real piece's outline lays out its decoys.
+ * How renderer 2+ lays out its decoys.
  *
  * `lookalikes` decoys copy the real outline; every other decoy draws its own.
- * Were all of them copies, a crowded board would leave a human nothing to go
- * on but darkness; were none, the piece's outline would match only the real
- * hole and a solver could find it by shape. A few copies sends the solver back
- * to darkness among several candidates, while a human discards the odd shapes
- * at a glance.
+ * With none, the piece's outline matches only the real hole, which a human
+ * spots at once and so does a solver. Copies send both back to darkness
+ * among several candidates while the odd shapes are discarded at a glance,
+ * which is why the count comes from the difficulty level.
  *
  * The copies keep `clearance` (centre to centre, in notch-sizes) from the real
  * hole and from each other, since piled-up copies read as a cut deeper than
@@ -64,11 +63,8 @@ export interface DecoyLayout {
 	attempts: number;
 }
 
-export const SHARED_OUTLINE_DECOY_LAYOUT: DecoyLayout = {
-	lookalikes: 3,
-	clearance: 1,
-	attempts: 32,
-};
+export const DECOY_CLEARANCE = 1;
+export const DECOY_PLACEMENT_ATTEMPTS = 32;
 
 const clamp255 = (v: number): number => (v < 0 ? 0 : v > 255 ? 255 : v);
 

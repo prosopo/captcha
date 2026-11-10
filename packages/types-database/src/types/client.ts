@@ -144,6 +144,7 @@ export const PuzzleRenderSettingsSchema = new Schema(
 		decoyBodyBrightness: { type: Number, min: -20, max: 20, required: false },
 		decoyHoleDarken: { type: Number, min: 0, max: 1, required: false },
 		holeDarken: { type: Number, min: 0, max: 1, required: false },
+		lookalikeDecoys: { type: Number, min: 0, max: 200, required: false },
 		pieceScale: {
 			type: new Schema(
 				{

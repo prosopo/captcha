@@ -90,6 +90,9 @@ export const puzzleHoleDarkenDefault = 0.55;
 // still the deepest region on the frame; too close and humans can't tell,
 // too far and a solver keys on brightness alone.
 export const puzzleDecoyHoleDarkenDefault = 0.84;
+// Decoys that copy the real piece's outline. None by default, so the piece
+// matches only the real hole; the difficulty ladder adds them.
+export const puzzleLookalikeDecoysDefault = 0;
 // Piece size as a fraction of the background width. The provider draws a
 // fresh value from [min, max] per challenge so a solver can't hard-code
 // the expected silhouette scale. Defaults preserve the historical 44px
@@ -380,6 +383,7 @@ export const puzzleDecoyBodyBrightnessFieldSchema = number()
 	.max(20);
 export const puzzleHoleDarkenFieldSchema = number().min(0).max(1);
 export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
+export const puzzleLookalikeDecoysFieldSchema = number().int().min(0).max(200);
 // Bounds are wider than the defaults so operators can pin the piece to a
 // fixed size (min == max) or explore the full frame. Cross-field
 // `min <= max` is enforced on the containing object schema.
@@ -428,6 +432,7 @@ export const PuzzleSettingsSchema = object({
 	decoyBodyBrightness: puzzleDecoyBodyBrightnessFieldSchema.optional(),
 	decoyHoleDarken: puzzleDecoyHoleDarkenFieldSchema.optional(),
 	holeDarken: puzzleHoleDarkenFieldSchema.optional(),
+	lookalikeDecoys: puzzleLookalikeDecoysFieldSchema.optional(),
 	pieceScale: PuzzlePieceScaleSchema.optional(),
 });
 

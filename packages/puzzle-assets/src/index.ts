@@ -89,6 +89,7 @@ export const DEFAULT_RENDER_SETTINGS: PuzzleRenderSettings = {
 	decoyBodyBrightness: 4,
 	holeDarken: 0.55,
 	decoyHoleDarken: 0.84,
+	lookalikeDecoys: 0,
 };
 
 /**

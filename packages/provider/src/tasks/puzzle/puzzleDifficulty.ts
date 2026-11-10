@@ -41,6 +41,7 @@ const toleranceSampler = createStratifiedSampler();
 const decoyCountSampler = createStratifiedSampler();
 const decoyHoleDarkenSampler = createStratifiedSampler();
 const decoyEdgeDarknessSampler = createStratifiedSampler();
+const lookalikeDecoysSampler = createStratifiedSampler();
 
 export interface SampledPuzzleDifficulty {
 	level: number;
@@ -95,6 +96,10 @@ export const samplePuzzleDifficulty = (
 			decoyHoleDarken: Math.min(
 				1,
 				Math.max(decoyHoleDarkenFloor, sampledDecoyHoleDarken),
+			),
+			lookalikeDecoys: lookalikeDecoysSampler.sampleInt(
+				band.lookalikeDecoys.min,
+				band.lookalikeDecoys.max,
 			),
 			pieceScale: { min: band.pieceScale.min, max: band.pieceScale.max },
 		},

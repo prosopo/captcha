@@ -82,6 +82,9 @@ export const resolvePuzzleRenderSettings = (
 		if (override.decoyHoleDarken !== undefined) {
 			resolved = { ...resolved, decoyHoleDarken: override.decoyHoleDarken };
 		}
+		if (override.lookalikeDecoys !== undefined) {
+			resolved = { ...resolved, lookalikeDecoys: override.lookalikeDecoys };
+		}
 	}
 	// The real cutout must remain the deepest region on the frame or a human
 	// cannot tell target from decoy at all. Enforced HERE rather than at each

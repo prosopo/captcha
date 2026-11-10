@@ -191,6 +191,7 @@ describe("render replay from the stored record", () => {
 		{ name: "decoyBodyBrightness", value: 40 },
 		{ name: "holeDarken", value: 0.2 },
 		{ name: "decoyHoleDarken", value: 0.95 },
+		{ name: "lookalikeDecoys", value: 2 },
 	];
 
 	for (const { name, value } of settingCases) {

@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { cutNotch } from "./compose.js";
-import { SHARED_OUTLINE_DECOY_LAYOUT, paintDecoys } from "./decoys.js";
+import {
+	DECOY_CLEARANCE,
+	DECOY_PLACEMENT_ATTEMPTS,
+	paintDecoys,
+} from "./decoys.js";
 import { createNotchShape } from "./notch.js";
 import {
 	type Regrain,
@@ -79,7 +83,13 @@ export const drawPuzzle = ({
 		bodyBrightness: settings.decoyBodyBrightness,
 		holeDarken: settings.decoyHoleDarken,
 		style: presentation?.recess,
-		...(version >= 2 && { layout: SHARED_OUTLINE_DECOY_LAYOUT }),
+		...(version >= 2 && {
+			layout: {
+				lookalikes: settings.lookalikeDecoys ?? 0,
+				clearance: DECOY_CLEARANCE,
+				attempts: DECOY_PLACEMENT_ATTEMPTS,
+			},
+		}),
 	});
 	const shape = sharedShape ?? createNotchShape(prng, pieceSize);
 	const cut = cutNotch({
