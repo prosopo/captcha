@@ -76,13 +76,13 @@ describe("Write queue integration with captcha flows", () => {
 				lRules: { en: 1 },
 			} as unknown as ProsopoConfigOutput;
 
-			const manager = new FrictionlessManager(
+			const manager = new FrictionlessManager({
 				db,
 				pair,
 				config,
-				mockLogger,
+				logger: mockLogger,
 				writeQueue,
-			);
+			});
 
 			manager.setSessionParams({
 				token: "pow-token",
@@ -138,13 +138,13 @@ describe("Write queue integration with captcha flows", () => {
 				lRules: { en: 1 },
 			} as unknown as ProsopoConfigOutput;
 
-			const manager = new FrictionlessManager(
+			const manager = new FrictionlessManager({
 				db,
 				pair,
 				config,
-				mockLogger,
+				logger: mockLogger,
 				writeQueue,
-			);
+			});
 
 			manager.setSessionParams({
 				token: "image-token",

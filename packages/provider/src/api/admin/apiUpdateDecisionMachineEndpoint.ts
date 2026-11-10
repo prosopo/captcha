@@ -21,7 +21,10 @@ import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import { UpdateDecisionMachineBody } from "@prosopo/types";
 import type { z } from "zod";
-import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
+import {
+	type ClientTaskManager,
+	toDecisionMachineTarget,
+} from "../../tasks/client/clientTasks.js";
 
 type UpdateDecisionMachineBodyType = typeof UpdateDecisionMachineBody;
 
@@ -59,17 +62,16 @@ class ApiUpdateDecisionMachineEndpoint
 				},
 			}));
 
-			const result = await this.clientTaskManager.updateDecisionMachine(
-				decisionMachineScope,
-				decisionMachineRuntime,
-				decisionMachineSource,
-				dapp,
-				decisionMachineLanguage,
-				decisionMachineName,
-				decisionMachineVersion,
-				decisionMachineCaptchaType,
-				decisionMachineKind,
-			);
+			const result = await this.clientTaskManager.updateDecisionMachine({
+				...toDecisionMachineTarget(decisionMachineScope, dapp),
+				runtime: decisionMachineRuntime,
+				source: decisionMachineSource,
+				language: decisionMachineLanguage,
+				name: decisionMachineName,
+				version: decisionMachineVersion,
+				captchaType: decisionMachineCaptchaType,
+				kind: decisionMachineKind,
+			});
 
 			logger.info(() => ({
 				msg: "Decision machine updated",

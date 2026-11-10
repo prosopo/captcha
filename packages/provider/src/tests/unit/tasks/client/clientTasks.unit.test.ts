@@ -38,6 +38,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ClientTaskManager,
 	matchesGlob,
+	toDecisionMachineTarget,
 } from "../../../../tasks/client/clientTasks.js";
 import {
 	invalidateAllDecisionMachineArtifactCaches,
@@ -841,28 +842,29 @@ describe("ClientTaskManager", () => {
 	});
 	describe("Decision machine updates", () => {
 		it("should store decision machine artifacts with global scope", async () => {
-			const result = await clientTaskManager.updateDecisionMachine(
-				DecisionMachineScope.Global,
-				DecisionMachineRuntime.Node,
-				'module.exports = () => ({ decision: "allow" });',
-				undefined,
-				DecisionMachineLanguage.JavaScript,
-				"dm",
-				"1.0.0",
-			);
+			const result = await clientTaskManager.updateDecisionMachine({
+				scope: DecisionMachineScope.Global,
+				runtime: DecisionMachineRuntime.Node,
+				source: 'module.exports = () => ({ decision: "allow" });',
+				language: DecisionMachineLanguage.JavaScript,
+				name: "dm",
+				version: "1.0.0",
+			});
 
 			expect(providerDB.upsertDecisionMachineArtifact).toHaveBeenCalled();
 			expect(result.scope).toBe(DecisionMachineScope.Global);
 		});
 
-		it("should reject dapp scope without dapp account", async () => {
-			await expect(
-				clientTaskManager.updateDecisionMachine(
-					DecisionMachineScope.Dapp,
-					DecisionMachineRuntime.Node,
-					'module.exports = () => ({ decision: "allow" });',
-				),
-			).rejects.toThrow();
+		it("should reject dapp scope without dapp account", () => {
+			expect(() => toDecisionMachineTarget(DecisionMachineScope.Dapp)).toThrow(
+				expect.objectContaining({ code: "INVALID_REQUEST" }),
+			);
+		});
+
+		it("should accept dapp scope with a dapp account", () => {
+			expect(
+				toDecisionMachineTarget(DecisionMachineScope.Dapp, "dapp"),
+			).toEqual({ scope: DecisionMachineScope.Dapp, dappAccount: "dapp" });
 		});
 
 		it("flushes the decision machine caches when one is removed", async () => {

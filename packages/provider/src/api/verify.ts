@@ -304,14 +304,13 @@ const interactiveVerifyHandler =
 				});
 
 			const verificationResponse: VerificationResponse =
-				captchaManager.getVerificationResponse(
+				captchaManager.getVerificationResponse({
 					verified,
 					clientRecord,
-					req.i18n.t,
+					translateFn: req.i18n.t,
 					score,
-					undefined,
 					sessionId,
-				);
+				});
 
 			return res.json(verificationResponse);
 		} catch (err) {
@@ -517,34 +516,30 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				}
 
 				const response =
-					await tasks.imgCaptchaManager.verifyImageCaptchaSolution(
+					await tasks.imgCaptchaManager.verifyImageCaptchaSolution({
 						user,
-						dapp,
+						dappAccount: dapp,
 						commitmentId,
+						settings: clientRecord.settings,
 						env,
 						maxVerifiedTime,
 						ip,
-						clientRecord.settings.disallowWebView,
 						userAccessRulesStorage,
 						email,
-						clientRecord.settings.spamEmailDomainCheckEnabled,
-						clientRecord.settings.spamFilter,
-						clientRecord.settings.trafficFilter,
-						clientRecord.settings.storeMetadata,
 						clientSessionId,
-					);
+					});
 
 				req.logger.debug(() => ({ data: { response } }));
 				const verificationResponse: ImageVerificationResponse =
-					tasks.imgCaptchaManager.getVerificationResponse(
-						response[ApiParams.verified],
+					tasks.imgCaptchaManager.getVerificationResponse({
+						verified: response[ApiParams.verified],
 						clientRecord,
-						req.i18n.t,
-						response[ApiParams.score],
-						response[ApiParams.commitmentId],
-						response[ApiParams.status],
-						response[ApiParams.sessionId],
-					);
+						translateFn: req.i18n.t,
+						score: response[ApiParams.score],
+						commitmentId: response[ApiParams.commitmentId],
+						reason: response[ApiParams.status],
+						sessionId: response[ApiParams.sessionId],
+					});
 				res.json(verificationResponse);
 			} catch (err) {
 				req.logger.error(() => ({
@@ -712,14 +707,14 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					});
 
 				const verificationResponse: VerificationResponse =
-					tasks.powCaptchaManager.getVerificationResponse(
+					tasks.powCaptchaManager.getVerificationResponse({
 						verified,
 						clientRecord,
-						req.i18n.t,
+						translateFn: req.i18n.t,
 						score,
 						reason,
 						sessionId,
-					);
+					});
 
 				return res.json(verificationResponse);
 			} catch (err) {

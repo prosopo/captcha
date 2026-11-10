@@ -58,7 +58,7 @@ describe("Frictionless Task Manager", () => {
 			lRules: { en: 1 },
 		} as unknown as ProsopoConfigOutput;
 
-		frictionlessTaskManager = new FrictionlessManager(db, pair, config);
+		frictionlessTaskManager = new FrictionlessManager({ db, pair, config });
 
 		vi.clearAllMocks();
 	});

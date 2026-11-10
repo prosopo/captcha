@@ -236,14 +236,21 @@ export class UsageCounters {
  * the key absent rather than at zero, so a bucket's count is over the requests
  * that actually proved it.
  */
-export const buildAllWindowIncrements = (
-	kind: CounterKind,
-	captchaType: CounterSpec["captchaType"],
-	ip: string,
-	userAccount: string,
-	peerIp?: string,
-	deviceBucket?: string,
-): CounterIncrement[] => {
+export const buildAllWindowIncrements = ({
+	kind,
+	captchaType,
+	ip,
+	userAccount,
+	peerIp,
+	deviceBucket,
+}: {
+	kind: CounterKind;
+	captchaType: CounterSpec["captchaType"];
+	ip: string;
+	userAccount: string;
+	peerIp?: string;
+	deviceBucket?: string;
+}): CounterIncrement[] => {
 	const out: CounterIncrement[] = [];
 	for (const window of [
 		"1m",

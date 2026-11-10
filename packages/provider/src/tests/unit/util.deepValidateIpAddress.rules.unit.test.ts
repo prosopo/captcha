@@ -105,13 +105,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 				mockIpInfo({ ip: "8.8.8.8", reputationScore: 0.42 }),
 			);
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("Reputation score 0.4200");
@@ -126,13 +126,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 				mockIpInfo({ ip: "8.8.8.8", reputationScore: 0.001 }),
 			);
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("Reputation score 0.4200");
@@ -147,13 +147,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 				mockIpInfo({ ip: "8.8.8.8", reputationScore: 0.19 }),
 			);
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 	});
@@ -165,13 +165,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 			.mockResolvedValueOnce(mockIpInfo({ ip: "1.1.1.1" }))
 			.mockResolvedValueOnce(mockIpInfo({ ip: "8.8.8.8" }));
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 	});
@@ -185,39 +185,39 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 				mockIpInfo({ ip: "8.8.8.8", isAbuser: true, companyAbuserScore: 0.9 }),
 			);
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 	});
 
 	it("short-circuits to valid on an exact IP match without consulting ipinfo", async () => {
-		const result = await deepValidateIpAddress(
-			"1.1.1.1",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "1.1.1.1",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 		expect(lookup).not.toHaveBeenCalled();
 	});
 
 	it("rejects on forceConsistentIp when the DNS peer IP differs from the client IP", async () => {
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("8.8.8.8"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("8.8.8.8"),
+			logger: mockLogger,
 			ipInfoService,
-			{ ...abuseOnlyRules(0.2), forceConsistentIp: true },
-			"9.9.9.9",
-		);
+			ipValidationRules: { ...abuseOnlyRules(0.2), forceConsistentIp: true },
+			dnsPeerIp: "9.9.9.9",
+		});
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("does not match dnsEvent.peerIp");
@@ -225,26 +225,26 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 	});
 
 	it("allows a rotated IPv6 address inside the same /64 without consulting ipinfo", async () => {
-		const result = await deepValidateIpAddress(
-			"2001:db8:aa:bb::6",
-			new Address6("2001:db8:aa:bb::5"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "2001:db8:aa:bb::6",
+			challengeIpAddress: new Address6("2001:db8:aa:bb::5"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 		expect(lookup).not.toHaveBeenCalled();
 	});
 
 	it("allows a neighbouring IPv4 address inside the same /24 without consulting ipinfo", async () => {
-		const result = await deepValidateIpAddress(
-			"203.0.113.23",
-			new Address4("203.0.113.22"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "203.0.113.23",
+			challengeIpAddress: new Address4("203.0.113.22"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 		expect(lookup).not.toHaveBeenCalled();
@@ -259,13 +259,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 				mockIpInfo({ ip: "2001:db8:aa:cc::5", reputationScore: 0.42 }),
 			);
 
-		const result = await deepValidateIpAddress(
-			"2001:db8:aa:cc::5",
-			new Address6("2001:db8:aa:bb::5"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "2001:db8:aa:cc::5",
+			challengeIpAddress: new Address6("2001:db8:aa:bb::5"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("Reputation score 0.4200");
@@ -280,13 +280,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 				mockIpInfo({ ip: "203.0.114.22", reputationScore: 0.42 }),
 			);
 
-		const result = await deepValidateIpAddress(
-			"203.0.114.22",
-			new Address4("203.0.113.22"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "203.0.114.22",
+			challengeIpAddress: new Address4("203.0.113.22"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(false);
 	});
@@ -299,13 +299,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 			ip: "8.8.8.8",
 		});
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 	});

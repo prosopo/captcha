@@ -136,27 +136,26 @@ export default (
 				? await tasks.db.getSessionRecordBySessionId(sessionId)
 				: undefined;
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
+			const userScope = getRequestUserScope({
+				requestHeaders: flatten(req.headers),
+				ja4: req.ja4,
+				ip: normalizedIp,
 				user,
-				sessionRecord?.decryptedHeadHash,
-				undefined, // coords
+				headHash: sessionRecord?.decryptedHeadHash,
 				countryCode,
 				asn,
-			);
+			});
 			// Skip deferToVerify policies at request time — see
 			// getImageCaptchaChallenge for the full rationale (sanitiser
 			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE
 			// fires when a deferToVerify Block rule leaks into isValidRequest).
 			const accessPolicies =
-				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
+				await tasks.powCaptchaManager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				);
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				});
 			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
 			// A deferred rule must never reject at request time, so it is
 			// kept out of the validation above — but it still carries the
@@ -171,14 +170,14 @@ export default (
 				reason,
 				sessionId: validSessionId,
 				powDifficulty,
-			} = await tasks.powCaptchaManager.isValidRequest(
+			} = await tasks.powCaptchaManager.isValidRequest({
 				clientSettings,
-				CaptchaType.pow,
+				requestedCaptchaType: CaptchaType.pow,
 				env,
 				sessionId,
 				userAccessPolicy,
-				normalizedIp,
-			);
+				currentIP: normalizedIp,
+			});
 
 			if (!valid) {
 				return next(
@@ -246,31 +245,26 @@ export default (
 					});
 			}
 
-			await tasks.db.storePowCaptchaRecord(
-				challenge.challenge,
-				{
+			await tasks.db.storePowCaptchaRecord({
+				challenge: challenge.challenge,
+				components: {
 					requestedAtTimestamp: challenge.requestedAtTimestamp,
 					userAccount: user,
 					dappAccount: dapp,
 				},
-				challenge.difficulty,
-				challenge.providerSignature,
-				getCompositeIpAddress(normalizedIp),
-				flatten(req.headers),
-				req.ja4,
-				validSessionId,
-				undefined,
-				undefined,
-				undefined,
-				// Persist the full ipinfo payload — consumers (portal,
-				// anomaly detection, CHECK_IP_INFO backfill) read the
-				// individual flags off this object instead of separate
-				// flat fields.
-				req.ipInfo,
-				// From the proof sent at frictionless time. A proof submitted
-				// with the solution replaces it.
-				sessionRecord?.fingerprintSummary,
-			);
+				difficulty: challenge.difficulty,
+				providerSignature: challenge.providerSignature,
+				ipAddress: getCompositeIpAddress(normalizedIp),
+				headers: flatten(req.headers),
+				ja4: req.ja4,
+				sessionId: validSessionId,
+				// Consumers (portal, anomaly detection, CHECK_IP_INFO backfill) read
+				// the individual flags off the full ipinfo payload.
+				ipInfo: req.ipInfo,
+				// From the proof sent at frictionless time; a proof submitted with the
+				// solution replaces it.
+				fingerprintSummary: sessionRecord?.fingerprintSummary,
+			});
 
 			const padBytes = trafficVerdict.padBytes;
 
