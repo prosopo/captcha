@@ -16,13 +16,19 @@
  * Validate that the puzzle solution is within tolerance of the target.
  * Uses Euclidean distance.
  */
-export const validatePuzzleSolution = (
-	finalX: number,
-	finalY: number,
-	targetX: number,
-	targetY: number,
-	tolerance: number,
-): boolean => {
+export const validatePuzzleSolution = ({
+	finalX,
+	finalY,
+	targetX,
+	targetY,
+	tolerance,
+}: {
+	finalX: number;
+	finalY: number;
+	targetX: number;
+	targetY: number;
+	tolerance: number;
+}): boolean => {
 	const distance = Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2);
 	return distance <= tolerance;
 };

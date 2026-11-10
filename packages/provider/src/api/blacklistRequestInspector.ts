@@ -55,21 +55,36 @@ export type BlockOutcome = {
 	messageKey?: ResultReason;
 };
 
-export const getRequestUserScope = (
-	requestHeaders: Record<string, unknown>,
-	ja4?: string,
-	ip?: string,
-	user?: string,
-	headHash?: string,
-	coords?: string,
-	countryCode?: string,
-	asn?: number,
-	// Present only when Web Bot Auth signature verification succeeded on the
-	// inbound request. Passed through to rule matching so `webBotAuthAgent`
-	// rules match the verified signer URL, never a spoofed header.
-	webBotAuthAgent?: string,
-	bypassKeyHash?: string,
-): Pick<
+export type RequestUserScopeInput = {
+	requestHeaders: Record<string, unknown>;
+	ja4?: string;
+	ip?: string;
+	user?: string;
+	headHash?: string;
+	coords?: string;
+	countryCode?: string;
+	asn?: number;
+	/**
+	 * Present only when Web Bot Auth signature verification succeeded on the
+	 * inbound request, so `webBotAuthAgent` rules match the verified signer
+	 * URL, never a spoofed header.
+	 */
+	webBotAuthAgent?: string;
+	bypassKeyHash?: string;
+};
+
+export const getRequestUserScope = ({
+	requestHeaders,
+	ja4,
+	ip,
+	user,
+	headHash,
+	coords,
+	countryCode,
+	asn,
+	webBotAuthAgent,
+	bypassKeyHash,
+}: RequestUserScopeInput): Pick<
 	UserScopeRecord,
 	| "userId"
 	| "ja4Hash"
@@ -421,23 +436,30 @@ export type GetPrioritisedAccessRuleOptions = {
 	skipCache?: boolean;
 };
 
-export const getPrioritisedAccessRule = async (
-	userAccessRulesStorage: AccessRulesStorage,
-	userScope: UserScope | UserScopeRecord,
-	clientId: string | undefined,
+export type GetPrioritisedAccessRuleArgs = GetPrioritisedAccessRuleOptions & {
+	userAccessRulesStorage: AccessRulesStorage;
+	userScope: UserScope | UserScopeRecord;
+	clientId?: string;
 	// Raw request headers (lower-cased name → value) for the in-code header
 	// condition check. Required, with no default: the negated header operators
 	// treat a missing header as "does not match", so a lookup that silently
 	// ran with an empty header map would make every allow-list rule fire on
 	// every request. Callers with nothing but a scope must say so explicitly.
-	requestHeaders: Record<string, string>,
-	options?: GetPrioritisedAccessRuleOptions,
-): Promise<AccessRule[]> => {
+	requestHeaders: Record<string, string>;
+};
+
+export const getPrioritisedAccessRule = async ({
+	userAccessRulesStorage,
+	userScope,
+	clientId,
+	requestHeaders,
+	...options
+}: GetPrioritisedAccessRuleArgs): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
-	const blockOnly = options?.blockOnly ?? false;
-	const includeDeferred = options?.includeDeferred ?? false;
-	const skipCache = options?.skipCache ?? false;
-	const requestMemoHost = options?.requestMemoHost as
+	const blockOnly = options.blockOnly ?? false;
+	const includeDeferred = options.includeDeferred ?? false;
+	const skipCache = options.skipCache ?? false;
+	const requestMemoHost = options.requestMemoHost as
 		| RequestWithMemo
 		| undefined;
 
@@ -473,11 +495,10 @@ export const getPrioritisedAccessRule = async (
 	// others await the same Promise. Kills the wave-1 stampede where
 	// every retry-storm identity misses simultaneously.
 	const compute = async (): Promise<AccessRule[]> =>
-		userAccessRulesStorage.findRules(
-			filter,
-			true, // matchingFieldsOnly — engages the split-query hot path
-			true,
-		);
+		userAccessRulesStorage.findRules(filter, {
+			matchingFieldsOnly: true,
+			skipEmptyUserScopes: true,
+		});
 
 	// Only the *candidate fetch* is cached — the Redis round-trip is what the
 	// cache exists to absorb. Ranking stays outside it because `ruleApplies`
@@ -536,20 +557,17 @@ export class BlacklistRequestInspector {
 
 		const blockOutcome: BlockOutcome = {};
 
-		const shouldAbortRequest = await this.shouldAbortRequest(
-			request.url,
+		const shouldAbortRequest = await this.shouldAbortRequest({
+			requestedRoute: request.url,
 			rawIp,
-			request.ja4,
-			request.headers,
-			request.body,
-			request.logger,
-			request.ipInfo,
-			// Share the per-request memo so a downstream captcha task
-			// hitting checkForHardBlock in the same request reuses this
-			// lookup rather than re-querying Redis.
-			request,
+			ja4: request.ja4,
+			requestHeaders: request.headers,
+			requestBody: request.body,
+			logger: request.logger,
+			ipInfo: request.ipInfo,
+			requestMemoHost: request,
 			blockOutcome,
-		);
+		});
 
 		if (shouldAbortRequest) {
 			// Any deny decision from shouldAbortRequest - a matched Block rule
@@ -572,17 +590,27 @@ export class BlacklistRequestInspector {
 		next();
 	}
 
-	public async shouldAbortRequest(
-		requestedRoute: string,
-		rawIp: string,
-		ja4: string,
-		requestHeaders: Record<string, unknown>,
-		requestBody: Record<string, unknown>,
-		logger: Logger,
-		ipInfo?: IPInfoResponse,
-		requestMemoHost?: object,
-		blockOutcome?: BlockOutcome,
-	): Promise<boolean> {
+	public async shouldAbortRequest({
+		requestedRoute,
+		rawIp,
+		ja4,
+		requestHeaders,
+		requestBody,
+		logger,
+		ipInfo,
+		requestMemoHost,
+		blockOutcome,
+	}: {
+		requestedRoute: string;
+		rawIp: string;
+		ja4: string;
+		requestHeaders: Record<string, unknown>;
+		requestBody: Record<string, unknown>;
+		logger: Logger;
+		ipInfo?: IPInfoResponse;
+		requestMemoHost?: object;
+		blockOutcome?: BlockOutcome;
+	}): Promise<boolean> {
 		// Skip this middleware for non-api routes like /json /favicon.ico etc
 		if (this.isApiUnrelatedRoute(requestedRoute)) {
 			return false;
@@ -618,28 +646,21 @@ export class BlacklistRequestInspector {
 			const countryCode = ipInfo?.isValid ? ipInfo.countryCode : undefined;
 			const asn = ipInfo?.isValid ? ipInfo.asnNumber : undefined;
 
-			const accessPolicies = await getPrioritisedAccessRule(
-				this.userAccessRulesStorage,
-				getRequestUserScope(
+			const accessPolicies = await getPrioritisedAccessRule({
+				userAccessRulesStorage: this.userAccessRulesStorage,
+				userScope: getRequestUserScope({
 					requestHeaders,
 					ja4,
-					rawIp,
-					userId,
-					undefined, // headHash
-					undefined, // coords
+					ip: rawIp,
+					user: userId,
 					countryCode,
 					asn,
-				),
+				}),
 				clientId,
-				normalizeHeadersForMatching(requestHeaders),
-				// Request-time middleware only ever fires on Block policies
-				// (Restrict rules flow through and let the captcha-creation
-				// path decorate the response). Restrict the Redis-side
-				// candidate pool so the SERVER_SIDE_RANK_TOP_N cap can't
-				// crowd out hard-block rules in clients with dense Restrict
-				// rule populations.
-				{ blockOnly: true, requestMemoHost },
-			);
+				requestHeaders: normalizeHeadersForMatching(requestHeaders),
+				blockOnly: true,
+				requestMemoHost,
+			});
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from
 			// `checkForHardBlock` inside each captcha task's verify path —

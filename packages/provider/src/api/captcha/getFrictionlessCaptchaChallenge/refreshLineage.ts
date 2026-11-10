@@ -36,13 +36,19 @@ export interface ResolvedRefresh {
  * rejected: the request then mints an ordinary session, which is all a client
  * that never sent `refreshOf` would have got.
  */
-export const resolveRefreshLineage = async (
-	db: Pick<IProviderDatabase, "getSessionRecordBySessionId">,
-	refreshOf: string | undefined,
-	siteKey: string,
-	userSitekeyIpHash: string,
-	now: Date,
-): Promise<ResolvedRefresh | undefined> => {
+export const resolveRefreshLineage = async ({
+	db,
+	refreshOf,
+	siteKey,
+	userSitekeyIpHash,
+	now,
+}: {
+	db: Pick<IProviderDatabase, "getSessionRecordBySessionId">;
+	refreshOf?: string;
+	siteKey: string;
+	userSitekeyIpHash: string;
+	now: Date;
+}): Promise<ResolvedRefresh | undefined> => {
 	if (!refreshOf) return undefined;
 	const replaced = await db.getSessionRecordBySessionId(refreshOf);
 	if (
