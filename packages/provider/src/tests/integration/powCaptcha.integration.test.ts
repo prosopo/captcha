@@ -273,6 +273,42 @@ describe("PoW Integration Tests", () => {
 		}
 	});
 
+	describe("malformed request bodies", () => {
+		const post = (body: string): Promise<Response> =>
+			fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+				},
+				body,
+			});
+
+		it("answers JSON that does not parse with the JSON error envelope", async () => {
+			const response = await post("{not json");
+
+			expect(response.status).toBe(400);
+			expect(response.headers.get("content-type")).toContain(
+				"application/json",
+			);
+			const data = (await response.json()) as { error: { code: string } };
+			expect(data.error.code).toBe("INVALID_REQUEST");
+		});
+
+		it("answers a body over the size limit with 413 and the JSON error envelope", async () => {
+			const response = await post(
+				JSON.stringify({ padding: "x".repeat(1024 * 1024) }),
+			);
+
+			expect(response.status).toBe(413);
+			expect(response.headers.get("content-type")).toContain(
+				"application/json",
+			);
+			const data = (await response.json()) as { error: { code: string } };
+			expect(data.error.code).toBe("INVALID_REQUEST");
+		});
+	});
+
 	describe("GetPowCaptchaChallenge", () => {
 		let siteKeyMnemonic: string;
 		let siteKey: string;
