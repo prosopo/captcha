@@ -100,9 +100,15 @@ describe("CaptchaDatabase.saveCaptchas — session upsert by sessionId", () => {
 	it("does not duplicate when the same sessionId is written twice by successive sweep passes", async () => {
 		const sessionId = "session-upsert-repeat";
 
-		await central.saveCaptchas([makeSession(sessionId, 0.1)], [], []);
-		await central.saveCaptchas([makeSession(sessionId, 0.2)], [], []);
-		await central.saveCaptchas([makeSession(sessionId, 0.3)], [], []);
+		await central.saveCaptchas({
+			sessionEvents: [makeSession(sessionId, 0.1)],
+		});
+		await central.saveCaptchas({
+			sessionEvents: [makeSession(sessionId, 0.2)],
+		});
+		await central.saveCaptchas({
+			sessionEvents: [makeSession(sessionId, 0.3)],
+		});
 
 		// Reconnect: `saveCaptchas` closes the connection when it's done
 		// (via bulkWrite → close pattern inherited from MongoDatabase).
@@ -124,11 +130,9 @@ describe("CaptchaDatabase.saveCaptchas — session upsert by sessionId", () => {
 
 	it("distinct sessionIds each get their own doc (guardrail against overly-broad filter)", async () => {
 		const ids = ["session-a", "session-b", "session-c"];
-		await central.saveCaptchas(
-			ids.map((id, i) => makeSession(id, 0.1 * (i + 1))),
-			[],
-			[],
-		);
+		await central.saveCaptchas({
+			sessionEvents: ids.map((id, i) => makeSession(id, 0.1 * (i + 1))),
+		});
 
 		await central.connect();
 		for (const id of ids) {
