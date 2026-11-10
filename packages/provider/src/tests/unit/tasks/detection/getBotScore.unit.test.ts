@@ -42,7 +42,11 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash", "privateKey");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+			privateKeyString: "privateKey",
+		});
 
 		expect(result).toEqual({
 			baseBotScore: 0.85,
@@ -74,7 +78,10 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+		});
 
 		expect(result).toEqual({
 			baseBotScore: 1,
@@ -93,7 +100,10 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+		});
 
 		expect(result).toEqual({
 			baseBotScore: 0.5,
@@ -123,7 +133,10 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+		});
 
 		expect(result.d).toEqual({
 			aKeyThisRepoDoesNotKnow: "yes",
@@ -140,7 +153,10 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+		});
 
 		expect(result.d).toBeUndefined();
 	});
@@ -154,7 +170,10 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+		});
 
 		expect(result.d).toEqual({ ok: 1 });
 	});
@@ -168,7 +187,10 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+		});
 
 		expect(result.isWebView).toBe(false);
 	});
@@ -182,7 +204,10 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		const result = await getBotScore("payload", "headHash");
+		const result = await getBotScore({
+			payload: "payload",
+			headHash: "headHash",
+		});
 
 		expect(result.isIframe).toBe(false);
 	});
@@ -195,14 +220,14 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		await getBotScore(
-			"testPayload",
-			"testHeadHash",
-			"testPrivateKey",
-			"innerConfig",
-			"layout",
-			"keyMap",
-		);
+		await getBotScore({
+			payload: "testPayload",
+			headHash: "testHeadHash",
+			privateKeyString: "testPrivateKey",
+			innerConfigEncoded: "innerConfig",
+			payloadLayoutEncoded: "layout",
+			keyMapEncoded: "keyMap",
+		});
 
 		expect(decoderPool.decode).toHaveBeenCalledWith("payload", [
 			"testPayload",
@@ -225,7 +250,7 @@ describe("getBotScore", () => {
 
 		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
-		await getBotScore("testPayload", "testHeadHash");
+		await getBotScore({ payload: "testPayload", headHash: "testHeadHash" });
 
 		expect(decoderPool.decode).toHaveBeenCalledWith("payload", [
 			"testPayload",

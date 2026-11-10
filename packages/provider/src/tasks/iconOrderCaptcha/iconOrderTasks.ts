@@ -67,14 +67,14 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 		userSignature: string,
 		coords: [number, number][][] | undefined,
 	): Promise<void> {
-		return this.db.updateIconOrderCaptchaRecordResult(
+		return this.db.updateIconOrderCaptchaRecordResult({
 			challenge,
 			result,
-			false,
-			true,
+			serverChecked: false,
+			userSubmitted: true,
 			userSignature,
 			coords,
-		);
+		});
 	}
 
 	/**
