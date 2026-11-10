@@ -1904,11 +1904,33 @@ describe("redisAccessRulesStorage", () => {
 		});
 
 		test("rejects rather than finding no rule ids when the search fails", async () => {
+			const disconnectedClient: RedisClientType = redisClient.duplicate();
+			const reader = new RedisRulesReader(disconnectedClient, mockLogger);
 			const filter: AccessRulesFilter = {
-				userScope: { ja4Hash: "unbalanced}brace" },
+				userScope: { ja4Hash: "ja4" },
 			};
 
-			await expect(accessRulesReader.findRuleIds(filter)).rejects.toThrow();
+			await expect(reader.findRuleIds(filter)).rejects.toThrow();
+		});
+
+		test("finds rules whose client id and user scope hold tag punctuation", async () => {
+			const rule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "client-a.b",
+				headersHash: "h:1/2",
+			};
+			await insertRules([rule]);
+
+			const ruleIds = await accessRulesReader.findRuleIds({
+				policyScope: { clientId: "client-a.b" },
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: { headersHash: "h:1/2" },
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			expect(ruleIds).toEqual([
+				getAccessRuleRedisKey(rule).slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			]);
 		});
 	});
 
