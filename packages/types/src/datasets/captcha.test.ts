@@ -91,6 +91,15 @@ describe("PowChallengeIdSchema", () => {
 				.success,
 		).toBe(true);
 	});
+
+	it.each<unknown>([5, null, undefined, {}, ["1", "u", "d", "0"]])(
+		"reports a validation issue rather than throwing for the non-string %s",
+		(value: unknown) => {
+			const result = PowChallengeIdSchema.safeParse(value);
+			expect(result.success).toBe(false);
+			expect(result.error?.issues[0]?.code).toBe("custom");
+		},
+	);
 });
 
 describe("CaptchaSchema", () => {
