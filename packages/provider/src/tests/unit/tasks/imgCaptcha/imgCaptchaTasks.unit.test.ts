@@ -842,6 +842,38 @@ describe("ImgCaptchaManager", () => {
 		});
 	});
 
+	describe("dappUserSolution — no pending request", () => {
+		it("answers not verified when the request was already answered or never existed", async () => {
+			const captchas = [
+				{ captchaId: "captcha1", solution: ["a"], salt: "0x00" },
+			] as unknown as CaptchaSolution[];
+			vi.mocked(signatureVerify).mockReturnValue({
+				crypto: "sr25519",
+				isValid: true,
+				isWrapped: false,
+				publicKey: new Uint8Array(),
+			});
+			vi.mocked(db.getPendingImageCommitment).mockResolvedValue(undefined);
+
+			const result = await imgCaptchaManager.dappUserSolution({
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				requestHash: "0xanswered",
+				captchas,
+				userTimestampSignature: "userTimestampSignature",
+				timestamp: Date.now(),
+				providerRequestHashSignature: "providerRequestHashSignature",
+				ipAddress: getIPAddress("1.1.1.1"),
+				headers: { a: "1" },
+				ja4: "ja4",
+			});
+
+			expect(result).toEqual({ captchas: [], verified: false });
+			expect(db.updatePendingImageCommitmentStatus).not.toHaveBeenCalled();
+			expect(db.storeUserImageCaptchaSolution).not.toHaveBeenCalled();
+		});
+	});
+
 	describe("dappUserSolution — passed challenge", () => {
 		it("builds each captcha's proof from its solution leaf, not its captcha id", async () => {
 			const captchas = [
@@ -915,50 +947,22 @@ describe("ImgCaptchaManager", () => {
 		});
 	});
 
-	it("should get dapp user commitment by ID", async () => {
-		const commitmentId = "commitmentId";
-		const dappUserCommitment: Partial<UserCommitment> = {
-			id: "commitmentId",
-			userAccount: "userAccount",
+	it("answers not verified for a commitment id that does not exist", async () => {
+		vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(undefined);
+
+		const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+			settings: {},
+			user: "userAccount",
 			dappAccount: "dappAccount",
-			providerAccount: "providerAccount",
-			datasetId: "datasetId",
-			result: { status: CaptchaStatus.approved },
-			userSignature: "",
-			userSubmitted: true,
-			serverChecked: false,
-			requestedAtTimestamp: new Date(0),
-			submittedAtTimestamp: new Date(),
-			ipAddress: {
-				lower: getIPAddress("1.1.1.1").bigInt(),
-				upper: 0n,
-				type: IpAddressType.v4,
-			},
-			headers: { a: "1", b: "2", c: "3" },
-			ja4: "ja4",
-			lastUpdatedTimestamp: new Date(),
-		};
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
-
-		const result =
-			await imgCaptchaManager.getDappUserCommitmentById(commitmentId);
-
-		expect(result).toEqual(dappUserCommitment);
-	});
-
-	it("should throw an error if dapp user commitment is not found by ID", async () => {
-		const commitmentId = "commitmentId";
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentById as any).mockResolvedValue(null);
-
-		await expect(
-			imgCaptchaManager.getDappUserCommitmentById(commitmentId),
-		).rejects.toMatchObject({
-			code: "SOLUTION_NOT_FOUND",
-			errorId: "SOLUTION_NOT_FOUND:PROV-68",
-			message: "Dapp user solution not found",
+			commitmentId: "0xunknown",
+			env: mockEnv,
 		});
+
+		expect(result).toEqual({
+			status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+			verified: false,
+		});
+		expect(db.markDappUserCommitmentsChecked).not.toHaveBeenCalled();
 	});
 
 	// Regression seen in production: image captchas produced
