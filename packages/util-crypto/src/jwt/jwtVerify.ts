@@ -15,6 +15,9 @@ import type {
 // The only algorithm sr25519jwtIssue (and the Rust sr25519-jwt issuer) writes.
 const JWT_ALG = "sr25519";
 
+export const JWT_LIFETIME_EXCEEDED_ERROR =
+	"JWT lifetime exceeds the allowed maximum";
+
 const isPinnedAlgHeader = (header: unknown): header is JWTHeader =>
 	typeof header === "object" &&
 	header !== null &&
@@ -145,7 +148,7 @@ export const jwtVerify = (
 	) {
 		return {
 			isValid: false,
-			error: "JWT lifetime exceeds the allowed maximum",
+			error: JWT_LIFETIME_EXCEEDED_ERROR,
 			crypto: header.alg,
 			publicKey,
 			isWrapped: false,
