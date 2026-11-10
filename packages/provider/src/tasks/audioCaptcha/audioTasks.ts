@@ -17,9 +17,7 @@ import {
 	type AudioEvent,
 	type CaptchaResult,
 	CaptchaType,
-	type ClientMetaData,
 	type DecisionMachineInput,
-	type IPAddress,
 	type PoWChallengeId,
 } from "@prosopo/types";
 import type { AudioCaptchaRecord } from "@prosopo/types-database";
@@ -30,6 +28,7 @@ import {
 import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
+	type InteractiveSolutionSubmission,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
 import {
@@ -102,36 +101,24 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 		};
 	}
 
-	async verifyAudioCaptchaSolution(
-		challenge: PoWChallengeId,
-		providerChallengeSignature: string,
-		submittedAnswer: string,
-		replays: number,
-		audioEvents: AudioEvent[],
-		timeout: number,
-		userTimestampSignature: string,
-		ipAddress: IPAddress,
-		behavioralData?: string,
-		salt?: string,
-		simdReadings?: string,
-		clientMetaData?: ClientMetaData,
-	): Promise<boolean> {
+	async verifyAudioCaptchaSolution({
+		submittedAnswer,
+		replays,
+		audioEvents,
+		...submission
+	}: InteractiveSolutionSubmission & {
+		submittedAnswer: string;
+		replays: number;
+		audioEvents: AudioEvent[];
+	}): Promise<boolean> {
 		return this.submitInteractiveCaptchaSolution({
-			challenge,
-			providerChallengeSignature,
-			timeout,
-			userTimestampSignature,
-			ipAddress,
-			behavioralData,
-			salt,
-			simdReadings,
-			clientMetaData,
+			...submission,
 			isCorrect: (record) =>
 				validateAudioSolution(submittedAnswer, record.answer),
 			// Wrong answers are kept too: systematic mishearings are only
 			// visible from the answers people actually typed.
 			persistInteraction: () =>
-				this.db.updateAudioCaptchaRecord(challenge, {
+				this.db.updateAudioCaptchaRecord(submission.challenge, {
 					audioEvents,
 					replays,
 					submittedAnswer: normaliseAudioAnswer(submittedAnswer),

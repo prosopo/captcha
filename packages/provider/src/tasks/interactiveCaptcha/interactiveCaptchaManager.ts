@@ -14,6 +14,7 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -25,8 +26,6 @@ import {
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 	type IPAddress,
-	type ISpamFilterRules,
-	type ITrafficFilter,
 	type InteractiveCaptchaStored,
 	type KeyringPair,
 	POW_SEPARATOR,
@@ -39,10 +38,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessRulesStorage,
-	describeMatchedRule,
-} from "@prosopo/user-access-policy";
+import { describeMatchedRule } from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -75,6 +71,7 @@ import {
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
+import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
 
 /** Fields the shared pipeline writes back onto a captcha record. */
@@ -100,7 +97,8 @@ export interface MintedChallenge {
 }
 
 /** A user's submission, plus the two steps that differ by captcha type. */
-export interface InteractiveSubmission<TRecord> {
+/** What every interactive captcha submission carries, whatever its answer. */
+export interface InteractiveSolutionSubmission {
 	challenge: PoWChallengeId;
 	providerChallengeSignature: string;
 	/** Milliseconds allowed between issuing the challenge and this submission. */
@@ -111,6 +109,10 @@ export interface InteractiveSubmission<TRecord> {
 	salt?: string;
 	simdReadings?: string;
 	clientMetaData?: ClientMetaData;
+}
+
+export interface InteractiveSubmission<TRecord>
+	extends InteractiveSolutionSubmission {
 	isCorrect: (record: TRecord) => boolean;
 	/**
 	 * Whether a wrong answer landed nowhere near the right one. Types that
@@ -138,9 +140,10 @@ export abstract class InteractiveCaptchaManager<
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
 		usageCounters?: UsageCounters | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
@@ -495,37 +498,27 @@ export abstract class InteractiveCaptchaManager<
 	/**
 	 * The post-solve gate the site's server calls: decides whether the token
 	 * the widget was given is honoured.
-	 *
-	 * @param dappAccount - the dapp that is requesting the captcha
-	 * @param challenge - the challenge string
-	 * @param timeout - milliseconds allowed between submit and verify
-	 * @param env - provider environment
-	 * @param ip - optional IP address for validation
-	 * @param userAccessRulesStorage - storage for querying user access policies
-	 * @param email
-	 * @param spamEmailDomainCheckingEnabled
-	 * @param spamFilter
-	 * @param trafficFilter
-	 * @param storeMetadata - when true, persists the dapp-server-provided
-	 *   `email` on the captcha record for spam-rate analysis.
-	 * @param clientSessionId - the session id the site rendered the widget
-	 *   with. When supplied, the solve must carry the same value in its
-	 *   `clientMetaData` or it is disapproved.
 	 */
-	async serverVerifyInteractiveCaptchaSolution(
-		dappAccount: string,
-		challenge: string,
-		timeout: number,
-		env: ProviderEnvironment,
-		ip?: string,
-		userAccessRulesStorage?: AccessRulesStorage,
-		email?: string,
-		spamEmailDomainCheckingEnabled = false,
-		spamFilter?: ISpamFilterRules,
-		trafficFilter?: ITrafficFilter,
-		storeMetadata = false,
-		clientSessionId?: string,
-	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
+	async serverVerifyInteractiveCaptchaSolution({
+		dappAccount,
+		challenge,
+		env,
+		settings: {
+			verifiedTimeout: timeout,
+			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
+			spamFilter,
+			trafficFilter,
+			storeMetadata = false,
+		},
+		ip,
+		email,
+		clientSessionId,
+		userAccessRulesStorage,
+	}: ServerVerifyCaptchaSolutionArgs): Promise<{
+		verified: boolean;
+		score?: number;
+		sessionId?: string;
+	}> {
 		// Shared by every not-verified exit; sessionId is stamped on below
 		// once the record is loaded, so each exit needn't repeat it.
 		const notVerifiedResponse: {

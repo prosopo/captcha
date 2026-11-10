@@ -68,34 +68,40 @@ export interface RenderedPuzzleRgba {
  * than WebP-encoded buffers, so browser consumers can `putImageData` onto
  * a canvas without needing sharp.
  */
-export const renderPuzzleToRgba = (
-	background: RgbaImage,
-	placement: NotchPlacement,
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	seed: Buffer = createSeed(),
-): RenderedPuzzleRgba => {
+export const renderPuzzleToRgba = ({
+	background,
+	placement,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	seed?: Buffer;
+}): RenderedPuzzleRgba => {
 	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	paintDecoys(
+	paintDecoys({
 		background,
 		prng,
-		settings.decoyCount,
-		pieceSize,
-		placement,
-		settings.decoyEdgeDarkness,
-		settings.decoyBodyBrightness,
-		settings.decoyHoleDarken,
-	);
+		targetCount: settings.decoyCount,
+		notchSize: pieceSize,
+		notch: placement,
+		edgeDarkness: settings.decoyEdgeDarkness,
+		bodyBrightness: settings.decoyBodyBrightness,
+		holeDarken: settings.decoyHoleDarken,
+	});
 	const shape = createNotchShape(prng, pieceSize);
-	const { background: cut, piece } = cutNotch(
+	const { background: cut, piece } = cutNotch({
 		prng,
 		background,
 		shape,
-		pieceSize,
+		size: pieceSize,
 		placement,
-		settings.holeDarken,
-	);
+		holeDarken: settings.holeDarken,
+	});
 	return { background: cut, piece, pieceSize, seed };
 };
 

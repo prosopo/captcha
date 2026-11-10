@@ -53,16 +53,16 @@ describe("renderPuzzleImages", () => {
 			pieceSize,
 		);
 
-		const replayed = await renderPuzzle(
-			createBackground(
-				DEFAULT_GEOMETRY,
-				Buffer.from(served.backgroundSeed, "hex"),
-			),
-			PLACEMENT,
-			{ ...DEFAULT_GEOMETRY, pieceSize },
-			DEFAULT_RENDER_SETTINGS,
-			Buffer.from(served.renderSeed, "hex"),
-		);
+		const replayed = await renderPuzzle({
+			background: createBackground({
+				geometry: DEFAULT_GEOMETRY,
+				seed: Buffer.from(served.backgroundSeed, "hex"),
+			}),
+			placement: PLACEMENT,
+			geometry: { ...DEFAULT_GEOMETRY, pieceSize },
+			settings: DEFAULT_RENDER_SETTINGS,
+			seed: Buffer.from(served.renderSeed, "hex"),
+		});
 
 		expect(toDataUri(replayed.background)).toBe(served.background);
 		expect(toDataUri(replayed.piece)).toBe(served.piece);

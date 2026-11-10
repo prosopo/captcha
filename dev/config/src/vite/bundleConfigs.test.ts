@@ -186,6 +186,11 @@ describe("ViteEsmConfig", () => {
 		expect(output).toMatchObject({ polyfillRequire: false });
 	});
 
+	it("strips the bare node:module import the disabled polyfill leaves behind", async () => {
+		const names = pluginNames(await ViteEsmConfig("my-lib", leafTsConfig()));
+		expect(names).toContain("drop-bare-node-module-import");
+	});
+
 	it("registers the copy and tsconfig-paths plugins", async () => {
 		const names = pluginNames(await ViteEsmConfig("my-lib", leafTsConfig()));
 		expect(names).toContain("close-plugin");
