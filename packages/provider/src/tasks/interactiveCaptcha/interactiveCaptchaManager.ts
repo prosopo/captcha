@@ -14,6 +14,7 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
+import type { RedisWriteQueue } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -138,9 +139,10 @@ export abstract class InteractiveCaptchaManager<
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
+		writeQueue?: RedisWriteQueue | null,
 		usageCounters?: UsageCounters | null,
 	) {
-		super(db, pair, config, logger);
+		super(db, pair, config, logger, writeQueue);
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
