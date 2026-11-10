@@ -69,15 +69,17 @@ export const StoredIconOrderCaptchaRecordSchema: Schema = new Schema({
 StoredIconOrderCaptchaRecordSchema.index({ sessionId: 1 });
 StoredIconOrderCaptchaRecordSchema.add({ storedAtTimestamp });
 
+export type SaveCaptchasArgs = {
+	sessionEvents?: StoredSession[];
+	imageCaptchaEvents?: UserCommitmentRecord[];
+	powCaptchaEvents?: PoWCaptchaRecord[];
+	puzzleCaptchaEvents?: PuzzleCaptchaRecord[];
+	iconOrderCaptchaEvents?: IconOrderCaptchaRecord[];
+	audioCaptchaEvents?: AudioCaptchaRecord[];
+};
+
 export interface ICaptchaDatabase extends IDatabase {
-	saveCaptchas(
-		sessionEvents: StoredSession[],
-		imageCaptchaEvents: UserCommitmentRecord[],
-		powCaptchaEvents: PoWCaptchaRecord[],
-		puzzleCaptchaEvents?: PuzzleCaptchaRecord[],
-		iconOrderCaptchaEvents?: IconOrderCaptchaRecord[],
-		audioCaptchaEvents?: AudioCaptchaRecord[],
-	): Promise<void>;
+	saveCaptchas(events: SaveCaptchasArgs): Promise<void>;
 	getCaptchas(
 		filter: QueryFilter<CaptchaProperties>,
 		limit: number,
