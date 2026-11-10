@@ -58,6 +58,11 @@ export type AccessRuleEntry = {
 	expiresUnixTimestamp?: number;
 };
 
+export type FindRulesOptions = {
+	matchingFieldsOnly?: boolean;
+	skipEmptyUserScopes?: boolean;
+};
+
 export type AccessRulesReader = {
 	fetchRules(ruleIds: string[]): Promise<AccessRuleEntry[]>;
 
@@ -65,8 +70,7 @@ export type AccessRulesReader = {
 
 	findRules(
 		filter: AccessRulesFilter,
-		matchingFieldsOnly?: boolean,
-		skipEmptyUserScopes?: boolean,
+		options?: FindRulesOptions,
 	): Promise<AccessRule[]>;
 
 	findRuleIds(

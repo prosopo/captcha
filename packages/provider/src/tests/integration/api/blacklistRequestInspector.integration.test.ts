@@ -192,8 +192,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					}),
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
-				true,
+				{ matchingFieldsOnly: true, skipEmptyUserScopes: true },
 			);
 
 			expect(result).toHaveLength(1);
@@ -240,8 +239,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					}),
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
-				true,
+				{ matchingFieldsOnly: true, skipEmptyUserScopes: true },
 			);
 			expect(result).toHaveLength(0);
 		});
