@@ -124,6 +124,7 @@ const RULE_LOAD_FIELDS = [
 	"@captchaType",
 	"@description",
 	"@solvedImagesCount",
+	"@severity",
 	"@imageThreshold",
 	"@powDifficulty",
 	"@unsolvedImagesCount",

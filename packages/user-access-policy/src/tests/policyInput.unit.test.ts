@@ -55,6 +55,15 @@ describe("sanitizeAccessPolicy", () => {
 			expect(result.solvedImagesCount).toBeUndefined();
 		});
 
+		it("should remove severity from block policies", () => {
+			const result = sanitizeAccessPolicy({
+				type: AccessPolicyType.Block,
+				severity: 5,
+			});
+
+			expect(result).toEqual({ type: AccessPolicyType.Block });
+		});
+
 		it("should remove both captchaType and solvedImagesCount from block policies", () => {
 			const input = {
 				type: AccessPolicyType.Block,
@@ -190,6 +199,29 @@ describe("accessPolicyInput refinement", () => {
 				/Block policies cannot set solvedImagesCount/,
 			);
 		}
+	});
+
+	it("rejects Block + severity", () => {
+		const result = accessPolicyInput.safeParse({
+			type: AccessPolicyType.Block,
+			severity: 3,
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			const issue = result.error.issues.find((i) =>
+				i.path.includes("severity"),
+			);
+			expect(issue?.message).toMatch(/Block policies cannot set severity/);
+		}
+	});
+
+	it("reads a Restrict severity stored as a Redis string back as a number", () => {
+		const result = accessPolicyInput.parse({
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.puzzle,
+			severity: "6",
+		});
+		expect(result.severity).toBe(6);
 	});
 
 	it("accepts Block without the disallowed fields", () => {

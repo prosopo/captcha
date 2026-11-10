@@ -125,15 +125,13 @@ const CAPTCHA_TYPE_TIER: ReadonlyMap<string, number> = new Map([
  * was strictest. Nothing ranks policies by it today, and adding it here would
  * silently start doing so.
  *
- * What carries puzzle severity instead is `solvedImagesCount`, on a puzzle
- * rule. That reads like a mistake and is not: a puzzle has no rounds — one
- * puzzle per session — so there is nothing for a round count to mean
- * literally. The number is reused as a severity level, which the provider
+ * What carries puzzle severity instead is `severity`, a level the provider
  * converts with `severityToPuzzleDifficulty` (see
  * `provider/src/tasks/puzzle/puzzleDifficulty.ts`) into an index into
  * `PUZZLE_DIFFICULTY_LEVELS`, the banded ladder that actually renders a
- * harder puzzle. Rule authoring therefore keeps the field on puzzle rules on
- * purpose, and drops it for `pow`, which has its own dial.
+ * harder puzzle. Puzzle rules written before `severity` existed carry the
+ * level in `solvedImagesCount` instead (a puzzle has no rounds, so the round
+ * count was reused), so that is read when `severity` is unset.
  */
 export interface CaptchaPolicySeverityInput {
 	captchaType?: string | undefined;
@@ -143,6 +141,11 @@ export interface CaptchaPolicySeverityInput {
 	 * rather than running that many rounds. Ignored on `pow`.
 	 */
 	solvedImagesCount?: number | undefined;
+	/**
+	 * Puzzle severity level. Takes precedence over `solvedImagesCount` on
+	 * `puzzle`, which older puzzle rules use to carry the same value.
+	 */
+	severity?: number | undefined;
 	/** PoW difficulty. Higher is harder. `pow`'s own dial. */
 	powDifficulty?: number | undefined;
 }
@@ -186,18 +189,18 @@ export const isStricterCaptchaType = (
  * Unset means "not hardened", i.e. the bottom of the tier — an operator who
  * set a value wants it to count for something against one who did not.
  *
- * `image` and `puzzle` share `solvedImagesCount` because it is the severity
- * currency both speak: a puzzle has no rounds, so the provider maps the same
- * number onto a puzzle difficulty level (`severityToPuzzleDifficulty`) instead
- * of running that many rounds. `pow` has its own dial and rule authoring drops
- * `solvedImagesCount` for it, so reading it there would rank every pow rule at
- * the bottom of its tier regardless of how hard it actually is.
+ * `puzzle` reads `severity`, falling back to `solvedImagesCount` for rules
+ * written before `severity` existed. `pow` has its own dial and rule
+ * authoring drops `solvedImagesCount` for it, so reading it there would rank
+ * every pow rule at the bottom of its tier regardless of how hard it actually
+ * is.
  */
 const intraTierSeverity = (policy: CaptchaPolicySeverityInput): number => {
 	switch (policy.captchaType) {
 		case "image":
-		case "puzzle":
 			return clampIntraTier(policy.solvedImagesCount ?? 0);
+		case "puzzle":
+			return clampIntraTier(policy.severity ?? policy.solvedImagesCount ?? 0);
 		case "pow":
 			return clampIntraTier(policy.powDifficulty ?? 0);
 		default:
