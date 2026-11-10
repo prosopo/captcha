@@ -108,6 +108,7 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
 			this.usageCounters,
 		);
 		this.audioCaptchaManager = new AudioCaptchaManager(
@@ -115,6 +116,7 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
 			this.usageCounters,
 		);
 		this.iconOrderCaptchaManager = new IconOrderCaptchaManager(
@@ -122,6 +124,7 @@ export class Tasks {
 			this.pair,
 			this.config,
 			this.logger,
+			this.writeQueue,
 			this.usageCounters,
 		);
 		this.datasetManager = new DatasetManager(
