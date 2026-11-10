@@ -39,3 +39,23 @@ export type ServerVerifyCaptchaSolutionArgs = {
 	clientSessionId?: string;
 	userAccessRulesStorage?: AccessRulesStorage;
 };
+
+export type VerifyImageCaptchaSolutionArgs = Omit<
+	ServerVerifyCaptchaSolutionArgs,
+	"challenge" | "settings"
+> & {
+	user: string;
+	commitmentId?: string;
+	/** Milliseconds a solution stays verifiable, as requested by the site's server. */
+	maxVerifiedTime?: number;
+	settings: Partial<
+		Pick<
+			IUserSettings,
+			| "disallowWebView"
+			| "spamEmailDomainCheckEnabled"
+			| "spamFilter"
+			| "trafficFilter"
+			| "storeMetadata"
+		>
+	>;
+};

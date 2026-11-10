@@ -68,7 +68,7 @@ const makeTasks = () => {
 		config: {
 			captchas: { solved: { count: 2 }, unsolved: { count: 0 } },
 		},
-	} as unknown as Parameters<typeof buildEscalation>[0];
+	} as unknown as Parameters<typeof buildEscalation>[0]["tasks"];
 
 	return {
 		tasks,
@@ -130,11 +130,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 				...makeOriginSession(),
 				fingerprintSummary: atFrictionless,
 			});
-			await buildEscalation(
-				env.tasks,
-				{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-				"challenge",
-			);
+			await buildEscalation({
+				tasks: env.tasks,
+				result: {
+					verified: true,
+					routingOutput: { captchaType: CaptchaType.puzzle },
+				},
+				challenge: "challenge",
+			});
 			const input: CreateSessionInput =
 				env.spies.createSession.mock.calls[0]?.[0];
 			return input.fingerprintSummary;
@@ -150,35 +153,38 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 	});
 
 	it("returns undefined when no routing output was supplied (no escalation)", async () => {
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: undefined },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: { verified: true, routingOutput: undefined },
+			challenge: "challenge",
+		});
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
 		expect(env.spies.createSession).not.toHaveBeenCalled();
 	});
 
 	it("returns undefined when PoW didn't verify (route() shouldn't fire if PoW failed)", async () => {
-		const out = await buildEscalation(
-			env.tasks,
-			{
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
 				verified: false,
 				routingOutput: { captchaType: CaptchaType.image },
 			},
-			"challenge",
-		);
+			challenge: "challenge",
+		});
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
 	});
 
 	it("returns undefined when the router kept the user on PoW (no escalation needed)", async () => {
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.pow } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.pow },
+			},
+			challenge: "challenge",
+		});
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
 	});
@@ -192,11 +198,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toEqual({
 			captchaType: CaptchaType.image,
@@ -220,11 +229,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(env.spies.cacheSessionEscalation).toHaveBeenCalledWith(
 			"origin-id",
@@ -246,11 +258,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		);
 		(env.tasks as unknown as { writeQueue: unknown }).writeQueue = null;
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toEqual({
 			captchaType: CaptchaType.image,
@@ -264,11 +279,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 	it("does not write a mapping when the PoW record lookup fails (no origin to map from)", async () => {
 		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue(null);
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
@@ -282,11 +300,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(undefined);
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
@@ -310,11 +331,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
 		const input = createSessionInput();
@@ -334,11 +358,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
 		const input = createSessionInput();
@@ -356,11 +383,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			solvedImagesCount: 9,
 		});
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		const input = createSessionInput();
 		expect(input.puzzleTolerance).toBeDefined();
@@ -376,11 +406,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		const input = createSessionInput();
 		expect(input.puzzleTolerance).toBeUndefined();
@@ -396,17 +429,19 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-			undefined,
-			{
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+			siteConstraints: {
 				allowedCaptchaTypes: resolveAllowedCaptchaTypes({
 					captchaTypeFeatureFlags: { puzzle: false },
 				}),
 			},
-		);
+		});
 
 		expect(out?.captchaType).toBe(CaptchaType.image);
 		expect(createSessionInput().captchaType).toBe(CaptchaType.image);
@@ -423,16 +458,15 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			env.spies.getSessionRecordBySessionId.mockResolvedValue(
 				makeOriginSession(),
 			);
-			return buildEscalation(
-				env.tasks,
-				{
+			return buildEscalation({
+				tasks: env.tasks,
+				result: {
 					verified: true,
 					routingOutput: { captchaType: CaptchaType.iconOrder },
 				},
-				"challenge",
-				undefined,
-				allowedCaptchaTypes && { allowedCaptchaTypes },
-			);
+				challenge: "challenge",
+				siteConstraints: allowedCaptchaTypes && { allowedCaptchaTypes },
+			});
 		};
 
 		it("escalates to icon-order when the site has it switched on", async () => {
@@ -493,11 +527,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().simdReadings).toBe(originSimd);
 	});
@@ -530,11 +567,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().simdReadings).toBe(originSimd);
 	});
@@ -550,11 +590,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().bundleId).toBe("bundle-42");
 	});
@@ -570,11 +613,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().bundleId).toBe("bundle-17");
 	});
@@ -599,11 +645,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			d: originData,
 		});
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().d).toBe(originData);
 	});
@@ -630,11 +679,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		// No field of the createSession input holds the origin's BDP —
 		// nothing was copied. `buildEscalation` enumerates what it inherits
@@ -667,15 +719,15 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 				...makeOriginSession(),
 				headers: { "user-agent": IPHONE_UA },
 			});
-			await buildEscalation(
-				env.tasks,
-				{
+			await buildEscalation({
+				tasks: env.tasks,
+				result: {
 					verified: true,
 					routingOutput: { captchaType: CaptchaType.puzzle },
 					...(device && { device }),
 				},
-				"challenge",
-			);
+				challenge: "challenge",
+			});
 			const input: CreateSessionInput =
 				env.spies.createSession.mock.calls[0]?.[0];
 			return input;

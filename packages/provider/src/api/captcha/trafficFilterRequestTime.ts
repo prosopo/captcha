@@ -84,7 +84,7 @@ export const applyTrafficFilterAtRequestTime = (
 	// request-time we consult only what the operator explicitly configured
 	// as `challenge`, and let submit-time enforce every `block` (defaulted
 	// or otherwise).
-	const result = checkTrafficFilter(ipInfo, trafficFilter);
+	const result = checkTrafficFilter({ ipInfo, trafficFilter });
 	const padBytes = resolvePadBytes(result.matches);
 
 	const resolved = resolveChallengePolicy(result.matches);
