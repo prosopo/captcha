@@ -21,11 +21,11 @@ import {
 	type IconOrderCaptchaRecord,
 	type PoWCaptchaRecord,
 	type PuzzleCaptchaRecord,
+	type SaveCaptchasArgs,
 	StoredAudioCaptchaRecordSchema,
 	StoredIconOrderCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
-	type StoredSession,
 	StoredSessionRecordSchema,
 	StoredUserCommitmentRecordSchema,
 	type Tables,
@@ -276,14 +276,14 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		};
 	}
 
-	async saveCaptchas(
-		sessionEvents: StoredSession[],
-		imageCaptchaEvents: UserCommitmentRecord[],
-		powCaptchaEvents: PoWCaptchaRecord[],
-		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
-		iconOrderCaptchaEvents: IconOrderCaptchaRecord[] = [],
-		audioCaptchaEvents: AudioCaptchaRecord[] = [],
-	) {
+	async saveCaptchas({
+		sessionEvents = [],
+		imageCaptchaEvents = [],
+		powCaptchaEvents = [],
+		puzzleCaptchaEvents = [],
+		iconOrderCaptchaEvents = [],
+		audioCaptchaEvents = [],
+	}: SaveCaptchasArgs) {
 		await this.connect();
 		if (sessionEvents.length) {
 			// Upsert by sessionId (same pattern as image/pow/puzzle below).
