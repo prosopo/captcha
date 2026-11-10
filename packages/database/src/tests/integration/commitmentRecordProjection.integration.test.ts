@@ -202,6 +202,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		expect(got.result?.status).toBe(CaptchaStatus.approved);
 		expect(got.ipAddress).toBeDefined();
 		expect(got.submittedAtTimestamp).toBeInstanceOf(Date);
+		expect(got.ja4).toBe("ja4-projection");
 	});
 
 	// The by-account path used to project only {_id: 0, result: 1}, so
@@ -257,6 +258,7 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 			"result",
 			"ipAddress",
 			"submittedAtTimestamp",
+			"ja4",
 		] as const;
 
 		for (const key of verifyPathReads) {
