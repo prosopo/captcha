@@ -1,0 +1,20 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/cjs",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"target": "ES2022",
+		"lib": ["es2022", "dom"]
+	},
+	"include": ["./src"],
+	"references": [
+		{
+			"path": "../../../../dev/config/tsconfig.cjs.json"
+		},
+		{
+			"path": "../../../../packages/types/tsconfig.cjs.json"
+		}
+	]
+}
