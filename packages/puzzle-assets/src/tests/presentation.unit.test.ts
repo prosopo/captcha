@@ -13,11 +13,13 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
+import { GRAIN_AMPLITUDE } from "../background.js";
 import {
 	type BoardEffect,
 	EVEN_RECESS_STYLE,
 	applyEffects,
 	recessShadow,
+	regrain,
 	samplePresentation,
 } from "../presentation.js";
 import { createPrng } from "../prng.js";
@@ -138,5 +140,45 @@ describe("recessShadow", () => {
 
 	it("is zero away from the outline", () => {
 		expect(recessShadow(-5, 10, 10, 20, 0.45, EVEN_RECESS_STYLE)).toBe(0);
+	});
+});
+
+describe("regrain", () => {
+	const randomImage = (width: number, height: number): RgbaImage => {
+		const prng = createPrng(Buffer.alloc(16, 3));
+		const data = Buffer.alloc(width * height * 4);
+		for (let i = 0; i < data.length; i++) {
+			data[i] = i % 4 === 3 ? 255 : Math.floor(prng.next() * 256);
+		}
+		return { data, width, height };
+	};
+
+	it("is a 3x3 median per channel plus fresh grain", () => {
+		const image = randomImage(13, 9);
+		const source = Buffer.from(image.data);
+		regrain(image, createPrng(SEED));
+
+		const prng = createPrng(SEED);
+		for (let y = 0; y < 9; y++) {
+			for (let x = 0; x < 13; x++) {
+				const noise = (prng.next() - 0.5) * 2 * GRAIN_AMPLITUDE;
+				for (let c = 0; c < 3; c++) {
+					const window: number[] = [];
+					for (let dy = -1; dy <= 1; dy++) {
+						for (let dx = -1; dx <= 1; dx++) {
+							const sx = Math.min(12, Math.max(0, x + dx));
+							const sy = Math.min(8, Math.max(0, y + dy));
+							window.push(source[(sy * 13 + sx) * 4 + c] ?? 0);
+						}
+					}
+					const median = window.sort((a, b) => a - b)[4] ?? 0;
+					const expected = Math.min(
+						255,
+						Math.max(0, Math.round(median + noise)),
+					);
+					expect(image.data[(y * 13 + x) * 4 + c]).toBe(expected);
+				}
+			}
+		}
 	});
 });

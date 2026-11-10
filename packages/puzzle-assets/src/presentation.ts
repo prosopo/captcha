@@ -377,8 +377,26 @@ export const applyEffects = (
 	}
 };
 
-const median9 = (values: number[]): number =>
-	values.sort((a, b) => a - b)[4] ?? 0;
+/** Index pairs of Paeth's median-of-nine network; the median ends in slot 4. */
+const MEDIAN9_NETWORK = [
+	1, 2, 4, 5, 7, 8, 0, 1, 3, 4, 6, 7, 1, 2, 4, 5, 7, 8, 0, 3, 5, 8, 4, 7, 3, 6,
+	1, 4, 2, 5, 4, 7, 4, 2, 6, 4, 4, 2,
+] as const;
+
+/** Median of the nine values in `p`, reordering `p` in place. */
+const median9 = (p: Int32Array): number => {
+	for (let k = 0; k < MEDIAN9_NETWORK.length; k += 2) {
+		const a = MEDIAN9_NETWORK[k] ?? 0;
+		const b = MEDIAN9_NETWORK[k + 1] ?? 0;
+		const lo = p[a] ?? 0;
+		const hi = p[b] ?? 0;
+		if (lo > hi) {
+			p[a] = hi;
+			p[b] = lo;
+		}
+	}
+	return p[4] ?? 0;
+};
 
 /**
  * Swap the board's grain for fresh grain of the same strength: a 3x3 median
@@ -389,18 +407,21 @@ const median9 = (values: number[]): number =>
 export const regrain = (image: RgbaImage, prng: Prng): void => {
 	const { width, height } = image;
 	const source = Buffer.from(image.data);
-	const window: number[] = [];
+	const window = new Int32Array(9);
+	const column = (x: number): number => Math.min(width - 1, Math.max(0, x)) * 4;
+	const row = (y: number): number =>
+		Math.min(height - 1, Math.max(0, y)) * width * 4;
 	for (let y = 0; y < height; y++) {
+		const rows = [row(y - 1), row(y), row(y + 1)] as const;
 		for (let x = 0; x < width; x++) {
+			const columns = [column(x - 1), column(x), column(x + 1)] as const;
 			const i = (y * width + x) * 4;
 			const noise = (prng.next() - 0.5) * 2 * GRAIN_AMPLITUDE;
 			for (let c = 0; c < 3; c++) {
-				window.length = 0;
-				for (let dy = -1; dy <= 1; dy++) {
-					const sy = Math.min(height - 1, Math.max(0, y + dy));
-					for (let dx = -1; dx <= 1; dx++) {
-						const sx = Math.min(width - 1, Math.max(0, x + dx));
-						window.push(source[(sy * width + sx) * 4 + c] ?? 0);
+				let w = 0;
+				for (const r of rows) {
+					for (const k of columns) {
+						window[w++] = source[r + k + c] ?? 0;
 					}
 				}
 				image.data[i + c] = clamp255(Math.round(median9(window) + noise));
