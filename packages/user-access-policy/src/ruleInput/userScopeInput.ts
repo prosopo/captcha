@@ -103,29 +103,65 @@ const userIpInput = z
 		ip: z.string().optional(),
 		ipMask: z.string().optional(),
 	} satisfies AllKeys<UserIpInput>)
-	.transform((userIpInput: UserIpInput): UserIp => {
+	.transform((userIpInput: UserIpInput, ctx): UserIp => {
 		// this line creates a new "userScope", without ip and ipMask
 		const { ip, ipMask, ...numericUserIp } = userIpInput;
 
 		if ("string" === typeof ip) {
-			numericUserIp.numericIp = getIPAddress(ip).bigInt();
+			const numericIp = parseIp(ip);
+			if (undefined === numericIp) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ["ip"],
+					message: "Invalid IP address",
+				});
+				return z.NEVER;
+			}
+			numericUserIp.numericIp = numericIp;
 		}
 
-		// Assuming ipMask is already validated to be a string in CIDR format
 		if ("string" === typeof ipMask) {
-			// Try IPv4 CIDR first (e.g., 192.168.1.0/24); fall back to IPv6
-			// CIDR (e.g., 2001:db8::/32). Both Address4 and Address6 understand
-			// CIDR notation and expose start/end addresses for the network.
-			const ipObject = Address4.isValid(ipMask)
-				? new Address4(ipMask)
-				: new Address6(ipMask);
-
-			numericUserIp.numericIpMaskMin = ipObject.startAddress().bigInt();
-			numericUserIp.numericIpMaskMax = ipObject.endAddress().bigInt();
+			const range = parseIpMask(ipMask);
+			if (undefined === range) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ["ipMask"],
+					message: "Invalid IP mask",
+				});
+				return z.NEVER;
+			}
+			numericUserIp.numericIpMaskMin = range.min;
+			numericUserIp.numericIpMaskMax = range.max;
 		}
 
 		return numericUserIp;
 	});
+
+const parseIp = (ip: string): bigint | undefined => {
+	try {
+		return getIPAddress(ip).bigInt();
+	} catch {
+		return undefined;
+	}
+};
+
+// Address4 and Address6 both read CIDR notation and expose the start and end
+// addresses of the network.
+const parseIpMask = (
+	ipMask: string,
+): { min: bigint; max: bigint } | undefined => {
+	try {
+		const ipObject = Address4.isValid(ipMask)
+			? new Address4(ipMask)
+			: new Address6(ipMask);
+		return {
+			min: ipObject.startAddress().bigInt(),
+			max: ipObject.endAddress().bigInt(),
+		};
+	} catch {
+		return undefined;
+	}
+};
 
 export type UserScopeInput = UserAttributesInput & UserIpInput;
 
