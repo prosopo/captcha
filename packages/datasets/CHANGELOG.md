@@ -1,5 +1,23 @@
 # @prosopo/datasets
 
+## 3.2.27
+### Patch Changes
+
+- Updated dependencies [8473b14]
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/util-crypto@13.6.6
+  - @prosopo/types@5.29.0
+  - @prosopo/logger@2.1.12
+  - @prosopo/util@3.7.1
+  - @prosopo/common@3.3.2
+
 ## 3.2.26
 ### Patch Changes
 

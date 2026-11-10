@@ -1,5 +1,38 @@
 # @prosopo/client-example-server
 
+## 2.7.200
+### Patch Changes
+
+- ffb5a5c: The example server's login now only accepts a captcha result of exactly `true`, the same as signup. Before, any truthy value, such as the string `"false"`, let a login through.
+  
+  The auto-increment plugin for user ids is now applied once, where the user schema is defined. Before, every new database connection added another copy of it to the shared schema, so a process with more than one connection numbered users in steps of two or more.
+- Updated dependencies [f9540f2]
+- Updated dependencies [45ddb28]
+- Updated dependencies [88aa878]
+- Updated dependencies [39eeef9]
+- Updated dependencies [32075aa]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [a676f91]
+- Updated dependencies [89c3078]
+- Updated dependencies [eb5b4ae]
+- Updated dependencies [898f642]
+- Updated dependencies [f868427]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [c8f0b16]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/database@4.6.7
+  - @prosopo/types@5.29.0
+  - @prosopo/keyring@2.10.27
+  - @prosopo/logger@2.1.12
+  - @prosopo/util@3.7.1
+  - @prosopo/common@3.3.2
+  - @prosopo/server@2.14.16
+  - @prosopo/dotenv@3.0.69
+
 ## 2.7.199
 ### Patch Changes
 

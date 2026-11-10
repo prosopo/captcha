@@ -1,5 +1,10 @@
 # @prosopo/native-puzzle
 
+## 0.2.0
+### Minor Changes
+
+- f7e7ea0: Add puzzle renderer version 2, record the renderer version on each puzzle, and deliver the puzzle piece inside the board image.
+
 ## 0.1.6
 ### Patch Changes
 

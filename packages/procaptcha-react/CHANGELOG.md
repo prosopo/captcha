@@ -1,5 +1,26 @@
 # @prosopo/procaptcha-react
 
+## 2.14.26
+### Patch Changes
+
+- fe27353: The image challenge's Cancel, Next and Submit buttons now draw their visible label from a closed shadow root inside the button instead of a plain text node, in line with the rest of the challenge not exposing fixed selectors. The buttons look exactly the same in light and dark themes and in every language, and their accessible name still comes from `aria-label`, so screen readers announce them as before. Tests that found these buttons by their visible text should use the button role with its name, or the `aria-label`, instead.
+- Updated dependencies [88aa878]
+- Updated dependencies [41af027]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/types@5.29.0
+  - @prosopo/procaptcha-common@2.23.7
+  - @prosopo/util@3.7.1
+  - @prosopo/procaptcha@2.12.7
+  - @prosopo/common@3.3.2
+  - @prosopo/locale@3.14.4
+  - @prosopo/widget-skeleton@2.10.5
+
 ## 2.14.25
 ### Patch Changes
 

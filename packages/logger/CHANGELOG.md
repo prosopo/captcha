@@ -1,5 +1,12 @@
 # @prosopo/logger
 
+## 2.1.12
+### Patch Changes
+
+- 206235c: Redact credential fields and connection-string passwords from log output.
+- Updated dependencies [206235c]
+  - @prosopo/util@3.7.1
+
 ## 2.1.11
 ### Patch Changes
 

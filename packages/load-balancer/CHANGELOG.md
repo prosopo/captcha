@@ -1,5 +1,23 @@
 # @prosopo/load-balancer
 
+## 2.11.31
+### Patch Changes
+
+- 818c669: A provider verifying a token it issued itself no longer fetches the provider list first. That fetch was only needed to decide whether to forward the request elsewhere, and when the list endpoint was slow every such verify waited for the full fetch timeout.
+  
+  Once the provider list has loaded, callers no longer wait on it again. An expired list is refreshed in the background while the previous one keeps being served, and a failed refresh keeps serving the previous list and tries again 30 seconds later, instead of discarding it so the next caller has to fetch from scratch.
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/types@5.29.0
+  - @prosopo/util@3.7.1
+  - @prosopo/common@3.3.2
+
 ## 2.11.30
 ### Patch Changes
 

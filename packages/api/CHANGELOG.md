@@ -1,5 +1,21 @@
 # @prosopo/api
 
+## 4.10.3
+### Patch Changes
+
+- 89c3078: The widget now sends the behavioural readings it has already gathered with the frictionless request, not only with the solution. The provider reads them with the same detector bundle it uses at submit and stores the device readings on the session, so a phone's first puzzle gets the touch sizing instead of waiting for a solve to report the touch screen. Readings that are missing or cannot be read leave the session as it was, and never fail the request.
+- f7e7ea0: Add puzzle renderer version 2, record the renderer version on each puzzle, and deliver the puzzle piece inside the board image.
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/types@5.29.0
+  - @prosopo/util@3.7.1
+
 ## 4.10.2
 ### Patch Changes
 

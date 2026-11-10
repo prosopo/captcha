@@ -1,5 +1,25 @@
 # @prosopo/procaptcha-common
 
+## 2.23.7
+### Patch Changes
+
+- 41af027: In float placement, the challenge panel no longer opens with its top cut off. It still opens above the widget when there is room. When there is not, because the widget is near the top of the screen, it now opens below the widget. If it fits on neither side, it starts at the top of the screen. Before, it always opened above, so a widget near the top of a fixed dialog or a page that cannot scroll hid the panel's instructions with no way to reach them.
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+- Updated dependencies [818c669]
+  - @prosopo/types@5.29.0
+  - @prosopo/util@3.7.1
+  - @prosopo/load-balancer@2.11.31
+  - @prosopo/account@2.8.130
+  - @prosopo/locale@3.14.4
+  - @prosopo/widget-skeleton@2.10.5
+
 ## 2.23.6
 ### Patch Changes
 
