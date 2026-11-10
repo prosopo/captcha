@@ -1013,12 +1013,12 @@ describe("PowCaptchaManager", () => {
 				challengeRecord as PoWCaptchaRecord,
 			);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
 
 			expect(result).toEqual({
 				verified: false,
@@ -1066,12 +1066,12 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
 
 			expect(result).toEqual({ verified: true, score: 0, sessionId });
 		});
