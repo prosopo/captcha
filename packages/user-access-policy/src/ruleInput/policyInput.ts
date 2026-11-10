@@ -51,6 +51,7 @@ export const accessPolicyInputShape = z.object({
 	description: z.coerce.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),
+	severity: z.coerce.number().optional(),
 	// the percentage of image panels that must be solved per image CAPTCHA
 	imageThreshold: z.coerce.number().optional(),
 	// the Proof-of-Work difficulty level
@@ -87,6 +88,14 @@ export const accessPolicyInput = accessPolicyInputShape.superRefine(
 					"Block policies cannot set solvedImagesCount — the field only applies to Restrict policies that adjust image-captcha rounds.",
 			});
 		}
+		if (policy.severity !== undefined) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ["severity"],
+				message:
+					"Block policies cannot set severity — the field only applies to Restrict policies that serve a puzzle.",
+			});
+		}
 	},
 );
 
@@ -97,7 +106,7 @@ export const accessPolicyInput = accessPolicyInputShape.superRefine(
 // canonical shape. New writes are rejected at input.
 export const sanitizeAccessPolicy = (policy: AccessPolicy): AccessPolicy => {
 	if (policy.type === AccessPolicyType.Block) {
-		const { captchaType, solvedImagesCount, ...blockPolicy } = policy;
+		const { captchaType, solvedImagesCount, severity, ...blockPolicy } = policy;
 		return blockPolicy;
 	}
 	return policy;

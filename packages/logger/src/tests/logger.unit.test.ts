@@ -15,6 +15,7 @@
 import { stringifyBigInts } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	REDACTED,
 	getLogger,
 	parseDirectives,
 	parseLogLevel,
@@ -169,6 +170,80 @@ describe("print", () => {
 			count: "3",
 		});
 		expect(data.count).toBe(3n);
+	});
+});
+
+describe("secret redaction", () => {
+	let lines: string[] = [];
+
+	beforeEach(() => {
+		lines = [];
+		vi.spyOn(console, "info").mockImplementation((...args: unknown[]): void => {
+			lines.push(String(args[0]));
+		});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	const logged = (data: object): Record<string, unknown> => {
+		getLogger("info", "test").info(() => ({ msg: "config", data }));
+		const record: Record<string, unknown> = JSON.parse(lines[0] ?? "{}");
+		return record.data as Record<string, unknown>;
+	};
+
+	it("redacts credential fields at any depth", () => {
+		const data = logged({
+			config: {
+				account: { address: "5Abc", secret: "seed words", password: "pw" },
+				redisConnection: { url: "redis://redis:6379", password: "root" },
+				ipApi: { apiKey: "key", baseUrl: "https://api.example.com" },
+			},
+		});
+		expect(data.config).toEqual({
+			account: { address: "5Abc", secret: REDACTED, password: REDACTED },
+			redisConnection: { url: "redis://redis:6379", password: REDACTED },
+			ipApi: { apiKey: REDACTED, baseUrl: "https://api.example.com" },
+		});
+	});
+
+	it("redacts a keystore whatever shape it has", () => {
+		const data = logged({ keystore: { encoded: "abc", encoding: {} } });
+		expect(data.keystore).toBe(REDACTED);
+	});
+
+	it("masks the password in a connection string", () => {
+		const data = logged({
+			mongoCaptchaUri: "mongodb://captcha:hunter2@mongo1:27017/captcha",
+		});
+		expect(data.mongoCaptchaUri).toBe(
+			`mongodb://captcha:${REDACTED}@mongo1:27017/captcha`,
+		);
+	});
+
+	it("leaves ordinary fields and empty secrets alone", () => {
+		const data = logged({
+			siteKey: "5Def",
+			url: "https://example.com/path",
+			password: "",
+			count: 2,
+		});
+		expect(data).toEqual({
+			siteKey: "5Def",
+			url: "https://example.com/path",
+			password: "",
+			count: 2,
+		});
+	});
+
+	it("redacts error data too", () => {
+		const err = Object.assign(new Error("connect failed"), {
+			password: "pw",
+		});
+		getLogger("info", "test").info(() => ({ err }));
+		const record: Record<string, unknown> = JSON.parse(lines[0] ?? "{}");
+		expect((record.errData as Record<string, unknown>).password).toBe(REDACTED);
 	});
 });
 

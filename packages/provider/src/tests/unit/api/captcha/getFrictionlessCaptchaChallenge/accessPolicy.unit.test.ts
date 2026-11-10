@@ -159,6 +159,50 @@ describe("handleAccessPolicy", () => {
 		).toHaveBeenCalledWith(CaptchaType.puzzle, expect.anything());
 	});
 
+	it("sizes a puzzle from the policy's severity over solvedImagesCount", async () => {
+		const { tasks, input } = buildInput();
+		input.userAccessPolicy = {
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.puzzle,
+			severity: 7,
+			solvedImagesCount: 2,
+		};
+		const res = buildRes();
+		await handleAccessPolicy(input as never, res as never);
+		const [, args] =
+			tasks.frictionlessManager.sendAccessRuleCaptcha.mock.calls[0] ?? [];
+		expect(args.solvedImagesCount).toBe(7);
+	});
+
+	it("sizes a puzzle from solvedImagesCount when the policy has no severity", async () => {
+		const { tasks, input } = buildInput();
+		input.userAccessPolicy = {
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.puzzle,
+			solvedImagesCount: 8,
+		};
+		const res = buildRes();
+		await handleAccessPolicy(input as never, res as never);
+		const [, args] =
+			tasks.frictionlessManager.sendAccessRuleCaptcha.mock.calls[0] ?? [];
+		expect(args.solvedImagesCount).toBe(8);
+	});
+
+	it("does not size an image from the policy's severity", async () => {
+		const { tasks, input } = buildInput();
+		input.userAccessPolicy = {
+			type: AccessPolicyType.Restrict,
+			captchaType: CaptchaType.image,
+			severity: 4,
+			solvedImagesCount: 3,
+		};
+		const res = buildRes();
+		await handleAccessPolicy(input as never, res as never);
+		const [, args] =
+			tasks.frictionlessManager.sendAccessRuleCaptcha.mock.calls[0] ?? [];
+		expect(args.solvedImagesCount).toBe(3);
+	});
+
 	// Every outcome below writes a session somewhere downstream, and each one
 	// used to land in the audit page as a bare "ACCESS_POLICY_BLOCK" /
 	// "USER_ACCESS_POLICY" with no way to tell which of a site's rules did it.

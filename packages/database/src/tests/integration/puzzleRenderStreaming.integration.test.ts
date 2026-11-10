@@ -144,4 +144,61 @@ describe("ProviderDatabase: puzzle render inputs reach the central copy", () => 
 		expect(verifyRead?.targetX).toBe(200);
 		expect(verifyRead).not.toHaveProperty("render");
 	});
+
+	it("stores the submitted drop position locally and streams it to the central copy", async () => {
+		const challenge = "1___u1___dapp-A___puzzle-drop" as PoWChallengeId;
+		await db.getTables().puzzlecaptcha.create({
+			challenge,
+			userAccount: "u1",
+			dappAccount: "dapp-A",
+			requestedAtTimestamp: new Date(),
+			ipAddress: ipv4Composite(1n),
+			headers: { host: "example.com" },
+			ja4: "j",
+			result: { status: CaptchaStatus.pending },
+			userSubmitted: false,
+			serverChecked: false,
+			targetX: 200,
+			targetY: 100,
+			originX: 30,
+			originY: 100,
+			tolerance: 10,
+			providerSignature: "sig",
+		});
+
+		await db.updatePuzzleCaptchaRecord(challenge, {
+			finalX: 203,
+			finalY: 104,
+			distanceFromTarget: 5,
+		});
+
+		const local = await db
+			.getTables()
+			.puzzlecaptcha.findOne({ challenge })
+			.lean<PuzzleCaptchaRecord>();
+		expect(local).toMatchObject({
+			finalX: 203,
+			finalY: 104,
+			distanceFromTarget: 5,
+		});
+
+		const central = (
+			streamer as unknown as {
+				db: {
+					tables: {
+						puzzlecaptcha: import("mongoose").Model<PuzzleCaptchaRecord>;
+					};
+				};
+			}
+		).db.tables.puzzlecaptcha;
+		const stored = await waitFor(
+			() => central.findOne({ challenge }).lean<PuzzleCaptchaRecord>(),
+			(doc) => doc?.distanceFromTarget !== undefined,
+		);
+		expect(stored).toMatchObject({
+			finalX: 203,
+			finalY: 104,
+			distanceFromTarget: 5,
+		});
+	});
 });
