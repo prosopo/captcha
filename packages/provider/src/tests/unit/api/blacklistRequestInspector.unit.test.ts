@@ -463,15 +463,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
+		await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
 			requestHeaders,
 			requestBody,
-			mockLogger,
-			validIpInfo("DE"),
-		);
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 
 		return seen;
 	};
