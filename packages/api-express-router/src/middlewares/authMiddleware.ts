@@ -15,10 +15,11 @@
 import { hexToU8a } from "@polkadot/util";
 import { ProsopoError, isProsopoError, toPublicError } from "@prosopo/common";
 import type { ApiJsonError, KeyringPair } from "@prosopo/types";
-import type {
-	JWT,
-	JWTVerifyOptions,
-	JWTVerifyResult,
+import {
+	type JWT,
+	type JWTVerifyOptions,
+	type JWTVerifyResult,
+	JWT_LIFETIME_EXCEEDED_ERROR,
 } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 import type { JwtReplayGuard } from "./jwtReplayGuard.js";
@@ -33,14 +34,57 @@ export type AuthMiddlewareOptions = {
 	replayGuard?: JwtReplayGuard;
 };
 
+type Verification = { key: KeyringPair; result: JWTVerifyResult };
+
 const verifyWith = (
-	key: KeyringPair | undefined,
+	keys: (KeyringPair | undefined)[],
 	jwt: JWT,
 	options: AuthMiddlewareOptions,
-): JWTVerifyResult | undefined => {
-	if (!key) return undefined;
-	const result = key.jwtVerify(jwt, options.verify);
-	return result.isValid ? result : undefined;
+): { verified?: JWTVerifyResult; rejections: Verification[] } => {
+	const rejections: Verification[] = [];
+	for (const key of keys) {
+		if (!key) continue;
+		const result = key.jwtVerify(jwt, options.verify);
+		if (result.isValid) return { verified: result, rejections };
+		rejections.push({ key, result });
+	}
+	return { rejections };
+};
+
+// A correctly signed token that outlives the lifetime cap can never pass, so
+// it is a caller misconfiguration rather than a bad credential. Re-verifying
+// without the cap confirms the signature before anything from the token is
+// logged; the subject must then be one of our own keys, which bounds the set.
+const subjectsWarnedForLifetime = new Set<string>();
+
+const warnOnOverlongLifetime = (
+	req: Request,
+	jwt: JWT,
+	rejections: Verification[],
+	verify: JWTVerifyOptions | undefined,
+): void => {
+	const maxLifetimeSeconds = verify?.maxLifetimeSeconds;
+	if (maxLifetimeSeconds === undefined) return;
+	for (const { key, result } of rejections) {
+		if (result.error !== JWT_LIFETIME_EXCEEDED_ERROR) continue;
+		const uncapped = key.jwtVerify(jwt, {
+			...verify,
+			maxLifetimeSeconds: undefined,
+		});
+		const payload = uncapped.payload;
+		if (!uncapped.isValid || !payload) continue;
+		if (subjectsWarnedForLifetime.has(payload.sub)) return;
+		subjectsWarnedForLifetime.add(payload.sub);
+		req.logger.warn(() => ({
+			msg: "Rejected a correctly signed token whose lifetime exceeds the maximum",
+			data: {
+				sub: payload.sub,
+				lifetimeSeconds: payload.exp - payload.iat,
+				maxLifetimeSeconds,
+			},
+		}));
+		return;
+	}
 };
 
 const isReplay = (
@@ -70,14 +114,18 @@ export const authMiddleware = ({
 		try {
 			const jwt = extractJWT(req);
 
-			const verified =
-				verifyWith(authAccount, jwt, options) ?? verifyWith(pair, jwt, options);
+			const { verified, rejections } = verifyWith(
+				[authAccount, pair],
+				jwt,
+				options,
+			);
 
 			if (verified && !isReplay(verified, options)) {
 				next();
 				return;
 			}
 
+			warnOnOverlongLifetime(req, jwt, rejections, options.verify);
 			unauthorized(res);
 			return;
 		} catch (err) {
