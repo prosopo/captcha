@@ -154,10 +154,11 @@ export const POW_SEPARATOR = "___";
 export type PoWChallengeId =
 	`${Timestamp}${typeof POW_SEPARATOR}${UserAccount}${typeof POW_SEPARATOR}${DappAccount}`;
 
-export const PowChallengeIdSchema = custom<PoWChallengeId>((val: string) => {
+export const PowChallengeIdSchema = custom<PoWChallengeId>((val: unknown) => {
+	if (typeof val !== "string") {
+		return false;
+	}
 	const valSplit = val.split(POW_SEPARATOR);
-	// The timestamp must be wholly an integer: parseInt never throws, so the
-	// try/catch this replaced validated nothing.
 	return valSplit.length === 4 && parseInteger(valSplit[0], { min: 0 }).ok;
 });
 
