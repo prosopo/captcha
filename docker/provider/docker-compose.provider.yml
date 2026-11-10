@@ -198,6 +198,32 @@ services:
       options:
         max-size: '100m'
         max-file: '1'
+  # Holds only the provider's session read cache (`getRedisMemConnection`),
+  # which the provider rebuilds from Mongo and wipes on start anyway, so it
+  # writes nothing to disk and a restart empties it.
+  redis-mem:
+    container_name: redis-mem
+    image: redis:7-alpine
+    restart: unless-stopped
+    env_file:
+      - ../.env.1.${NODE_ENV}
+    command:
+      - sh
+      - -c
+      - >-
+        exec docker-entrypoint.sh redis-server
+        --save ""
+        --appendonly no
+        --maxmemory 2gb
+        --maxmemory-policy allkeys-lru
+        --requirepass "$${REDIS_CONNECTION_PASSWORD}"
+    networks:
+      - datastore
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   # Scraped by vector's redis_metrics source. The exporter only reads
   # REDIS_PASSWORD, so the env file carries it as a copy of
   # REDIS_CONNECTION_PASSWORD; without it the exporter connects but every

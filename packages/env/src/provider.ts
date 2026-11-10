@@ -47,7 +47,7 @@ export class ProviderEnvironment extends Environment {
 		// resurrect a Mongo-deleted session and break the next captcha
 		// attempt for that user+IP+sitekey.
 		try {
-			const redisConnection = this.getDb().getRedisConnection();
+			const redisConnection = this.getDb().getRedisMemConnection();
 			const writeQueue = new RedisWriteQueue(redisConnection, this.logger);
 			writeQueue.clearAllSessionRecords().catch((err) => {
 				errorLog.error(() => ({

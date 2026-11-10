@@ -166,6 +166,15 @@ export default function getConfig({
 			url: process.env.REDIS_CONNECTION_URL || "",
 			password: process.env.REDIS_CONNECTION_PASSWORD || "",
 		},
+		redisMemConnection: process.env.REDIS_MEM_CONNECTION_URL
+			? {
+					url: process.env.REDIS_MEM_CONNECTION_URL,
+					password:
+						process.env.REDIS_MEM_CONNECTION_PASSWORD ||
+						process.env.REDIS_CONNECTION_PASSWORD ||
+						"",
+				}
+			: undefined,
 		rateLimits: getRateLimitConfig(),
 		proxyCount: integerFromEnv("PROSOPO_PROXY_COUNT", 0, { min: 0 }),
 		scheduledTasks: {

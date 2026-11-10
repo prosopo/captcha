@@ -56,7 +56,7 @@ import { ProviderEnvironment } from "../provider.js";
 type MockDb = {
 	connected: boolean;
 	cleanupScheduledTaskStatus: (status: ScheduledTaskStatus) => Promise<void>;
-	getRedisConnection: () => object;
+	getRedisMemConnection: () => object;
 };
 
 const buildConfig = (): Record<string, unknown> => ({
@@ -81,7 +81,7 @@ const mockDb = (overrides: Partial<MockDb> = {}): MockDb => ({
 	cleanupScheduledTaskStatus: vi
 		.fn<(status: ScheduledTaskStatus) => Promise<void>>()
 		.mockResolvedValue(undefined),
-	getRedisConnection: vi.fn(() => ({ redis: true })),
+	getRedisMemConnection: vi.fn(() => ({ redis: true })),
 	...overrides,
 });
 
@@ -167,7 +167,7 @@ describe("ProviderEnvironment.cleanup", () => {
 		expect(db.cleanupScheduledTaskStatus).toHaveBeenCalledWith(
 			ScheduledTaskStatus.Running,
 		);
-		expect(db.getRedisConnection).toHaveBeenCalled();
+		expect(db.getRedisMemConnection).toHaveBeenCalled();
 		expect(mockClearAllSessionRecords).toHaveBeenCalledTimes(1);
 	});
 
@@ -200,7 +200,7 @@ describe("ProviderEnvironment.cleanup", () => {
 
 	it("warns and continues when there is no redis connection", () => {
 		const db = mockDb({
-			getRedisConnection: vi.fn(() => {
+			getRedisMemConnection: vi.fn(() => {
 				throw new Error("no redis");
 			}),
 		});

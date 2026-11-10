@@ -231,6 +231,7 @@ export class Environment implements ProsopoEnvironment {
 				url: this.config.redisConnection.url,
 				password: this.config.redisConnection.password,
 			},
+			redisMem: this.config.redisMemConnection,
 			logger: this.logger,
 		});
 	}
