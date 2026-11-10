@@ -38,12 +38,17 @@ export default (
 				if (!env.config.mongoCaptchaUri) {
 					throw new Error("mongoCaptchaUri not set in config");
 				}
-				await tasks.clientTaskManager
-					.getCaptchaDB(env.config.mongoCaptchaUri)
-					.ensureIndexes()
-					.catch((err) => {
-						env.logger.error(() => ({ err }));
-					});
+				const captchaDB = tasks.clientTaskManager.getCaptchaDB(
+					env.config.mongoCaptchaUri,
+				);
+				try {
+					await captchaDB.connect();
+					await captchaDB.ensureIndexes();
+				} catch (err) {
+					env.logger.error(() => ({ err }));
+				} finally {
+					await captchaDB.close();
+				}
 			} catch (err) {
 				logger.error(() => ({ err }));
 			}
