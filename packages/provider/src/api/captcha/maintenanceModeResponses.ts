@@ -125,7 +125,9 @@ export const buildPuzzleMaintenanceResponse = async (
 	dapp: string,
 ): Promise<GetPuzzleCaptchaResponse> => {
 	const timestamp = Date.now();
-	const images = await renderPuzzleImages({ targetX: 200, targetY: 100 });
+	const images = await renderPuzzleImages({
+		placement: { targetX: 200, targetY: 100 },
+	});
 	return {
 		[ApiParams.status]: "ok",
 		[ApiParams.challenge]: buildChallenge(user, dapp),

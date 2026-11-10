@@ -115,25 +115,23 @@ export default (env: ProviderEnvironment) =>
 			}
 
 			const result: DappUserSolutionResult =
-				await tasks.imgCaptchaManager.dappUserSolution(
-					user,
-					dapp,
-					parsed[ApiParams.requestHash],
-					parsed[ApiParams.captchas],
-					parsed[ApiParams.signature].user.timestamp,
-					requestTimestamp.value,
-					parsed[ApiParams.signature].provider.requestHash,
-					getIPAddress(req.ip || ""),
-					flatten(req.headers),
-					req.ja4,
-					parsed[ApiParams.behavioralData],
-					// Persist the full ipinfo payload — consumers read
-					// individual flags off this object instead of separate
-					// flat fields.
-					req.ipInfo,
-					parsed[ApiParams.simdReadings],
-					parsed[ApiParams.clientMetaData],
-				);
+				await tasks.imgCaptchaManager.dappUserSolution({
+					userAccount: user,
+					dappAccount: dapp,
+					requestHash: parsed[ApiParams.requestHash],
+					captchas: parsed[ApiParams.captchas],
+					userTimestampSignature: parsed[ApiParams.signature].user.timestamp,
+					timestamp: requestTimestamp.value,
+					providerRequestHashSignature:
+						parsed[ApiParams.signature].provider.requestHash,
+					ipAddress: getIPAddress(req.ip || ""),
+					headers: flatten(req.headers),
+					ja4: req.ja4,
+					behavioralData: parsed[ApiParams.behavioralData],
+					ipInfo: req.ipInfo,
+					simdReadings: parsed[ApiParams.simdReadings],
+					clientMetaData: parsed[ApiParams.clientMetaData],
+				});
 
 			const returnValue: CaptchaSolutionResponse = {
 				status: req.i18n.t(

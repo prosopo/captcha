@@ -366,29 +366,27 @@ export default (
 				const dedupTrafficPolicies = deriveTrafficPolicies(
 					clientRecord.settings?.trafficFilter,
 				);
-				const dedupUserScope = getRequestUserScope(
-					dedupFlatHeaders,
-					req.ja4,
-					normalizedIp,
+				const dedupUserScope = getRequestUserScope({
+					requestHeaders: dedupFlatHeaders,
+					ja4: req.ja4,
+					ip: normalizedIp,
 					user,
-					undefined,
-					undefined,
-					dedupCountryCode,
-					dedupAsn,
-					verifiedSignerUrl,
+					countryCode: dedupCountryCode,
+					asn: dedupAsn,
+					webBotAuthAgent: verifiedSignerUrl,
 					bypassKeyHash,
-				);
+				});
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
 				// prematurely eject a user whose frictionless flow should
 				// complete normally before the block fires downstream.
 				const dedupAccessPolicy = (
-					await tasks.frictionlessManager.getPrioritisedAccessPolicies(
+					await tasks.frictionlessManager.getPrioritisedAccessPolicies({
 						userAccessRulesStorage,
-						dapp,
-						dedupUserScope,
-						normalizeHeadersForMatching(req.headers),
-					)
+						clientId: dapp,
+						userScope: dedupUserScope,
+						requestHeaders: normalizeHeadersForMatching(req.headers),
+					})
 				).find((p) => !p.deferToVerify);
 				// A request that now matches an Allow rule gets a fresh authenticated
 				// session instead of its old challenge.
@@ -644,13 +642,13 @@ export default (
 
 			// Ahead of the short-circuits, so a site pinned to puzzle can still be
 			// switched to image and still has its refreshes recorded.
-			const refresh = await resolveRefreshLineage(
-				tasks.db,
+			const refresh = await resolveRefreshLineage({
+				db: tasks.db,
 				refreshOf,
-				dapp,
+				siteKey: dapp,
 				userSitekeyIpHash,
-				new Date(),
-			);
+				now: new Date(),
+			});
 			// A retry that cannot be checked is served as a fresh session.
 			const retry = await resolveRetrySolveDevice(tasks.db, {
 				retryOf,
@@ -710,25 +708,23 @@ export default (
 				...(solveDevice && { solveDevice }),
 			};
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
+			const userScope = getRequestUserScope({
+				requestHeaders: flatten(req.headers),
+				ja4: req.ja4,
+				ip: normalizedIp,
 				user,
-				undefined,
-				undefined,
 				countryCode,
 				asn,
-				verifiedSignerUrl,
+				webBotAuthAgent: verifiedSignerUrl,
 				bypassKeyHash,
-			);
+			});
 			const lookupAccessPolicies = () =>
-				tasks.frictionlessManager.getPrioritisedAccessPolicies(
+				tasks.frictionlessManager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				);
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				});
 
 			// Authenticated fast-path. Fires when any non-deferToVerify Allow
 			// rule matches the userScope — the qualifier can be a verified
@@ -763,22 +759,23 @@ export default (
 						);
 				if (!allowingPolicy) return null;
 				const authenticatedSession =
-					await tasks.frictionlessManager.createAuthenticatedSession(
-						sessionToken,
+					await tasks.frictionlessManager.createAuthenticatedSession({
+						token: sessionToken,
 						ipAddress,
 						// Undefined when the Allow was matched by IP / JA4 / UA
 						// instead of webBotAuthAgent. The session field stays
 						// unset in that case so verify-side observability
 						// distinguishes "verified signer" from "trusted IP".
-						verifiedSignerUrl,
-						dapp,
+						webBotAuthAgent: verifiedSignerUrl,
+						siteKey: dapp,
 						userSitekeyIpHash,
-						flatHeaders,
-						req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-							? req.ipInfo
-							: undefined,
+						headers: flatHeaders,
+						ipInfo:
+							req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+								? req.ipInfo
+								: undefined,
 						clientSessionId,
-					);
+					});
 				req.logger.info(() => ({
 					msg: "Frictionless decision",
 					data: {
@@ -878,11 +875,11 @@ export default (
 					headHash,
 					detectorSessionId,
 				),
-				tasks.frictionlessManager.isValidRequest(
-					clientRecord,
-					CaptchaType.frictionless,
+				tasks.frictionlessManager.isValidRequest({
+					clientSettings: clientRecord,
+					requestedCaptchaType: CaptchaType.frictionless,
 					env,
-				),
+				}),
 				signerAccessPolicies ?? lookupAccessPolicies(),
 			]);
 

@@ -185,39 +185,38 @@ export const interactiveChallengeHandler =
 				? await tasks.db.getSessionRecordBySessionId(sessionId)
 				: undefined;
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
+			const userScope = getRequestUserScope({
+				requestHeaders: flatten(req.headers),
+				ja4: req.ja4,
+				ip: normalizedIp,
 				user,
-				sessionRecord?.decryptedHeadHash,
-				undefined, // coords
+				headHash: sessionRecord?.decryptedHeadHash,
 				countryCode,
 				asn,
-			);
+			});
 			// Skip deferToVerify policies at request time — see
 			// getImageCaptchaChallenge for the full rationale.
 			const userAccessPolicy = (
-				await manager.getPrioritisedAccessPolicies(
+				await manager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				)
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				})
 			).find((p) => !p.deferToVerify);
 
 			const {
 				valid,
 				reason,
 				sessionId: validSessionId,
-			} = await manager.isValidRequest(
+			} = await manager.isValidRequest({
 				clientSettings,
-				captchaType,
+				requestedCaptchaType: captchaType,
 				env,
 				sessionId,
 				userAccessPolicy,
-				normalizedIp,
-			);
+				currentIP: normalizedIp,
+			});
 
 			if (!valid) {
 				return next(
