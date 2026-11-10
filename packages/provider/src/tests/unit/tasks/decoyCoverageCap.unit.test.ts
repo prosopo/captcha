@@ -47,7 +47,7 @@ describe("capDecoyCountForCoverage", () => {
 
 	it("never increases the count", () => {
 		for (const scale of [0.09, 0.15, 0.22, 0.3, 0.45]) {
-			for (const count of [4, 10, 26, 40]) {
+			for (const count of [0, 1, 2, 3, 4, 10, 26, 40]) {
 				expect(
 					cap(count, pxFor(scale), MAX_DECOY_COVERAGE),
 				).toBeLessThanOrEqual(count);

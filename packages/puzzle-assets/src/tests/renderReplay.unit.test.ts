@@ -91,14 +91,22 @@ describe("render replay from the stored record", () => {
 	});
 
 	// Pins renderer 1 to the pixels it produced before renderer 2 existed, so
-	// records stored without a version still replay as they were served.
+	// records stored without a version still replay as they were served. The
+	// settings are the defaults of that time; a replay reads them off the record.
 	it("redraws renderer 1 puzzles pixel for pixel", () => {
 		const geometry: PuzzleGeometry = { ...DEFAULT_GEOMETRY, pieceSize: 61 };
+		const renderer1Settings: PuzzleRenderSettings = {
+			decoyCount: 5,
+			decoyEdgeDarkness: 20,
+			decoyBodyBrightness: 4,
+			holeDarken: 0.55,
+			decoyHoleDarken: 0.7,
+		};
 		const { background, piece } = renderPuzzleToRgba({
 			background: createBackground({ geometry, seed: BACKGROUND_SEED }),
 			placement: PLACEMENT,
 			geometry,
-			settings: DEFAULT_RENDER_SETTINGS,
+			settings: renderer1Settings,
 			seed: RENDER_SEED,
 			rendererVersion: 1,
 		});
@@ -183,6 +191,7 @@ describe("render replay from the stored record", () => {
 		{ name: "decoyBodyBrightness", value: 40 },
 		{ name: "holeDarken", value: 0.2 },
 		{ name: "decoyHoleDarken", value: 0.95 },
+		{ name: "lookalikeDecoys", value: 2 },
 	];
 
 	for (const { name, value } of settingCases) {

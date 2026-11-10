@@ -49,11 +49,12 @@ export const DEFAULT_GEOMETRY: PuzzleGeometry = {
 };
 
 export const DEFAULT_RENDER_SETTINGS: PuzzleRenderSettings = {
-	decoyCount: 5,
-	decoyEdgeDarkness: 20,
+	decoyCount: 3,
+	decoyEdgeDarkness: 12,
 	decoyBodyBrightness: 4,
 	holeDarken: 0.55,
-	decoyHoleDarken: 0.7,
+	decoyHoleDarken: 0.84,
+	lookalikeDecoys: 0,
 };
 
 export interface RenderedPuzzleRgba {

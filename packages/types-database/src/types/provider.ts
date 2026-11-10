@@ -522,6 +522,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 					decoyBodyBrightness: { type: Number, required: true },
 					holeDarken: { type: Number, required: true },
 					decoyHoleDarken: { type: Number, required: true },
+					lookalikeDecoys: { type: Number, required: false },
 				},
 				backgroundSeed: { type: String, required: true },
 				renderSeed: { type: String, required: true },

@@ -613,10 +613,12 @@ describe("UserSettingsSchema", () => {
 				decoyBodyBrightness: -6,
 				decoyHoleDarken: 0.8,
 				holeDarken: 0.4,
+				lookalikeDecoys: 2,
 				pieceScale: { min: 0.2, max: 0.35 },
 			},
 		});
 		expect(doc.puzzle.decoyCount).toBe(12);
+		expect(doc.puzzle.lookalikeDecoys).toBe(2);
 		expect(doc.puzzle.decoyEdgeDarkness).toBe(30);
 		expect(doc.puzzle.decoyBodyBrightness).toBe(-6);
 		expect(doc.puzzle.decoyHoleDarken).toBe(0.8);

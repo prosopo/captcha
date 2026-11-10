@@ -102,6 +102,13 @@ export interface PuzzleRenderSettings {
 	 */
 	decoyBodyBrightness: number;
 	/**
+	 * How many decoys copy the real piece's outline (renderer 2+); the rest
+	 * each draw their own. Unique outlines let a human — and a solver — match
+	 * the piece to the one hole of its shape, so the count rises with
+	 * difficulty. Unset means none.
+	 */
+	lookalikeDecoys?: number;
+	/**
 	 * Multiplier applied to the real cutout's pixels. Lower is darker (a
 	 * more obvious target for the human user); higher lets the cutout
 	 * blend closer to the decoys. Bounded 0..1 by the schema.
