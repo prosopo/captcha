@@ -17,7 +17,6 @@ import {
 	resolveMaxEscalationLevel,
 	severityToPuzzleDifficulty,
 } from "@prosopo/captcha-severity";
-import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
@@ -30,11 +29,9 @@ import {
 	type IFrictionlessTypes,
 	type IPInfoResponse,
 	type ImageRoundsBounds,
-	type KeyringPair,
 	NO_MEASUREMENT_REASONS,
 	OPEN_DETECTOR_FORMAT,
 	type OpenDetectorFormat,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
 	type RoutingMachineOutput,
@@ -46,7 +43,6 @@ import {
 	isConcreteCaptchaType,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { dnsBeaconUrls } from "../../api/dnsEventUrl.js";
@@ -59,7 +55,7 @@ import {
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { offersAudioAlternative } from "../audioAlternative.js";
-import { CaptchaManager } from "../captchaManager.js";
+import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
 import {
 	coerceToEnabledCaptchaType,
 	switchTypeAfterRefreshes,
@@ -120,16 +116,16 @@ export class FrictionlessManager extends CaptchaManager {
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: import("@prosopo/database").RedisWriteQueue | null,
-		decisionMachineRunner?: DecisionMachineRunner,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger, writeQueue);
+	constructor({
+		decisionMachineRunner,
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & {
+		decisionMachineRunner?: DecisionMachineRunner;
+		usageCounters?: UsageCounters | null;
+	}) {
+		super(deps);
+		const { db, config } = deps;
 		this.config = config;
 		this.decisionMachineRunner =
 			decisionMachineRunner ?? new DecisionMachineRunner(db);
@@ -183,13 +179,13 @@ export class FrictionlessManager extends CaptchaManager {
 		baseline: RoutingMachineBaseline,
 		ctx: RoutingContext,
 	): Promise<RoutingMachineOutput> {
-		return applyRouter(
-			this.decisionMachineRunner,
-			this.usageCounters,
+		return applyRouter({
+			runner: this.decisionMachineRunner,
+			counters: this.usageCounters,
 			baseline,
 			ctx,
-			this.logger,
-		);
+			logger: this.logger,
+		});
 	}
 
 	setSessionParams(
@@ -395,16 +391,26 @@ export class FrictionlessManager extends CaptchaManager {
 	 * to solve, no bot score to compute and no routing to run. Consumed only by
 	 * `/client/authenticated/verify`.
 	 */
-	async createAuthenticatedSession(
-		token: string,
-		ipAddress: CompositeIpAddress,
-		webBotAuthAgent: string | undefined,
-		siteKey: string,
-		userSitekeyIpHash?: string,
-		headers?: RequestHeaders,
-		ipInfo?: IPInfoResponse,
-		clientSessionId?: string,
-	): Promise<Session> {
+	async createAuthenticatedSession({
+		token,
+		ipAddress,
+		webBotAuthAgent,
+		siteKey,
+		userSitekeyIpHash,
+		headers,
+		ipInfo,
+		clientSessionId,
+	}: {
+		token: string;
+		ipAddress: CompositeIpAddress;
+		siteKey: string;
+		/** Unset when the allow rule matched on something other than a verified signer. */
+		webBotAuthAgent?: string;
+		userSitekeyIpHash?: string;
+		headers?: RequestHeaders;
+		ipInfo?: IPInfoResponse;
+		clientSessionId?: string;
+	}): Promise<Session> {
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),
@@ -586,13 +592,13 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 		const routed: RoutingMachineOutput =
 			route && this.routingContext
-				? await applyRouter(
-						this.decisionMachineRunner,
-						this.usageCounters,
+				? await applyRouter({
+						runner: this.decisionMachineRunner,
+						counters: this.usageCounters,
 						baseline,
-						this.routingContext,
-						this.logger,
-					)
+						ctx: this.routingContext,
+						logger: this.logger,
+					})
 				: baseline;
 
 		// Resolved before the session is written, and after the router, so it is
@@ -757,12 +763,12 @@ export class FrictionlessManager extends CaptchaManager {
 		if (this.routingContext && this.usageCounters) {
 			this.usageCounters.incrManyAsync(
 				this.routingContext.dappAccount,
-				buildAllWindowIncrements(
-					"served",
-					finalCaptchaType,
-					this.routingContext.ip,
-					this.routingContext.userAccount,
-				),
+				buildAllWindowIncrements({
+					kind: "served",
+					captchaType: finalCaptchaType,
+					ip: this.routingContext.ip,
+					userAccount: this.routingContext.userAccount,
+				}),
 			);
 		}
 
@@ -967,14 +973,14 @@ export class FrictionlessManager extends CaptchaManager {
 				const result =
 					attempt.format === OPEN_DETECTOR_FORMAT
 						? decodeOpenPayload(token, headHash, attempt.key)
-						: await getBotScore(
-								token,
+						: await getBotScore({
+								payload: token,
 								headHash,
-								attempt.key,
-								attempt.innerConfig,
-								attempt.payloadLayout,
-								attempt.keyMap,
-							);
+								privateKeyString: attempt.key,
+								innerConfigEncoded: attempt.innerConfig,
+								payloadLayoutEncoded: attempt.payloadLayout,
+								keyMapEncoded: attempt.keyMap,
+							});
 				decrypted = result;
 				if (result.outOfRangeDetectorIds) {
 					recordOutOfRangeDetectorIds(result.outOfRangeDetectorIds);
