@@ -828,12 +828,15 @@ export class BlacklistRequestInspector {
 		userId: string | undefined;
 		clientId: string | undefined;
 	} {
+		// The body wins so a header cannot swap out the ids a body-scoped rule
+		// already matches; the header covers routes that send the ids only there.
+		// Node lower-cases incoming header names.
 		const userId =
-			this.getObjectValue(requestHeaders, "Prosopo-User") ||
-			this.getObjectValue(requestBody, "user");
+			this.getObjectValue(requestBody, "user") ||
+			this.getObjectValue(requestHeaders, "prosopo-user");
 		const clientId =
-			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
-			this.getObjectValue(requestBody, "dapp");
+			this.getObjectValue(requestBody, "dapp") ||
+			this.getObjectValue(requestHeaders, "prosopo-site-key");
 
 		return {
 			userId: "string" === typeof userId ? userId : undefined,
