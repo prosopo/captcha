@@ -645,6 +645,25 @@ describe("login", () => {
 		]);
 	});
 
+	test("treats a non-boolean login verification result as a failure", async () => {
+		// Same rule as signup: only a boolean `true` from the verifier counts.
+		const user = await storedUser();
+		for (const verdict of ["yes", "false", 1]) {
+			mocks.isVerified.mockResolvedValue({ verified: verdict });
+			const { connection } = connectionWith(userModel({ found: user }));
+			const res = responseStub();
+			await login(
+				connection,
+				serverConfig(),
+				VERIFY_ENDPOINT,
+				"local",
+				request({ body: signupBody() }),
+				res.response,
+			);
+			expect(res.statuses).toEqual([401]);
+		}
+	});
+
 	test("does not send the email to the verifier", async () => {
 		// Unlike signup, login verifies the token alone — the provider has no
 		// signup record to match an email against.
