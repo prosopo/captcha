@@ -129,12 +129,14 @@ describe("the endpoint adapter interface", () => {
 });
 
 describe("the middleware", () => {
-	test("authMiddleware takes an optional pair, auth account and options", () => {
+	test("authMiddleware takes a pair, an optional auth account and options", () => {
 		expectTypeOf(authMiddleware).parameters.toEqualTypeOf<
 			[
-				pair: KeyringPair | undefined,
-				authAccount?: KeyringPair | undefined,
-				options?: AuthMiddlewareOptions,
+				{
+					pair: KeyringPair | undefined;
+					authAccount?: KeyringPair;
+					options?: AuthMiddlewareOptions;
+				},
 			]
 		>();
 	});
@@ -145,11 +147,11 @@ describe("the middleware", () => {
 		>();
 	});
 
-	test("authMiddleware still requires the first argument to be passed", () => {
+	test("authMiddleware still requires the pair to be passed", () => {
 		// It is `KeyringPair | undefined` rather than optional, so a provider
 		// with no key has to say so explicitly instead of forgetting to wire it.
-		// @ts-expect-error - the first parameter is required
-		authMiddleware();
+		// @ts-expect-error - the pair is required
+		authMiddleware({});
 	});
 
 	test("requestLoggerMiddleware returns a synchronous express handler", () => {
@@ -166,7 +168,7 @@ describe("the middleware", () => {
 				{} as Parameters<typeof requestLoggerMiddleware>[0],
 			),
 		);
-		assertType<RequestHandler>(authMiddleware(undefined));
+		assertType<RequestHandler>(authMiddleware({ pair: undefined }));
 	});
 
 	test("verifySignature takes a signature, a message and a pair, and returns void", () => {

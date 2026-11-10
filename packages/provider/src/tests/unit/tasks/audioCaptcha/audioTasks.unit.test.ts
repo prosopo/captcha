@@ -213,16 +213,16 @@ describe("AudioCaptchaManager", () => {
 			a: ReturnType<typeof buildArgs>,
 			answer: string,
 		): Promise<boolean> =>
-			audioCaptchaManager.verifyAudioCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				answer,
-				2,
-				[{ kind: "play", t: 1 }],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-			);
+			audioCaptchaManager.verifyAudioCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				submittedAnswer: answer,
+				replays: 2,
+				audioEvents: [{ kind: "play", t: 1 }],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
 
 		it("checks both signatures before it touches the database", async () => {
 			const a = buildArgs();
@@ -361,12 +361,12 @@ describe("AudioCaptchaManager", () => {
 		const challenge = "1234567___user___dappAccount___1";
 
 		const verify = () =>
-			audioCaptchaManager.serverVerifyInteractiveCaptchaSolution(
-				DAPP_ACCOUNT,
+			audioCaptchaManager.serverVerifyInteractiveCaptchaSolution({
+				dappAccount: DAPP_ACCOUNT,
 				challenge,
-				60_000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 60_000 },
+			});
 
 		const approvedRecord = (
 			overrides: Partial<AudioCaptchaStored> = {},

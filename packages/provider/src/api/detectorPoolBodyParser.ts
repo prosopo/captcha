@@ -13,30 +13,12 @@
 // limitations under the License.
 
 import type { KeyringPair } from "@prosopo/types";
-import type { JWT } from "@prosopo/util-crypto";
 import express, {
 	type NextFunction,
 	type Request,
 	type Response,
 } from "express";
-
-const hasValidAdminJwt = (
-	req: Request,
-	pair: KeyringPair | undefined,
-	authAccount: KeyringPair | undefined,
-): boolean => {
-	const header = req.headers.authorization;
-	if (typeof header !== "string" || !header.startsWith("Bearer ")) return false;
-	const jwt: JWT = header.slice("Bearer ".length);
-	try {
-		return (
-			authAccount?.jwtVerify(jwt).isValid === true ||
-			pair?.jwtVerify(jwt).isValid === true
-		);
-	} catch {
-		return false;
-	}
-};
+import { verifiedAdminSubject } from "./adminJwt.js";
 
 /**
  * Parses the detector-pool push body with its large limit, but only for a
@@ -52,7 +34,7 @@ export const detectorPoolBodyParser = (
 ) => {
 	const parse = express.json({ limit });
 	return (req: Request, res: Response, next: NextFunction): void => {
-		if (!hasValidAdminJwt(req, pair, authAccount)) {
+		if (verifiedAdminSubject(req, pair, authAccount) === undefined) {
 			next();
 			return;
 		}
