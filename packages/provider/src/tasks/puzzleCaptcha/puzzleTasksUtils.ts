@@ -33,7 +33,8 @@ export const validatePuzzleSolution = ({
 	targetX: number;
 	targetY: number;
 	tolerance: number;
-}): boolean => puzzleDropDistance(finalX, finalY, targetX, targetY) <= tolerance;
+}): boolean =>
+	puzzleDropDistance(finalX, finalY, targetX, targetY) <= tolerance;
 
 /** A wrong answer at least this far from the target is not a near miss. */
 export const FAR_PUZZLE_MISS_DISTANCE = 50;
