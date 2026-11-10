@@ -27,7 +27,11 @@ import {
 	type InteractiveSolutionSubmission,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
-import { isFarPuzzleMiss, validatePuzzleSolution } from "./puzzleTasksUtils.js";
+import {
+	isFarPuzzleMiss,
+	puzzleDropDistance,
+	validatePuzzleSolution,
+} from "./puzzleTasksUtils.js";
 
 interface PuzzleCaptchaChallenge extends MintedChallenge {
 	targetX: number;
@@ -162,9 +166,17 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 				}),
 			isFarMiss: (record) =>
 				isFarPuzzleMiss(finalX, finalY, record.targetX, record.targetY),
-			persistInteraction: () =>
+			persistInteraction: (record) =>
 				this.db.updatePuzzleCaptchaRecord(submission.challenge, {
 					puzzleEvents,
+					finalX,
+					finalY,
+					distanceFromTarget: puzzleDropDistance(
+						finalX,
+						finalY,
+						record.targetX,
+						record.targetY,
+					),
 				}),
 		});
 	}

@@ -114,7 +114,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to cache session in Redis",
 				err: error,
-				sessionId,
+				data: { sessionId },
 			}));
 			return false;
 		}
@@ -142,7 +142,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to get cached session from Redis",
 				err: error,
-				sessionId,
+				data: { sessionId },
 			}));
 			return null;
 		}
@@ -234,14 +234,14 @@ export class RedisWriteQueue {
 			}
 			this.logger.warn(() => ({
 				msg: "Gave up patching cached session after repeated conflicts",
-				sessionId,
+				data: { sessionId },
 			}));
 			return false;
 		} catch (error) {
 			this.logger.warn(() => ({
 				msg: "Failed to patch cached session in Redis",
 				err: error,
-				sessionId,
+				data: { sessionId },
 			}));
 			return false;
 		}
@@ -262,7 +262,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to invalidate cached session in Redis",
 				err: error,
-				sessionId,
+				data: { sessionId },
 			}));
 		}
 	}
@@ -287,7 +287,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to invalidate cached session hash in Redis",
 				err: error,
-				userSitekeyIpHash,
+				data: { userSitekeyIpHash },
 			}));
 		}
 	}
@@ -317,7 +317,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to cache session hash in Redis",
 				err: error,
-				userSitekeyIpHash,
+				data: { userSitekeyIpHash },
 			}));
 			return false;
 		}
@@ -341,7 +341,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to get cached session hash from Redis",
 				err: error,
-				userSitekeyIpHash,
+				data: { userSitekeyIpHash },
 			}));
 			return null;
 		}
@@ -373,7 +373,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to cache detector bundle assignment in Redis",
 				err: error,
-				detectorSessionId,
+				data: { detectorSessionId },
 			}));
 			return false;
 		}
@@ -394,7 +394,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to get detector bundle assignment from Redis",
 				err: error,
-				detectorSessionId,
+				data: { detectorSessionId },
 			}));
 			return null;
 		}
@@ -443,8 +443,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to cache session escalation mapping in Redis",
 				err: error,
-				originSessionId,
-				escalationSessionId,
+				data: { originSessionId, escalationSessionId },
 			}));
 			return false;
 		}
@@ -470,7 +469,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to get cached session escalation mapping from Redis",
 				err: error,
-				originSessionId,
+				data: { originSessionId },
 			}));
 			return null;
 		}
@@ -497,7 +496,7 @@ export class RedisWriteQueue {
 			this.logger.warn(() => ({
 				msg: "Failed to invalidate cached session escalation mapping",
 				err: error,
-				originSessionId,
+				data: { originSessionId },
 			}));
 		}
 	}

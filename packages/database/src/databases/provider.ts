@@ -360,7 +360,7 @@ export class ProviderDatabase
 			throw new ProsopoError({
 				code: "DB_UNAVAILABLE",
 				errorSite: "DBSE-7",
-				message: "Redis access rules connection undefined",
+				message: "Redis connection undefined",
 			});
 		}
 
@@ -1151,9 +1151,9 @@ export class ProviderDatabase
 							record as PuzzleCaptchaRecord,
 							markStored,
 						),
-					// The render inputs are patched on after the record is first
-					// streamed, so only an update can carry them to the central
-					// copy the portal redraws from. They are read here and on no
+					// The render inputs and the submitted drop position are patched
+					// on after the record is first streamed, so only an update can
+					// carry them to the central copy. They are read here and on no
 					// other path: verify never needs them.
 					streamUpdate: (challenge, markStored) =>
 						this.centralStreamer?.streamPuzzleUpdate(
@@ -1162,7 +1162,12 @@ export class ProviderDatabase
 									this.interactiveCollection(CaptchaType.puzzle),
 									challenge,
 									"streamPuzzleUpdate",
-									{ render: 1 },
+									{
+										render: 1,
+										finalX: 1,
+										finalY: 1,
+										distanceFromTarget: 1,
+									},
 								),
 							markStored,
 						),
@@ -2916,6 +2921,8 @@ export class ProviderDatabase
 		// that supplied a session id — a token replay reported on solves that
 		// were earned in exactly the session they claimed.
 		clientMetaData: 1,
+		// The verify-time hard-block check scopes its rule lookup by it.
+		ja4: 1,
 	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 
 	/**

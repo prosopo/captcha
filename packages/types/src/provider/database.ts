@@ -1028,6 +1028,10 @@ export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
 	originX: number;
 	originY: number;
 	puzzleEvents?: PuzzleEvent[];
+	/** The submitted drop position that grading compared against the target. */
+	finalX?: number;
+	finalY?: number;
+	distanceFromTarget?: number;
 	render?: PuzzleRenderRecord;
 	// Set once a retry session has taken this failed puzzle's device readings.
 	// A failed puzzle vouches for at most one retry.

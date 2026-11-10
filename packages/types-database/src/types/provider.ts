@@ -497,6 +497,9 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	originX: { type: Number, required: true },
 	originY: { type: Number, required: true },
 	tolerance: { type: Number, required: true },
+	finalX: { type: Number, required: false },
+	finalY: { type: Number, required: false },
+	distanceFromTarget: { type: Number, required: false },
 	retried: { type: Boolean, required: false },
 	// Render inputs kept so the portal can replay the exact puzzle a user was
 	// served. Patched on after the imagery is produced, so absent on older

@@ -183,8 +183,8 @@ export const handleAccessPolicy = async (
 	};
 
 	// Image clamps the rule's round count to the sitekey's bounds. Puzzle takes
-	// the raw count because it sets the puzzle's difficulty, not a number of
-	// rounds. Pow and icon-order take none.
+	// the rule's severity, falling back to `solvedImagesCount` for rules written
+	// before `severity` existed. Pow and icon-order take none.
 	if (isConcreteCaptchaType(userAccessPolicy.captchaType)) {
 		logger.info(() => ({
 			msg: "Frictionless decision",
@@ -203,7 +203,7 @@ export const handleAccessPolicy = async (
 						)
 					: resolveImageRoundsBounds(clientRecord.settings).max
 				: userAccessPolicy.captchaType === CaptchaType.puzzle
-					? userAccessPolicy.solvedImagesCount
+					? (userAccessPolicy.severity ?? userAccessPolicy.solvedImagesCount)
 					: undefined;
 		return {
 			handled: true,
