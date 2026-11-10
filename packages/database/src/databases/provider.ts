@@ -2687,7 +2687,7 @@ export class ProviderDatabase
 	 */
 	async getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingImageCaptchaRequest> {
+	): Promise<PendingImageCaptchaRequest | undefined> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoError({
 				code: "INVALID_DATA",
@@ -2721,15 +2721,7 @@ export class ProviderDatabase
 			};
 		}
 
-		throw new ProsopoError({
-			code: "RECORD_NOT_FOUND",
-			errorSite: "DBSE-38",
-			message: "No pending record found",
-			context: {
-				failedFuncName: this.getPendingImageCommitment.name,
-				requestHash,
-			},
-		});
+		return undefined;
 	}
 
 	/**
