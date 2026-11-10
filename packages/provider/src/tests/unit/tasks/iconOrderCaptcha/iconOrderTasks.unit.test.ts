@@ -186,15 +186,15 @@ describe("IconOrderCaptchaManager", () => {
 		const ip = getIPAddress("1.1.1.1");
 
 		const submit = (clicks: { x: number; y: number }[]) =>
-			manager.verifyIconOrderCaptchaSolution(
+			manager.verifyIconOrderCaptchaSolution({
 				challenge,
-				"0xprovider",
+				providerChallengeSignature: "0xprovider",
 				clicks,
-				[],
-				60000,
-				"0xuser",
-				ip,
-			);
+				iconOrderEvents: [],
+				timeout: 60000,
+				userTimestampSignature: "0xuser",
+				ipAddress: ip,
+			});
 
 		const storedRecord = (over: Partial<IconOrderCaptchaStored> = {}) =>
 			asRecord({
@@ -374,15 +374,15 @@ describe("IconOrderCaptchaManager", () => {
 			];
 			const trail = [{ x: 5, y: 5, t: 12 }];
 
-			await manager.verifyIconOrderCaptchaSolution(
+			await manager.verifyIconOrderCaptchaSolution({
 				challenge,
-				"0xprovider",
+				providerChallengeSignature: "0xprovider",
 				clicks,
-				trail,
-				60000,
-				"0xuser",
-				ip,
-			);
+				iconOrderEvents: trail,
+				timeout: 60000,
+				userTimestampSignature: "0xuser",
+				ipAddress: ip,
+			});
 
 			expect(db.updateIconOrderCaptchaRecord).toHaveBeenCalledWith(challenge, {
 				clicks,
