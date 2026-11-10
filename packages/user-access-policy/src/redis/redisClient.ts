@@ -78,7 +78,7 @@ export const parseRedisRecords = <T>(
 	logger: Logger,
 ): T[] =>
 	records.flatMap((record) => {
-		const parseResult = recordSchema.safeParse(record);
+		const parseResult = safeParseRecord(record, recordSchema);
 
 		if (parseResult.success) {
 			return [parseResult.data];
@@ -91,6 +91,19 @@ export const parseRedisRecords = <T>(
 
 		return [];
 	});
+
+// A transform that throws escapes safeParse; catching it here keeps one bad
+// record from discarding every other record in the same result.
+const safeParseRecord = <T>(
+	record: unknown,
+	recordSchema: ZodType<T, ZodTypeDef, unknown>,
+): { success: true; data: T } | { success: false; error: unknown } => {
+	try {
+		return recordSchema.safeParse(record);
+	} catch (error) {
+		return { success: false, error };
+	}
+};
 
 const expirationRecordSchema = z.coerce.number();
 // Redis returns -1 when expiration is not set
