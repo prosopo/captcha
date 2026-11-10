@@ -19,6 +19,7 @@ import {
 } from "@prosopo/api-route";
 import { type AllKeys, executeBatchesSequentially } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesFilterInput,
@@ -36,7 +37,7 @@ export type RuleIdsResponse = {
 };
 
 export const ruleIdsResponse = z.object({
-	ruleIds: z.string().array(),
+	ruleIds: z.string().max(INPUT_LIMITS.ID).array(),
 } satisfies AllKeys<RuleIdsResponse>) satisfies ZodType<RuleIdsResponse>;
 
 export type RuleIdsEndpointResponse = ApiEndpointResponse & {
@@ -50,7 +51,7 @@ export class FindRuleIdsEndpoint implements ApiEndpoint<FindRulesSchema> {
 	) {}
 
 	public getRequestArgsSchema(): FindRulesSchema {
-		return z.array(accessRulesFilterInput);
+		return z.array(accessRulesFilterInput).max(INPUT_LIMITS.ARRAY);
 	}
 
 	async processRequest(

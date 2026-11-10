@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import crypto from "node:crypto";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { IpAddress, IpRange } from "cidr-calc";
 import { Address4, Address6 } from "ip-address";
 import { z } from "zod";
@@ -69,7 +70,7 @@ const accessRuleToRecordScheme = z
 		...policyScopeInput.shape,
 		...policyScopeExclusionsInput.shape,
 		...userScopeSchema.shape,
-		groupId: z.coerce.string().optional(),
+		groupId: z.coerce.string().max(INPUT_LIMITS.ID).optional(),
 	})
 	.transform((ruleInput: AccessRule): AccessRuleRecord => {
 		// extract groupId

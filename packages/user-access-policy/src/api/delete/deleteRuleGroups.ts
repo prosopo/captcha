@@ -19,6 +19,7 @@ import {
 } from "@prosopo/api-route";
 import type { AllKeys } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, z } from "zod";
 import {
 	type AccessRulesStorage,
@@ -43,12 +44,14 @@ export class DeleteRuleGroupsEndpoint
 	) {}
 
 	public getRequestArgsSchema(): DeleteRuleGroupsSchema {
-		return z.array(
-			z.object({
-				clientIds: z.string().array(),
-				groupId: z.string(),
-			} satisfies AllKeys<DeleteSiteGroup>),
-		);
+		return z
+			.array(
+				z.object({
+					clientIds: z.string().max(INPUT_LIMITS.ID).array(),
+					groupId: z.string().max(INPUT_LIMITS.ID),
+				} satisfies AllKeys<DeleteSiteGroup>),
+			)
+			.max(INPUT_LIMITS.ARRAY);
 	}
 
 	async processRequest(

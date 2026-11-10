@@ -16,41 +16,42 @@ import { hexToU8a } from "@polkadot/util";
 import { u8aToHex } from "@prosopo/util";
 import { Option, Struct, str, u32 } from "scale-ts";
 import { number, object, string, type infer as zInfer } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import { ApiParams } from "../api/params.js";
 import { CaptchaTypeSchema } from "../client/captchaType/captchaType.js";
 
 export const RequestHashSignatureSchema = object({
-	[ApiParams.requestHash]: string(),
+	[ApiParams.requestHash]: string().max(INPUT_LIMITS.TOKEN),
 });
 
 export type RequestHashSignature = zInfer<typeof RequestHashSignatureSchema>;
 
 export const ChallengeSignatureSchema = object({
-	[ApiParams.challenge]: string(),
+	[ApiParams.challenge]: string().max(INPUT_LIMITS.TOKEN),
 });
 
 export type ChallengeSignature = zInfer<typeof ChallengeSignatureSchema>;
 
 export const TimestampSignatureSchema = object({
-	[ApiParams.timestamp]: string(),
+	[ApiParams.timestamp]: string().max(INPUT_LIMITS.TOKEN),
 });
 
 export type TimestampSignature = zInfer<typeof TimestampSignatureSchema>;
 
 export const SignatureTypesSchema = object({
-	[ApiParams.challenge]: string().optional(),
-	[ApiParams.requestHash]: string().optional(),
-	[ApiParams.timestamp]: string().optional(),
+	[ApiParams.challenge]: string().max(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.requestHash]: string().max(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.timestamp]: string().max(INPUT_LIMITS.TOKEN).optional(),
 });
 
 export const ProcaptchaOutputSchema = object({
-	[ApiParams.commitmentId]: string().optional(),
-	[ApiParams.providerUrl]: string().optional(),
-	[ApiParams.dapp]: string(),
-	[ApiParams.user]: string(),
-	[ApiParams.challenge]: string().optional(),
-	[ApiParams.nonce]: number().optional(),
-	[ApiParams.timestamp]: string(),
+	[ApiParams.commitmentId]: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	[ApiParams.providerUrl]: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	[ApiParams.dapp]: string().max(INPUT_LIMITS.LONG_TEXT),
+	[ApiParams.user]: string().max(INPUT_LIMITS.LONG_TEXT),
+	[ApiParams.challenge]: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
+	[ApiParams.nonce]: number().safe().optional(),
+	[ApiParams.timestamp]: string().max(INPUT_LIMITS.LONG_TEXT),
 	[ApiParams.signature]: object({
 		[ApiParams.provider]: SignatureTypesSchema,
 		[ApiParams.user]: SignatureTypesSchema,
@@ -122,7 +123,9 @@ export const ProcaptchaTokenCodec = Struct({
 	[ApiParams.captchaType]: Option(str),
 });
 
-export const ProcaptchaTokenSpec = string().startsWith("0x");
+export const ProcaptchaTokenSpec = string()
+	.max(INPUT_LIMITS.TOKEN)
+	.startsWith("0x");
 export type ProcaptchaToken = zInfer<typeof ProcaptchaTokenSpec>;
 
 export const encodeProcaptchaOutput = (

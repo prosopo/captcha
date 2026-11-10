@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { IpAddressType, parseMongooseCompositeIpAddress } from "./database.js";
+import {
+	IpAddressType,
+	SessionSchema,
+	parseMongooseCompositeIpAddress,
+} from "./database.js";
 
 describe("parseMongooseCompositeIpAddress", () => {
 	it("reads $numberDecimal strings exactly", () => {
@@ -49,5 +53,23 @@ describe("parseMongooseCompositeIpAddress", () => {
 				type: IpAddressType.v4,
 			}),
 		).toThrow(/composite IP address lower/);
+	});
+});
+
+describe("SessionSchema tcp-probe timestamps", () => {
+	const fields = ["synNs", "synackNs", "ackNs"] as const;
+
+	it.each(fields)(
+		"%s accepts nanosecond epochs above MAX_SAFE_INTEGER",
+		(field) => {
+			const nanos: number = 1_762_700_000_000_000_000;
+			expect(nanos).toBeGreaterThan(Number.MAX_SAFE_INTEGER);
+			expect(SessionSchema.shape[field].safeParse(nanos).success).toBe(true);
+		},
+	);
+
+	it.each(fields)("%s rejects values beyond u64", (field) => {
+		expect(SessionSchema.shape[field].safeParse(2 ** 65).success).toBe(false);
+		expect(SessionSchema.shape[field].safeParse(-1).success).toBe(false);
 	});
 });

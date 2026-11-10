@@ -1,13 +1,3 @@
-import fs from "node:fs";
-import { ProsopoError } from "@prosopo/common";
-import {
-	DataSchema,
-	type Item,
-	LabelledDataSchema,
-	type LabelledItem,
-	LabelsContainerSchema,
-} from "@prosopo/types";
-import { lodash, setSeedGlobal } from "@prosopo/util/lodash";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,16 +11,27 @@ import { lodash, setSeedGlobal } from "@prosopo/util/lodash";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import fs from "node:fs";
+import { ProsopoError } from "@prosopo/common";
+import {
+	DataSchema,
+	type Item,
+	LabelledDataSchema,
+	type LabelledItem,
+	LabelsContainerSchema,
+} from "@prosopo/types";
+import { INPUT_LIMITS } from "@prosopo/types";
+import { lodash, setSeedGlobal } from "@prosopo/util/lodash";
 import * as z from "zod";
 import { OutputArgsSchema, OutputCliCommand } from "../utils/output.js";
 import { readJsonFile } from "../utils/readJsonFile.js";
 
 export const ArgsSchema = OutputArgsSchema.extend({
-	labels: z.string().optional(),
-	labelled: z.string().optional(),
-	unlabelled: z.string().optional(),
-	seed: z.number(),
-	size: z.number().optional(),
+	labels: z.string().max(INPUT_LIMITS.URL).optional(),
+	labelled: z.string().max(INPUT_LIMITS.URL).optional(),
+	unlabelled: z.string().max(INPUT_LIMITS.URL).optional(),
+	seed: z.number().safe(),
+	size: z.number().safe().optional(),
 	overwrite: z.boolean().optional(),
 	allowDuplicates: z.boolean().optional(),
 	allowDuplicatesLabelled: z.boolean().optional(),

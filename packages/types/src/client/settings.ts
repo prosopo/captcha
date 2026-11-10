@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { array, boolean, number, object, type output, string, z } from "zod";
+import { INPUT_LIMITS, hasAtMostKeys } from "../api/inputLimits.js";
 import {
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -153,6 +154,7 @@ export const FrictionlessThresholdSchema = z.preprocess(
 			.default(frictionlessPuzzleThresholdDefault),
 		// Not capped at 1, unlike the rung below it — see the default's note.
 		frictionlessImageThreshold: number()
+			.safe()
 			.min(0)
 			.optional()
 			.default(frictionlessImageThresholdDefault),
@@ -362,11 +364,11 @@ export const resolveFrictionlessThreshold = (
 		),
 	};
 };
-export const imageMaxRoundsFieldSchema = number().int().min(2);
+export const imageMaxRoundsFieldSchema = number().safe().int().min(2);
 // Deliberately looser than the max at the bottom end: a site may want to
 // serve a single round, but no site may cap itself below 2. `min <= max` is
 // enforced across the pair on `ClientSettingsSchema`.
-export const imageMinRoundsFieldSchema = number().int().min(1);
+export const imageMinRoundsFieldSchema = number().safe().int().min(1);
 export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
 export const puzzleMaxDifficultyFieldSchema = number()
 	.int()
@@ -517,9 +519,9 @@ const IPValidationSchema = object({
 		abuseScoreExceedAction: IPValidationActionSchema.optional(),
 	}).partial(), // all optional, so you can just override what you need
 
-	distanceThresholdKm: number().positive().optional(),
+	distanceThresholdKm: number().safe().positive().optional(),
 	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
-	abuseScoreThreshold: number().positive().optional(),
+	abuseScoreThreshold: number().safe().positive().optional(),
 	reputationScoreThreshold: number().min(0).max(1).optional(),
 	requireAllConditions: boolean().optional(),
 });
@@ -544,11 +546,13 @@ export const IPValidationRulesSchema = object({
 		),
 	}),
 	distanceThresholdKm: number()
+		.safe()
 		.positive()
 		.optional()
 		.default(distanceThresholdKmDefault),
 	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
 	abuseScoreThreshold: number()
+		.safe()
 		.positive()
 		.optional()
 		.default(abuseScoreThresholdDefault),
@@ -564,7 +568,12 @@ export const IPValidationRulesSchema = object({
 		.optional()
 		.default(requireAllConditionsDefault),
 	// overrides are now lightweight, not recursive
-	countryOverrides: z.record(string(), IPValidationSchema).optional(),
+	countryOverrides: z
+		.record(string().max(INPUT_LIMITS.NAME), IPValidationSchema)
+		.refine(hasAtMostKeys(INPUT_LIMITS.RECORD_KEYS), {
+			message: "Too many keys",
+		})
+		.optional(),
 	forceConsistentIp: boolean().optional().default(false),
 });
 
@@ -715,7 +724,7 @@ const safeRegexPattern = string()
 
 export const EmailSpamRulesSchema = object({
 	enabled: boolean().optional().default(false),
-	maxLocalPartDots: number().int().min(0).optional(),
+	maxLocalPartDots: number().safe().int().min(0).optional(),
 	normaliseGmail: boolean().optional().default(false),
 	useDefaultPatterns: boolean().optional().default(false),
 	customRegexBlocklist: array(safeRegexPattern)
@@ -727,7 +736,7 @@ export const EmailSpamRulesSchema = object({
 	// everywhere) before further submissions from that address are rejected.
 	// Requires `storeMetadata` to be on so the normalised email is persisted
 	// alongside each verified commitment. Undefined disables the check.
-	maxEmailSubmissionCount: number().int().min(1).optional(),
+	maxEmailSubmissionCount: number().safe().int().min(1).optional(),
 });
 
 export const SpamFilterRulesSchema = object({
@@ -912,7 +921,7 @@ export const honeypotEncodingTypeDefault = EncodingType.morse;
 
 export const HoneypotSettingsSchema = object({
 	enabled: boolean().optional().default(false),
-	question: string().optional(),
+	question: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	encodingType: EncodingTypeSchema.optional().default(
 		honeypotEncodingTypeDefault,
 	),
@@ -922,7 +931,7 @@ export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
 export const ClientSettingsSchema = object({
 	captchaType: SelectableCaptchaTypeSpec.optional().default(captchaTypeDefault),
-	domains: array(string()).min(1),
+	domains: array(string().max(INPUT_LIMITS.URL)).max(INPUT_LIMITS.ARRAY).min(1),
 	// Maximum ms between user submission and the dapp's /verify call.
 	verifiedTimeout: number()
 		.int()
@@ -973,7 +982,7 @@ export const ClientSettingsSchema = object({
 		.default(imageMinRoundsDefault),
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
-	autoBanScoreThreshold: number().min(0).optional(),
+	autoBanScoreThreshold: number().safe().min(0).optional(),
 	// How much of the IP's detector risk is added to the session's bot score
 	// before the score ladder is applied. 0 leaves the score untouched.
 	// Optional with no parse default, so code that builds a full settings
@@ -1036,8 +1045,9 @@ export const ClientSettingsSchema = object({
 	// cost, and the site operator should make that trust decision
 	// explicitly rather than get it as a default.
 	allowAgents: boolean().optional(),
-	assetOrigin: string().url().optional(),
+	assetOrigin: string().max(INPUT_LIMITS.LONG_TEXT).url().optional(),
 	clientUrl: string()
+		.max(INPUT_LIMITS.URL)
 		.regex(/^\/(?!\/)/, "clientUrl must be a root-relative path")
 		.optional(),
 }).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {

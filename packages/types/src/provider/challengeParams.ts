@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { discriminatedUnion, literal, number, object } from "zod";
+import {} from "../api/inputLimits.js";
 import {
 	CaptchaType,
 	type ConcreteCaptchaType,
@@ -36,19 +37,19 @@ export type ChallengeParams =
 export const ChallengeParamsSchema = discriminatedUnion("type", [
 	object({
 		type: literal(CaptchaType.image),
-		solvedImagesCount: number().optional(),
+		solvedImagesCount: number().safe().optional(),
 	}),
 	object({
 		type: literal(CaptchaType.pow),
-		powDifficulty: number().optional(),
+		powDifficulty: number().safe().optional(),
 	}),
 	object({
 		type: literal(CaptchaType.puzzle),
-		tolerance: number().optional(),
+		tolerance: number().safe().optional(),
 	}),
 	object({
 		type: literal(CaptchaType.iconOrder),
-		tolerance: number().optional(),
+		tolerance: number().safe().optional(),
 	}),
 ]);
 

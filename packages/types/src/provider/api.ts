@@ -35,7 +35,7 @@ import {
 	type z,
 	type infer as zInfer,
 } from "zod";
-import { INPUT_LIMITS } from "../api/inputLimits.js";
+import { INPUT_LIMITS, hasAtMostKeys } from "../api/inputLimits.js";
 import { ApiParams } from "../api/params.js";
 import {
 	boundedArray,
@@ -131,16 +131,18 @@ export enum PublicApiPaths {
 }
 
 export const providerDetailsSchema = object({
-	version: string(),
-	message: string(),
+	version: string().max(INPUT_LIMITS.ID),
+	message: string().max(INPUT_LIMITS.TEXT),
 	// Identity of the node that answered. Optional because the fleet is
 	// mixed-version during a rolling deploy and older nodes omit it.
-	host: string().optional(),
+	host: string().max(INPUT_LIMITS.NAME).optional(),
 	redis: object({
-		actor: string(),
+		actor: string().max(INPUT_LIMITS.LONG_TEXT),
 		isReady: boolean(),
-		awaitingTimeSeconds: number(),
-	}).array(),
+		awaitingTimeSeconds: number().safe(),
+	})
+		.array()
+		.max(INPUT_LIMITS.ARRAY),
 });
 
 export type ProviderDetails = output<typeof providerDetailsSchema>;
@@ -314,8 +316,8 @@ const createRateLimitSchemaWithDefaults = (
 			(schemas, [path, defaults]) => {
 				const enumPath = path as CombinedApiPaths;
 				schemas[enumPath] = object({
-					windowMs: coerce.number().optional().default(defaults.windowMs),
-					limit: coerce.number().optional().default(defaults.limit),
+					windowMs: coerce.number().safe().optional().default(defaults.windowMs),
+					limit: coerce.number().safe().optional().default(defaults.limit),
 				});
 
 				return schemas;
@@ -369,7 +371,7 @@ export const CaptchaRequestBody = object({
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.datasetId]: union([
 		boundedString(INPUT_LIMITS.ID),
-		boundedArray(number(), REQUEST_ARRAY_LIMITS.datasetId),
+		boundedArray(number().safe(), REQUEST_ARRAY_LIMITS.datasetId),
 	]).optional(),
 	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
@@ -470,6 +472,7 @@ export const VerifySolutionBody = object({
 	[ApiParams.token]: BoundedProcaptchaTokenSpec,
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.maxVerifiedTime]: number()
+		.safe()
 		.optional()
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
@@ -649,8 +652,10 @@ export type ServerPowCaptchaVerifyRequestBodyOutput = output<
 
 // ── DNS observation event ingestion (wire-compat with the dns sidecar) ─
 export const DnsEventKindSchema = union([
-	string().regex(/^dns$/),
-	string().regex(/^http$/),
+	string().max(INPUT_LIMITS.NAME).regex(/^dns$/),
+	string()
+		.max(INPUT_LIMITS.NAME)
+		.regex(/^http$/),
 ]);
 export type DnsEventKind = "dns" | "http";
 
@@ -674,7 +679,7 @@ export const DnsEventSchema = object({
 export type DnsEvent = output<typeof DnsEventSchema>;
 
 export const DnsEventBatchSchema = object({
-	events: array(DnsEventSchema),
+	events: array(DnsEventSchema).max(INPUT_LIMITS.ARRAY),
 });
 export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
 
@@ -682,7 +687,7 @@ export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
 // DnsEventSchema so a single malformed event is dropped rather than rejecting
 // the whole batch.
 export const DnsEventIngestBatchSchema = object({
-	events: array(unknown()),
+	events: array(unknown()).max(INPUT_LIMITS.ARRAY),
 });
 export type DnsEventIngestBatch = output<typeof DnsEventIngestBatchSchema>;
 
@@ -713,7 +718,7 @@ export type ServerPowCaptchaVerifyRequestBodyType = zInfer<
 
 export const SubmitPowCaptchaSolutionBody = object({
 	[ApiParams.challenge]: PowChallengeIdSchema,
-	[ApiParams.difficulty]: number(),
+	[ApiParams.difficulty]: number().safe(),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: object({
 			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
@@ -724,7 +729,7 @@ export const SubmitPowCaptchaSolutionBody = object({
 	}),
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.nonce]: number(),
+	[ApiParams.nonce]: number().safe(),
 	[ApiParams.behavioralData]: boundedString(
 		INPUT_LIMITS.BEHAVIOURAL_DATA,
 	).optional(),
@@ -823,7 +828,7 @@ export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 // ── Detector bundle pool ────────────────────────────────────────────────
 
 export const AssignDetectorBundleRequestBody = object({
-	[ApiParams.dapp]: string(),
+	[ApiParams.dapp]: string().max(INPUT_LIMITS.TOKEN),
 });
 
 export type AssignDetectorBundleRequestBodyOutput = output<
@@ -847,27 +852,27 @@ export const ReplaceDetectorPoolBody = object({
 	// schema and the bundle can then no longer be decoded, so a field added to
 	// the build output has to be added here too.
 	bundles: record(
-		string(),
+		string().max(INPUT_LIMITS.TOKEN),
 		object({
-			js: string(),
-			privateKey: string(),
+			js: string().max(INPUT_LIMITS.LONG_TEXT),
+			privateKey: string().max(INPUT_LIMITS.TOKEN),
 			// Required for sealed bundles. Open-format bundles have no inner
 			// layer; the pool rejects a sealed bundle that arrives without it.
-			innerConfig: string().optional(),
+			innerConfig: string().max(INPUT_LIMITS.TOKEN).optional(),
 			format: literal(OPEN_DETECTOR_FORMAT).optional(),
 			// Release the bundle was built from, e.g. "3.6.64". The widget runs
 			// whatever the provider serves, so this is the only guard against a
 			// pool built from a different release. Optional for pools predating
 			// the stamp.
-			release: string().optional(),
+			release: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 			// Opaque per-bundle decode parameter, paired with this bundle's js.
 			// Optional for pools built before it existed.
-			payloadLayout: string().optional(),
+			payloadLayout: string().max(INPUT_LIMITS.TOKEN).optional(),
 			// Second opaque per-bundle decode parameter, same contract as
 			// `payloadLayout`. Optional for pools built before it existed.
-			keyMap: string().optional(),
+			keyMap: string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 		}),
-	),
+	).refine(hasAtMostKeys(INPUT_LIMITS.RECORD_KEYS), { message: "Too many keys" }),
 });
 
 export type ReplaceDetectorPoolBodyType = output<
@@ -906,17 +911,17 @@ export type GetPuzzleCaptchaChallengeRequestBodyTypeOutput = output<
 // since the drag started (not absolute), which is enough for behavioural
 // analysis and lets the trail be replay-portable.
 export const PuzzleEventSchema = object({
-	x: number(),
-	y: number(),
-	t: number(),
+	x: number().safe(),
+	y: number().safe(),
+	t: number().safe(),
 });
 
 export type PuzzleEvent = zInfer<typeof PuzzleEventSchema>;
 
 export const SubmitPuzzleCaptchaSolutionBody = object({
 	[ApiParams.challenge]: PowChallengeIdSchema,
-	[ApiParams.finalX]: number(),
-	[ApiParams.finalY]: number(),
+	[ApiParams.finalX]: number().safe(),
+	[ApiParams.finalY]: number().safe(),
 	[ApiParams.puzzleEvents]: boundedArray(
 		PuzzleEventSchema,
 		REQUEST_ARRAY_LIMITS.puzzleEvents,
@@ -972,7 +977,7 @@ export const AudioEventSchema = object({
 		literal("replay"),
 		literal("key"),
 	]),
-	t: number(),
+	t: number().safe(),
 });
 
 export type AudioEvent = zInfer<typeof AudioEventSchema>;
@@ -1029,8 +1034,8 @@ export type IconOrderEvent = PuzzleEvent;
 
 /** One click in background pixels; its index in `clicks` is its order. */
 export const IconClickSchema = object({
-	x: number(),
-	y: number(),
+	x: number().safe(),
+	y: number().safe(),
 });
 
 export type IconClick = zInfer<typeof IconClickSchema>;
@@ -1093,7 +1098,7 @@ export const RegisterSitekeysBody = array(
 		[ApiParams.tier]: nativeEnum(Tier),
 		[ApiParams.settings]: ClientSettingsSchema.optional(),
 	}),
-);
+).max(INPUT_LIMITS.ARRAY);
 
 export const RemoveSitekeyBody = object({
 	[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
@@ -1103,7 +1108,7 @@ export const RemoveSitekeysBody = array(
 	object({
 		[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),
 	}),
-);
+).max(INPUT_LIMITS.ARRAY);
 
 export const UpdateDecisionMachineBody = object({
 	[ApiParams.decisionMachineScope]: nativeEnum(DecisionMachineScope),
@@ -1139,8 +1144,8 @@ export type ClearAllCountersBodyType = z.infer<typeof ClearAllCountersBody>;
 
 export const ClearAllCountersResponse = object({
 	success: boolean(),
-	deletedCount: number(),
-	scope: string(),
+	deletedCount: number().safe(),
+	scope: string().max(INPUT_LIMITS.LONG_TEXT),
 });
 
 export type ClearAllCountersResponseType = z.infer<
@@ -1148,17 +1153,17 @@ export type ClearAllCountersResponseType = z.infer<
 >;
 
 export const DecisionMachineSummarySchema = object({
-	_id: string(),
+	_id: string().max(INPUT_LIMITS.ID),
 	scope: nativeEnum(DecisionMachineScope),
-	dappAccount: string().nullish(),
+	dappAccount: string().max(INPUT_LIMITS.ID).nullish(),
 	kind: nativeEnum(DecisionMachineKind).nullish(),
 	runtime: nativeEnum(DecisionMachineRuntime),
 	language: nativeEnum(DecisionMachineLanguage).nullish(),
-	name: string().nullish(),
-	version: string().nullish(),
+	name: string().max(INPUT_LIMITS.NAME).nullish(),
+	version: string().max(INPUT_LIMITS.ID).nullish(),
 	captchaType: ChallengeCaptchaTypeSchema.nullish(),
-	createdAt: string(),
-	updatedAt: string(),
+	createdAt: string().max(INPUT_LIMITS.NAME),
+	updatedAt: string().max(INPUT_LIMITS.NAME),
 });
 
 export type DecisionMachineSummary = z.infer<
@@ -1170,16 +1175,16 @@ export type DecisionMachineSummary = z.infer<
 // a follow-up get-by-id per machine.
 export const GetAllDecisionMachinesResponse = array(
 	DecisionMachineSummarySchema.extend({
-		source: string(),
+		source: string().max(INPUT_LIMITS.TOKEN),
 	}),
-);
+).max(INPUT_LIMITS.ARRAY);
 
 export type GetAllDecisionMachinesResponseType = z.infer<
 	typeof GetAllDecisionMachinesResponse
 >;
 
 export const GetDecisionMachineResponse = DecisionMachineSummarySchema.extend({
-	source: string(),
+	source: string().max(INPUT_LIMITS.TOKEN),
 });
 
 export type GetDecisionMachineResponseType = z.infer<
@@ -1188,7 +1193,7 @@ export type GetDecisionMachineResponseType = z.infer<
 
 export const RemoveDecisionMachineResponse = object({
 	success: boolean(),
-	deletedId: string(),
+	deletedId: string().max(INPUT_LIMITS.ID),
 });
 
 export type RemoveDecisionMachineResponseType = z.infer<
@@ -1197,7 +1202,7 @@ export type RemoveDecisionMachineResponseType = z.infer<
 
 export const RemoveAllDecisionMachinesResponse = object({
 	success: boolean(),
-	deletedCount: number(),
+	deletedCount: number().safe(),
 });
 
 export type RemoveAllDecisionMachinesResponseType = z.infer<
@@ -1210,7 +1215,9 @@ export const ToggleMaintenanceModeBody = object({
 	// means the node-wide flag, which is what the deploy path uses. Scoped
 	// maintenance mode exists so one customer can be taken out of scoring
 	// without forcing a pass for everybody else on the node.
-	[ApiParams.siteKeys]: array(string()).optional(),
+	[ApiParams.siteKeys]: array(string().max(INPUT_LIMITS.LONG_TEXT))
+		.max(INPUT_LIMITS.ARRAY)
+		.optional(),
 });
 
 export type ToggleMaintenanceModeBodyOutput = output<
@@ -1248,12 +1255,12 @@ export type RemoveSitekeysBodyTypeOutput = output<typeof RemoveSitekeysBody>;
 
 export const ProsopoCaptchaCountConfigSchema = object({
 	solved: object({
-		count: number().positive(),
+		count: number().safe().positive(),
 	})
 		.optional()
 		.default({ count: DEFAULT_SOLVED_COUNT }),
 	unsolved: object({
-		count: number().nonnegative(),
+		count: number().safe().nonnegative(),
 	})
 		.optional()
 		.default({ count: DEFAULT_UNSOLVED_COUNT }),
@@ -1278,12 +1285,12 @@ export const BlockRuleSpec = object({
 	global: boolean(),
 	hardBlock: boolean(),
 	type: BlockRuleTypeSpec,
-	dappAccount: string().optional(),
+	dappAccount: string().max(INPUT_LIMITS.ID).optional(),
 	captchaConfig: ProsopoCaptchaCountConfigSchema.optional(),
 });
 
 export type BlockRule = zInfer<typeof BlockRuleSpec>;
 
 export const DappDomainRequestBody = object({
-	[ApiParams.dapp]: string(),
+	[ApiParams.dapp]: string().max(INPUT_LIMITS.TOKEN),
 });

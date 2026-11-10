@@ -1,7 +1,3 @@
-import fs from "node:fs";
-import { get } from "@prosopo/util";
-import { lodash } from "@prosopo/util/lodash";
-import cliProgress from "cli-progress";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,6 +11,11 @@ import cliProgress from "cli-progress";
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import fs from "node:fs";
+import { INPUT_LIMITS } from "@prosopo/types";
+import { get } from "@prosopo/util";
+import { lodash } from "@prosopo/util/lodash";
+import cliProgress from "cli-progress";
 import * as z from "zod";
 import { InputArgsSchema, InputCliCommand } from "../utils/input.js";
 import { readJsonFile } from "../utils/readJsonFile.js";
@@ -52,7 +53,7 @@ export class Get extends InputCliCommand<ArgsSchemaType> {
 				for (const key of Object.keys(data)) {
 					if (key === "data") {
 						const value = get(data, key);
-						const url = z.string().parse(value);
+						const url = z.string().max(INPUT_LIMITS.URL).parse(value);
 						list.push(url);
 					} else {
 						await traverse(get(data, key));

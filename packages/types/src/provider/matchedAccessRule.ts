@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { array, boolean, literal, object, string, union } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import { type CaptchaType, CaptchaTypeSchema } from "../client/index.js";
 
 // Lives here rather than in @prosopo/user-access-policy because the Session
@@ -25,8 +26,8 @@ export const MatchedRuleConditionSchema = object({
 	// plain string here to avoid the package cycle. The producer only ever
 	// emits values from `userScopeRecordFields`, and every consumer treats an
 	// unrecognised field as a raw label, so nothing depends on the narrowing.
-	field: string(),
-	value: string(),
+	field: string().max(INPUT_LIMITS.NAME),
+	value: string().max(INPUT_LIMITS.LONG_TEXT),
 	// Set when `value` was clipped (a `coords` polygon serialises unbounded),
 	// so the UI can say "truncated" rather than imply an exact match.
 	truncated: boolean().optional(),
@@ -51,15 +52,15 @@ export type MatchedRuleCondition = {
  * page for the rules that DO still exist.
  */
 export const MatchedAccessRuleSchema = object({
-	ruleHash: string(),
+	ruleHash: string().max(INPUT_LIMITS.ID),
 	policyType: union([literal("block"), literal("restrict"), literal("allow")]),
-	conditions: array(MatchedRuleConditionSchema),
-	description: string().optional(),
+	conditions: array(MatchedRuleConditionSchema).max(INPUT_LIMITS.ARRAY),
+	description: string().max(INPUT_LIMITS.TOKEN).optional(),
 	captchaType: CaptchaTypeSchema.optional(),
 	deferToVerify: boolean().optional(),
-	ruleGroupId: string().optional(),
+	ruleGroupId: string().max(INPUT_LIMITS.ID).optional(),
 	// Absent for global (Prosopo-wide) rules; the siteKey for client rules.
-	clientId: string().optional(),
+	clientId: string().max(INPUT_LIMITS.ID).optional(),
 });
 
 export type MatchedAccessRule = {

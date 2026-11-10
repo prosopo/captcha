@@ -19,6 +19,7 @@ import {
 } from "@prosopo/api-route";
 import type { AllKeys } from "@prosopo/common";
 import { LogLevel, type Logger } from "@prosopo/logger";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { type ZodType, type ZodTypeDef, z } from "zod";
 import type {
 	AccessPolicy,
@@ -69,16 +70,21 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 	) {}
 
 	public getRequestArgsSchema(): InsertRulesSchema {
-		return z.array(
-			z.object({
-				accessPolicy: accessPolicyInput,
-				policyScopes: z.array(policyScopeInput).optional(),
-				excludedClientIds: policyScopeExclusionsInput.shape.excludedClientIds,
-				groupId: z.string().optional(),
-				userScopes: z.array(userScopeInput),
-				expiresUnixTimestamp: z.number().optional(),
-			} satisfies AllKeys<InsertRulesGroup>),
-		);
+		return z
+			.array(
+				z.object({
+					accessPolicy: accessPolicyInput,
+					policyScopes: z
+						.array(policyScopeInput)
+						.max(INPUT_LIMITS.ARRAY)
+						.optional(),
+					excludedClientIds: policyScopeExclusionsInput.shape.excludedClientIds,
+					groupId: z.string().max(INPUT_LIMITS.ID).optional(),
+					userScopes: z.array(userScopeInput).max(INPUT_LIMITS.ARRAY),
+					expiresUnixTimestamp: z.number().safe().optional(),
+				} satisfies AllKeys<InsertRulesGroup>),
+			)
+			.max(INPUT_LIMITS.ARRAY);
 	}
 
 	async processRequest(

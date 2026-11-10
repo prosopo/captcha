@@ -31,21 +31,22 @@ import {
 	SelectableCaptchaTypeSpec,
 	Tier,
 } from "@prosopo/types";
+import { INPUT_LIMITS } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
 import { z } from "zod";
 import { validateSiteKey } from "./validators.js";
 
 export const SiteKeyRegisterCommandArgsSpec = z.object({
-	sitekey: z.string(),
+	sitekey: z.string().max(INPUT_LIMITS.ID),
 	tier: z.nativeEnum(Tier),
 	captcha_type: SelectableCaptchaTypeSpec,
 	frictionless_threshold: z.number().max(1).min(0),
 	// Optional upper rung of the score ladder. Omit for the two-outcome
 	// ladder (pow below the threshold, image above it). Uncapped: the score
 	// it is compared against is post-penalty and routinely exceeds 1.
-	frictionless_image_threshold: z.number().min(0).optional(),
-	pow_difficulty: z.number(),
-	domains: z.array(z.string()),
+	frictionless_image_threshold: z.number().safe().min(0).optional(),
+	pow_difficulty: z.number().safe(),
+	domains: z.array(z.string().max(INPUT_LIMITS.NAME)).max(INPUT_LIMITS.ARRAY),
 	image_threshold: z.number().max(1).min(0),
 	image_max_rounds: z
 		.number()

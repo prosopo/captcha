@@ -14,6 +14,7 @@
 
 import type { AllKeys } from "@prosopo/common";
 import { ResultReason, SelectableCaptchaTypeSchema } from "@prosopo/types";
+import { INPUT_LIMITS } from "@prosopo/types";
 import { z } from "zod";
 import {
 	type AccessPolicy,
@@ -48,17 +49,17 @@ import {
 export const accessPolicyInputShape = z.object({
 	type: z.nativeEnum(AccessPolicyType),
 	captchaType: SelectableCaptchaTypeSchema.optional(),
-	description: z.coerce.string().optional(),
+	description: z.coerce.string().max(INPUT_LIMITS.TEXT).optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
-	solvedImagesCount: z.coerce.number().optional(),
+	solvedImagesCount: z.coerce.number().safe().optional(),
 	// the percentage of image panels that must be solved per image CAPTCHA
-	imageThreshold: z.coerce.number().optional(),
+	imageThreshold: z.coerce.number().safe().optional(),
 	// the Proof-of-Work difficulty level
-	powDifficulty: z.coerce.number().optional(),
+	powDifficulty: z.coerce.number().safe().optional(),
 	// the number of unsolved image CAPTCHA challenges to serve
-	unsolvedImagesCount: z.coerce.number().optional(),
+	unsolvedImagesCount: z.coerce.number().safe().optional(),
 	// used to increase the user's score
-	frictionlessScore: z.coerce.number().optional(),
+	frictionlessScore: z.coerce.number().safe().optional(),
 	// Skip the request-time block middleware and only fire at verify.
 	// Redis stores booleans as strings — preprocess so "true"/"false"
 	// round-trip to the JS boolean the matcher expects.
@@ -116,7 +117,7 @@ export const policyScopeInput = z.object({
 	// side and the API input side never emit the sentinel.
 	clientId: z.preprocess(
 		(v) => (v === GLOBAL_CLIENT_SCOPE_SENTINEL ? undefined : v),
-		z.coerce.string().optional(),
+		z.coerce.string().max(INPUT_LIMITS.LONG_TEXT).optional(),
 	),
 } satisfies AllKeys<PolicyScope>);
 
