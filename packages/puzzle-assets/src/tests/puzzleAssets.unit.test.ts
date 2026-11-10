@@ -400,16 +400,16 @@ describe("paintDecoys", () => {
 		// Additive rim/body knobs at 0 too so only the multiplicative path
 		// contributes; otherwise `bodyBrightness` adds back a few units and
 		// the pixels never reach exactly zero.
-		paintDecoyPiece(
-			bg,
-			createPrng(SEED_B),
-			DEFAULT_GEOMETRY.notchSize,
+		paintDecoyPiece({
+			background: bg,
+			prng: createPrng(SEED_B),
+			size: DEFAULT_GEOMETRY.notchSize,
 			cx,
 			cy,
-			0,
-			0,
-			0,
-		);
+			edgeDarkness: 0,
+			bodyBrightness: 0,
+			holeDarken: 0,
+		});
 		const i = (cy * bg.width + cx) * 4;
 		expect(bg.data[i]).toBe(0);
 		expect(bg.data[i + 1]).toBe(0);

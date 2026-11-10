@@ -186,13 +186,19 @@ const byteForLuminance = (luminance: number): number =>
  * light piece a dark one, so the cue is present whatever the palette produced —
  * which neither a fixed direction nor a fixed magnitude can promise.
  */
-const pieceRimDelta = (
-	background: RgbaImage,
-	shape: NotchShape,
-	size: number,
-	left: number,
-	top: number,
-): number => {
+const pieceRimDelta = ({
+	background,
+	shape,
+	size,
+	left,
+	top,
+}: {
+	background: RgbaImage;
+	shape: NotchShape;
+	size: number;
+	left: number;
+	top: number;
+}): number => {
 	let total = 0;
 	let counted = 0;
 	// Every fourth pixel on each axis. The answer is the mean brightness of a few
@@ -273,7 +279,7 @@ export const cutNotch = ({
 	// pixels the piece is actually made of, before any of them are written, so the
 	// step is away from the piece rather than in a fixed direction and magnitude
 	// that might match it.
-	const rimStep = pieceRimDelta(background, shape, size, left, top);
+	const rimStep = pieceRimDelta({ background, shape, size, left, top });
 	const rim = pieceRimGeometry(size);
 
 	// Pass 1: build the piece from the pixels about to be removed.

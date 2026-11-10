@@ -62,16 +62,25 @@ const DECOY_INNER_SHADOW = 0.35;
  * `(cx, cy)`. Mutates `background`. Runs the same signed-distance sampling
  * as the real cut, so the silhouette reads as the same family of shapes.
  */
-export const paintDecoyPiece = (
-	background: RgbaImage,
-	prng: Prng,
-	size: number,
-	cx: number,
-	cy: number,
-	edgeDarkness: number,
-	bodyBrightness: number,
-	holeDarken: number,
-): void => {
+export const paintDecoyPiece = ({
+	background,
+	prng,
+	size,
+	cx,
+	cy,
+	edgeDarkness,
+	bodyBrightness,
+	holeDarken,
+}: {
+	background: RgbaImage;
+	prng: Prng;
+	size: number;
+	cx: number;
+	cy: number;
+	edgeDarkness: number;
+	bodyBrightness: number;
+	holeDarken: number;
+}): void => {
 	const shape = createNotchShape(prng, size);
 	const half = size / 2;
 	const left = Math.round(cx - half);
@@ -184,16 +193,16 @@ export const paintDecoys = ({
 			) {
 				continue;
 			}
-			paintDecoyPiece(
+			paintDecoyPiece({
 				background,
 				prng,
-				notchSize,
+				size: notchSize,
 				cx,
 				cy,
 				edgeDarkness,
 				bodyBrightness,
 				holeDarken,
-			);
+			});
 			break;
 		}
 	}

@@ -68,13 +68,19 @@ export interface RenderedPuzzleRgba {
  * than WebP-encoded buffers, so browser consumers can `putImageData` onto
  * a canvas without needing sharp.
  */
-export const renderPuzzleToRgba = (
-	background: RgbaImage,
-	placement: NotchPlacement,
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	seed: Buffer = createSeed(),
-): RenderedPuzzleRgba => {
+export const renderPuzzleToRgba = ({
+	background,
+	placement,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	seed?: Buffer;
+}): RenderedPuzzleRgba => {
 	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
 	paintDecoys({
