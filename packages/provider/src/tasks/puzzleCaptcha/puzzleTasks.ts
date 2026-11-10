@@ -15,25 +15,23 @@
 import {
 	type CaptchaResult,
 	CaptchaType,
-	type ClientMetaData,
 	type DecisionMachineInput,
-	type IPAddress,
-	type ISpamFilterRules,
-	type ITrafficFilter,
 	type PoWChallengeId,
 	type PuzzleEvent,
-	type RequestHeaders,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { PuzzleCaptchaRecord } from "@prosopo/types-database";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
+	type InteractiveSolutionSubmission,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
-import { isFarPuzzleMiss, validatePuzzleSolution } from "./puzzleTasksUtils.js";
+import {
+	isFarPuzzleMiss,
+	puzzleDropDistance,
+	validatePuzzleSolution,
+} from "./puzzleTasksUtils.js";
 
 interface PuzzleCaptchaChallenge extends MintedChallenge {
 	targetX: number;
@@ -66,20 +64,18 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 		userSignature: string,
 		coords: [number, number][][] | undefined,
 	): Promise<void> {
-		return this.db.updatePuzzleCaptchaRecordResult(
+		return this.db.updatePuzzleCaptchaRecordResult({
 			challenge,
 			result,
-			false,
-			true,
+			serverChecked: false,
+			userSubmitted: true,
 			userSignature,
 			coords,
-		);
+		});
 	}
 
-	protected async claimSubmission(
-		record: PuzzleCaptchaRecord,
-	): Promise<boolean> {
-		return !record.userSubmitted;
+	protected claimSubmission(record: PuzzleCaptchaRecord): Promise<boolean> {
+		return this.db.claimPuzzleCaptchaSubmission(record.challenge);
 	}
 
 	protected markRecordChecked(challenge: PoWChallengeId): Promise<boolean> {
@@ -148,73 +144,40 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 	 * @param headers
 	 * @param behavioralData
 	 */
-	async verifyPuzzleCaptchaSolution(
-		challenge: PoWChallengeId,
-		providerChallengeSignature: string,
-		finalX: number,
-		finalY: number,
-		puzzleEvents: PuzzleEvent[],
-		timeout: number,
-		userTimestampSignature: string,
-		ipAddress: IPAddress,
-		headers: RequestHeaders,
-		behavioralData?: string,
-		salt?: string,
-		simdReadings?: string,
-		clientMetaData?: ClientMetaData,
-	): Promise<boolean> {
+	async verifyPuzzleCaptchaSolution({
+		finalX,
+		finalY,
+		puzzleEvents,
+		...submission
+	}: InteractiveSolutionSubmission & {
+		finalX: number;
+		finalY: number;
+		puzzleEvents: PuzzleEvent[];
+	}): Promise<boolean> {
 		return this.submitInteractiveCaptchaSolution({
-			challenge,
-			providerChallengeSignature,
-			timeout,
-			userTimestampSignature,
-			ipAddress,
-			behavioralData,
-			salt,
-			simdReadings,
-			clientMetaData,
+			...submission,
 			isCorrect: (record) =>
-				validatePuzzleSolution(
+				validatePuzzleSolution({
 					finalX,
 					finalY,
-					record.targetX,
-					record.targetY,
-					record.tolerance,
-				),
+					targetX: record.targetX,
+					targetY: record.targetY,
+					tolerance: record.tolerance,
+				}),
 			isFarMiss: (record) =>
 				isFarPuzzleMiss(finalX, finalY, record.targetX, record.targetY),
-			persistInteraction: () =>
-				this.db.updatePuzzleCaptchaRecord(challenge, { puzzleEvents }),
+			persistInteraction: (record) =>
+				this.db.updatePuzzleCaptchaRecord(submission.challenge, {
+					puzzleEvents,
+					finalX,
+					finalY,
+					distanceFromTarget: puzzleDropDistance(
+						finalX,
+						finalY,
+						record.targetX,
+						record.targetY,
+					),
+				}),
 		});
-	}
-
-	async serverVerifyPuzzleCaptchaSolution(
-		dappAccount: string,
-		challenge: string,
-		timeout: number,
-		env: ProviderEnvironment,
-		ip?: string,
-		userAccessRulesStorage?: AccessRulesStorage,
-		email?: string,
-		spamEmailDomainCheckingEnabled = false,
-		spamFilter?: ISpamFilterRules,
-		trafficFilter?: ITrafficFilter,
-		storeMetadata = false,
-		clientSessionId?: string,
-	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
-		return this.serverVerifyInteractiveCaptchaSolution(
-			dappAccount,
-			challenge,
-			timeout,
-			env,
-			ip,
-			userAccessRulesStorage,
-			email,
-			spamEmailDomainCheckingEnabled,
-			spamFilter,
-			trafficFilter,
-			storeMetadata,
-			clientSessionId,
-		);
 	}
 }

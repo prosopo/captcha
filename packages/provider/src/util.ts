@@ -480,14 +480,21 @@ export const evaluateIpValidationRules = (
  * @param ipValidationRules - IP validation rules configuration
  * @returns Object with validation result, optional error message, and distance info
  */
-export const deepValidateIpAddress = async (
-	ip: string,
-	challengeIpAddress: IPAddress,
-	logger: Logger,
-	ipInfoService: IIpInfoService,
-	ipValidationRules?: IIPValidationRules,
-	dnsPeerIp?: string,
-): Promise<{
+export const deepValidateIpAddress = async ({
+	ip,
+	challengeIpAddress,
+	logger,
+	ipInfoService,
+	ipValidationRules,
+	dnsPeerIp,
+}: {
+	ip: string;
+	challengeIpAddress: IPAddress;
+	logger: Logger;
+	ipInfoService: IIpInfoService;
+	ipValidationRules?: IIPValidationRules;
+	dnsPeerIp?: string;
+}): Promise<{
 	isValid: boolean;
 	errorMessage?: string;
 	distanceKm?: number;

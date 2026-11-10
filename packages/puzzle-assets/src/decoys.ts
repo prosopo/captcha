@@ -63,19 +63,30 @@ const DECOY_INNER_SHADOW = 0.35;
 
 /**
  * Composite a jigsaw-shaped decoration onto `background`, centred on
- * `(cx, cy)`. Mutates `background`.
+ * `(cx, cy)`. Mutates `background`. Runs the same signed-distance sampling
+ * as the real cut, so the silhouette reads as the same family of shapes.
  */
-export const paintDecoyPiece = (
-	background: RgbaImage,
-	shape: NotchShape,
-	size: number,
-	cx: number,
-	cy: number,
-	edgeDarkness: number,
-	bodyBrightness: number,
-	holeDarken: number,
-	style?: RecessStyle,
-): void => {
+export const paintDecoyPiece = ({
+	background,
+	shape,
+	size,
+	cx,
+	cy,
+	edgeDarkness,
+	bodyBrightness,
+	holeDarken,
+	style,
+}: {
+	background: RgbaImage;
+	shape: NotchShape;
+	size: number;
+	cx: number;
+	cy: number;
+	edgeDarkness: number;
+	bodyBrightness: number;
+	holeDarken: number;
+	style?: RecessStyle;
+}): void => {
 	const half = size / 2;
 	const left = Math.round(cx - half);
 	const top = Math.round(cy - half);
@@ -149,18 +160,29 @@ const COUNT_JITTER = 0.3;
  * cosmetic, so an occasional miss is fine. Every decoy takes `shape` when one
  * is given; otherwise each draws its own.
  */
-export const paintDecoys = (
-	background: RgbaImage,
-	prng: Prng,
-	targetCount: number,
-	shape: NotchShape | undefined,
-	notchSize: number,
-	notch: NotchPlacement,
-	edgeDarkness: number,
-	bodyBrightness: number,
-	holeDarken: number,
-	style?: RecessStyle,
-): void => {
+export const paintDecoys = ({
+	background,
+	prng,
+	targetCount,
+	shape,
+	notchSize,
+	notch,
+	edgeDarkness,
+	bodyBrightness,
+	holeDarken,
+	style,
+}: {
+	background: RgbaImage;
+	prng: Prng;
+	targetCount: number;
+	shape?: NotchShape;
+	notchSize: number;
+	notch: NotchPlacement;
+	edgeDarkness: number;
+	bodyBrightness: number;
+	holeDarken: number;
+	style?: RecessStyle;
+}): void => {
 	if (targetCount <= 0) return;
 
 	// Draw an actual count near the target. Round to int, clamp to >=0.
@@ -188,17 +210,17 @@ export const paintDecoys = (
 			) {
 				continue;
 			}
-			paintDecoyPiece(
+			paintDecoyPiece({
 				background,
-				shape ?? createNotchShape(prng, notchSize),
-				notchSize,
+				shape: shape ?? createNotchShape(prng, notchSize),
+				size: notchSize,
 				cx,
 				cy,
 				edgeDarkness,
 				bodyBrightness,
 				holeDarken,
 				style,
-			);
+			});
 			break;
 		}
 	}

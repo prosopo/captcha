@@ -60,6 +60,7 @@ const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	captchaType: { type: String, required: false },
 	description: { type: String, required: false },
 	solvedImagesCount: { type: Number, required: false },
+	severity: { type: Number, required: false },
 	imageThreshold: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
 	unsolvedImagesCount: { type: Number, required: false },

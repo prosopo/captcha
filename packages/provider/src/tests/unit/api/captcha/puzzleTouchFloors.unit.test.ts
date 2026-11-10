@@ -32,7 +32,10 @@ import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { renderPuzzleBoardImagesMock } = vi.hoisted(() => ({
-	renderPuzzleBoardImagesMock: vi.fn(),
+	renderPuzzleBoardImagesMock:
+		vi.fn<
+			typeof import("../../../../tasks/puzzle/puzzleRenderer.js").renderPuzzleBoardImages
+		>(),
 }));
 
 vi.mock(
@@ -143,7 +146,9 @@ const servedTolerance = (): number | undefined => {
 const servedPieceSize = (): number => {
 	const call = renderPuzzleBoardImagesMock.mock.calls[0];
 	if (!call) throw new Error("nothing was rendered");
-	return call[3] as number;
+	const { pieceSize } = call[0];
+	if (pieceSize === undefined) throw new Error("no piece size was served");
+	return pieceSize;
 };
 
 const TOUCH_MIN_PIECE_PX = Math.round(
@@ -345,7 +350,8 @@ describe("the session's fingerprint summary at issuance", () => {
 
 	/** The summary argument storePuzzleCaptchaRecord was given. */
 	const storedSummary = (ctx: ChallengeIssueContext): unknown =>
-		vi.mocked(ctx.tasks.db.storePuzzleCaptchaRecord).mock.calls[0]?.[13];
+		vi.mocked(ctx.tasks.db.storePuzzleCaptchaRecord).mock.calls[0]?.[0]
+			?.fingerprintSummary;
 
 	it("is stored on the puzzle record", async () => {
 		const fingerprintSummary = {

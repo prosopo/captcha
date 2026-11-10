@@ -12,20 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Validate that the puzzle solution is within tolerance of the target.
- * Uses Euclidean distance.
- */
-export const validatePuzzleSolution = (
+/** Euclidean distance from where the piece was dropped to the target. */
+export const puzzleDropDistance = (
 	finalX: number,
 	finalY: number,
 	targetX: number,
 	targetY: number,
-	tolerance: number,
-): boolean => {
-	const distance = Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2);
-	return distance <= tolerance;
-};
+): number => Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2);
+
+/** Validate that the puzzle solution is within tolerance of the target. */
+export const validatePuzzleSolution = ({
+	finalX,
+	finalY,
+	targetX,
+	targetY,
+	tolerance,
+}: {
+	finalX: number;
+	finalY: number;
+	targetX: number;
+	targetY: number;
+	tolerance: number;
+}): boolean =>
+	puzzleDropDistance(finalX, finalY, targetX, targetY) <= tolerance;
 
 /** A wrong answer at least this far from the target is not a near miss. */
 export const FAR_PUZZLE_MISS_DISTANCE = 50;
@@ -37,5 +46,5 @@ export const isFarPuzzleMiss = (
 	targetX: number,
 	targetY: number,
 ): boolean =>
-	Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2) >=
+	puzzleDropDistance(finalX, finalY, targetX, targetY) >=
 	FAR_PUZZLE_MISS_DISTANCE;

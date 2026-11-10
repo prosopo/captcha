@@ -70,7 +70,10 @@ export default class ReloadingAPI {
 		}
 		await waitForEnvironment(this.env);
 
-		this.api = await start(this.env, !!this._processedArgs.adminApi);
+		this.api = await start({
+			env: this.env,
+			admin: !!this._processedArgs.adminApi,
+		});
 		if (process.env.NODE_ENV === "development") {
 			this._envWatcher = await this._watchEnv();
 		}

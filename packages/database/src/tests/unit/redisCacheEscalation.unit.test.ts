@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Logger } from "@prosopo/logger";
+import type { LogRecord, LogRecordFn, Logger } from "@prosopo/logger";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RedisWriteQueue } from "../../redisCache.js";
 
@@ -63,6 +63,14 @@ const makeLogger = () => {
 		level: "info" as const,
 		warnSpy: warn,
 	} as unknown as Logger & { warnSpy: ReturnType<typeof vi.fn> };
+};
+
+const lastWarning = (logger: {
+	warnSpy: ReturnType<typeof vi.fn>;
+}): LogRecord => {
+	const fn = logger.warnSpy.mock.lastCall?.[0] as LogRecordFn | undefined;
+	if (!fn) throw new Error("no warning logged");
+	return fn();
 };
 
 describe("RedisWriteQueue — session escalation mapping", () => {
@@ -153,14 +161,17 @@ describe("RedisWriteQueue — session escalation mapping", () => {
 		fakeClient.set.mockRejectedValueOnce(new Error("REDIS_DOWN"));
 		const ok = await queue.cacheSessionEscalation("origin-A", "escalation-B");
 		expect(ok).toBe(false);
-		expect(logger.warnSpy).toHaveBeenCalled();
+		expect(lastWarning(logger).data).toEqual({
+			originSessionId: "origin-A",
+			escalationSessionId: "escalation-B",
+		});
 	});
 
 	it("get failure surfaces as null + a logged warning, not a thrown error", async () => {
 		fakeClient.get.mockRejectedValueOnce(new Error("REDIS_DOWN"));
 		const got = await queue.getCachedSessionEscalation("origin-A");
 		expect(got).toBeNull();
-		expect(logger.warnSpy).toHaveBeenCalled();
+		expect(lastWarning(logger).data).toEqual({ originSessionId: "origin-A" });
 	});
 
 	it("del failure surfaces as a logged warning, not a thrown error", async () => {
@@ -168,7 +179,7 @@ describe("RedisWriteQueue — session escalation mapping", () => {
 		await expect(
 			queue.invalidateCachedSessionEscalation("origin-A"),
 		).resolves.toBeUndefined();
-		expect(logger.warnSpy).toHaveBeenCalled();
+		expect(lastWarning(logger).data).toEqual({ originSessionId: "origin-A" });
 	});
 
 	it("entries respect TTL expiry", async () => {

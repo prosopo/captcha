@@ -112,7 +112,7 @@ describe("puzzle piece delivery", () => {
 		const { response: served } = await issuePuzzleChallenge(buildContext());
 		expect(served[ApiParams.piece]).toBeUndefined();
 		expect(served[ApiParams.background]).toBe("board-with-piece");
-		expect(renderPuzzleBoardImagesMock.mock.calls[0]?.[1]).toEqual({
+		expect(renderPuzzleBoardImagesMock.mock.calls[0]?.[0].start).toEqual({
 			x: 60,
 			y: 110,
 		});

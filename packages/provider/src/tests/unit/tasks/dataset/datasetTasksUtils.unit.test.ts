@@ -109,6 +109,42 @@ describe("providerValidateDataset", () => {
 		expect(buildDataset).not.toHaveBeenCalled();
 	});
 
+	it("should not count an empty solution as solved", async () => {
+		const datasetRaw = {
+			captchas: [{ solution: [] }, { solution: [] }, { solution: [] }],
+		} as unknown as DatasetRaw;
+
+		await expect(
+			providerValidateDataset(datasetRaw, 2, 0),
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-56",
+		});
+		expect(buildDataset).not.toHaveBeenCalled();
+	});
+
+	it("should count captchas with an empty solution as unsolved", async () => {
+		const datasetRaw = {
+			captchas: [
+				{ solution: ["a"] },
+				{ solution: ["b"] },
+				{ solution: [] },
+				{ solution: [] },
+			],
+		} as unknown as DatasetRaw;
+		const mockDataset: Dataset = {
+			datasetId: "datasetId",
+			datasetContentId: "datasetContentId",
+			captchas: [],
+			format: CaptchaTypes.SelectAll,
+		};
+		vi.mocked(buildDataset).mockResolvedValue(mockDataset);
+
+		await expect(providerValidateDataset(datasetRaw, 2, 2)).resolves.toEqual(
+			mockDataset,
+		);
+	});
+
 	it("should throw an error if datasetId or datasetContentId is undefined", async () => {
 		const datasetRaw = {
 			captchas: [{ solution: "sol1" }, {}],

@@ -16,9 +16,7 @@ import { gradeClicks } from "@prosopo/icon-order-assets";
 import {
 	type CaptchaResult,
 	CaptchaType,
-	type ClientMetaData,
 	type DecisionMachineInput,
-	type IPAddress,
 	type IconClick,
 	type IconOrderEvent,
 	type IconOrderRenderRecord,
@@ -34,6 +32,7 @@ import {
 import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
+	type InteractiveSolutionSubmission,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
 
@@ -68,14 +67,14 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 		userSignature: string,
 		coords: [number, number][][] | undefined,
 	): Promise<void> {
-		return this.db.updateIconOrderCaptchaRecordResult(
+		return this.db.updateIconOrderCaptchaRecordResult({
 			challenge,
 			result,
-			false,
-			true,
+			serverChecked: false,
+			userSubmitted: true,
 			userSignature,
 			coords,
-		);
+		});
 	}
 
 	/**
@@ -118,33 +117,20 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 		};
 	}
 
-	async verifyIconOrderCaptchaSolution(
-		challenge: PoWChallengeId,
-		providerChallengeSignature: string,
-		clicks: IconClick[],
-		iconOrderEvents: IconOrderEvent[],
-		timeout: number,
-		userTimestampSignature: string,
-		ipAddress: IPAddress,
-		behavioralData?: string,
-		salt?: string,
-		simdReadings?: string,
-		clientMetaData?: ClientMetaData,
-	): Promise<boolean> {
+	async verifyIconOrderCaptchaSolution({
+		clicks,
+		iconOrderEvents,
+		...submission
+	}: InteractiveSolutionSubmission & {
+		clicks: IconClick[];
+		iconOrderEvents: IconOrderEvent[];
+	}): Promise<boolean> {
 		return this.submitInteractiveCaptchaSolution({
-			challenge,
-			providerChallengeSignature,
-			timeout,
-			userTimestampSignature,
-			ipAddress,
-			behavioralData,
-			salt,
-			simdReadings,
-			clientMetaData,
+			...submission,
 			isCorrect: (record) =>
 				gradeClicks(record.targets, clicks, record.tolerance),
 			persistInteraction: () =>
-				this.db.updateIconOrderCaptchaRecord(challenge, {
+				this.db.updateIconOrderCaptchaRecord(submission.challenge, {
 					clicks,
 					iconOrderEvents,
 				}),

@@ -37,14 +37,21 @@ export interface DrawnPuzzle {
  * Each version consumes `prng` in its own order, so a stored seed only
  * reproduces a puzzle when redrawn with the version that served it.
  */
-export const drawPuzzle = (
-	background: RgbaImage,
-	placement: NotchPlacement,
-	pieceSize: number,
-	settings: PuzzleRenderSettings,
-	prng: Prng,
-	version: PuzzleRendererVersion,
-): DrawnPuzzle => {
+export const drawPuzzle = ({
+	background,
+	placement,
+	pieceSize,
+	settings,
+	prng,
+	version,
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	pieceSize: number;
+	settings: PuzzleRenderSettings;
+	prng: Prng;
+	version: PuzzleRendererVersion;
+}): DrawnPuzzle => {
 	const presentation =
 		version >= 2
 			? samplePresentation(prng, background.width, background.height)
@@ -53,28 +60,28 @@ export const drawPuzzle = (
 		version >= 2 ? createNotchShape(prng, pieceSize) : undefined;
 	// Decoys go on first so the real cut sits on top of any overlap and
 	// always reads as the deepest, darkest region on the board.
-	paintDecoys(
+	paintDecoys({
 		background,
 		prng,
-		settings.decoyCount,
-		sharedShape,
-		pieceSize,
-		placement,
-		settings.decoyEdgeDarkness,
-		settings.decoyBodyBrightness,
-		settings.decoyHoleDarken,
-		presentation?.recess,
-	);
+		targetCount: settings.decoyCount,
+		shape: sharedShape,
+		notchSize: pieceSize,
+		notch: placement,
+		edgeDarkness: settings.decoyEdgeDarkness,
+		bodyBrightness: settings.decoyBodyBrightness,
+		holeDarken: settings.decoyHoleDarken,
+		style: presentation?.recess,
+	});
 	const shape = sharedShape ?? createNotchShape(prng, pieceSize);
-	const cut = cutNotch(
+	const cut = cutNotch({
 		prng,
 		background,
 		shape,
-		pieceSize,
+		size: pieceSize,
 		placement,
-		settings.holeDarken,
-		presentation?.recess,
-	);
+		holeDarken: settings.holeDarken,
+		style: presentation?.recess,
+	});
 	if (!presentation) return cut;
 
 	regrain(cut.background, prng);

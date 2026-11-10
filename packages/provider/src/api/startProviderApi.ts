@@ -20,6 +20,7 @@ import {
 	apiExpressRouterFactory,
 	authMiddleware,
 	createApiExpressDefaultEndpointAdapter,
+	handleErrors,
 	requestLoggerMiddleware,
 } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/env";
@@ -38,11 +39,9 @@ import {
 	AccessRuleApiRoutes,
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
-import type { JWT } from "@prosopo/util-crypto";
 import { packageDir } from "@prosopo/util/node";
 import cors, { type CorsOptions } from "cors";
 import express from "express";
-import type { Request } from "express";
 import rateLimit from "express-rate-limit";
 import {
 	DEFAULT_DETECTOR_POOL_DIR,
@@ -50,6 +49,7 @@ import {
 } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
 import { adminAuthOptions } from "./adminAuthOptions.js";
+import { adminRateLimitKey } from "./adminJwt.js";
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
@@ -145,36 +145,6 @@ export const getClientApiPathsExpectingProsopoHeaders =
 	};
 
 /**
- * Extract authenticated user address from JWT for rate limiting
- * @param req Express request object
- * @returns User address from JWT or undefined
- */
-export const getUserFromJWT = (req: Request): string | undefined => {
-	try {
-		const authHeader = req.headers.Authorization || req.headers.authorization;
-		if (!authHeader || typeof authHeader !== "string") {
-			return undefined;
-		}
-		const jwt = authHeader.replace("Bearer ", "") as JWT;
-		if (!jwt) {
-			return undefined;
-		}
-		// We don't need to verify the signature here, just extract the subject
-		// The actual verification happens in authMiddleware
-		const parts = jwt.split(".");
-		if (parts.length !== 3 || !parts[1]) {
-			return undefined;
-		}
-		const payload = JSON.parse(
-			Buffer.from(parts[1], "base64url").toString("utf-8"),
-		);
-		return payload.sub as string | undefined;
-	} catch (e) {
-		return undefined;
-	}
-};
-
-/**
  * `.listen()` returns before the socket is bound, so a bind failure such as
  * EADDRINUSE arrives later as an 'error' event — an uncaught exception unless
  * something is waiting on it. Settle on whichever event comes first so the
@@ -238,14 +208,14 @@ export async function startProviderApi(
 	// check (dev, and pools built before stamping existed).
 	const detectorPoolDir =
 		process.env.PROSOPO_DETECTOR_POOL_DIR ?? DEFAULT_DETECTOR_POOL_DIR;
-	initDetectorBundlePool(
-		detectorPoolDir,
-		{
+	initDetectorBundlePool({
+		dir: detectorPoolDir,
+		logger: {
 			info: (msg, data) => env.logger.info(() => ({ msg, data })),
 			warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
 		},
-		process.env.PROSOPO_DETECTOR_POOL_RELEASE,
-	);
+		expectedRelease: process.env.PROSOPO_DETECTOR_POOL_RELEASE,
+	});
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;
@@ -345,21 +315,16 @@ export async function startProviderApi(
 			...getExpressApiRuleRateLimits(),
 		};
 		const adminPaths = Object.values(AdminApiPaths);
+		const adminKey = adminRateLimitKey(env.pair, env.authAccount);
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
-			// For admin paths, key by authenticated user instead of IP
-			// This prevents tests (and legitimate users) from interfering with each other
 			if (adminPaths.includes(enumPath as AdminApiPaths)) {
 				apiApp.use(
 					enumPath,
 					rateLimit({
 						...limit,
 						handler: rateLimitHandler(env.logger, enumPath),
-						keyGenerator: (req) => {
-							const user = getUserFromJWT(req);
-							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
-							return user || req.ip || "unknown";
-						},
+						keyGenerator: adminKey,
 					}),
 				);
 			} else if (
@@ -412,11 +377,11 @@ export async function startProviderApi(
 
 	//  Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
-	const adminAuth = authMiddleware(
-		env.pair,
-		env.authAccount,
-		adminAuthOptions(process.env, env.config.host),
-	);
+	const adminAuth = authMiddleware({
+		pair: env.pair,
+		authAccount: env.authAccount,
+		options: adminAuthOptions(process.env, env.config.host),
+	});
 	apiApp.use("/v1/prosopo/provider/admin", adminAuth);
 	if (apiRuleRoutesProvider) {
 		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
@@ -469,6 +434,10 @@ export async function startProviderApi(
 	// Domain middleware will run on any routes beginning with "/v1/prosopo/provider/client/" past this point
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
+
+	// Routers answer their own errors, but app-level middleware such as the
+	// body parsers above pass theirs past every router to here.
+	apiApp.use(handleErrors);
 
 	// Check if certificates exist and create HTTPS server if available
 	const tls = tlsFiles();

@@ -284,7 +284,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			join(poolDir, "bundle-0.json"),
 			JSON.stringify({ privateKey: "PK", innerConfig: "C" }),
 		);
-		initDetectorBundlePool(poolDir);
+		initDetectorBundlePool({ dir: poolDir });
 	});
 	afterAll(() => {
 		rmSync(poolDir, { recursive: true, force: true });

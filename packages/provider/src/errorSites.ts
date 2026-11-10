@@ -80,12 +80,9 @@ declare module "@prosopo/common" {
 		"PROV-65": true;
 		"PROV-66": true;
 		"PROV-67": true;
-		"PROV-68": true;
 		"PROV-69": true;
 		"PROV-70": true;
-		"PROV-71": true;
 		"PROV-72": true;
-		"PROV-73": true;
 		"PROV-74": true;
 		"PROV-75": true;
 		"PROV-76": true;

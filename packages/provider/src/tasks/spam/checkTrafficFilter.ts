@@ -384,12 +384,17 @@ const evaluateIpInfo = (
  * only care about challenges can inspect `matches` directly and use
  * `resolveChallengePolicy` to combine them.
  */
-export const checkTrafficFilter = (
-	ipInfo: IPInfoResponse | undefined,
-	trafficFilter: Partial<ITrafficFilter>,
-	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>,
-	dnsPathValid?: boolean,
-): TrafficCheckResult => {
+export const checkTrafficFilter = ({
+	ipInfo,
+	trafficFilter,
+	extraIpInfos,
+	dnsPathValid,
+}: {
+	ipInfo?: IPInfoResponse;
+	trafficFilter: Partial<ITrafficFilter>;
+	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>;
+	dnsPathValid?: boolean;
+}): TrafficCheckResult => {
 	const matches: TrafficFilterMatch[] = [];
 	matches.push(...evaluateIpInfo(ipInfo, trafficFilter));
 

@@ -96,6 +96,22 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		);
 	});
 
+	it("registers a site key sent without settings with the default settings", async () => {
+		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+		const args = endpoint
+			.getRequestArgsSchema()
+			.parse({ siteKey, tier: Tier.Free });
+
+		const result = await endpoint.processRequest(args, mockLogger as never);
+
+		expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
+		expect(mockClientTaskManager.registerSiteKey).toHaveBeenCalledWith(
+			siteKey,
+			Tier.Free,
+			expect.objectContaining({ domains: ["localhost"] }),
+		);
+	});
+
 	it("logs registration message", async () => {
 		await endpoint.processRequest(
 			{

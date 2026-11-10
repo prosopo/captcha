@@ -497,6 +497,9 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	originX: { type: Number, required: true },
 	originY: { type: Number, required: true },
 	tolerance: { type: Number, required: true },
+	finalX: { type: Number, required: false },
+	finalY: { type: Number, required: false },
+	distanceFromTarget: { type: Number, required: false },
 	retried: { type: Boolean, required: false },
 	// Render inputs kept so the portal can replay the exact puzzle a user was
 	// served. Patched on after the imagery is produced, so absent on older
@@ -1398,6 +1401,89 @@ export type ProjectedSession = Pick<
 	Extract<keyof typeof SESSION_PROJECTION, keyof Session> | "headers"
 >;
 
+/** A dapp-scoped decision machine always names the dapp it applies to. */
+export type DecisionMachineTarget =
+	| { scope: DecisionMachineScope.Global; dappAccount?: string }
+	| { scope: DecisionMachineScope.Dapp; dappAccount: string };
+
+/** Keyset paging over records still pending a central-DB sync. */
+export type UnstoredRecordsPage = {
+	limit?: number;
+	afterId?: unknown;
+};
+
+export type StoreCaptchaRecordArgs = {
+	challenge: PoWChallengeId;
+	components: PoWChallengeComponents;
+	providerSignature: string;
+	ipAddress: CompositeIpAddress;
+	headers: RequestHeaders;
+	ja4: string;
+	sessionId?: string;
+	ipInfo?: IPInfoResponse;
+};
+
+export type StorePowCaptchaRecordArgs = StoreCaptchaRecordArgs & {
+	difficulty: number;
+	serverChecked?: boolean;
+	userSubmitted?: boolean;
+	userSignature?: string;
+	fingerprintSummary?: FingerprintSummaryStored;
+};
+
+export type StorePuzzleCaptchaRecordArgs = StoreCaptchaRecordArgs & {
+	targetX: number;
+	targetY: number;
+	originX: number;
+	originY: number;
+	tolerance: number;
+	fingerprintSummary?: FingerprintSummaryStored;
+};
+
+export type StoreAudioCaptchaRecordArgs = StoreCaptchaRecordArgs & {
+	answer: string;
+};
+
+export type StoreIconOrderCaptchaRecordArgs = StoreCaptchaRecordArgs & {
+	targets: StoredIconTarget[];
+	tolerance: number;
+	render?: IconOrderRenderRecord;
+};
+
+export type UpdateCaptchaRecordResultArgs = {
+	challenge: PoWChallengeId;
+	result: CaptchaResult;
+	serverChecked: boolean;
+	userSubmitted: boolean;
+	userSignature?: string;
+	coords?: [number, number][][];
+};
+
+export type UpdatePowCaptchaRecordResultArgs = Omit<
+	UpdateCaptchaRecordResultArgs,
+	"serverChecked" | "userSubmitted"
+> &
+	Partial<
+		Pick<UpdateCaptchaRecordResultArgs, "serverChecked" | "userSubmitted">
+	>;
+
+export type UpdateInteractiveCaptchaRecordResultArgs =
+	UpdateCaptchaRecordResultArgs & {
+		lastUpdatedTimestamp?: Date;
+	};
+
+export type StorePendingImageCommitmentArgs = {
+	userAccount: string;
+	requestHash: string;
+	salt: string;
+	deadlineTimestamp: Date;
+	requestedAtTimestamp: Date;
+	ipAddress: CompositeIpAddress;
+	threshold: number;
+	sessionId?: string;
+	ipInfo?: IPInfoResponse;
+};
+
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	tables: Tables<any>;
@@ -1420,8 +1506,6 @@ export interface IProviderDatabase extends IDatabase {
 
 	getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>;
 
-	updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
-
 	removeCaptchas(captchaIds: string[]): Promise<void>;
 
 	getDatasetDetails(
@@ -1434,20 +1518,12 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	storePendingImageCommitment(
-		userAccount: string,
-		requestHash: string,
-		salt: string,
-		deadlineTimestamp: Date,
-		requestedAtTimestamp: Date,
-		ipAddress: CompositeIpAddress,
-		threshold: number,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
+		args: StorePendingImageCommitmentArgs,
 	): Promise<void>;
 
 	getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingImageCaptchaRequest>;
+	): Promise<PendingImageCaptchaRequest | undefined>;
 
 	/**
 	 * Atomically flips a pending image request to not-pending. Resolves true
@@ -1492,11 +1568,11 @@ export interface IProviderDatabase extends IDatabase {
 		coords?: [number, number][][],
 	): Promise<void>;
 
-	disapproveDappUserCommitment(
-		commitmentId: string,
-		reason?: ResultReason,
-		coords?: [number, number][][],
-	): Promise<void>;
+	disapproveDappUserCommitment(args: {
+		commitmentId: string;
+		reason?: ResultReason;
+		coords?: [number, number][][];
+	}): Promise<void>;
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
@@ -1508,8 +1584,7 @@ export interface IProviderDatabase extends IDatabase {
 	 * size, not with total collection size.
 	 */
 	getUnstoredDappUserCommitments(
-		limit?: number,
-		afterId?: unknown,
+		page?: UnstoredRecordsPage,
 	): Promise<UserCommitmentRecord[]>;
 
 	markDappUserCommitmentsStored(
@@ -1546,8 +1621,7 @@ export interface IProviderDatabase extends IDatabase {
 	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
 	 */
 	getUnstoredDappUserPoWCommitments(
-		limit?: number,
-		afterId?: unknown,
+		page?: UnstoredRecordsPage,
 	): Promise<PoWCaptchaRecord[]>;
 
 	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
@@ -1571,8 +1645,6 @@ export interface IProviderDatabase extends IDatabase {
 
 	flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
 
-	flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
-
 	getLastScheduledTaskStatus(
 		task: ScheduledTaskNames,
 		status?: ScheduledTaskStatus,
@@ -1594,33 +1666,14 @@ export interface IProviderDatabase extends IDatabase {
 		result?: ScheduledTaskResult,
 	): Promise<void>;
 
-	storePowCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		difficulty: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		serverChecked?: boolean,
-		userSubmitted?: boolean,
-		userSignature?: string,
-		ipInfo?: IPInfoResponse,
-		fingerprintSummary?: FingerprintSummaryStored,
-	): Promise<void>;
+	storePowCaptchaRecord(args: StorePowCaptchaRecordArgs): Promise<void>;
 
 	getPowCaptchaRecordByChallenge(
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null>;
 
 	updatePowCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked: boolean,
-		userSubmitted: boolean,
-		userSignature?: string,
-		coords?: [number, number][][],
+		args: UpdatePowCaptchaRecordResultArgs,
 	): Promise<void>;
 
 	updatePowCaptchaRecord(
@@ -1628,22 +1681,7 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PoWCaptchaRecord>,
 	): Promise<void>;
 
-	storePuzzleCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		targetX: number,
-		targetY: number,
-		originX: number,
-		originY: number,
-		tolerance: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-		fingerprintSummary?: FingerprintSummaryStored,
-	): Promise<void>;
+	storePuzzleCaptchaRecord(args: StorePuzzleCaptchaRecordArgs): Promise<void>;
 
 	getPuzzleCaptchaRecordByChallenge(
 		challenge: string,
@@ -1656,13 +1694,7 @@ export interface IProviderDatabase extends IDatabase {
 	claimPuzzleCaptchaRetry(challenge: PoWChallengeId): Promise<boolean>;
 
 	updatePuzzleCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked: boolean,
-		userSubmitted: boolean,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void>;
 
 	updatePuzzleCaptchaRecord(
@@ -1670,30 +1702,10 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
-	storeAudioCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		answer: string,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<void>;
+	storeAudioCaptchaRecord(args: StoreAudioCaptchaRecordArgs): Promise<void>;
 
 	storeIconOrderCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		targets: StoredIconTarget[],
-		tolerance: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-		render?: IconOrderRenderRecord,
+		args: StoreIconOrderCaptchaRecordArgs,
 	): Promise<void>;
 
 	getAudioCaptchaRecordByChallenge(
@@ -1701,13 +1713,7 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<AudioCaptchaRecord | null>;
 
 	updateAudioCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked: boolean,
-		userSubmitted: boolean,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void>;
 
 	getIconOrderCaptchaRecordByChallenge(
@@ -1722,16 +1728,13 @@ export interface IProviderDatabase extends IDatabase {
 	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
 	/** Same claim contract as {@link claimIconOrderCaptchaSubmission}. */
+	claimPuzzleCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
+
+	/** Same claim contract as {@link claimIconOrderCaptchaSubmission}. */
 	claimAudioCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
 	updateIconOrderCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked: boolean,
-		userSubmitted: boolean,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void>;
 
 	updateAudioCaptchaRecord(
@@ -1822,8 +1825,7 @@ export interface IProviderDatabase extends IDatabase {
 	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
 	 */
 	getUnstoredSessionRecords(
-		limit: number,
-		afterId?: unknown,
+		page?: UnstoredRecordsPage,
 	): Promise<SessionRecord[]>;
 
 	markSessionRecordsStored(
@@ -1837,23 +1839,17 @@ export interface IProviderDatabase extends IDatabase {
 	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
 	 */
 	getUnstoredPuzzleCaptchaRecords(
-		limit?: number,
-		afterId?: unknown,
-		since?: Date,
+		page?: UnstoredRecordsPage & { since?: Date },
 	): Promise<PuzzleCaptchaRecord[]>;
 
 	/** Same contract as {@link getUnstoredPuzzleCaptchaRecords}. */
 	getUnstoredIconOrderCaptchaRecords(
-		limit?: number,
-		afterId?: unknown,
-		since?: Date,
+		page?: UnstoredRecordsPage & { since?: Date },
 	): Promise<IconOrderCaptchaRecord[]>;
 
 	/** Same contract as {@link getUnstoredPuzzleCaptchaRecords}. */
 	getUnstoredAudioCaptchaRecords(
-		limit?: number,
-		afterId?: unknown,
-		since?: Date,
+		page?: UnstoredRecordsPage & { since?: Date },
 	): Promise<AudioCaptchaRecord[]>;
 
 	markInteractiveCaptchaRecordsStored(
@@ -1869,9 +1865,7 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	getDecisionMachineArtifact(
-		scope: DecisionMachineScope,
-		dappAccount?: string,
-		kind?: DecisionMachineKind,
+		target: DecisionMachineTarget & { kind?: DecisionMachineKind },
 	): Promise<DecisionMachineArtifact | undefined>;
 
 	getAllDecisionMachineArtifacts(): Promise<

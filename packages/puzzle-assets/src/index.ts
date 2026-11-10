@@ -47,6 +47,7 @@ export {
 } from "./palette.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
 export { PUZZLE_RENDERER_VERSION } from "./draw.js";
+export { pieceMask, placePiece } from "./placement.js";
 export {
 	encodeBackground,
 	encodePiece,
@@ -62,7 +63,6 @@ export type {
 	RenderedPuzzleBoard,
 	RgbaImage,
 } from "./types.js";
-export { pieceMask, placePiece } from "./placement.js";
 
 /**
  * Matches the widget's container. Kept here so the generator and the provider
@@ -95,10 +95,13 @@ export const DEFAULT_RENDER_SETTINGS: PuzzleRenderSettings = {
  * attacker diff the two composites and read both targets straight off. The
  * caller's buffer is responsible for enforcing consume-once.
  */
-export const createBackground = (
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	seed: Buffer = createSeed(),
-): RgbaImage =>
+export const createBackground = ({
+	geometry = DEFAULT_GEOMETRY,
+	seed = createSeed(),
+}: {
+	geometry?: PuzzleGeometry;
+	seed?: Buffer;
+} = {}): RgbaImage =>
 	generateBackground(createPrng(seed), geometry.width, geometry.height);
 
 /**
@@ -106,23 +109,30 @@ export const createBackground = (
  *
  * The background is consumed (mutated) by this call.
  */
-export const renderPuzzle = async (
-	background: RgbaImage,
-	placement: NotchPlacement,
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	seed: Buffer = createSeed(),
-	rendererVersion: PuzzleRendererVersion = PUZZLE_RENDERER_VERSION,
-): Promise<RenderedPuzzle> => {
+export const renderPuzzle = async ({
+	background,
+	placement,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	seed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
+}): Promise<RenderedPuzzle> => {
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	const { background: cut, piece } = drawPuzzle(
+	const { background: cut, piece } = drawPuzzle({
 		background,
 		placement,
 		pieceSize,
 		settings,
-		createPrng(seed),
-		rendererVersion,
-	);
+		prng: createPrng(seed),
+		version: rendererVersion,
+	});
 
 	const [backgroundWebp, pieceWebp] = await Promise.all([
 		encodeBackground(cut),
@@ -145,24 +155,32 @@ export const renderPuzzle = async (
  *
  * The background is consumed (mutated) by this call.
  */
-export const renderPuzzleBoard = async (
-	background: RgbaImage,
-	placement: NotchPlacement,
-	start: { x: number; y: number },
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	seed: Buffer = createSeed(),
-	rendererVersion: PuzzleRendererVersion = PUZZLE_RENDERER_VERSION,
-): Promise<RenderedPuzzleBoard> => {
+export const renderPuzzleBoard = async ({
+	background,
+	placement,
+	start,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	start: { x: number; y: number };
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	seed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
+}): Promise<RenderedPuzzleBoard> => {
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	const { background: board, piece } = drawPuzzle(
+	const { background: board, piece } = drawPuzzle({
 		background,
 		placement,
 		pieceSize,
 		settings,
-		createPrng(seed),
-		rendererVersion,
-	);
+		prng: createPrng(seed),
+		version: rendererVersion,
+	});
 	placePiece(board, piece, start.x, start.y);
 	return {
 		board: await encodeBackground(board),
@@ -180,19 +198,26 @@ export const renderPuzzleBoard = async (
  * challenge byte for byte — the background seed and the render seed are
  * independent and both are required.
  */
-export const createPuzzle = async (
-	placement: NotchPlacement,
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	backgroundSeed: Buffer = createSeed(),
-	renderSeed: Buffer = createSeed(),
-	rendererVersion: PuzzleRendererVersion = PUZZLE_RENDERER_VERSION,
-): Promise<RenderedPuzzle> =>
-	renderPuzzle(
-		createBackground(geometry, backgroundSeed),
+export const createPuzzle = async ({
+	placement,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	backgroundSeed = createSeed(),
+	renderSeed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
+}: {
+	placement: NotchPlacement;
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	backgroundSeed?: Buffer;
+	renderSeed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
+}): Promise<RenderedPuzzle> =>
+	renderPuzzle({
+		background: createBackground({ geometry, seed: backgroundSeed }),
 		placement,
 		geometry,
 		settings,
-		renderSeed,
+		seed: renderSeed,
 		rendererVersion,
-	);
+	});

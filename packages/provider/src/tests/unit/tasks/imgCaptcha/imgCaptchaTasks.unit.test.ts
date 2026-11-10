@@ -37,6 +37,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { embedData, getIPAddress } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -214,7 +215,12 @@ describe("ImgCaptchaManager", () => {
 			unsolved: { count: 4 },
 		};
 
-		imgCaptchaManager = new ImgCaptchaManager(db, pair, captchaConfig, logger);
+		imgCaptchaManager = new ImgCaptchaManager({
+			db,
+			pair,
+			config: captchaConfig,
+			logger,
+		});
 
 		mockEnv = {
 			config: {
@@ -325,13 +331,13 @@ describe("ImgCaptchaManager", () => {
 			(u8aToHex as any).mockReturnValue("hexSignedRequestHash"); // biome-ignore lint/suspicious/noExplicitAny: tests
 			(shuffleArray as any).mockReturnValue([]);
 
-			const result = await imgCaptchaManager.getRandomCaptchasAndRequestHash(
+			const result = await imgCaptchaManager.getRandomCaptchasAndRequestHash({
 				datasetId,
 				userAccount,
 				ipAddress,
 				captchaConfig,
-				0.8,
-			);
+				threshold: 0.8,
+			});
 
 			expect(result).toEqual({
 				captchas: [],
@@ -351,13 +357,13 @@ describe("ImgCaptchaManager", () => {
 			(db.getDatasetDetails as any).mockResolvedValue(null);
 
 			await expect(
-				imgCaptchaManager.getRandomCaptchasAndRequestHash(
+				imgCaptchaManager.getRandomCaptchasAndRequestHash({
 					datasetId,
 					userAccount,
 					ipAddress,
-					{ solved: { count: 1 }, unsolved: { count: 1 } },
-					0.8,
-				),
+					captchaConfig: { solved: { count: 1 }, unsolved: { count: 1 } },
+					threshold: 0.8,
+				}),
 			).rejects.toMatchObject({
 				code: "DB_QUERY_FAILED",
 				errorId: "DB_QUERY_FAILED:PROV-60",
@@ -537,18 +543,18 @@ describe("ImgCaptchaManager", () => {
 			// The user selected the wrong images: the comparison fails.
 			vi.mocked(compareCaptchaSolutions).mockReturnValue(false);
 
-			const result = await imgCaptchaManager.dappUserSolution(
+			const result = await imgCaptchaManager.dappUserSolution({
 				userAccount,
 				dappAccount,
 				requestHash,
 				captchas,
-				"userTimestampSignature",
+				userTimestampSignature: "userTimestampSignature",
 				timestamp,
-				"providerRequestHashSignature",
+				providerRequestHashSignature: "providerRequestHashSignature",
 				ipAddress,
 				headers,
-				"ja4",
-			);
+				ja4: "ja4",
+			});
 			return result;
 		};
 
@@ -557,11 +563,11 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(compareCaptchaSolutions).toHaveBeenCalled();
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
-				"commitmentId",
-				"CAPTCHA.INVALID_SOLUTION",
-				expect.anything(),
-			);
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
+				commitmentId: "commitmentId",
+				reason: "CAPTCHA.INVALID_SOLUTION",
+				coords: expect.anything(),
+			});
 			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
 		});
 
@@ -611,12 +617,13 @@ describe("ImgCaptchaManager", () => {
 			vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(commitment);
 			vi.mocked(db.markDappUserCommitmentsChecked).mockResolvedValue(0);
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				"userAccount",
-				"dappAccount",
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: "userAccount",
+				dappAccount: "dappAccount",
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.USER_ALREADY_VERIFIED");
@@ -693,18 +700,18 @@ describe("ImgCaptchaManager", () => {
 			} as unknown as Awaited<ReturnType<typeof db.getSolutionByCaptchaId>>);
 			vi.mocked(compareCaptchaSolutions).mockReturnValue(true);
 
-			return imgCaptchaManager.dappUserSolution(
-				"userAccount",
-				"dappAccount",
-				"requestHash",
+			return imgCaptchaManager.dappUserSolution({
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				requestHash: "requestHash",
 				captchas,
-				"userTimestampSignature",
-				Date.now(),
-				"providerRequestHashSignature",
-				getIPAddress("1.1.1.1"),
-				{},
-				"ja4",
-			);
+				userTimestampSignature: "userTimestampSignature",
+				timestamp: Date.now(),
+				providerRequestHashSignature: "providerRequestHashSignature",
+				ipAddress: getIPAddress("1.1.1.1"),
+				headers: {},
+				ja4: "ja4",
+			});
 		};
 
 		const storedCommitment = (): UserCommitment | undefined =>
@@ -790,11 +797,11 @@ describe("ImgCaptchaManager", () => {
 			const result = await submit({ coords: [0, 0, 0, 0] }, { coords: [0, 0] });
 
 			expect(result.verified).toBe(false);
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
-				"commitmentId",
-				"CAPTCHA.INVALID_SOLUTION",
-				expect.anything(),
-			);
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
+				commitmentId: "commitmentId",
+				reason: "CAPTCHA.INVALID_SOLUTION",
+				coords: expect.anything(),
+			});
 			expect(compareCaptchaSolutions).not.toHaveBeenCalled();
 		});
 
@@ -832,6 +839,38 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("dappUserSolution — no pending request", () => {
+		it("answers not verified when the request was already answered or never existed", async () => {
+			const captchas = [
+				{ captchaId: "captcha1", solution: ["a"], salt: "0x00" },
+			] as unknown as CaptchaSolution[];
+			vi.mocked(signatureVerify).mockReturnValue({
+				crypto: "sr25519",
+				isValid: true,
+				isWrapped: false,
+				publicKey: new Uint8Array(),
+			});
+			vi.mocked(db.getPendingImageCommitment).mockResolvedValue(undefined);
+
+			const result = await imgCaptchaManager.dappUserSolution({
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				requestHash: "0xanswered",
+				captchas,
+				userTimestampSignature: "userTimestampSignature",
+				timestamp: Date.now(),
+				providerRequestHashSignature: "providerRequestHashSignature",
+				ipAddress: getIPAddress("1.1.1.1"),
+				headers: { a: "1" },
+				ja4: "ja4",
+			});
+
+			expect(result).toEqual({ captchas: [], verified: false });
+			expect(db.updatePendingImageCommitmentStatus).not.toHaveBeenCalled();
+			expect(db.storeUserImageCaptchaSolution).not.toHaveBeenCalled();
 		});
 	});
 
@@ -886,18 +925,18 @@ describe("ImgCaptchaManager", () => {
 			} as unknown as Awaited<ReturnType<typeof db.getSolutionByCaptchaId>>);
 			vi.mocked(compareCaptchaSolutions).mockReturnValue(true);
 
-			const result = await imgCaptchaManager.dappUserSolution(
-				"userAccount",
-				"dappAccount",
-				"requestHash",
+			const result = await imgCaptchaManager.dappUserSolution({
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				requestHash: "requestHash",
 				captchas,
-				"userTimestampSignature",
+				userTimestampSignature: "userTimestampSignature",
 				timestamp,
-				"providerRequestHashSignature",
-				getIPAddress("1.1.1.1"),
-				{ a: "1" },
-				"ja4",
-			);
+				providerRequestHashSignature: "providerRequestHashSignature",
+				ipAddress: getIPAddress("1.1.1.1"),
+				headers: { a: "1" },
+				ja4: "ja4",
+			});
 
 			expect(result.verified).toBe(true);
 			expect(proof.mock.calls).toEqual([["leaf1"], ["leaf2"]]);
@@ -908,50 +947,22 @@ describe("ImgCaptchaManager", () => {
 		});
 	});
 
-	it("should get dapp user commitment by ID", async () => {
-		const commitmentId = "commitmentId";
-		const dappUserCommitment: Partial<UserCommitment> = {
-			id: "commitmentId",
-			userAccount: "userAccount",
+	it("answers not verified for a commitment id that does not exist", async () => {
+		vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(undefined);
+
+		const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+			settings: {},
+			user: "userAccount",
 			dappAccount: "dappAccount",
-			providerAccount: "providerAccount",
-			datasetId: "datasetId",
-			result: { status: CaptchaStatus.approved },
-			userSignature: "",
-			userSubmitted: true,
-			serverChecked: false,
-			requestedAtTimestamp: new Date(0),
-			submittedAtTimestamp: new Date(),
-			ipAddress: {
-				lower: getIPAddress("1.1.1.1").bigInt(),
-				upper: 0n,
-				type: IpAddressType.v4,
-			},
-			headers: { a: "1", b: "2", c: "3" },
-			ja4: "ja4",
-			lastUpdatedTimestamp: new Date(),
-		};
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentById as any).mockResolvedValue(dappUserCommitment);
-
-		const result =
-			await imgCaptchaManager.getDappUserCommitmentById(commitmentId);
-
-		expect(result).toEqual(dappUserCommitment);
-	});
-
-	it("should throw an error if dapp user commitment is not found by ID", async () => {
-		const commitmentId = "commitmentId";
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentById as any).mockResolvedValue(null);
-
-		await expect(
-			imgCaptchaManager.getDappUserCommitmentById(commitmentId),
-		).rejects.toMatchObject({
-			code: "SOLUTION_NOT_FOUND",
-			errorId: "SOLUTION_NOT_FOUND:PROV-68",
-			message: "Dapp user solution not found",
+			commitmentId: "0xunknown",
+			env: mockEnv,
 		});
+
+		expect(result).toEqual({
+			status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+			verified: false,
+		});
+		expect(db.markDappUserCommitmentsChecked).not.toHaveBeenCalled();
 	});
 
 	// Regression seen in production: image captchas produced
@@ -963,26 +974,24 @@ describe("ImgCaptchaManager", () => {
 	// wrong record, so the session correlation compared a live id against the
 	// `undefined` on some earlier visit's commitment.
 	it("should not verify when the token carries no commitmentId", async () => {
-		const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-			"userAccount",
-			"dappAccount",
-			undefined,
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			{} as any,
-		);
+		const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+			settings: {},
+			user: "userAccount",
+			dappAccount: "dappAccount",
+			env: {} as ProviderEnvironment,
+		});
 
 		expect(result.verified).toBe(false);
 		expect(result.status).toBe("API.USER_NOT_VERIFIED_NO_SOLUTION");
 	});
 
 	it("should never search the account's history when no commitmentId is given", async () => {
-		await imgCaptchaManager.verifyImageCaptchaSolution(
-			"userAccount",
-			"dappAccount",
-			undefined,
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			{} as any,
-		);
+		await imgCaptchaManager.verifyImageCaptchaSolution({
+			settings: {},
+			user: "userAccount",
+			dappAccount: "dappAccount",
+			env: {} as ProviderEnvironment,
+		});
 
 		expect(db.getDappUserCommitmentByAccount).not.toHaveBeenCalled();
 	});
@@ -1037,22 +1046,23 @@ describe("ImgCaptchaManager", () => {
 					tags: ["suspicious"],
 				});
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			// Verify result is not verified
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("Suspicious behavior detected");
 
 			// Verify commitment was disapproved via streaming-aware method
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				expect.stringContaining("Suspicious behavior"),
-			);
+				reason: expect.stringContaining("Suspicious behavior"),
+			});
 
 			// Restore original decision machine
 			// biome-ignore lint/suspicious/noExplicitAny: tests
@@ -1101,12 +1111,13 @@ describe("ImgCaptchaManager", () => {
 				.fn()
 				.mockRejectedValue(new Error("Decision machine error"));
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			// Should still be verified (fail-safe behavior)
 			expect(result.verified).toBe(true);
@@ -1163,12 +1174,13 @@ describe("ImgCaptchaManager", () => {
 					score: 95,
 				});
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			// Should be verified
 			expect(result.verified).toBe(true);
@@ -1279,12 +1291,13 @@ describe("ImgCaptchaManager", () => {
 			(imgCaptchaManager as any).decisionMachineRunner.decide = decideSpy;
 
 			try {
-				await imgCaptchaManager.verifyImageCaptchaSolution(
-					userAccount,
+				await imgCaptchaManager.verifyImageCaptchaSolution({
+					settings: {},
+					user: userAccount,
 					dappAccount,
 					commitmentId,
-					mockEnv,
-				);
+					env: mockEnv,
+				});
 
 				expect(decideSpy).toHaveBeenCalledOnce();
 				const input = decideSpy.mock.calls[0]?.[0];
@@ -1306,6 +1319,71 @@ describe("ImgCaptchaManager", () => {
 				(imgCaptchaManager as any).decisionMachineRunner.decide =
 					originalDecide;
 			}
+		});
+	});
+
+	describe("verifyImageCaptchaSolution score", () => {
+		it("returns a score of exactly 0 rather than dropping it", async () => {
+			const commitmentId = "zeroScoreCommitmentId";
+			const sessionId = "zero-score-session";
+			const ipAddress = getIPAddress("1.1.1.1");
+			const commitment: Partial<UserCommitment> = {
+				id: commitmentId,
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				providerAccount: "providerAccount",
+				datasetId: "datasetId",
+				result: { status: CaptchaStatus.approved },
+				userSignature: "",
+				userSubmitted: true,
+				serverChecked: false,
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				headers: { a: "1" },
+				ja4: "ja4",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: {
+					lower: ipAddress.bigInt(),
+					upper: 0n,
+					type: IpAddressType.v4,
+				},
+				captchaType: CaptchaType.image,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "h".repeat(16),
+			};
+			vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(
+				commitment as UserCommitment,
+			);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: "userAccount",
+				dappAccount: "dappAccount",
+				commitmentId,
+				env: mockEnv,
+			});
+
+			expect(result).toEqual(
+				expect.objectContaining({ verified: true, score: 0, sessionId }),
+			);
 		});
 	});
 
@@ -1353,12 +1431,13 @@ describe("ImgCaptchaManager", () => {
 				.fn()
 				.mockResolvedValue({ decision: "allow" });
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			expect(result.verified).toBe(true);
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(
@@ -1418,12 +1497,13 @@ describe("ImgCaptchaManager", () => {
 					reason: "Suspicious",
 				});
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(
@@ -1480,12 +1560,13 @@ describe("ImgCaptchaManager", () => {
 				.fn()
 				.mockResolvedValue({ decision: "allow" });
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			expect(result.verified).toBe(true);
 			expect(db.updateSessionRecord).not.toHaveBeenCalled();
@@ -1536,19 +1617,14 @@ describe("ImgCaptchaManager", () => {
 			});
 
 			try {
-				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-					userAccount,
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					settings: {},
+					user: userAccount,
 					dappAccount,
 					commitmentId,
-					mockEnv,
-					undefined, // maxVerifiedTime
-					undefined, // ip
-					undefined, // disallowWebView
-					// Truthy storage triggers the checkForHardBlock branch;
-					// the stub above ignores whatever's passed here.
-					// biome-ignore lint/suspicious/noExplicitAny: test stub
-					{} as any,
-				);
+					env: mockEnv,
+					userAccessRulesStorage: {} as AccessRulesStorage,
+				});
 
 				expect(result.verified).toBe(false);
 				expect(db.updateSessionRecord).toHaveBeenCalledWith(
@@ -1613,26 +1689,22 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				spamEmail,
-				true,
-			);
+				settings: { spamEmailDomainCheckEnabled: true },
+				env: mockEnv,
+				email: spamEmail,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.SPAM_EMAIL_DOMAIN",
-			);
+				reason: "API.SPAM_EMAIL_DOMAIN",
+			});
 		});
 
 		it("should allow when email domain is not in spam list", async () => {
@@ -1692,18 +1764,14 @@ describe("ImgCaptchaManager", () => {
 				});
 
 			try {
-				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-					userAccount,
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					user: userAccount,
 					dappAccount,
 					commitmentId,
-					mockEnv,
-					undefined,
-					undefined,
-					undefined,
-					undefined,
-					legitimateEmail,
-					true,
-				);
+					settings: { spamEmailDomainCheckEnabled: true },
+					env: mockEnv,
+					email: legitimateEmail,
+				});
 
 				expect(result.verified).toBe(true);
 				expect(result.status).toBe("API.USER_VERIFIED");
@@ -1769,18 +1837,13 @@ describe("ImgCaptchaManager", () => {
 				});
 
 			try {
-				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-					userAccount,
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					user: userAccount,
 					dappAccount,
 					commitmentId,
-					mockEnv,
-					undefined,
-					undefined,
-					undefined,
-					undefined,
-					undefined, // No email provided
-					true,
-				);
+					settings: { spamEmailDomainCheckEnabled: true },
+					env: mockEnv,
+				});
 
 				expect(result.verified).toBe(true);
 				expect(result.status).toBe("API.USER_VERIFIED");
@@ -1835,26 +1898,22 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				atDomainEmail,
-				true,
-			);
+				settings: { spamEmailDomainCheckEnabled: true },
+				env: mockEnv,
+				email: atDomainEmail,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.SPAM_EMAIL_DOMAIN",
-			);
+				reason: "API.SPAM_EMAIL_DOMAIN",
+			});
 		});
 
 		it("should handle domain-only format correctly", async () => {
@@ -1899,18 +1958,14 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				user: userAccount,
 				dappAccount,
 				commitmentId,
-				mockEnv,
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				domainOnly,
-				true,
-			);
+				settings: { spamEmailDomainCheckEnabled: true },
+				env: mockEnv,
+				email: domainOnly,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
@@ -1972,18 +2027,14 @@ describe("ImgCaptchaManager", () => {
 				});
 
 			try {
-				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-					userAccount,
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					user: userAccount,
 					dappAccount,
 					commitmentId,
-					mockEnv,
-					undefined,
-					undefined,
-					undefined,
-					undefined,
+					settings: { spamEmailDomainCheckEnabled: true },
+					env: mockEnv,
 					email,
-					true,
-				);
+				});
 
 				// Should continue and verify successfully despite spam check error
 				expect(result.verified).toBe(true);
@@ -2042,18 +2093,13 @@ describe("ImgCaptchaManager", () => {
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 				.mockResolvedValue(undefined) as any;
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				userAccount,
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				user: userAccount,
 				dappAccount,
-				undefined, // No commitmentId
-				mockEnv,
-				undefined,
-				undefined,
-				undefined,
-				undefined,
-				spamEmail,
-				true,
-			);
+				env: mockEnv,
+				settings: { spamEmailDomainCheckEnabled: true },
+				email: spamEmail,
+			});
 
 			expect(result.verified).toBe(false);
 			// Was API.SPAM_EMAIL_DOMAIN: without a commitmentId this used to
@@ -2116,22 +2162,20 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				"userAccount",
-				"dappAccount",
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				user: "userAccount",
+				dappAccount: "dappAccount",
 				commitmentId,
-				mockEnv,
-				undefined,
-				undefined,
-				true, // disallowWebView
-			);
+				settings: { disallowWebView: true },
+				env: mockEnv,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.DISALLOWED_WEBVIEW",
-			);
+				reason: "API.DISALLOWED_WEBVIEW",
+			});
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(
 				sessionId,
 				{
@@ -2170,22 +2214,20 @@ describe("ImgCaptchaManager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.disapproveDappUserCommitment as any).mockResolvedValue(undefined);
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				"userAccount",
-				"dappAccount",
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				user: "userAccount",
+				dappAccount: "dappAccount",
 				commitmentId,
-				mockEnv,
-				undefined,
-				undefined,
-				true, // disallowWebView
-			);
+				settings: { disallowWebView: true },
+				env: mockEnv,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.DISALLOWED_WEBVIEW",
-			);
+				reason: "API.DISALLOWED_WEBVIEW",
+			});
 		});
 
 		it("should not block when disallowWebView is false even if webview is detected", async () => {
@@ -2213,15 +2255,13 @@ describe("ImgCaptchaManager", () => {
 				.mockResolvedValue({ decision: "allow" });
 
 			try {
-				const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-					"userAccount",
-					"dappAccount",
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					user: "userAccount",
+					dappAccount: "dappAccount",
 					commitmentId,
-					mockEnv,
-					undefined,
-					undefined,
-					false, // disallowWebView
-				);
+					settings: { disallowWebView: false },
+					env: mockEnv,
+				});
 
 				expect(result.verified).toBe(true);
 				expect(result.status).toBe("API.USER_VERIFIED");
@@ -2250,32 +2290,30 @@ describe("ImgCaptchaManager", () => {
 			storeMetadata: boolean;
 			commitmentId: string;
 		}) =>
-			imgCaptchaManager.verifyImageCaptchaSolution(
-				"userAccount",
-				"dappAccount",
+			imgCaptchaManager.verifyImageCaptchaSolution({
+				user: "userAccount",
+				dappAccount: "dappAccount",
 				commitmentId,
-				mockEnv,
-				undefined, // maxVerifiedTime
-				undefined, // ip
-				undefined, // disallowWebView
-				undefined, // userAccessRulesStorage
+				settings: {
+					spamEmailDomainCheckEnabled: false,
+					spamFilter:
+						maxEmailSubmissionCount !== undefined
+							? {
+									enabled: true,
+									emailRules: {
+										enabled: true,
+										maxEmailSubmissionCount,
+										normaliseGmail: false,
+										useDefaultPatterns: false,
+										customRegexBlocklist: [],
+									},
+								}
+							: undefined,
+					storeMetadata,
+				},
+				env: mockEnv,
 				email,
-				false, // spamEmailDomainCheckingEnabled — off, isolates the count check
-				maxEmailSubmissionCount !== undefined
-					? {
-							enabled: true,
-							emailRules: {
-								enabled: true,
-								maxEmailSubmissionCount,
-								normaliseGmail: false,
-								useDefaultPatterns: false,
-								customRegexBlocklist: [],
-							},
-						}
-					: undefined,
-				undefined, // trafficFilter
-				storeMetadata,
-			);
+			});
 
 		// Seeds a solved-image commitment in-memory. The count-check block
 		// runs before the decisionMachine, so it fires regardless of
@@ -2408,22 +2446,14 @@ describe("ImgCaptchaManager", () => {
 			commitmentId: string,
 			clientSessionId: string | undefined,
 		) =>
-			imgCaptchaManager.verifyImageCaptchaSolution(
-				"userAccount",
-				"dappAccount",
+			imgCaptchaManager.verifyImageCaptchaSolution({
+				user: "userAccount",
+				dappAccount: "dappAccount",
 				commitmentId,
-				mockEnv,
-				undefined, // maxVerifiedTime
-				undefined, // ip
-				undefined, // disallowWebView
-				undefined, // userAccessRulesStorage
-				undefined, // email
-				false, // spamEmailDomainCheckingEnabled
-				undefined, // spamFilter
-				undefined, // trafficFilter
-				false, // storeMetadata
+				settings: { spamEmailDomainCheckEnabled: false, storeMetadata: false },
+				env: mockEnv,
 				clientSessionId,
-			);
+			});
 
 		const seedApprovedCommitment = (
 			commitmentId: string,

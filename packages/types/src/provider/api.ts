@@ -882,7 +882,13 @@ export const ReplaceDetectorPoolBody = object({
 			// `payloadLayout`. Optional for pools built before it existed.
 			keyMap: string().optional(),
 		}),
-	),
+	)
+		// Replacing the pool with nothing deletes every bundle from memory and
+		// disk, leaving the node unable to serve or decode detectors until the
+		// next good push. An empty set is always an operator mistake.
+		.refine((bundles) => Object.keys(bundles).length > 0, {
+			message: "bundles must contain at least one bundle",
+		}),
 });
 
 export type ReplaceDetectorPoolBodyType = output<

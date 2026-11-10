@@ -100,7 +100,7 @@ const run = async (
 	authAccount?: KeyringPair | undefined,
 	options?: AuthMiddlewareOptions,
 ): Promise<void> => {
-	await authMiddleware(pair, authAccount, options)(
+	await authMiddleware({ pair, authAccount, options })(
 		harness.req,
 		harness.res,
 		harness.next.fn,
@@ -317,7 +317,7 @@ describe("a verifier that throws", () => {
 	});
 
 	test("does not resolve before it has answered", async () => {
-		const middleware = authMiddleware(explodes(), undefined);
+		const middleware = authMiddleware({ pair: explodes() });
 		await middleware(harness.req, harness.res, harness.next.fn);
 		expect(harness.json).toHaveBeenCalledTimes(1);
 	});

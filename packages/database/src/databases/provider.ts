@@ -28,7 +28,6 @@ import {
 	CaptchaStates,
 	CaptchaStatus,
 	CaptchaType,
-	type CompositeIpAddress,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -36,19 +35,13 @@ import {
 	DatasetWithIdsAndTreeSchema,
 	type DecisionMachineArtifact,
 	DecisionMachineKind,
-	type DecisionMachineScope,
-	type FingerprintSummaryStored,
 	type Hash,
-	type IPInfoResponse,
 	type IconOrderCaptchaStored,
-	type IconOrderRenderRecord,
 	type InteractiveCaptchaStored,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
-	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
-	type RequestHeaders,
 	type ResultReason,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -57,7 +50,6 @@ import {
 	type SimdReadingsStage,
 	type SolutionRecord,
 	type StoredCaptcha,
-	type StoredIconTarget,
 	StoredStatusNames,
 	type UserCommitment,
 	UserCommitmentSchema,
@@ -72,6 +64,7 @@ import {
 	ClientRecordSchema,
 	DatasetRecordSchema,
 	DecisionMachineArtifactRecordSchema,
+	type DecisionMachineTarget,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type IconOrderCaptchaRecord,
@@ -91,7 +84,16 @@ import {
 	type SpamEmailDomain,
 	type SpamEmailDomainRecord,
 	SpamEmailDomainRecordSchema,
+	type StoreAudioCaptchaRecordArgs,
+	type StoreCaptchaRecordArgs,
+	type StoreIconOrderCaptchaRecordArgs,
+	type StorePendingImageCommitmentArgs,
+	type StorePowCaptchaRecordArgs,
+	type StorePuzzleCaptchaRecordArgs,
 	type Tables,
+	type UnstoredRecordsPage,
+	type UpdateInteractiveCaptchaRecordResultArgs,
+	type UpdatePowCaptchaRecordResultArgs,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 	type UserSolutionRecord,
@@ -358,7 +360,7 @@ export class ProviderDatabase
 			throw new ProsopoError({
 				code: "DB_UNAVAILABLE",
 				errorSite: "DBSE-7",
-				message: "Redis access rules connection undefined",
+				message: "Redis connection undefined",
 			});
 		}
 
@@ -729,38 +731,6 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Update a captcha
-	 * @param {Captcha}  captcha
-	 * @param {string}   datasetId  the id of the data set
-	 */
-	async updateCaptcha(captcha: Captcha, datasetId: Hash): Promise<void> {
-		if (!isHex(datasetId)) {
-			throw new ProsopoError({
-				code: "INVALID_DATA",
-				errorSite: "DBSE-14",
-				message: "Invalid hash",
-				context: { failedFuncName: this.updateCaptcha.name, datasetId },
-			});
-		}
-		try {
-			const filter: Pick<DatasetBase, "datasetId"> = { datasetId };
-			await this.tables?.captcha.updateOne(
-				filter,
-				{ $set: captcha },
-				{ upsert: false },
-			);
-		} catch (err) {
-			throw new ProsopoError({
-				code: "DB_QUERY_FAILED",
-				errorSite: "DBSE-15",
-				message: "Failed to update captcha",
-				cause: err,
-				context: { failedFuncName: this.getDatasetDetails.name },
-			});
-		}
-	}
-
-	/**
 	 * @description Remove captchas
 	 */
 	async removeCaptchas(captchaIds: string[]): Promise<void> {
@@ -874,36 +844,23 @@ export class ProviderDatabase
 
 	/**
 	 * @description Adds a new PoW Captcha record to the database.
-	 * @param {string} challenge The challenge string for the captcha.
-	 * @param components The components of the PoW challenge.
-	 * @param difficulty
-	 * @param providerSignature
-	 * @param ipAddress
-	 * @param headers
-	 * @param ja4
-	 * @param sessionId
-	 * @param serverChecked
-	 * @param userSubmitted
-	 * @param storedStatus
-	 * @param userSignature
-	 * @param ipInfo full ipinfo payload from the ipInfoMiddleware
 	 * @returns {Promise<void>} A promise that resolves when the record is added.
 	 */
-	async storePowCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		difficulty: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
+	async storePowCaptchaRecord({
+		challenge,
+		components,
+		difficulty,
+		providerSignature,
+		ipAddress,
+		headers,
+		ja4,
+		sessionId,
 		serverChecked = false,
 		userSubmitted = false,
-		userSignature?: string,
-		ipInfo?: IPInfoResponse,
-		fingerprintSummary?: FingerprintSummaryStored,
-	): Promise<void> {
+		userSignature,
+		ipInfo,
+		fingerprintSummary,
+	}: StorePowCaptchaRecordArgs): Promise<void> {
 		const tables = this.getTables();
 
 		const powCaptchaRecord: PoWCaptchaStored = {
@@ -1051,21 +1008,16 @@ export class ProviderDatabase
 
 	/**
 	 * @description Updates a PoW Captcha record in the database.
-	 * @param {string} challenge The challenge string of the captcha to be updated.
-	 * @param result
-	 * @param serverChecked
-	 * @param userSubmitted
-	 * @param userSignature
 	 * @returns {Promise<void>} A promise that resolves when the record is updated.
 	 */
-	async updatePowCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
+	async updatePowCaptchaRecordResult({
+		challenge,
+		result,
 		serverChecked = false,
 		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-	): Promise<void> {
+		userSignature,
+		coords,
+	}: UpdatePowCaptchaRecordResultArgs): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
@@ -1199,9 +1151,9 @@ export class ProviderDatabase
 							record as PuzzleCaptchaRecord,
 							markStored,
 						),
-					// The render inputs are patched on after the record is first
-					// streamed, so only an update can carry them to the central
-					// copy the portal redraws from. They are read here and on no
+					// The render inputs and the submitted drop position are patched
+					// on after the record is first streamed, so only an update can
+					// carry them to the central copy. They are read here and on no
 					// other path: verify never needs them.
 					streamUpdate: (challenge, markStored) =>
 						this.centralStreamer?.streamPuzzleUpdate(
@@ -1210,7 +1162,12 @@ export class ProviderDatabase
 									this.interactiveCollection(CaptchaType.puzzle),
 									challenge,
 									"streamPuzzleUpdate",
-									{ render: 1 },
+									{
+										render: 1,
+										finalX: 1,
+										finalY: 1,
+										distanceFromTarget: 1,
+									},
 								),
 							markStored,
 						),
@@ -1332,16 +1289,16 @@ export class ProviderDatabase
 		}
 	}
 
-	private pendingInteractiveRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): InteractiveCaptchaStored {
+	private pendingInteractiveRecord({
+		challenge,
+		components,
+		providerSignature,
+		ipAddress,
+		headers,
+		ja4,
+		sessionId,
+		ipInfo,
+	}: StoreCaptchaRecordArgs): InteractiveCaptchaStored {
 		return {
 			challenge,
 			userAccount: components.userAccount,
@@ -1361,35 +1318,19 @@ export class ProviderDatabase
 		};
 	}
 
-	async storePuzzleCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		targetX: number,
-		targetY: number,
-		originX: number,
-		originY: number,
-		tolerance: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-		fingerprintSummary?: FingerprintSummaryStored,
-	): Promise<void> {
+	async storePuzzleCaptchaRecord({
+		targetX,
+		targetY,
+		originX,
+		originY,
+		tolerance,
+		fingerprintSummary,
+		...context
+	}: StorePuzzleCaptchaRecordArgs): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.puzzle),
 			{
-				...this.pendingInteractiveRecord(
-					challenge,
-					components,
-					providerSignature,
-					ipAddress,
-					headers,
-					ja4,
-					sessionId,
-					ipInfo,
-				),
+				...this.pendingInteractiveRecord(context),
 				tolerance,
 				targetX,
 				targetY,
@@ -1400,61 +1341,29 @@ export class ProviderDatabase
 		);
 	}
 
-	async storeAudioCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		answer: string,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<void> {
+	async storeAudioCaptchaRecord({
+		answer,
+		...context
+	}: StoreAudioCaptchaRecordArgs): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.audio),
 			{
-				...this.pendingInteractiveRecord(
-					challenge,
-					components,
-					providerSignature,
-					ipAddress,
-					headers,
-					ja4,
-					sessionId,
-					ipInfo,
-				),
+				...this.pendingInteractiveRecord(context),
 				answer,
 			},
 		);
 	}
 
-	async storeIconOrderCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		targets: StoredIconTarget[],
-		tolerance: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-		render?: IconOrderRenderRecord,
-	): Promise<void> {
+	async storeIconOrderCaptchaRecord({
+		targets,
+		tolerance,
+		render,
+		...context
+	}: StoreIconOrderCaptchaRecordArgs): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.iconOrder),
 			{
-				...this.pendingInteractiveRecord(
-					challenge,
-					components,
-					providerSignature,
-					ipAddress,
-					headers,
-					ja4,
-					sessionId,
-					ipInfo,
-				),
+				...this.pendingInteractiveRecord(context),
 				targets,
 				tolerance,
 				...(render && { render }),
@@ -1619,6 +1528,15 @@ export class ProviderDatabase
 		}
 	}
 
+	async claimPuzzleCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.claimInteractiveCaptchaSubmission(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+		);
+	}
+
 	async claimIconOrderCaptchaSubmission(
 		challenge: PoWChallengeId,
 	): Promise<boolean> {
@@ -1639,13 +1557,15 @@ export class ProviderDatabase
 
 	private async updateInteractiveCaptchaRecordResult(
 		collection: InteractiveCaptchaCollection,
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked: boolean,
-		userSubmitted: boolean,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		{
+			challenge,
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			coords,
+			lastUpdatedTimestamp,
+		}: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
@@ -1720,75 +1640,32 @@ export class ProviderDatabase
 
 	/**
 	 * @description Updates a Puzzle Captcha record result in the database.
-	 * @param {string} challenge The challenge string of the captcha to be updated.
-	 * @param result
-	 * @param serverChecked
-	 * @param userSubmitted
-	 * @param userSignature
-	 * @param coords
-	 * @param lastUpdatedTimestamp
 	 * @returns {Promise<void>} A promise that resolves when the record is updated.
 	 */
 	async updatePuzzleCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		await this.updateInteractiveCaptchaRecordResult(
 			this.interactiveCollection(CaptchaType.puzzle),
-			challenge,
-			result,
-			serverChecked,
-			userSubmitted,
-			userSignature,
-			coords,
-			lastUpdatedTimestamp,
+			args,
 		);
 	}
 
 	async updateIconOrderCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		await this.updateInteractiveCaptchaRecordResult(
 			this.interactiveCollection(CaptchaType.iconOrder),
-			challenge,
-			result,
-			serverChecked,
-			userSubmitted,
-			userSignature,
-			coords,
-			lastUpdatedTimestamp,
+			args,
 		);
 	}
 
 	async updateAudioCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		await this.updateInteractiveCaptchaRecordResult(
 			this.interactiveCollection(CaptchaType.audio),
-			challenge,
-			result,
-			serverChecked,
-			userSubmitted,
-			userSignature,
-			coords,
-			lastUpdatedTimestamp,
+			args,
 		);
 	}
 
@@ -1962,10 +1839,10 @@ export class ProviderDatabase
 	 * once but doesn't prevent the regression re-appearing after future
 	 * catalog changes — the hint makes the choice explicit.
 	 */
-	async getUnstoredDappUserCommitments(
+	async getUnstoredDappUserCommitments({
 		limit = 1000,
-		afterId?: unknown,
-	): Promise<UserCommitmentRecord[]> {
+		afterId,
+	}: UnstoredRecordsPage = {}): Promise<UserCommitmentRecord[]> {
 		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
 			pendingStage: true,
 		};
@@ -2110,10 +1987,10 @@ export class ProviderDatabase
 	 * @param {number} skip Number of records to skip (for pagination)
 	 * @returns {Promise<PoWCaptchaRecord[]>} Array of PoW captcha records
 	 */
-	async getUnstoredDappUserPoWCommitments(
+	async getUnstoredDappUserPoWCommitments({
 		limit = 1000,
-		afterId?: unknown,
-	): Promise<PoWCaptchaRecord[]> {
+		afterId,
+	}: UnstoredRecordsPage = {}): Promise<PoWCaptchaRecord[]> {
 		// Served by the compound `pendingStage_partial` index — see
 		// `getUnstoredDappUserCommitments` for the lifecycle of the flag
 		// and the keyset-pagination contract.
@@ -2564,10 +2441,10 @@ export class ProviderDatabase
 	 * the flag so consumed sessions propagate to the central DB via the
 	 * next sweep.
 	 */
-	getUnstoredSessionRecords(
+	getUnstoredSessionRecords({
 		limit = 1000,
-		afterId?: unknown,
-	): Promise<SessionRecord[]> {
+		afterId,
+	}: UnstoredRecordsPage = {}): Promise<SessionRecord[]> {
 		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
 			pendingStage: true,
 		};
@@ -2624,11 +2501,13 @@ export class ProviderDatabase
 		return docs || [];
 	}
 
-	getUnstoredPuzzleCaptchaRecords(
+	getUnstoredPuzzleCaptchaRecords({
 		limit = 1000,
-		afterId?: unknown,
-		since?: Date,
-	): Promise<PuzzleCaptchaRecord[]> {
+		afterId,
+		since,
+	}: UnstoredRecordsPage & { since?: Date } = {}): Promise<
+		PuzzleCaptchaRecord[]
+	> {
 		return this.getUnstoredInteractiveCaptchaRecords<PuzzleCaptchaRecord>(
 			CaptchaType.puzzle,
 			limit,
@@ -2637,11 +2516,13 @@ export class ProviderDatabase
 		);
 	}
 
-	getUnstoredIconOrderCaptchaRecords(
+	getUnstoredIconOrderCaptchaRecords({
 		limit = 1000,
-		afterId?: unknown,
-		since?: Date,
-	): Promise<IconOrderCaptchaRecord[]> {
+		afterId,
+		since,
+	}: UnstoredRecordsPage & { since?: Date } = {}): Promise<
+		IconOrderCaptchaRecord[]
+	> {
 		return this.getUnstoredInteractiveCaptchaRecords<IconOrderCaptchaRecord>(
 			CaptchaType.iconOrder,
 			limit,
@@ -2650,11 +2531,13 @@ export class ProviderDatabase
 		);
 	}
 
-	getUnstoredAudioCaptchaRecords(
+	getUnstoredAudioCaptchaRecords({
 		limit = 1000,
-		afterId?: unknown,
-		since?: Date,
-	): Promise<AudioCaptchaRecord[]> {
+		afterId,
+		since,
+	}: UnstoredRecordsPage & { since?: Date } = {}): Promise<
+		AudioCaptchaRecord[]
+	> {
 		return this.getUnstoredInteractiveCaptchaRecords<AudioCaptchaRecord>(
 			CaptchaType.audio,
 			limit,
@@ -2710,17 +2593,17 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's pending record
 	 */
-	async storePendingImageCommitment(
-		userAccount: string,
-		requestHash: string,
-		salt: string,
-		deadlineTimestamp: Date,
-		requestedAtTimestamp: Date,
-		ipAddress: CompositeIpAddress,
-		threshold: number,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<void> {
+	async storePendingImageCommitment({
+		userAccount,
+		requestHash,
+		salt,
+		deadlineTimestamp,
+		requestedAtTimestamp,
+		ipAddress,
+		threshold,
+		sessionId,
+		ipInfo,
+	}: StorePendingImageCommitmentArgs): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoError({
 				code: "INVALID_DATA",
@@ -2777,7 +2660,7 @@ export class ProviderDatabase
 	 */
 	async getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingImageCaptchaRequest> {
+	): Promise<PendingImageCaptchaRequest | undefined> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoError({
 				code: "INVALID_DATA",
@@ -2811,15 +2694,7 @@ export class ProviderDatabase
 			};
 		}
 
-		throw new ProsopoError({
-			code: "RECORD_NOT_FOUND",
-			errorSite: "DBSE-38",
-			message: "No pending record found",
-			context: {
-				failedFuncName: this.getPendingImageCommitment.name,
-				requestHash,
-			},
-		});
+		return undefined;
 	}
 
 	/**
@@ -3046,6 +2921,8 @@ export class ProviderDatabase
 		// that supplied a session id — a token replay reported on solves that
 		// were earned in exactly the session they claimed.
 		clientMetaData: 1,
+		// The verify-time hard-block check scopes its rule lookup by it.
+		ja4: 1,
 	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 
 	/**
@@ -3152,11 +3029,15 @@ export class ProviderDatabase
 	 * @param coords
 	 * @param reason
 	 */
-	async disapproveDappUserCommitment(
-		commitmentId: string,
-		reason?: ResultReason,
-		coords?: [number, number][][],
-	): Promise<void> {
+	async disapproveDappUserCommitment({
+		commitmentId,
+		reason,
+		coords,
+	}: {
+		commitmentId: string;
+		reason?: ResultReason;
+		coords?: [number, number][][];
+	}): Promise<void> {
 		try {
 			const result: CaptchaResult = {
 				status: CaptchaStatus.disapproved,
@@ -3232,31 +3113,6 @@ export class ProviderDatabase
 				message: "Failed to flag solution as processed",
 				cause: err,
 				context: { captchaIds },
-			});
-		}
-	}
-
-	/**
-	 * @description Flag dapp users' commitments as used by calculated solution
-	 * @param {string[]} commitmentIds
-	 */
-	async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
-		try {
-			const distinctCommitmentIds = [...new Set(commitmentIds)];
-			await this.tables?.commitment
-				?.updateMany(
-					{ id: { $in: distinctCommitmentIds } },
-					{ $set: { processed: true } },
-					{ upsert: false },
-				)
-				.lean();
-		} catch (err) {
-			throw new ProsopoError({
-				code: "DB_QUERY_FAILED",
-				errorSite: "DBSE-49",
-				message: "Failed to flag commitment as processed",
-				cause: err,
-				context: { commitmentIds },
 			});
 		}
 	}
@@ -3500,11 +3356,13 @@ export class ProviderDatabase
 	 * @param dappAccount - Required for Dapp scope, unused for Global scope
 	 * @returns The matching artifact, or undefined if not found
 	 */
-	async getDecisionMachineArtifact(
-		scope: DecisionMachineScope,
-		dappAccount?: string,
-		kind?: DecisionMachineKind,
-	): Promise<DecisionMachineArtifact | undefined> {
+	async getDecisionMachineArtifact({
+		scope,
+		dappAccount,
+		kind,
+	}: DecisionMachineTarget & { kind?: DecisionMachineKind }): Promise<
+		DecisionMachineArtifact | undefined
+	> {
 		const filter: Record<string, unknown> = {
 			scope,
 			dappAccount: dappAccount ?? null,

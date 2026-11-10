@@ -80,14 +80,14 @@ describe("renderPuzzleBoard", () => {
 	const backgroundSeed = Buffer.from("00112233445566778899aabbccddeeff", "hex");
 
 	const render = (start: { x: number; y: number }) =>
-		renderPuzzleBoard(
-			createBackground(geometry, backgroundSeed),
-			{ targetX: 200, targetY: 100 },
+		renderPuzzleBoard({
+			background: createBackground({ geometry, seed: backgroundSeed }),
+			placement: { targetX: 200, targetY: 100 },
 			start,
 			geometry,
-			DEFAULT_RENDER_SETTINGS,
+			settings: DEFAULT_RENDER_SETTINGS,
 			seed,
-		);
+		});
 
 	it("returns a square mask the size of the piece with an opaque middle", async () => {
 		const { mask, pieceSize } = await render({ x: 60, y: 100 });

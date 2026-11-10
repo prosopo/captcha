@@ -38,6 +38,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	ClientTaskManager,
 	matchesGlob,
+	toDecisionMachineTarget,
 } from "../../../../tasks/client/clientTasks.js";
 import {
 	invalidateAllDecisionMachineArtifactCaches,
@@ -287,9 +288,18 @@ describe("ClientTaskManager", () => {
 		await clientTaskManager.storeCommitmentsExternal();
 
 		expect(commMock).toHaveBeenCalledTimes(3);
-		expect(commMock).toHaveBeenNthCalledWith(1, 1000, undefined);
-		expect(commMock).toHaveBeenNthCalledWith(2, 1000, "id-1000");
-		expect(commMock).toHaveBeenNthCalledWith(3, 1000, "id-2000");
+		expect(commMock).toHaveBeenNthCalledWith(1, {
+			limit: 1000,
+			afterId: undefined,
+		});
+		expect(commMock).toHaveBeenNthCalledWith(2, {
+			limit: 1000,
+			afterId: "id-1000",
+		});
+		expect(commMock).toHaveBeenNthCalledWith(3, {
+			limit: 1000,
+			afterId: "id-2000",
+		});
 	});
 
 	it("stops a phase at the first short page instead of chasing rows that arrive during the sweep", async () => {
@@ -467,21 +477,20 @@ describe("ClientTaskManager", () => {
 		const before = Date.now();
 		await clientTaskManager.storeCommitmentsExternal();
 
-		const [, , since] = vi.mocked(providerDB.getUnstoredIconOrderCaptchaRecords)
-			.mock.calls[0] as [number, unknown, Date];
-		const windowMs = before - since.getTime();
+		const since = vi.mocked(providerDB.getUnstoredIconOrderCaptchaRecords).mock
+			.calls[0]?.[0]?.since;
+		expect(since).toBeInstanceOf(Date);
+		const windowMs = before - (since?.getTime() ?? 0);
 		expect(windowMs).toBeGreaterThanOrEqual(48 * 60 * 60 * 1000 - 1000);
 		expect(windowMs).toBeLessThanOrEqual(48 * 60 * 60 * 1000 + 1000);
-		expect(providerDB.getUnstoredPuzzleCaptchaRecords).toHaveBeenCalledWith(
-			1000,
-			undefined,
+		expect(providerDB.getUnstoredPuzzleCaptchaRecords).toHaveBeenCalledWith({
+			limit: 1000,
 			since,
-		);
-		expect(providerDB.getUnstoredAudioCaptchaRecords).toHaveBeenCalledWith(
-			1000,
-			undefined,
+		});
+		expect(providerDB.getUnstoredAudioCaptchaRecords).toHaveBeenCalledWith({
+			limit: 1000,
 			since,
-		);
+		});
 		expect(
 			providerDB.markInteractiveCaptchaRecordsStored,
 		).toHaveBeenCalledTimes(1);
@@ -841,28 +850,29 @@ describe("ClientTaskManager", () => {
 	});
 	describe("Decision machine updates", () => {
 		it("should store decision machine artifacts with global scope", async () => {
-			const result = await clientTaskManager.updateDecisionMachine(
-				DecisionMachineScope.Global,
-				DecisionMachineRuntime.Node,
-				'module.exports = () => ({ decision: "allow" });',
-				undefined,
-				DecisionMachineLanguage.JavaScript,
-				"dm",
-				"1.0.0",
-			);
+			const result = await clientTaskManager.updateDecisionMachine({
+				scope: DecisionMachineScope.Global,
+				runtime: DecisionMachineRuntime.Node,
+				source: 'module.exports = () => ({ decision: "allow" });',
+				language: DecisionMachineLanguage.JavaScript,
+				name: "dm",
+				version: "1.0.0",
+			});
 
 			expect(providerDB.upsertDecisionMachineArtifact).toHaveBeenCalled();
 			expect(result.scope).toBe(DecisionMachineScope.Global);
 		});
 
-		it("should reject dapp scope without dapp account", async () => {
-			await expect(
-				clientTaskManager.updateDecisionMachine(
-					DecisionMachineScope.Dapp,
-					DecisionMachineRuntime.Node,
-					'module.exports = () => ({ decision: "allow" });',
-				),
-			).rejects.toThrow();
+		it("should reject dapp scope without dapp account", () => {
+			expect(() => toDecisionMachineTarget(DecisionMachineScope.Dapp)).toThrow(
+				expect.objectContaining({ code: "INVALID_REQUEST" }),
+			);
+		});
+
+		it("should accept dapp scope with a dapp account", () => {
+			expect(
+				toDecisionMachineTarget(DecisionMachineScope.Dapp, "dapp"),
+			).toEqual({ scope: DecisionMachineScope.Dapp, dappAccount: "dapp" });
 		});
 
 		it("flushes the decision machine caches when one is removed", async () => {

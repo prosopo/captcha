@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoError } from "@prosopo/common";
 import type { IIpInfoService } from "@prosopo/ipinfo";
 import {
 	CaptchaStatus,
@@ -36,6 +35,7 @@ import type {
 	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { embedData, getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
@@ -191,6 +191,7 @@ describe("PuzzleCaptchaManager", () => {
 			getPuzzleCaptchaRecordByChallenge: vi.fn(),
 			updatePuzzleCaptchaRecord: vi.fn(),
 			markPuzzleCaptchaRecordChecked: vi.fn().mockResolvedValue(true),
+			claimPuzzleCaptchaSubmission: vi.fn().mockResolvedValue(true),
 			updatePuzzleCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
@@ -211,7 +212,11 @@ describe("PuzzleCaptchaManager", () => {
 			config: {},
 		} as unknown as ProviderEnvironment;
 
-		puzzleCaptchaManager = new PuzzleCaptchaManager(db, pair, mockEnv.config);
+		puzzleCaptchaManager = new PuzzleCaptchaManager({
+			db,
+			pair,
+			config: mockEnv.config,
+		});
 
 		vi.clearAllMocks();
 		vi.mocked(u8aToHex).mockReturnValue("0xsigned");
@@ -289,17 +294,16 @@ describe("PuzzleCaptchaManager", () => {
 
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(null);
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				100,
-				100,
-				[],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 100,
+				finalY: 100,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
 
 			expect(result).toBe(false);
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
@@ -313,17 +317,16 @@ describe("PuzzleCaptchaManager", () => {
 					`${timestamp}${POW_SEPARATOR}${a.userAccount}${POW_SEPARATOR}${a.dappAccount}${POW_SEPARATOR}1` as PoWChallengeId;
 
 				await expect(
-					puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
+					puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
 						challenge,
-						a.providerSignature,
-						100,
-						100,
-						[],
-						1000,
-						a.userSignature,
-						a.ipAddress,
-						a.headers,
-					),
+						providerChallengeSignature: a.providerSignature,
+						finalX: 100,
+						finalY: 100,
+						puzzleEvents: [],
+						timeout: 1000,
+						userTimestampSignature: a.userSignature,
+						ipAddress: a.ipAddress,
+					}),
 				).rejects.toMatchObject({
 					code: "INVALID_TIMESTAMP",
 					errorSite: "PROV-97",
@@ -348,20 +351,55 @@ describe("PuzzleCaptchaManager", () => {
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
 				asPuzzleRecord(challengeRecord),
 			);
+			vi.mocked(db.claimPuzzleCaptchaSubmission).mockResolvedValue(false);
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				100,
-				100,
-				[],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 100,
+				finalY: 100,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
 
 			expect(result).toBe(false);
+			expect(validatePuzzleSolution).not.toHaveBeenCalled();
+			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
+		});
+
+		it("grades nothing when a concurrent submission has already claimed an unsubmitted record", async () => {
+			const a = buildArgs();
+			const challengeRecord: Partial<PuzzleCaptchaStored> = {
+				challenge: a.challenge,
+				dappAccount: a.dappAccount,
+				userAccount: a.userAccount,
+				targetX: 100,
+				targetY: 100,
+				tolerance: 15,
+				ipAddress: getCompositeIpAddress(a.ipAddress),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+			};
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord(challengeRecord),
+			);
+			vi.mocked(db.claimPuzzleCaptchaSubmission).mockResolvedValue(false);
+
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 100,
+				finalY: 100,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
+
+			expect(result).toBe(false);
+			expect(db.claimPuzzleCaptchaSubmission).toHaveBeenCalledWith(a.challenge);
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
@@ -388,33 +426,30 @@ describe("PuzzleCaptchaManager", () => {
 
 			const malformedSalt = "0x010200";
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				100,
-				100,
-				[],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-				undefined, // behavioralData
-				malformedSalt,
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 100,
+				finalY: 100,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+				salt: malformedSalt,
+			});
 
 			expect(result).toBe(false);
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SALT,
 				},
-				false, // serverChecked
-				true, // userSubmitted
-				a.userSignature,
-				undefined, // coords must NOT be the bad value
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 
 		it("returns false and records a timeout when the challenge is not recent", async () => {
@@ -435,31 +470,73 @@ describe("PuzzleCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => false);
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				100,
-				100,
-				[],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 100,
+				finalY: 100,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
 
 			expect(result).toBe(false);
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				expect.objectContaining({
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: expect.objectContaining({
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_TIMESTAMP",
 				}),
-				false,
-				true,
-				a.userSignature,
-				undefined, // coords — no salt supplied in this test
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
+
+		it.each([
+			{ verdict: "approved", correct: true },
+			{ verdict: "rejected", correct: false },
+		])(
+			"stores the submitted drop position and its distance from the target on a $verdict solve",
+			async ({ correct }: { verdict: string; correct: boolean }) => {
+				const a = buildArgs();
+				vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+					asPuzzleRecord({
+						challenge: a.challenge,
+						dappAccount: a.dappAccount,
+						userAccount: a.userAccount,
+						targetX: 100,
+						targetY: 100,
+						tolerance: 15,
+						ipAddress: getCompositeIpAddress(a.ipAddress),
+						result: { status: CaptchaStatus.pending },
+					}),
+				);
+				vi.mocked(verifyRecency).mockImplementation(() => true);
+				vi.mocked(validatePuzzleSolution).mockReturnValue(correct);
+
+				await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+					challenge: a.challenge,
+					providerChallengeSignature: a.providerSignature,
+					finalX: 103,
+					finalY: 104,
+					puzzleEvents: [],
+					timeout: 1000,
+					userTimestampSignature: a.userSignature,
+					ipAddress: a.ipAddress,
+				});
+
+				expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
+					a.challenge,
+					expect.objectContaining({
+						finalX: 103,
+						finalY: 104,
+						distanceFromTarget: 5,
+					}),
+				);
+			},
+		);
 
 		it("returns true and approves when the solution is within tolerance", async () => {
 			const a = buildArgs();
@@ -480,28 +557,26 @@ describe("PuzzleCaptchaManager", () => {
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 			vi.mocked(validatePuzzleSolution).mockReturnValue(true);
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				102,
-				101,
-				[{ x: 1, y: 1, t: 1 }],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 102,
+				finalY: 101,
+				puzzleEvents: [{ x: 1, y: 1, t: 1 }],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
 
 			expect(result).toBe(true);
 			expect(checkPowSignature).toHaveBeenCalled();
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
-				a.userSignature,
-				undefined, // coords — no salt supplied in this test
-			);
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 			// puzzleEvents stored when no behavioral data
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
 				a.challenge,
@@ -567,18 +642,17 @@ describe("PuzzleCaptchaManager", () => {
 				{ x: 6, y: 5, t: 6 },
 			];
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				102,
-				101,
-				trail,
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-				"encrypted-blob",
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 102,
+				finalY: 101,
+				puzzleEvents: trail,
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+				behavioralData: "encrypted-blob",
+			});
 
 			expect(result).toBe(true);
 
@@ -656,18 +730,17 @@ describe("PuzzleCaptchaManager", () => {
 				{ x: 2, y: 1, t: 2 },
 			];
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				102,
-				101,
-				trail,
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-				"encrypted-blob",
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 102,
+				finalY: 101,
+				puzzleEvents: trail,
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+				behavioralData: "encrypted-blob",
+			});
 
 			expect(result).toBe(true);
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
@@ -714,18 +787,17 @@ describe("PuzzleCaptchaManager", () => {
 
 			const trail = [{ x: 3, y: 3, t: 3 }];
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				102,
-				101,
-				trail,
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-				"encrypted-blob",
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 102,
+				finalY: 101,
+				puzzleEvents: trail,
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+				behavioralData: "encrypted-blob",
+			});
 
 			expect(result).toBe(true);
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
@@ -772,32 +844,27 @@ describe("PuzzleCaptchaManager", () => {
 			const coordsToEmbed = [clickX, clickY];
 			const salt = embedData(`0x${"a".repeat(64)}`, coordsToEmbed);
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				102,
-				101,
-				[{ x: 1, y: 1, t: 1 }],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-				undefined, // behavioralData
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 102,
+				finalY: 101,
+				puzzleEvents: [{ x: 1, y: 1, t: 1 }],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
 				salt,
-			);
+			});
 
 			expect(result).toBe(true);
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
-				a.userSignature,
-				// The whole contract: coords[0] is the "click" tile, coords[0][0]
-				// is the [x, y] pair the widget embedded. A regression that drops
-				// the decode or writes [0, 0] fails this exact match.
-				[[[clickX, clickY]]],
-			);
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+				coords: [[[clickX, clickY]]],
+			});
 		});
 
 		it("returns false and disapproves when the solution is outside tolerance", async () => {
@@ -819,30 +886,28 @@ describe("PuzzleCaptchaManager", () => {
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 			vi.mocked(validatePuzzleSolution).mockReturnValue(false);
 
-			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution(
-				a.challenge,
-				a.providerSignature,
-				500,
-				500,
-				[],
-				1000,
-				a.userSignature,
-				a.ipAddress,
-				a.headers,
-			);
+			const result = await puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+				challenge: a.challenge,
+				providerChallengeSignature: a.providerSignature,
+				finalX: 500,
+				finalY: 500,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: a.userSignature,
+				ipAddress: a.ipAddress,
+			});
 
 			expect(result).toBe(false);
-			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				expect.objectContaining({
+			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: expect.objectContaining({
 					status: CaptchaStatus.disapproved,
 					reason: "CAPTCHA.INVALID_SOLUTION",
 				}),
-				false,
-				true,
-				a.userSignature,
-				undefined, // coords — no salt supplied in this test
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 	});
 
@@ -856,17 +921,17 @@ describe("PuzzleCaptchaManager", () => {
 
 		beforeEach(() => {
 			counters = new InMemoryUsageCounters();
-			manager = new PuzzleCaptchaManager(
+			manager = new PuzzleCaptchaManager({
 				db,
 				pair,
-				mockEnv.config,
-				undefined,
-				counters,
-			);
+				config: mockEnv.config,
+				writeQueue: null,
+				usageCounters: counters,
+			});
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 			// Grade by distance, as the real check does.
 			vi.mocked(validatePuzzleSolution).mockImplementation(
-				(finalX, finalY, targetX, targetY, tolerance) =>
+				({ finalX, finalY, targetX, targetY, tolerance }) =>
 					Math.hypot(finalX - targetX, finalY - targetY) <= tolerance,
 			);
 		});
@@ -887,17 +952,16 @@ describe("PuzzleCaptchaManager", () => {
 					result: { status: CaptchaStatus.pending },
 				}),
 			);
-			return manager.verifyPuzzleCaptchaSolution(
+			return manager.verifyPuzzleCaptchaSolution({
 				challenge,
-				"0xprov",
-				x,
-				y,
-				[],
-				1000,
-				"0xuser",
+				providerChallengeSignature: "0xprov",
+				finalX: x,
+				finalY: y,
+				puzzleEvents: [],
+				timeout: 1000,
+				userTimestampSignature: "0xuser",
 				ipAddress,
-				{} as RequestHeaders,
-			);
+			});
 		};
 
 		const count = (
@@ -939,17 +1003,17 @@ describe("PuzzleCaptchaManager", () => {
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(null);
 
 			const result =
-				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 			expect(result.verified).toBe(false);
 		});
 
-		it("throws when the stored result is not approved", async () => {
+		it("returns verified:false when the stored result is not approved", async () => {
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
 				asPuzzleRecord({
 					challenge,
@@ -959,17 +1023,23 @@ describe("PuzzleCaptchaManager", () => {
 						reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 					},
 					serverChecked: false,
+					sessionId: "unapproved-session",
 				}),
 			);
 
-			await expect(
-				puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+			const result =
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				),
-			).rejects.toBeInstanceOf(ProsopoError);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
+
+			expect(result).toEqual({
+				verified: false,
+				sessionId: "unapproved-session",
+			});
+			expect(db.markPuzzleCaptchaRecordChecked).not.toHaveBeenCalled();
 		});
 
 		it("returns verified:false when the solution has already been server-checked", async () => {
@@ -983,12 +1053,12 @@ describe("PuzzleCaptchaManager", () => {
 			);
 
 			const result =
-				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 			expect(result.verified).toBe(false);
 			expect(db.updatePuzzleCaptchaRecord).not.toHaveBeenCalled();
@@ -1005,12 +1075,12 @@ describe("PuzzleCaptchaManager", () => {
 			);
 
 			await expect(
-				puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				),
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				}),
 			).rejects.toThrow();
 		});
 
@@ -1029,12 +1099,12 @@ describe("PuzzleCaptchaManager", () => {
 			vi.mocked(verifyRecency).mockImplementation(() => false);
 
 			const result =
-				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 			expect(result.verified).toBe(false);
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
@@ -1069,16 +1139,61 @@ describe("PuzzleCaptchaManager", () => {
 			);
 
 			const result =
-				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 			expect(result.verified).toBe(true);
 			// Records that the solution has been server-checked, gating reuse.
 			expect(db.markPuzzleCaptchaRecordChecked).toHaveBeenCalledWith(challenge);
+		});
+
+		it("returns a score of exactly 0 rather than dropping it", async () => {
+			const sessionId = "zero-score-session";
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					sessionId,
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				captchaType: CaptchaType.puzzle,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "h".repeat(16),
+			};
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({ decision: "allow" } as const),
+			);
+
+			const result =
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
+					dappAccount,
+					challenge,
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
+
+			expect(result).toEqual({ verified: true, score: 0, sessionId });
 		});
 
 		it("returns verified:false when a concurrent verify already claimed the record", async () => {
@@ -1104,12 +1219,12 @@ describe("PuzzleCaptchaManager", () => {
 			);
 
 			const result =
-				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 			expect(result.verified).toBe(false);
 		});
@@ -1142,13 +1257,13 @@ describe("PuzzleCaptchaManager", () => {
 
 			beforeEach(() => {
 				counters = new InMemoryUsageCounters();
-				manager = new PuzzleCaptchaManager(
+				manager = new PuzzleCaptchaManager({
 					db,
 					pair,
-					mockEnv.config,
-					undefined,
-					counters,
-				);
+					config: mockEnv.config,
+					writeQueue: null,
+					usageCounters: counters,
+				});
 				decide = vi
 					.fn<DecideFn>()
 					.mockResolvedValue({ decision: DecisionMachineDecision.Allow });
@@ -1186,12 +1301,12 @@ describe("PuzzleCaptchaManager", () => {
 			};
 
 			const verify = () =>
-				manager.serverVerifyPuzzleCaptchaSolution(
+				manager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 			it("reads the counters and account sighting the machine declared", async () => {
 				counters.incrManyAsync(dappAccount, [
@@ -1270,12 +1385,12 @@ describe("PuzzleCaptchaManager", () => {
 			);
 
 			const result =
-				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 			expect(result.verified).toBe(false);
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
@@ -1334,17 +1449,13 @@ describe("PuzzleCaptchaManager", () => {
 
 			try {
 				const result =
-					await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+					await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 						dappAccount,
 						challenge,
-						1000,
-						mockEnv,
-						undefined, // ip
-						// Truthy storage triggers the checkForHardBlock branch;
-						// the stub above ignores whatever's passed here.
-						// biome-ignore lint/suspicious/noExplicitAny: test stub
-						{} as any,
-					);
+						env: mockEnv,
+						settings: { verifiedTimeout: 1000 },
+						userAccessRulesStorage: {} as AccessRulesStorage,
+					});
 
 				expect(result.verified).toBe(false);
 				// AP reason wins. DM's reason must NOT appear.
@@ -1389,15 +1500,13 @@ describe("PuzzleCaptchaManager", () => {
 			});
 
 			try {
-				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-					undefined, // ip
-					// biome-ignore lint/suspicious/noExplicitAny: test stub
-					{} as any,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+					userAccessRulesStorage: {} as AccessRulesStorage,
+				});
 
 				expect(db.updateSessionRecord).toHaveBeenCalledWith(
 					sessionId,
@@ -1473,12 +1582,12 @@ describe("PuzzleCaptchaManager", () => {
 				.mockResolvedValue({ decision: "allow" } as const);
 			mockDecisionMachine(decideSpy);
 
-			await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+			await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
 
 			expect(decideSpy).toHaveBeenCalledOnce();
 			const input = decideSpy.mock.calls[0]?.[0];
@@ -1524,12 +1633,12 @@ describe("PuzzleCaptchaManager", () => {
 				.mockResolvedValue({ decision: "allow" } as const);
 			mockDecisionMachine(decideSpy);
 
-			await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+			await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
 
 			expect(decideSpy).toHaveBeenCalledOnce();
 			const input = decideSpy.mock.calls[0]?.[0];
@@ -1558,30 +1667,30 @@ describe("PuzzleCaptchaManager", () => {
 			maxEmailSubmissionCount: number | undefined;
 			storeMetadata: boolean;
 		}) =>
-			puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+			puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 				dappAccount,
 				challenge,
-				60_000,
-				mockEnv,
-				undefined, // ip
-				undefined, // userAccessRulesStorage
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: 60_000,
+					spamEmailDomainCheckEnabled: false,
+					spamFilter:
+						maxEmailSubmissionCount !== undefined
+							? {
+									enabled: true,
+									emailRules: {
+										enabled: true,
+										maxEmailSubmissionCount,
+										normaliseGmail: false,
+										useDefaultPatterns: false,
+										customRegexBlocklist: [],
+									},
+								}
+							: undefined,
+					storeMetadata,
+				},
 				email,
-				false, // spamEmailDomainCheckingEnabled
-				maxEmailSubmissionCount !== undefined
-					? {
-							enabled: true,
-							emailRules: {
-								enabled: true,
-								maxEmailSubmissionCount,
-								normaliseGmail: false,
-								useDefaultPatterns: false,
-								customRegexBlocklist: [],
-							},
-						}
-					: undefined,
-				undefined, // trafficFilter
-				storeMetadata,
-			);
+			});
 
 		const seedApprovedPuzzle = (challenge: string, dappAccount: string) => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
@@ -1713,20 +1822,17 @@ describe("PuzzleCaptchaManager", () => {
 			dappAccount: string,
 			clientSessionId: string | undefined,
 		) =>
-			puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+			puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
 				dappAccount,
 				challenge,
-				60_000,
-				mockEnv,
-				undefined, // ip
-				undefined, // userAccessRulesStorage
-				undefined, // email
-				false, // spamEmailDomainCheckingEnabled
-				undefined, // spamFilter
-				undefined, // trafficFilter
-				false, // storeMetadata
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: 60_000,
+					spamEmailDomainCheckEnabled: false,
+					storeMetadata: false,
+				},
 				clientSessionId,
-			);
+			});
 
 		const seedApprovedPuzzle = (
 			challenge: string,
