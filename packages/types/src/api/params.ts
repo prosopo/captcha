@@ -88,7 +88,6 @@ export enum ApiParams {
 	pieceSize = "pieceSize",
 	pieceMask = "pieceMask",
 	pieceMaskCheck = "pieceMaskCheck",
-	maskedPiece = "maskedPiece",
 	puzzleKey = "puzzleKey",
 	legend = "legend",
 	legendIconSize = "legendIconSize",

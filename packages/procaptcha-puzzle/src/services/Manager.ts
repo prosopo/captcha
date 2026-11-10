@@ -47,7 +47,6 @@ import { embedData, sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import {
 	type PuzzleChallengeWithPiece,
-	canLiftPiece,
 	liftChallengePiece,
 } from "./pieceMask.js";
 
@@ -309,7 +308,6 @@ export const Manager = (
 					getDappAccount(),
 					challengeSessionId,
 					simdReadingsOnChallenge,
-					canLiftPiece(),
 				);
 				// The provider answered, so it has seen the id and consumed it —
 				// a challenge and a 4xx mean the same thing here. Marked after

@@ -336,7 +336,6 @@ export default class ProviderApi
 		dapp: string,
 		sessionId?: string,
 		simdReadings?: string,
-		maskedPiece?: boolean,
 	): Promise<GetPuzzleCaptchaResponse> {
 		return this.getInteractiveCaptchaChallenge(
 			ClientApiPaths.GetPuzzleCaptchaChallenge,
@@ -344,7 +343,6 @@ export default class ProviderApi
 			dapp,
 			sessionId,
 			simdReadings,
-			maskedPiece,
 		);
 	}
 
@@ -387,14 +385,12 @@ export default class ProviderApi
 		dapp: string,
 		sessionId?: string,
 		simdReadings?: string,
-		maskedPiece?: boolean,
 	): Promise<TResponse> {
 		const body: GetPuzzleCaptchaChallengeRequestBodyType = {
 			[ApiParams.user]: user.toString(),
 			[ApiParams.dapp]: dapp.toString(),
 			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
-			...(maskedPiece && { [ApiParams.maskedPiece]: true }),
 		};
 		return this.dedupedPost<
 			TResponse,

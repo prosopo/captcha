@@ -35,7 +35,6 @@ import {
 } from "../../tasks/puzzle/puzzleKey.js";
 import {
 	renderPuzzleBoardImages,
-	renderPuzzleImages,
 	resolvePuzzlePieceScaleRange,
 	resolvePuzzleRenderSettings,
 	samplePuzzlePieceSize,
@@ -58,7 +57,6 @@ export const issuePuzzleChallenge = async ({
 	clientSettings,
 	sessionRecord,
 	trafficVerdict,
-	maskedPiece,
 	provenance,
 }: ChallengeIssueContext): Promise<
 	IssuedChallenge<GetPuzzleCaptchaResponse>
@@ -173,32 +171,17 @@ export const issuePuzzleChallenge = async ({
 		targetX: challenge.targetX,
 		targetY: challenge.targetY,
 	};
-	const images = maskedPiece
-		? await renderPuzzleBoardImages(
-				placement,
-				{ x: challenge.originX, y: challenge.originY },
-				renderedPuzzleSettings,
-				effectivePieceSize,
-			)
-		: await renderPuzzleImages(
-				placement,
-				renderedPuzzleSettings,
-				effectivePieceSize,
-			);
-	const pieceFields = (() => {
-		if (!("mask" in images)) {
-			return { [ApiParams.piece]: images.piece };
-		}
-		const scrambled = scramblePieceMask(
-			images.mask,
-			networkPuzzleKey(getIpAddressFromComposite(provenance.ipAddress)),
-			challenge.challenge,
-		);
-		return {
-			[ApiParams.pieceMask]: scrambled.mask,
-			[ApiParams.pieceMaskCheck]: scrambled.check,
-		};
-	})();
+	const images = await renderPuzzleBoardImages(
+		placement,
+		{ x: challenge.originX, y: challenge.originY },
+		renderedPuzzleSettings,
+		effectivePieceSize,
+	);
+	const scrambled = scramblePieceMask(
+		images.mask,
+		networkPuzzleKey(getIpAddressFromComposite(provenance.ipAddress)),
+		challenge.challenge,
+	);
 
 	// A second write rather than an argument to storePuzzleCaptchaRecord: the
 	// sampled piece size and the seeds only exist once the render has run, and
@@ -248,7 +231,8 @@ export const issuePuzzleChallenge = async ({
 			[ApiParams.status]: "ok",
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.background]: images.background,
-			...pieceFields,
+			[ApiParams.pieceMask]: scrambled.mask,
+			[ApiParams.pieceMaskCheck]: scrambled.check,
 			[ApiParams.pieceSize]: images.pieceSize,
 			[ApiParams.originX]: challenge.originX,
 			[ApiParams.originY]: challenge.originY,

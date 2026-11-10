@@ -220,13 +220,9 @@ export type PuzzleChallengeWithPiece = GetPuzzleCaptchaResponse & {
 	[ApiParams.piece]: string;
 };
 
-/** Whether this browser can unscramble and lift a piece. */
-export const canLiftPiece = (): boolean =>
-	undefined !== globalThis.crypto?.subtle && "undefined" !== typeof document;
-
 /**
- * The challenge with a piece the canvas can draw: as served, or lifted out of
- * the board with the unscrambled mask. Undefined when the mask cannot be
+ * The challenge with a piece the canvas can draw: as served (maintenance mode),
+ * or lifted out of the board with the unscrambled mask. Undefined when the mask cannot be
  * unscrambled with `puzzleKey`.
  */
 export const liftChallengePiece = async (

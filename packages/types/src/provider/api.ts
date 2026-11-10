@@ -907,7 +907,6 @@ export const GetPuzzleCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.maskedPiece]: boolean().optional(),
 });
 
 export type GetPuzzleCaptchaChallengeRequestBodyType = zInfer<

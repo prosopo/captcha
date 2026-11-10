@@ -18,12 +18,9 @@ import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { getIPAddress } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { renderPuzzleImagesMock, renderPuzzleBoardImagesMock } = vi.hoisted(
-	() => ({
-		renderPuzzleImagesMock: vi.fn(),
-		renderPuzzleBoardImagesMock: vi.fn(),
-	}),
-);
+const { renderPuzzleBoardImagesMock } = vi.hoisted(() => ({
+	renderPuzzleBoardImagesMock: vi.fn(),
+}));
 
 vi.mock(
 	"../../../../tasks/puzzle/puzzleRenderer.js",
@@ -34,7 +31,6 @@ vi.mock(
 			>();
 		return {
 			...actual,
-			renderPuzzleImages: renderPuzzleImagesMock,
 			renderPuzzleBoardImages: renderPuzzleBoardImagesMock,
 		};
 	},
@@ -50,7 +46,7 @@ const CALLER_IP = "203.0.113.5";
 const CHALLENGE = "1700000000000___user___dapp";
 const MASK = Buffer.from([0, 128, 255, 255, 64, 0]);
 
-const buildContext = (maskedPiece: boolean): ChallengeIssueContext => ({
+const buildContext = (): ChallengeIssueContext => ({
 	tasks: {
 		puzzleCaptchaManager: {
 			getPuzzleCaptchaChallenge: vi.fn().mockResolvedValue({
@@ -76,7 +72,6 @@ const buildContext = (maskedPiece: boolean): ChallengeIssueContext => ({
 	clientSettings: { settings: {} } as unknown as ClientRecord,
 	sessionRecord: {} as ProjectedSession,
 	trafficVerdict: { kind: "pass" },
-	maskedPiece,
 	provenance: {
 		ipAddress: getCompositeIpAddress(CALLER_IP),
 		headers: { "user-agent": "Mozilla/5.0 (X11; Linux x86_64)" },
@@ -103,14 +98,6 @@ const unscramble = (scrambled: string): Buffer => {
 describe("puzzle piece delivery", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		renderPuzzleImagesMock.mockResolvedValue({
-			background: "board",
-			piece: "piece",
-			pieceSize: 60,
-			backgroundSeed: "seed",
-			renderSeed: "seed",
-			rendererVersion: 2,
-		});
 		renderPuzzleBoardImagesMock.mockResolvedValue({
 			background: "board-with-piece",
 			mask: MASK,
@@ -121,17 +108,8 @@ describe("puzzle piece delivery", () => {
 		});
 	});
 
-	it("serves the piece as an image to a widget that cannot lift it", async () => {
-		const { response: served } = await issuePuzzleChallenge(
-			buildContext(false),
-		);
-		expect(served[ApiParams.piece]).toBe("piece");
-		expect(served[ApiParams.pieceMask]).toBeUndefined();
-		expect(renderPuzzleBoardImagesMock).not.toHaveBeenCalled();
-	});
-
 	it("draws the piece at its start and sends only its scrambled mask", async () => {
-		const { response: served } = await issuePuzzleChallenge(buildContext(true));
+		const { response: served } = await issuePuzzleChallenge(buildContext());
 		expect(served[ApiParams.piece]).toBeUndefined();
 		expect(served[ApiParams.background]).toBe("board-with-piece");
 		expect(renderPuzzleBoardImagesMock.mock.calls[0]?.[1]).toEqual({
