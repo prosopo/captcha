@@ -95,63 +95,66 @@ export class Tasks {
 		this.decisionMachineRunner = new DecisionMachineRunner(this.db);
 		this.usageCounters = this.initUsageCounters();
 
-		this.powCaptchaManager = new PowCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.writeQueue,
-			this.usageCounters,
-		);
-		this.puzzleCaptchaManager = new PuzzleCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.usageCounters,
-		);
-		this.audioCaptchaManager = new AudioCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.usageCounters,
-		);
-		this.iconOrderCaptchaManager = new IconOrderCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.usageCounters,
-		);
+		this.powCaptchaManager = new PowCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
+		this.puzzleCaptchaManager = new PuzzleCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
+		this.audioCaptchaManager = new AudioCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
+		this.iconOrderCaptchaManager = new IconOrderCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
 		this.datasetManager = new DatasetManager(
 			this.config,
 			this.logger,
 			this.captchaConfig,
 			this.db,
 		);
-		this.imgCaptchaManager = new ImgCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.writeQueue,
-			this.usageCounters,
-		);
+		this.imgCaptchaManager = new ImgCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
 			this.logger,
 			this.db,
 		);
-		this.frictionlessManager = new FrictionlessManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.writeQueue,
-			this.decisionMachineRunner,
-			this.usageCounters,
-		);
+		this.frictionlessManager = new FrictionlessManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			decisionMachineRunner: this.decisionMachineRunner,
+			usageCounters: this.usageCounters,
+		});
 	}
 
 	private initUsageCounters(): UsageCounters | null {

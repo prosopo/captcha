@@ -25,24 +25,16 @@ import {
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 	type IPAddress,
-	type ISpamFilterRules,
-	type ITrafficFilter,
 	type InteractiveCaptchaStored,
-	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
-	type ProsopoConfigOutput,
 	ResultReason,
 	type Session,
 	SimdReadingsStage,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessRulesStorage,
-	describeMatchedRule,
-} from "@prosopo/user-access-policy";
+import { describeMatchedRule } from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -66,7 +58,7 @@ import {
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
 import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
-import { CaptchaManager } from "../captchaManager.js";
+import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -75,6 +67,7 @@ import {
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
+import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
 
 /** Fields the shared pipeline writes back onto a captcha record. */
@@ -100,7 +93,8 @@ export interface MintedChallenge {
 }
 
 /** A user's submission, plus the two steps that differ by captcha type. */
-export interface InteractiveSubmission<TRecord> {
+/** What every interactive captcha submission carries, whatever its answer. */
+export interface InteractiveSolutionSubmission {
 	challenge: PoWChallengeId;
 	providerChallengeSignature: string;
 	/** Milliseconds allowed between issuing the challenge and this submission. */
@@ -111,6 +105,10 @@ export interface InteractiveSubmission<TRecord> {
 	salt?: string;
 	simdReadings?: string;
 	clientMetaData?: ClientMetaData;
+}
+
+export interface InteractiveSubmission<TRecord>
+	extends InteractiveSolutionSubmission {
 	isCorrect: (record: TRecord) => boolean;
 	/**
 	 * Whether a wrong answer landed nowhere near the right one. Types that
@@ -133,14 +131,14 @@ export abstract class InteractiveCaptchaManager<
 	protected decisionMachineRunner: DecisionMachineRunner;
 	protected readonly usageCounters: UsageCounters | null;
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger);
+	constructor({
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & {
+		usageCounters?: UsageCounters | null;
+	}) {
+		super(deps);
+		const { db } = deps;
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
@@ -259,28 +257,27 @@ export abstract class InteractiveCaptchaManager<
 		}
 
 		if (saltDecodeError) {
-			await this.recordSubmissionResult(
+			await this.recordSubmissionResult({
 				challengeRecord,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SALT,
 				},
-				userTimestampSignature,
-				undefined,
-			);
+				userSignature: userTimestampSignature,
+			});
 			return false;
 		}
 
 		if (!verifyRecency(challenge, submission.timeout)) {
-			await this.recordSubmissionResult(
+			await this.recordSubmissionResult({
 				challengeRecord,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 				},
-				userTimestampSignature,
+				userSignature: userTimestampSignature,
 				coords,
-			);
+			});
 			return false;
 		}
 
@@ -304,12 +301,12 @@ export abstract class InteractiveCaptchaManager<
 			if (kind) {
 				this.usageCounters.incrManyAsync(
 					dappAccount,
-					buildAllWindowIncrements(
+					buildAllWindowIncrements({
 						kind,
-						this.captchaType,
-						submission.ipAddress.address,
+						captchaType: this.captchaType,
+						ip: submission.ipAddress.address,
 						userAccount,
-					),
+					}),
 				);
 			}
 		}
@@ -374,13 +371,13 @@ export abstract class InteractiveCaptchaManager<
 			});
 		}
 
-		await this.recordSubmissionResult(
+		await this.recordSubmissionResult({
 			challengeRecord,
 			result,
-			userTimestampSignature,
+			userSignature: userTimestampSignature,
 			coords,
-			storedClientMetaData,
-		);
+			clientMetaData: storedClientMetaData,
+		});
 
 		if (challengeRecord.sessionId && decodedPayloads.simd) {
 			await this.recordSessionSimdReadingsIfAbsentWithCache(
@@ -465,13 +462,19 @@ export abstract class InteractiveCaptchaManager<
 		}
 	}
 
-	private async recordSubmissionResult(
-		challengeRecord: TRecord,
-		result: CaptchaResult,
-		userSignature: string,
-		coords: [number, number][][] | undefined,
-		clientMetaData?: ClientMetaData,
-	): Promise<void> {
+	private async recordSubmissionResult({
+		challengeRecord,
+		result,
+		userSignature,
+		coords,
+		clientMetaData,
+	}: {
+		challengeRecord: TRecord;
+		result: CaptchaResult;
+		userSignature: string;
+		coords?: [number, number][][];
+		clientMetaData?: ClientMetaData;
+	}): Promise<void> {
 		await this.updateSubmissionResult(
 			challengeRecord.challenge,
 			result,
@@ -495,37 +498,27 @@ export abstract class InteractiveCaptchaManager<
 	/**
 	 * The post-solve gate the site's server calls: decides whether the token
 	 * the widget was given is honoured.
-	 *
-	 * @param dappAccount - the dapp that is requesting the captcha
-	 * @param challenge - the challenge string
-	 * @param timeout - milliseconds allowed between submit and verify
-	 * @param env - provider environment
-	 * @param ip - optional IP address for validation
-	 * @param userAccessRulesStorage - storage for querying user access policies
-	 * @param email
-	 * @param spamEmailDomainCheckingEnabled
-	 * @param spamFilter
-	 * @param trafficFilter
-	 * @param storeMetadata - when true, persists the dapp-server-provided
-	 *   `email` on the captcha record for spam-rate analysis.
-	 * @param clientSessionId - the session id the site rendered the widget
-	 *   with. When supplied, the solve must carry the same value in its
-	 *   `clientMetaData` or it is disapproved.
 	 */
-	async serverVerifyInteractiveCaptchaSolution(
-		dappAccount: string,
-		challenge: string,
-		timeout: number,
-		env: ProviderEnvironment,
-		ip?: string,
-		userAccessRulesStorage?: AccessRulesStorage,
-		email?: string,
-		spamEmailDomainCheckingEnabled = false,
-		spamFilter?: ISpamFilterRules,
-		trafficFilter?: ITrafficFilter,
-		storeMetadata = false,
-		clientSessionId?: string,
-	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
+	async serverVerifyInteractiveCaptchaSolution({
+		dappAccount,
+		challenge,
+		env,
+		settings: {
+			verifiedTimeout: timeout,
+			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
+			spamFilter,
+			trafficFilter,
+			storeMetadata = false,
+		},
+		ip,
+		email,
+		clientSessionId,
+		userAccessRulesStorage,
+	}: ServerVerifyCaptchaSolutionArgs): Promise<{
+		verified: boolean;
+		score?: number;
+		sessionId?: string;
+	}> {
 		// Shared by every not-verified exit; sessionId is stamped on below
 		// once the record is loaded, so each exit needn't repeat it.
 		const notVerifiedResponse: {
@@ -549,18 +542,11 @@ export abstract class InteractiveCaptchaManager<
 
 		notVerifiedResponse.sessionId = challengeRecord.sessionId;
 
-		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoError({
-				code: "INVALID_SOLUTION",
-				errorSite: "PROV-71",
-				context: {
-					failedFuncName: this.serverVerifyInteractiveCaptchaSolution.name,
-					challenge,
-				},
-			});
-		}
-
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
+		if (
+			challengeRecord.result.status !== CaptchaStatus.approved ||
+			challengeRecord.serverChecked
+		)
+			return notVerifiedResponse;
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -633,20 +619,20 @@ export abstract class InteractiveCaptchaManager<
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
 			try {
-				const blockPolicy = await this.checkForHardBlock(
+				const blockPolicy = await this.checkForHardBlock({
 					userAccessRulesStorage,
 					challengeRecord,
-					challengeRecord.userAccount,
-					challengeRecord.headers,
-					sessionRecord?.decryptedHeadHash,
-					challengeRecord.coords,
-					challengeRecord.ipInfo?.isValid
+					userAccount: challengeRecord.userAccount,
+					headers: challengeRecord.headers,
+					headHash: sessionRecord?.decryptedHeadHash,
+					coords: challengeRecord.coords,
+					countryCode: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
-					challengeRecord.ipInfo?.isValid
+					asn: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.asnNumber
 						: undefined,
-				);
+				});
 
 				if (blockPolicy) {
 					logger.info(() => ({
@@ -746,12 +732,12 @@ export abstract class InteractiveCaptchaManager<
 		);
 
 		{
-			const check = await this.resolveTrafficFilterCheck(
-				challengeRecord.ipInfo,
+			const check = await this.resolveTrafficFilterCheck({
+				recordIpInfo: challengeRecord.ipInfo,
 				trafficFilter,
-				ip ? await env.ipInfoService.lookup(ip) : undefined,
+				currentIpInfo: ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
-			);
+			});
 			if (check.isBlocked) {
 				logger.info(() => ({
 					msg: `Traffic filter rejected request in ${this.logLabel} verification`,
@@ -797,14 +783,14 @@ export abstract class InteractiveCaptchaManager<
 			});
 
 			if (ipValidationRules?.enabled === true) {
-				const ipValidation = await deepValidateIpAddress(
+				const ipValidation = await deepValidateIpAddress({
 					ip,
 					challengeIpAddress,
 					logger,
-					env.ipInfoService,
+					ipInfoService: env.ipInfoService,
 					ipValidationRules,
-					enrichedDnsEvent?.peerIp,
-				);
+					dnsPeerIp: enrichedDnsEvent?.peerIp,
+				});
 
 				if (!ipValidation.isValid) {
 					logger.error(() => ({
@@ -950,7 +936,7 @@ export abstract class InteractiveCaptchaManager<
 
 		return {
 			verified: true,
-			...(score ? { score } : {}),
+			...(Number.isFinite(score) && { score }),
 			...(challengeRecord.sessionId && {
 				sessionId: challengeRecord.sessionId,
 			}),

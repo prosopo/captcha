@@ -28,7 +28,6 @@ import {
 	CaptchaStates,
 	CaptchaStatus,
 	CaptchaType,
-	type CompositeIpAddress,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -37,18 +36,13 @@ import {
 	type DecisionMachineArtifact,
 	DecisionMachineKind,
 	type DecisionMachineScope,
-	type FingerprintSummaryStored,
 	type Hash,
-	type IPInfoResponse,
 	type IconOrderCaptchaStored,
-	type IconOrderRenderRecord,
 	type InteractiveCaptchaStored,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
-	type PoWChallengeComponents,
 	type PoWChallengeId,
 	type PuzzleCaptchaStored,
-	type RequestHeaders,
 	type ResultReason,
 	type ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -57,7 +51,6 @@ import {
 	type SimdReadingsStage,
 	type SolutionRecord,
 	type StoredCaptcha,
-	type StoredIconTarget,
 	StoredStatusNames,
 	type UserCommitment,
 	UserCommitmentSchema,
@@ -91,7 +84,15 @@ import {
 	type SpamEmailDomain,
 	type SpamEmailDomainRecord,
 	SpamEmailDomainRecordSchema,
+	type StoreAudioCaptchaRecordArgs,
+	type StoreCaptchaRecordArgs,
+	type StoreIconOrderCaptchaRecordArgs,
+	type StorePendingImageCommitmentArgs,
+	type StorePowCaptchaRecordArgs,
+	type StorePuzzleCaptchaRecordArgs,
 	type Tables,
+	type UpdateInteractiveCaptchaRecordResultArgs,
+	type UpdatePowCaptchaRecordResultArgs,
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 	type UserSolutionRecord,
@@ -874,36 +875,23 @@ export class ProviderDatabase
 
 	/**
 	 * @description Adds a new PoW Captcha record to the database.
-	 * @param {string} challenge The challenge string for the captcha.
-	 * @param components The components of the PoW challenge.
-	 * @param difficulty
-	 * @param providerSignature
-	 * @param ipAddress
-	 * @param headers
-	 * @param ja4
-	 * @param sessionId
-	 * @param serverChecked
-	 * @param userSubmitted
-	 * @param storedStatus
-	 * @param userSignature
-	 * @param ipInfo full ipinfo payload from the ipInfoMiddleware
 	 * @returns {Promise<void>} A promise that resolves when the record is added.
 	 */
-	async storePowCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		difficulty: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
+	async storePowCaptchaRecord({
+		challenge,
+		components,
+		difficulty,
+		providerSignature,
+		ipAddress,
+		headers,
+		ja4,
+		sessionId,
 		serverChecked = false,
 		userSubmitted = false,
-		userSignature?: string,
-		ipInfo?: IPInfoResponse,
-		fingerprintSummary?: FingerprintSummaryStored,
-	): Promise<void> {
+		userSignature,
+		ipInfo,
+		fingerprintSummary,
+	}: StorePowCaptchaRecordArgs): Promise<void> {
 		const tables = this.getTables();
 
 		const powCaptchaRecord: PoWCaptchaStored = {
@@ -1051,21 +1039,16 @@ export class ProviderDatabase
 
 	/**
 	 * @description Updates a PoW Captcha record in the database.
-	 * @param {string} challenge The challenge string of the captcha to be updated.
-	 * @param result
-	 * @param serverChecked
-	 * @param userSubmitted
-	 * @param userSignature
 	 * @returns {Promise<void>} A promise that resolves when the record is updated.
 	 */
-	async updatePowCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
+	async updatePowCaptchaRecordResult({
+		challenge,
+		result,
 		serverChecked = false,
 		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-	): Promise<void> {
+		userSignature,
+		coords,
+	}: UpdatePowCaptchaRecordResultArgs): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
@@ -1332,16 +1315,16 @@ export class ProviderDatabase
 		}
 	}
 
-	private pendingInteractiveRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): InteractiveCaptchaStored {
+	private pendingInteractiveRecord({
+		challenge,
+		components,
+		providerSignature,
+		ipAddress,
+		headers,
+		ja4,
+		sessionId,
+		ipInfo,
+	}: StoreCaptchaRecordArgs): InteractiveCaptchaStored {
 		return {
 			challenge,
 			userAccount: components.userAccount,
@@ -1361,35 +1344,19 @@ export class ProviderDatabase
 		};
 	}
 
-	async storePuzzleCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		targetX: number,
-		targetY: number,
-		originX: number,
-		originY: number,
-		tolerance: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-		fingerprintSummary?: FingerprintSummaryStored,
-	): Promise<void> {
+	async storePuzzleCaptchaRecord({
+		targetX,
+		targetY,
+		originX,
+		originY,
+		tolerance,
+		fingerprintSummary,
+		...context
+	}: StorePuzzleCaptchaRecordArgs): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.puzzle),
 			{
-				...this.pendingInteractiveRecord(
-					challenge,
-					components,
-					providerSignature,
-					ipAddress,
-					headers,
-					ja4,
-					sessionId,
-					ipInfo,
-				),
+				...this.pendingInteractiveRecord(context),
 				tolerance,
 				targetX,
 				targetY,
@@ -1400,61 +1367,29 @@ export class ProviderDatabase
 		);
 	}
 
-	async storeAudioCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		answer: string,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<void> {
+	async storeAudioCaptchaRecord({
+		answer,
+		...context
+	}: StoreAudioCaptchaRecordArgs): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.audio),
 			{
-				...this.pendingInteractiveRecord(
-					challenge,
-					components,
-					providerSignature,
-					ipAddress,
-					headers,
-					ja4,
-					sessionId,
-					ipInfo,
-				),
+				...this.pendingInteractiveRecord(context),
 				answer,
 			},
 		);
 	}
 
-	async storeIconOrderCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		targets: StoredIconTarget[],
-		tolerance: number,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-		render?: IconOrderRenderRecord,
-	): Promise<void> {
+	async storeIconOrderCaptchaRecord({
+		targets,
+		tolerance,
+		render,
+		...context
+	}: StoreIconOrderCaptchaRecordArgs): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.iconOrder),
 			{
-				...this.pendingInteractiveRecord(
-					challenge,
-					components,
-					providerSignature,
-					ipAddress,
-					headers,
-					ja4,
-					sessionId,
-					ipInfo,
-				),
+				...this.pendingInteractiveRecord(context),
 				targets,
 				tolerance,
 				...(render && { render }),
@@ -1619,6 +1554,15 @@ export class ProviderDatabase
 		}
 	}
 
+	async claimPuzzleCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.claimInteractiveCaptchaSubmission(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+		);
+	}
+
 	async claimIconOrderCaptchaSubmission(
 		challenge: PoWChallengeId,
 	): Promise<boolean> {
@@ -1639,13 +1583,15 @@ export class ProviderDatabase
 
 	private async updateInteractiveCaptchaRecordResult(
 		collection: InteractiveCaptchaCollection,
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked: boolean,
-		userSubmitted: boolean,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		{
+			challenge,
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			coords,
+			lastUpdatedTimestamp,
+		}: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
@@ -1720,75 +1666,32 @@ export class ProviderDatabase
 
 	/**
 	 * @description Updates a Puzzle Captcha record result in the database.
-	 * @param {string} challenge The challenge string of the captcha to be updated.
-	 * @param result
-	 * @param serverChecked
-	 * @param userSubmitted
-	 * @param userSignature
-	 * @param coords
-	 * @param lastUpdatedTimestamp
 	 * @returns {Promise<void>} A promise that resolves when the record is updated.
 	 */
 	async updatePuzzleCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		await this.updateInteractiveCaptchaRecordResult(
 			this.interactiveCollection(CaptchaType.puzzle),
-			challenge,
-			result,
-			serverChecked,
-			userSubmitted,
-			userSignature,
-			coords,
-			lastUpdatedTimestamp,
+			args,
 		);
 	}
 
 	async updateIconOrderCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		await this.updateInteractiveCaptchaRecordResult(
 			this.interactiveCollection(CaptchaType.iconOrder),
-			challenge,
-			result,
-			serverChecked,
-			userSubmitted,
-			userSignature,
-			coords,
-			lastUpdatedTimestamp,
+			args,
 		);
 	}
 
 	async updateAudioCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
+		args: UpdateInteractiveCaptchaRecordResultArgs,
 	): Promise<void> {
 		await this.updateInteractiveCaptchaRecordResult(
 			this.interactiveCollection(CaptchaType.audio),
-			challenge,
-			result,
-			serverChecked,
-			userSubmitted,
-			userSignature,
-			coords,
-			lastUpdatedTimestamp,
+			args,
 		);
 	}
 
@@ -2710,17 +2613,17 @@ export class ProviderDatabase
 	/**
 	 * @description Store a Dapp User's pending record
 	 */
-	async storePendingImageCommitment(
-		userAccount: string,
-		requestHash: string,
-		salt: string,
-		deadlineTimestamp: Date,
-		requestedAtTimestamp: Date,
-		ipAddress: CompositeIpAddress,
-		threshold: number,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<void> {
+	async storePendingImageCommitment({
+		userAccount,
+		requestHash,
+		salt,
+		deadlineTimestamp,
+		requestedAtTimestamp,
+		ipAddress,
+		threshold,
+		sessionId,
+		ipInfo,
+	}: StorePendingImageCommitmentArgs): Promise<void> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoError({
 				code: "INVALID_DATA",

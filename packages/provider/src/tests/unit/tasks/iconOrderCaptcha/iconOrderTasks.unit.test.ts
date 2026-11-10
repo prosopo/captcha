@@ -113,7 +113,7 @@ describe("IconOrderCaptchaManager", () => {
 		} as unknown as KeyringPair;
 
 		mockEnv = { config: {} } as unknown as ProviderEnvironment;
-		manager = new IconOrderCaptchaManager(db, pair, mockEnv.config);
+		manager = new IconOrderCaptchaManager({ db, pair, config: mockEnv.config });
 
 		vi.clearAllMocks();
 		vi.mocked(u8aToHex).mockReturnValue("0xsigned");
@@ -186,15 +186,15 @@ describe("IconOrderCaptchaManager", () => {
 		const ip = getIPAddress("1.1.1.1");
 
 		const submit = (clicks: { x: number; y: number }[]) =>
-			manager.verifyIconOrderCaptchaSolution(
+			manager.verifyIconOrderCaptchaSolution({
 				challenge,
-				"0xprovider",
+				providerChallengeSignature: "0xprovider",
 				clicks,
-				[],
-				60000,
-				"0xuser",
-				ip,
-			);
+				iconOrderEvents: [],
+				timeout: 60000,
+				userTimestampSignature: "0xuser",
+				ipAddress: ip,
+			});
 
 		const storedRecord = (over: Partial<IconOrderCaptchaStored> = {}) =>
 			asRecord({
@@ -222,14 +222,13 @@ describe("IconOrderCaptchaManager", () => {
 				]),
 			).resolves.toBe(true);
 
-			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
-				"0xuser",
-				undefined,
-			);
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
 		});
 
 		it("rejects the right icons clicked in the wrong order", async () => {
@@ -245,17 +244,16 @@ describe("IconOrderCaptchaManager", () => {
 				]),
 			).resolves.toBe(false);
 
-			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 				},
-				false,
-				true,
-				"0xuser",
-				undefined,
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
 		});
 
 		it("rejects clicks that miss the icons", async () => {
@@ -350,17 +348,16 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 240, y: 150 },
 				]),
 			).resolves.toBe(false);
-			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 				},
-				false,
-				true,
-				"0xuser",
-				undefined,
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
 		});
 
 		it("persists the clicks and pointer trail even on a failed solve", async () => {
@@ -374,15 +371,15 @@ describe("IconOrderCaptchaManager", () => {
 			];
 			const trail = [{ x: 5, y: 5, t: 12 }];
 
-			await manager.verifyIconOrderCaptchaSolution(
+			await manager.verifyIconOrderCaptchaSolution({
 				challenge,
-				"0xprovider",
+				providerChallengeSignature: "0xprovider",
 				clicks,
-				trail,
-				60000,
-				"0xuser",
-				ip,
-			);
+				iconOrderEvents: trail,
+				timeout: 60000,
+				userTimestampSignature: "0xuser",
+				ipAddress: ip,
+			});
 
 			expect(db.updateIconOrderCaptchaRecord).toHaveBeenCalledWith(challenge, {
 				clicks,

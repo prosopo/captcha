@@ -14,14 +14,11 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
-import type { RedisWriteQueue } from "@prosopo/database";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
-import type { TranslateFn } from "@prosopo/locale";
-import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
 	type BehavioralDataPacked,
@@ -37,13 +34,9 @@ import {
 	type Hash,
 	type IPAddress,
 	type IPInfoResponse,
-	type ISpamFilterRules,
-	type ITrafficFilter,
 	type ImageVerificationResponse,
-	type KeyringPair,
 	type PendingImageCaptchaRequest,
 	type ProsopoCaptchaCountConfigSchemaOutput,
-	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
 	type Session,
@@ -51,12 +44,7 @@ import {
 	type UserCommitment,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
-import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessRulesStorage,
-	describeMatchedRule,
-} from "@prosopo/user-access-policy";
+import { describeMatchedRule } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
@@ -82,7 +70,11 @@ import {
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
 import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
-import { CaptchaManager } from "../captchaManager.js";
+import {
+	CaptchaManager,
+	type CaptchaManagerDeps,
+	type VerificationResponseArgs,
+} from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -90,6 +82,7 @@ import {
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import type { VerifyImageCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import { isSignatureValid } from "../signatureCheck.js";
 import {
 	evaluateEmailSpamRules,
@@ -97,19 +90,34 @@ import {
 } from "../spam/evaluateEmailSpamRules.js";
 import { buildTreeAndGetCommitmentId } from "./imgCaptchaTasksUtils.js";
 
+export interface ImageSolutionSubmission {
+	userAccount: string;
+	dappAccount: string;
+	requestHash: string;
+	captchas: CaptchaSolution[];
+	/** Proves the user owns `userAccount`. */
+	userTimestampSignature: string;
+	timestamp: number;
+	providerRequestHashSignature: string;
+	ipAddress: IPAddress;
+	headers: RequestHeaders;
+	ja4: string;
+	behavioralData?: string;
+	ipInfo?: IPInfoResponse;
+	simdReadings?: string;
+	clientMetaData?: ClientMetaData;
+}
+
 export class ImgCaptchaManager extends CaptchaManager {
 	private decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: RedisWriteQueue | null,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger, writeQueue);
+	constructor({
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & { usageCounters?: UsageCounters | null }) {
+		super(deps);
+		const { db, config } = deps;
 		this.config = config;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
@@ -138,15 +146,23 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return captchaDocs;
 	}
 
-	async getRandomCaptchasAndRequestHash(
-		datasetId: Hash,
-		userAccount: string,
-		ipAddress: IPAddress,
-		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput,
-		threshold: number,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<{
+	async getRandomCaptchasAndRequestHash({
+		datasetId,
+		userAccount,
+		ipAddress,
+		captchaConfig,
+		threshold,
+		sessionId,
+		ipInfo,
+	}: {
+		datasetId: Hash;
+		userAccount: string;
+		ipAddress: IPAddress;
+		captchaConfig: ProsopoCaptchaCountConfigSchemaOutput;
+		threshold: number;
+		sessionId?: string;
+		ipInfo?: IPInfoResponse;
+	}): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
 		timestamp: number;
@@ -211,17 +227,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			.reduce((a, b) => a + b, 0);
 		const deadlineDate = new Date(timeLimit + currentTime);
 
-		await this.db.storePendingImageCommitment(
+		await this.db.storePendingImageCommitment({
 			userAccount,
 			requestHash,
 			salt,
-			deadlineDate,
-			new Date(currentTime),
-			getCompositeIpAddress(ipAddress),
+			deadlineTimestamp: deadlineDate,
+			requestedAtTimestamp: new Date(currentTime),
+			ipAddress: getCompositeIpAddress(ipAddress),
 			threshold,
 			sessionId,
 			ipInfo,
-		);
+		});
 		return {
 			captchas,
 			requestHash,
@@ -231,36 +247,24 @@ export class ImgCaptchaManager extends CaptchaManager {
 	}
 
 	/**
-	 * Validate and store the text captcha solution(s) from the Dapp User in a web2 environment
-	 * @param {string} userAccount
-	 * @param {string} dappAccount
-	 * @param {string} requestHash
-	 * @param {JSON} captchas
-	 * @param userTimestampSignature
-	 * @param timestamp
-	 * @param providerRequestHashSignature
-	 * @param ipAddress
-	 * @param headers
-	 * @param ja4
-	 * @param behavioralData
-	 * @return {Promise<DappUserSolutionResult>} result containing the contract event
+	 * Validate and store the image captcha solution(s) from the Dapp User
 	 */
-	async dappUserSolution(
-		userAccount: string,
-		dappAccount: string,
-		requestHash: string,
-		captchas: CaptchaSolution[],
-		userTimestampSignature: string, // the signature to indicate ownership of account
-		timestamp: number,
-		providerRequestHashSignature: string,
-		ipAddress: IPAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		behavioralData?: string,
-		ipInfo?: IPInfoResponse,
-		simdReadings?: string,
-		clientMetaData?: ClientMetaData,
-	): Promise<DappUserSolutionResult> {
+	async dappUserSolution({
+		userAccount,
+		dappAccount,
+		requestHash,
+		captchas,
+		userTimestampSignature,
+		timestamp,
+		providerRequestHashSignature,
+		ipAddress,
+		headers,
+		ja4,
+		behavioralData,
+		ipInfo,
+		simdReadings,
+		clientMetaData,
+	}: ImageSolutionSubmission): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		if (
 			!isSignatureValid(
@@ -701,25 +705,24 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return false;
 	}
 
-	async verifyImageCaptchaSolution(
-		user: string,
-		dapp: string,
-		commitmentId: string | undefined,
-		env: ProviderEnvironment,
-		maxVerifiedTime?: number,
-		ip?: string,
-		disallowWebView?: boolean,
-		userAccessRulesStorage?: AccessRulesStorage,
-		email?: string,
-		spamEmailDomainCheckingEnabled = false,
-		spamFilter?: ISpamFilterRules,
-		trafficFilter?: ITrafficFilter,
-		storeMetadata = false,
-		// The session id the site rendered the widget with. When supplied, the
-		// solution must carry the same value in its `clientMetaData` or it is
-		// disapproved.
-		clientSessionId?: string,
-	): Promise<ImageVerificationResponse> {
+	async verifyImageCaptchaSolution({
+		user,
+		dappAccount: dapp,
+		commitmentId,
+		env,
+		maxVerifiedTime,
+		settings: {
+			disallowWebView,
+			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
+			spamFilter,
+			trafficFilter,
+			storeMetadata = false,
+		},
+		ip,
+		email,
+		clientSessionId,
+		userAccessRulesStorage,
+	}: VerifyImageCaptchaSolutionArgs): Promise<ImageVerificationResponse> {
 		// Bind the commitmentId/dapp context once so every log line in this
 		// method carries it without repeating the fields in each `data` block.
 		const logger = this.logger.with({ commitmentId, dapp });
@@ -863,16 +866,18 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Check user access policies for hard blocks
 		if (!failStatus && userAccessRulesStorage) {
 			try {
-				const blockPolicy = await this.checkForHardBlock(
+				const blockPolicy = await this.checkForHardBlock({
 					userAccessRulesStorage,
-					solution,
-					solution.userAccount,
-					solution.headers,
-					sessionRecord?.decryptedHeadHash,
-					solution.coords,
-					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
-					solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
-				);
+					challengeRecord: solution,
+					userAccount: solution.userAccount,
+					headers: solution.headers,
+					headHash: sessionRecord?.decryptedHeadHash,
+					coords: solution.coords,
+					countryCode: solution.ipInfo?.isValid
+						? solution.ipInfo.countryCode
+						: undefined,
+					asn: solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
+				});
 
 				if (blockPolicy) {
 					logger.info(() => ({
@@ -993,12 +998,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 		);
 
 		if (!failStatus) {
-			const check = await this.resolveTrafficFilterCheck(
-				solution.ipInfo,
+			const check = await this.resolveTrafficFilterCheck({
+				recordIpInfo: solution.ipInfo,
 				trafficFilter,
-				ip ? await env.ipInfoService.lookup(ip) : undefined,
+				currentIpInfo: ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
-			);
+			});
 			if (check.isBlocked) {
 				logger.info(() => ({
 					msg: "Traffic filter rejected request",
@@ -1047,14 +1052,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 			commitmentUpdates.providedIp = getCompositeIpAddress(ip);
 
 			if (!failStatus && ipValidationRules?.enabled === true) {
-				const ipValidation = await deepValidateIpAddress(
+				const ipValidation = await deepValidateIpAddress({
 					ip,
-					solutionIpAddress,
+					challengeIpAddress: solutionIpAddress,
 					logger,
-					env.ipInfoService,
+					ipInfoService: env.ipInfoService,
 					ipValidationRules,
-					enrichedDnsEvent?.peerIp,
-				);
+					dnsPeerIp: enrichedDnsEvent?.peerIp,
+				});
 
 				if (!ipValidation.isValid) {
 					logger.error(() => ({
@@ -1086,13 +1091,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const ipValue = ip ?? "";
 			this.usageCounters.incrManyAsync(
 				solution.dappAccount,
-				buildAllWindowIncrements(
-					"solved",
-					CaptchaType.image,
-					ipValue,
-					solution.userAccount,
-					enrichedDnsEvent?.peerIp,
-				),
+				buildAllWindowIncrements({
+					kind: "solved",
+					captchaType: CaptchaType.image,
+					ip: ipValue,
+					userAccount: solution.userAccount,
+					peerIp: enrichedDnsEvent?.peerIp,
+				}),
 			);
 		}
 
@@ -1283,7 +1288,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			status: isApproved ? ResultReason.USER_VERIFIED : failureStatus,
 			verified: isApproved,
 			commitmentId: solution.id.toString(),
-			...(score && { score }),
+			...(Number.isFinite(score) && { score }),
 			...(solution.sessionId && { sessionId: solution.sessionId }),
 		};
 	}
@@ -1292,24 +1297,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return checkLangRules(this.config, acceptLanguage);
 	}
 
-	override getVerificationResponse(
-		verified: boolean,
-		clientRecord: ClientRecord,
-		translateFn: TranslateFn,
-		score?: number,
-		commitmentId?: Hash,
-		reason?: string,
-		sessionId?: string,
-	): ImageVerificationResponse {
+	override getVerificationResponse({
+		commitmentId,
+		...args
+	}: VerificationResponseArgs & {
+		commitmentId?: Hash;
+	}): ImageVerificationResponse {
 		return {
-			...super.getVerificationResponse(
-				verified,
-				clientRecord,
-				translateFn,
-				score,
-				reason,
-				sessionId,
-			),
+			...super.getVerificationResponse(args),
 			...(commitmentId && {
 				[ApiParams.commitmentId]: commitmentId,
 			}),

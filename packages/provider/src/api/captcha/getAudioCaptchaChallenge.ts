@@ -50,21 +50,21 @@ const issueAudioChallenge = async ({
 
 	// Stored before responding, so the user never hears a clip the server
 	// cannot score.
-	await tasks.db.storeAudioCaptchaRecord(
-		challenge.challenge,
-		{
+	await tasks.db.storeAudioCaptchaRecord({
+		challenge: challenge.challenge,
+		components: {
 			requestedAtTimestamp: challenge.requestedAtTimestamp,
 			userAccount: user,
 			dappAccount: dapp,
 		},
-		challenge.answer,
-		challenge.providerSignature,
-		provenance.ipAddress,
-		provenance.headers,
-		provenance.ja4,
-		provenance.sessionId,
-		provenance.ipInfo,
-	);
+		answer: challenge.answer,
+		providerSignature: challenge.providerSignature,
+		ipAddress: provenance.ipAddress,
+		headers: provenance.headers,
+		ja4: provenance.ja4,
+		sessionId: provenance.sessionId,
+		ipInfo: provenance.ipInfo,
+	});
 
 	return {
 		logData: {

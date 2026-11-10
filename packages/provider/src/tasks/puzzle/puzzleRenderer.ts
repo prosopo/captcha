@@ -156,25 +156,30 @@ export const isPuzzleRenderAvailable = (): boolean => {
 // that has image disabled — it would have served exactly the type the
 // customer asked us never to serve.
 
-export const renderPuzzleImages = async (
-	placement: NotchPlacement,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	pieceSize?: number,
-): Promise<RenderedPuzzleImages> => {
+export const renderPuzzleImages = async ({
+	placement,
+	settings = DEFAULT_RENDER_SETTINGS,
+	pieceSize,
+}: {
+	placement: NotchPlacement;
+	settings?: PuzzleRenderSettings;
+	pieceSize?: number;
+}): Promise<RenderedPuzzleImages> => {
 	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
 	const background = buffer.take();
 
 	// Only the decoy paint and notch cut are billed to the span; renderPuzzle
 	// hands the encode to sharp, which runs off the event loop.
 	const rendered = await measureSync("puzzle_render", () =>
-		renderPuzzle(
-			background.image,
+		renderPuzzle({
+			background: background.image,
 			placement,
-			pieceSize !== undefined
-				? { ...DEFAULT_GEOMETRY, pieceSize }
-				: DEFAULT_GEOMETRY,
+			geometry:
+				pieceSize !== undefined
+					? { ...DEFAULT_GEOMETRY, pieceSize }
+					: DEFAULT_GEOMETRY,
 			settings,
-		),
+		}),
 	);
 
 	return {

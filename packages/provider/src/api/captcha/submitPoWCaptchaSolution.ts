@@ -212,20 +212,19 @@ export default (env: ProviderEnvironment) =>
 				| undefined;
 			const submitWindowMs: number =
 				persistedSolutionTimeout ?? clientRecord.settings.verifiedTimeout;
-			const result = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await tasks.powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				signature.provider.challenge,
+				providerChallengeSignature: signature.provider.challenge,
 				nonce,
-				submitWindowMs,
-				signature.user.timestamp,
-				getIPAddress(req.ip || ""),
-				flatHeaders,
+				timeout: submitWindowMs,
+				userTimestampSignature: signature.user.timestamp,
+				ipAddress: getIPAddress(req.ip || ""),
 				behavioralData,
 				salt,
 				simdReadings,
 				clientMetaData,
 				fingerprintSummary,
-			);
+			});
 
 			// Surface the routing machine's post-PoW decision (escalation +
 			// selection reason, e.g. FINGERPRINT_PROOF_INVALID) at the provider
@@ -241,16 +240,16 @@ export default (env: ProviderEnvironment) =>
 				}));
 			}
 
-			const escalation = await buildEscalation(
+			const escalation = await buildEscalation({
 				tasks,
 				result,
 				challenge,
-				{
+				perConnectionSignals: {
 					tcpToChelloUs: req.tcpToChelloUs,
 					chelloToHandshakeUs: req.chelloToHandshakeUs,
 					...rawTlsSignalsForSession(req),
 				},
-				{
+				siteConstraints: {
 					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
 						clientRecord.settings,
 						clientRecord.tier,
@@ -258,7 +257,7 @@ export default (env: ProviderEnvironment) =>
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
 					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
 				},
-			);
+			});
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
@@ -295,14 +294,20 @@ export default (env: ProviderEnvironment) =>
  * Exported for unit testing only — the handler above is the production entry
  * point.
  */
-export const buildEscalation = async (
-	tasks: Tasks,
+export const buildEscalation = async ({
+	tasks,
+	result,
+	challenge,
+	perConnectionSignals,
+	siteConstraints,
+}: {
+	tasks: Tasks;
 	result: {
 		verified: boolean;
 		routingOutput?: { captchaType: CaptchaType };
 		device?: DeviceVerdict;
-	},
-	challenge: string,
+	};
+	challenge: string;
 	// Per-connection signals (TLS handshake timings + raw TCP handshake
 	// signals) come from the CURRENT PoW-submit request, not from
 	// `originSession` — those values belong to a different TCP connection
@@ -310,7 +315,7 @@ export const buildEscalation = async (
 	perConnectionSignals?: RawTlsSignals & {
 		tcpToChelloUs?: number;
 		chelloToHandshakeUs?: number;
-	},
+	};
 	// Site constraints on what an escalation may serve. Threaded from the
 	// handler, which already holds the client record, rather than re-read
 	// here. An absent `allowedCaptchaTypes` falls back to the default flags and
@@ -320,8 +325,8 @@ export const buildEscalation = async (
 		allowedCaptchaTypes?: IFrictionlessTypes;
 		imageMaxRounds?: number;
 		puzzleMaxDifficulty?: number;
-	},
-): Promise<PowCaptchaSolutionEscalation | undefined> => {
+	};
+}): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
 	if (!isInteractiveCaptchaType(result.routingOutput.captchaType)) {
 		return undefined;
@@ -478,6 +483,7 @@ export const buildEscalation = async (
 		...rawTlsSignalsFromRecord(perConnectionSignals),
 		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
 		puzzle: escalationPuzzleOverrides?.puzzle,
+		puzzleLevel: escalationPuzzleOverrides?.puzzleLevel,
 		// The escalated session is the same render as the origin, so it answers
 		// to the same session id the verify call will correlate against.
 		clientMetaData: originSession.clientMetaData,
