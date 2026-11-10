@@ -405,11 +405,11 @@ export class DecisionMachineRunner {
 			cachedDapp !== null
 				? Promise.resolve(cachedDapp)
 				: this.db
-						.getDecisionMachineArtifact(
-							DecisionMachineScope.Dapp,
+						.getDecisionMachineArtifact({
+							scope: DecisionMachineScope.Dapp,
 							dappAccount,
 							kind,
-						)
+						})
 						.then((a) => {
 							this.setCachedArtifact(
 								DecisionMachineScope.Dapp,
@@ -422,11 +422,10 @@ export class DecisionMachineRunner {
 			cachedGlobal !== null
 				? Promise.resolve(cachedGlobal)
 				: this.db
-						.getDecisionMachineArtifact(
-							DecisionMachineScope.Global,
-							undefined,
+						.getDecisionMachineArtifact({
+							scope: DecisionMachineScope.Global,
 							kind,
-						)
+						})
 						.then((a) => {
 							this.setCachedArtifact(
 								DecisionMachineScope.Global,

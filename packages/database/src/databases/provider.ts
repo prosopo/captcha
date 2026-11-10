@@ -35,7 +35,6 @@ import {
 	DatasetWithIdsAndTreeSchema,
 	type DecisionMachineArtifact,
 	DecisionMachineKind,
-	type DecisionMachineScope,
 	type Hash,
 	type IconOrderCaptchaStored,
 	type InteractiveCaptchaStored,
@@ -65,6 +64,7 @@ import {
 	ClientRecordSchema,
 	DatasetRecordSchema,
 	DecisionMachineArtifactRecordSchema,
+	type DecisionMachineTarget,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type IconOrderCaptchaRecord,
@@ -91,6 +91,7 @@ import {
 	type StorePowCaptchaRecordArgs,
 	type StorePuzzleCaptchaRecordArgs,
 	type Tables,
+	type UnstoredRecordsPage,
 	type UpdateInteractiveCaptchaRecordResultArgs,
 	type UpdatePowCaptchaRecordResultArgs,
 	type UserCommitmentRecord,
@@ -1870,10 +1871,10 @@ export class ProviderDatabase
 	 * once but doesn't prevent the regression re-appearing after future
 	 * catalog changes — the hint makes the choice explicit.
 	 */
-	async getUnstoredDappUserCommitments(
+	async getUnstoredDappUserCommitments({
 		limit = 1000,
-		afterId?: unknown,
-	): Promise<UserCommitmentRecord[]> {
+		afterId,
+	}: UnstoredRecordsPage = {}): Promise<UserCommitmentRecord[]> {
 		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
 			pendingStage: true,
 		};
@@ -2018,10 +2019,10 @@ export class ProviderDatabase
 	 * @param {number} skip Number of records to skip (for pagination)
 	 * @returns {Promise<PoWCaptchaRecord[]>} Array of PoW captcha records
 	 */
-	async getUnstoredDappUserPoWCommitments(
+	async getUnstoredDappUserPoWCommitments({
 		limit = 1000,
-		afterId?: unknown,
-	): Promise<PoWCaptchaRecord[]> {
+		afterId,
+	}: UnstoredRecordsPage = {}): Promise<PoWCaptchaRecord[]> {
 		// Served by the compound `pendingStage_partial` index — see
 		// `getUnstoredDappUserCommitments` for the lifecycle of the flag
 		// and the keyset-pagination contract.
@@ -2472,10 +2473,10 @@ export class ProviderDatabase
 	 * the flag so consumed sessions propagate to the central DB via the
 	 * next sweep.
 	 */
-	getUnstoredSessionRecords(
+	getUnstoredSessionRecords({
 		limit = 1000,
-		afterId?: unknown,
-	): Promise<SessionRecord[]> {
+		afterId,
+	}: UnstoredRecordsPage = {}): Promise<SessionRecord[]> {
 		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
 			pendingStage: true,
 		};
@@ -2532,11 +2533,13 @@ export class ProviderDatabase
 		return docs || [];
 	}
 
-	getUnstoredPuzzleCaptchaRecords(
+	getUnstoredPuzzleCaptchaRecords({
 		limit = 1000,
-		afterId?: unknown,
-		since?: Date,
-	): Promise<PuzzleCaptchaRecord[]> {
+		afterId,
+		since,
+	}: UnstoredRecordsPage & { since?: Date } = {}): Promise<
+		PuzzleCaptchaRecord[]
+	> {
 		return this.getUnstoredInteractiveCaptchaRecords<PuzzleCaptchaRecord>(
 			CaptchaType.puzzle,
 			limit,
@@ -2545,11 +2548,13 @@ export class ProviderDatabase
 		);
 	}
 
-	getUnstoredIconOrderCaptchaRecords(
+	getUnstoredIconOrderCaptchaRecords({
 		limit = 1000,
-		afterId?: unknown,
-		since?: Date,
-	): Promise<IconOrderCaptchaRecord[]> {
+		afterId,
+		since,
+	}: UnstoredRecordsPage & { since?: Date } = {}): Promise<
+		IconOrderCaptchaRecord[]
+	> {
 		return this.getUnstoredInteractiveCaptchaRecords<IconOrderCaptchaRecord>(
 			CaptchaType.iconOrder,
 			limit,
@@ -2558,11 +2563,13 @@ export class ProviderDatabase
 		);
 	}
 
-	getUnstoredAudioCaptchaRecords(
+	getUnstoredAudioCaptchaRecords({
 		limit = 1000,
-		afterId?: unknown,
-		since?: Date,
-	): Promise<AudioCaptchaRecord[]> {
+		afterId,
+		since,
+	}: UnstoredRecordsPage & { since?: Date } = {}): Promise<
+		AudioCaptchaRecord[]
+	> {
 		return this.getUnstoredInteractiveCaptchaRecords<AudioCaptchaRecord>(
 			CaptchaType.audio,
 			limit,
@@ -3060,11 +3067,15 @@ export class ProviderDatabase
 	 * @param coords
 	 * @param reason
 	 */
-	async disapproveDappUserCommitment(
-		commitmentId: string,
-		reason?: ResultReason,
-		coords?: [number, number][][],
-	): Promise<void> {
+	async disapproveDappUserCommitment({
+		commitmentId,
+		reason,
+		coords,
+	}: {
+		commitmentId: string;
+		reason?: ResultReason;
+		coords?: [number, number][][];
+	}): Promise<void> {
 		try {
 			const result: CaptchaResult = {
 				status: CaptchaStatus.disapproved,
@@ -3408,11 +3419,13 @@ export class ProviderDatabase
 	 * @param dappAccount - Required for Dapp scope, unused for Global scope
 	 * @returns The matching artifact, or undefined if not found
 	 */
-	async getDecisionMachineArtifact(
-		scope: DecisionMachineScope,
-		dappAccount?: string,
-		kind?: DecisionMachineKind,
-	): Promise<DecisionMachineArtifact | undefined> {
+	async getDecisionMachineArtifact({
+		scope,
+		dappAccount,
+		kind,
+	}: DecisionMachineTarget & { kind?: DecisionMachineKind }): Promise<
+		DecisionMachineArtifact | undefined
+	> {
 		const filter: Record<string, unknown> = {
 			scope,
 			dappAccount: dappAccount ?? null,
