@@ -122,13 +122,13 @@ export const issuePuzzleChallenge = async ({
 	// adds crowding rather than removing it.
 	const renderedPuzzleSettings = {
 		...effectivePuzzleSettings,
-		decoyCount: capDecoyCountForCoverage(
-			effectivePuzzleSettings.decoyCount,
-			effectivePieceSize,
-			DEFAULT_GEOMETRY.width,
-			DEFAULT_GEOMETRY.height,
-			easeForTouch ? MAX_DECOY_COVERAGE_TOUCH : MAX_DECOY_COVERAGE,
-		),
+		decoyCount: capDecoyCountForCoverage({
+			decoyCount: effectivePuzzleSettings.decoyCount,
+			pieceSizePx: effectivePieceSize,
+			backgroundWidth: DEFAULT_GEOMETRY.width,
+			backgroundHeight: DEFAULT_GEOMETRY.height,
+			maxCoverage: easeForTouch ? MAX_DECOY_COVERAGE_TOUCH : MAX_DECOY_COVERAGE,
+		}),
 	};
 	const challenge = await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 		user,
@@ -137,39 +137,39 @@ export const issuePuzzleChallenge = async ({
 		tolerance,
 	);
 
-	await tasks.db.storePuzzleCaptchaRecord(
-		challenge.challenge,
-		{
+	await tasks.db.storePuzzleCaptchaRecord({
+		challenge: challenge.challenge,
+		components: {
 			requestedAtTimestamp: challenge.requestedAtTimestamp,
 			userAccount: user,
 			dappAccount: dapp,
 		},
-		challenge.targetX,
-		challenge.targetY,
-		challenge.originX,
-		challenge.originY,
-		challenge.tolerance,
-		challenge.providerSignature,
-		provenance.ipAddress,
-		provenance.headers,
-		provenance.ja4,
-		provenance.sessionId,
-		provenance.ipInfo,
-		sessionRecord?.fingerprintSummary,
-	);
+		targetX: challenge.targetX,
+		targetY: challenge.targetY,
+		originX: challenge.originX,
+		originY: challenge.originY,
+		tolerance: challenge.tolerance,
+		providerSignature: challenge.providerSignature,
+		ipAddress: provenance.ipAddress,
+		headers: provenance.headers,
+		ja4: provenance.ja4,
+		sessionId: provenance.sessionId,
+		ipInfo: provenance.ipInfo,
+		fingerprintSummary: sessionRecord?.fingerprintSummary,
+	});
 
 	// Render AFTER the record is stored: the target must be durable
 	// before it is expressed in pixels, so a crash between the two
 	// cannot leave a challenge the user can see but the server cannot
 	// score. Imagery is derived from the same target that was persisted.
-	const images = await renderPuzzleImages(
-		{
+	const images = await renderPuzzleImages({
+		placement: {
 			targetX: challenge.targetX,
 			targetY: challenge.targetY,
 		},
-		renderedPuzzleSettings,
-		effectivePieceSize,
-	);
+		settings: renderedPuzzleSettings,
+		pieceSize: effectivePieceSize,
+	});
 
 	// A second write rather than an argument to storePuzzleCaptchaRecord: the
 	// sampled piece size and the seeds only exist once the render has run, and

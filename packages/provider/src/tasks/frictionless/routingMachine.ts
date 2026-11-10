@@ -73,14 +73,21 @@ export interface RoutingContext {
  * type. Returns the supplied baseline on any failure (no machine, machine
  * throws/times out, output fails validation, Redis unavailable).
  */
-export const applyRouter = async (
-	runner: DecisionMachineRunner,
-	counters: UsageCounters | null,
-	baseline: RoutingMachineBaseline,
-	ctx: RoutingContext,
-	logger: Logger,
-	phase: RoutingMachinePhase = "route",
-): Promise<RoutingMachineOutput> => {
+export const applyRouter = async ({
+	runner,
+	counters,
+	baseline,
+	ctx,
+	logger,
+	phase = "route",
+}: {
+	runner: DecisionMachineRunner;
+	counters: UsageCounters | null;
+	baseline: RoutingMachineBaseline;
+	ctx: RoutingContext;
+	logger: Logger;
+	phase?: RoutingMachinePhase;
+}): Promise<RoutingMachineOutput> => {
 	try {
 		const partial: RoutingMachineInputBase = {
 			phase,
