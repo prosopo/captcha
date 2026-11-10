@@ -113,11 +113,11 @@ describe("device bucket, fingerprintjs through to the routing machine", () => {
 		};
 		const counters = { batchGet: vi.fn().mockResolvedValue({}) };
 
-		await applyRouter(
-			runner as unknown as DecisionMachineRunner,
-			counters as unknown as UsageCounters,
-			{ captchaType: CaptchaType.pow },
-			{
+		await applyRouter({
+			runner: runner as unknown as DecisionMachineRunner,
+			counters: counters as unknown as UsageCounters,
+			baseline: { captchaType: CaptchaType.pow },
+			ctx: {
 				dappAccount: DAPP,
 				userAccount: "5Gy",
 				ip: "1.2.3.4",
@@ -129,23 +129,22 @@ describe("device bucket, fingerprintjs through to the routing machine", () => {
 					fingerprintSummary: summary,
 				},
 			},
-			buildLogger(),
-			"postPow",
-		);
+			logger: buildLogger(),
+			phase: "postPow",
+		});
 
 		const call = counters.batchGet.mock.calls[0];
 		if (!call) throw new Error("expected batchGet to be called");
 		const reads = call[1] as Array<{ spec: CounterSpec; value: string }>;
 		const readKeys = reads.map((r) => encodeCounterKey(DAPP, r.spec, r.value));
 
-		const writeKeys = buildAllWindowIncrements(
-			"solved",
-			CaptchaType.pow,
-			"1.2.3.4",
-			"5Gy",
-			undefined,
-			summary.bucketId,
-		).map((inc) => encodeCounterKey(DAPP, inc.spec, inc.value));
+		const writeKeys = buildAllWindowIncrements({
+			kind: "solved",
+			captchaType: CaptchaType.pow,
+			ip: "1.2.3.4",
+			userAccount: "5Gy",
+			deviceBucket: summary.bucketId,
+		}).map((inc) => encodeCounterKey(DAPP, inc.spec, inc.value));
 
 		expect(readKeys).toHaveLength(1);
 		expect(writeKeys).toContain(readKeys[0]);

@@ -92,6 +92,29 @@ export const matchesGlob = (pattern: string, text: string): boolean => {
 	return p === pattern.length;
 };
 
+/** A dapp-scoped decision machine always names the dapp it applies to. */
+export type DecisionMachineTarget =
+	| { scope: DecisionMachineScope.Global; dappAccount?: string }
+	| { scope: DecisionMachineScope.Dapp; dappAccount: string };
+
+export const toDecisionMachineTarget = (
+	scope: DecisionMachineScope,
+	dappAccount?: string,
+): DecisionMachineTarget => {
+	if (scope === DecisionMachineScope.Global) {
+		return { scope, dappAccount };
+	}
+	if (!dappAccount) {
+		throw new ProsopoError({
+			code: "INVALID_REQUEST",
+			errorSite: "PROV-52",
+			message: "BadRequest",
+			context: { scope, dappAccount },
+		});
+	}
+	return { scope, dappAccount };
+};
+
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
 	logger: Logger;
@@ -244,45 +267,45 @@ export class ClientTaskManager {
 				sweepStartedAt.getTime() - INTERACTIVE_RESYNC_WINDOW_MS,
 			);
 			const onlyUpdated = Boolean(lastTask?.updated);
-			const processedPuzzleRecords = await this.resyncInteractiveRecords(
-				CaptchaType.puzzle,
-				(afterId) =>
+			const processedPuzzleRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.puzzle,
+				fetchBatch: (afterId) =>
 					this.providerDB.getUnstoredPuzzleCaptchaRecords(
 						BATCH_SIZE,
 						afterId,
 						interactiveSince,
 					),
-				(batch) => captchaDB.saveCaptchas([], [], [], batch),
+				save: (batch) => captchaDB.saveCaptchas([], [], [], batch),
 				sweepStartedAt,
 				onlyUpdated,
-				BATCH_SIZE,
-			);
-			const processedIconOrderRecords = await this.resyncInteractiveRecords(
-				CaptchaType.iconOrder,
-				(afterId) =>
+				batchSize: BATCH_SIZE,
+			});
+			const processedIconOrderRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.iconOrder,
+				fetchBatch: (afterId) =>
 					this.providerDB.getUnstoredIconOrderCaptchaRecords(
 						BATCH_SIZE,
 						afterId,
 						interactiveSince,
 					),
-				(batch) => captchaDB.saveCaptchas([], [], [], [], batch),
+				save: (batch) => captchaDB.saveCaptchas([], [], [], [], batch),
 				sweepStartedAt,
 				onlyUpdated,
-				BATCH_SIZE,
-			);
-			const processedAudioRecords = await this.resyncInteractiveRecords(
-				CaptchaType.audio,
-				(afterId) =>
+				batchSize: BATCH_SIZE,
+			});
+			const processedAudioRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.audio,
+				fetchBatch: (afterId) =>
 					this.providerDB.getUnstoredAudioCaptchaRecords(
 						BATCH_SIZE,
 						afterId,
 						interactiveSince,
 					),
-				(batch) => captchaDB.saveCaptchas([], [], [], [], [], batch),
+				save: (batch) => captchaDB.saveCaptchas([], [], [], [], [], batch),
 				sweepStartedAt,
 				onlyUpdated,
-				BATCH_SIZE,
-			);
+				batchSize: BATCH_SIZE,
+			});
 
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -441,31 +464,30 @@ export class ClientTaskManager {
 		await this.providerDB.removeClientRecords(accounts);
 	}
 
-	async updateDecisionMachine(
-		scope: DecisionMachineScope,
-		runtime: DecisionMachineRuntime,
-		source: string,
-		dappAccount?: string,
-		language?: DecisionMachineLanguage,
-		name?: string,
-		version?: string,
-		captchaType?: DecisionMachineCaptchaType,
-		kind?: DecisionMachineKind,
-	): Promise<{
+	async updateDecisionMachine({
+		scope,
+		dappAccount,
+		runtime,
+		source,
+		language,
+		name,
+		version,
+		captchaType,
+		kind,
+	}: DecisionMachineTarget & {
+		runtime: DecisionMachineRuntime;
+		source: string;
+		language?: DecisionMachineLanguage;
+		name?: string;
+		version?: string;
+		captchaType?: DecisionMachineCaptchaType;
+		kind?: DecisionMachineKind;
+	}): Promise<{
 		scope: DecisionMachineScope;
 		dappAccount?: string;
 		kind?: DecisionMachineKind;
 		updatedAt: string;
 	}> {
-		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
-			throw new ProsopoError({
-				code: "INVALID_REQUEST",
-				errorSite: "PROV-52",
-				message: "BadRequest",
-				context: { scope, dappAccount },
-			});
-		}
-
 		const now = new Date();
 		await this.providerDB.upsertDecisionMachineArtifact({
 			scope,
@@ -659,14 +681,21 @@ export class ClientTaskManager {
 	 */
 	private async resyncInteractiveRecords<
 		T extends PuzzleCaptchaRecord | IconOrderCaptchaRecord | AudioCaptchaRecord,
-	>(
-		captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio,
-		fetchBatch: (afterId?: unknown) => Promise<T[]>,
-		save: (batch: T[]) => Promise<void>,
-		sweepStartedAt: Date,
-		onlyUpdated: boolean,
-		batchSize: number,
-	): Promise<number> {
+	>({
+		captchaType,
+		fetchBatch,
+		save,
+		sweepStartedAt,
+		onlyUpdated,
+		batchSize,
+	}: {
+		captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio;
+		fetchBatch: (afterId?: unknown) => Promise<T[]>;
+		save: (batch: T[]) => Promise<void>;
+		sweepStartedAt: Date;
+		onlyUpdated: boolean;
+		batchSize: number;
+	}): Promise<number> {
 		let processed = 0;
 		await this.processBatchesWithCursor(
 			fetchBatch,

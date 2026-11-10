@@ -14,9 +14,6 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
-import type { RedisWriteQueue } from "@prosopo/database";
-import type { Logger } from "@prosopo/logger";
-import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
 	CaptchaType,
 	DecisionMachineDecision,
@@ -45,10 +42,7 @@ import {
 	type Tier,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
-import type {
-	IProviderDatabase,
-	PoWCaptchaRecord,
-} from "@prosopo/types-database";
+import type { PoWCaptchaRecord } from "@prosopo/types-database";
 import { describeMatchedRule } from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
@@ -79,7 +73,7 @@ import {
 	deriveTrafficPolicies,
 	solveDeviceSignals,
 } from "../../utils/devicePlatform.js";
-import { CaptchaManager } from "../captchaManager.js";
+import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	computeDnsAsymmetry,
@@ -152,16 +146,12 @@ export class PowCaptchaManager extends CaptchaManager {
 	private readonly usageCounters: UsageCounters | null;
 	private postPowContext?: PostPowRoutingContext;
 
-	constructor(
-		db: IProviderDatabase,
-
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: RedisWriteQueue | null,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger, writeQueue);
+	constructor({
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & { usageCounters?: UsageCounters | null }) {
+		super(deps);
+		const { db } = deps;
 		this.POW_SEPARATOR = POW_SEPARATOR;
 		this.decisionMachineRunner = new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
@@ -311,14 +301,13 @@ export class PowCaptchaManager extends CaptchaManager {
 				reason: ResultReason.CAPTCHA_INVALID_SALT,
 			};
 			const writePromises: Promise<void>[] = [
-				this.db.updatePowCaptchaRecordResult(
+				this.db.updatePowCaptchaRecordResult({
 					challenge,
-					badSaltResult,
-					false, // serverChecked
-					true, // userSubmitted
-					userTimestampSignature,
-					undefined, // never persist the bad coords
-				),
+					result: badSaltResult,
+					serverChecked: false,
+					userSubmitted: true,
+					userSignature: userTimestampSignature,
+				}),
 			];
 			if (challengeRecord.sessionId) {
 				writePromises.push(
@@ -346,14 +335,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			};
 			// Write pow record and session update in parallel
 			const writePromises: Promise<void>[] = [
-				this.db.updatePowCaptchaRecordResult(
+				this.db.updatePowCaptchaRecordResult({
 					challenge,
-					timeoutResult,
-					false, //serverchecked
-					true, // usersubmitted
-					userTimestampSignature,
+					result: timeoutResult,
+					serverChecked: false,
+					userSubmitted: true,
+					userSignature: userTimestampSignature,
 					coords,
-				),
+				}),
 			];
 			if (challengeRecord.sessionId) {
 				writePromises.push(
@@ -388,14 +377,13 @@ export class PowCaptchaManager extends CaptchaManager {
 			const dappAccount = at(challengeSplit, 2);
 			this.usageCounters.incrManyAsync(
 				dappAccount,
-				buildAllWindowIncrements(
-					"solved",
-					CaptchaType.pow,
-					ipAddress.address,
+				buildAllWindowIncrements({
+					kind: "solved",
+					captchaType: CaptchaType.pow,
+					ip: ipAddress.address,
 					userAccount,
-					undefined,
-					fingerprintSummary?.bucketId,
-				),
+					deviceBucket: fingerprintSummary?.bucketId,
+				}),
 			);
 		}
 
@@ -480,14 +468,14 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		// Then write result + session in parallel (different documents/collections).
 		const writePromises: Promise<void>[] = [
-			this.db.updatePowCaptchaRecordResult(
+			this.db.updatePowCaptchaRecordResult({
 				challenge,
 				result,
-				false,
-				true,
-				userTimestampSignature,
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: userTimestampSignature,
 				coords,
-			),
+			}),
 		];
 
 		if (challengeRecord.sessionId) {
@@ -687,14 +675,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			powDifficulty: challengeRecord.difficulty,
 		};
 
-		const routingOutput = await applyRouter(
-			this.decisionMachineRunner,
-			this.usageCounters,
+		const routingOutput = await applyRouter({
+			runner: this.decisionMachineRunner,
+			counters: this.usageCounters,
 			baseline,
 			ctx,
-			this.logger,
-			"postPow",
-		);
+			logger: this.logger,
+			phase: "postPow",
+		});
 		return { routingOutput, device };
 	}
 
@@ -869,20 +857,20 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Check user access policies for hard blocks
 		if (!failResult && userAccessRulesStorage) {
 			try {
-				const blockPolicy = await this.checkForHardBlock(
+				const blockPolicy = await this.checkForHardBlock({
 					userAccessRulesStorage,
 					challengeRecord,
-					challengeRecord.userAccount,
-					challengeRecord.headers,
-					(await sessionRecordRead)?.decryptedHeadHash,
-					challengeRecord.coords,
-					challengeRecord.ipInfo?.isValid
+					userAccount: challengeRecord.userAccount,
+					headers: challengeRecord.headers,
+					headHash: (await sessionRecordRead)?.decryptedHeadHash,
+					coords: challengeRecord.coords,
+					countryCode: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
 						: undefined,
-					challengeRecord.ipInfo?.isValid
+					asn: challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.asnNumber
 						: undefined,
-				);
+				});
 
 				if (blockPolicy) {
 					logger.info(() => ({
@@ -998,12 +986,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		const enrichedDnsEvent = await enrichedDnsEventRead;
 
 		if (!failResult) {
-			const check = await this.resolveTrafficFilterCheck(
-				challengeRecord.ipInfo,
+			const check = await this.resolveTrafficFilterCheck({
+				recordIpInfo: challengeRecord.ipInfo,
 				trafficFilter,
-				await currentIpInfoRead,
+				currentIpInfo: await currentIpInfoRead,
 				enrichedDnsEvent,
-			);
+			});
 			if (check.isBlocked) {
 				logger.info(() => ({
 					msg: "Traffic filter rejected request in PoW verification",
@@ -1046,14 +1034,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			powRecordUpdates.providedIp = getCompositeIpAddress(ip);
 
 			if (ipValidationRules?.enabled === true) {
-				const ipValidation = await deepValidateIpAddress(
+				const ipValidation = await deepValidateIpAddress({
 					ip,
 					challengeIpAddress,
 					logger,
-					env.ipInfoService,
+					ipInfoService: env.ipInfoService,
 					ipValidationRules,
-					enrichedDnsEvent?.peerIp,
-				);
+					dnsPeerIp: enrichedDnsEvent?.peerIp,
+				});
 
 				if (!ipValidation.isValid) {
 					logger.error(() => ({

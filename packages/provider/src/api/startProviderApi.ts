@@ -207,14 +207,14 @@ export async function startProviderApi(
 	// check (dev, and pools built before stamping existed).
 	const detectorPoolDir =
 		process.env.PROSOPO_DETECTOR_POOL_DIR ?? DEFAULT_DETECTOR_POOL_DIR;
-	initDetectorBundlePool(
-		detectorPoolDir,
-		{
+	initDetectorBundlePool({
+		dir: detectorPoolDir,
+		logger: {
 			info: (msg, data) => env.logger.info(() => ({ msg, data })),
 			warn: (msg, data) => env.logger.warn(() => ({ msg, data })),
 		},
-		process.env.PROSOPO_DETECTOR_POOL_RELEASE,
-	);
+		expectedRelease: process.env.PROSOPO_DETECTOR_POOL_RELEASE,
+	});
 
 	const apiApp = express();
 	const apiPort = port || env.config.server?.port;
