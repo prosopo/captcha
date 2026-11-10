@@ -32,14 +32,10 @@ import {
 	type DecisionMachineBehavioralDataPacked,
 	type FingerprintSummaryStored,
 	FrictionlessReason,
-	type IIPValidationRules,
 	type IPAddress,
-	type ISpamFilterRules,
-	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWCaptcha,
 	type PoWChallengeId,
-	type RequestHeaders,
 	ResultReason,
 	type RoutingMachineBaseline,
 	type RoutingMachineOutput,
@@ -53,11 +49,7 @@ import type {
 	IProviderDatabase,
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessRulesStorage,
-	describeMatchedRule,
-} from "@prosopo/user-access-policy";
+import { describeMatchedRule } from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -99,6 +91,7 @@ import {
 	type RoutingContext,
 	applyRouter,
 } from "../frictionless/routingMachine.js";
+import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
@@ -137,6 +130,22 @@ const DEFAULT_POW_DIFFICULTY = 4;
 
 const verifyOutcomeWrites = new BackgroundWrites(500);
 
+export interface PowSolutionSubmission {
+	challenge: PoWChallengeId;
+	providerChallengeSignature: string;
+	/** The value the user found that satisfies the PoW challenge. */
+	nonce: number;
+	/** Milliseconds the user had to submit after the challenge was issued. */
+	timeout: number;
+	userTimestampSignature: string;
+	ipAddress: IPAddress;
+	behavioralData?: string;
+	salt?: string;
+	simdReadings?: string;
+	clientMetaData?: ClientMetaData;
+	fingerprintSummary?: FingerprintSummaryStored;
+}
+
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
 	private decisionMachineRunner: DecisionMachineRunner;
@@ -145,6 +154,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 	constructor(
 		db: IProviderDatabase,
+
 		pair: KeyringPair,
 		config: ProsopoConfigOutput,
 		logger?: Logger,
@@ -199,31 +209,20 @@ export class PowCaptchaManager extends CaptchaManager {
 
 	/**
 	 * @description Verifies a PoW Captcha for a given user and dapp
-	 *
-	 * @param {string} challenge - the starting string for the PoW challenge
-	 * @param {string} providerChallengeSignature - proof that the Provider provided the challenge
-	 * @param {string} nonce - the string that the user has found that satisfies the PoW challenge
-	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
-	 * @param {string} userTimestampSignature
-	 * @param ipAddress
-	 * @param headers
-	 * @param behavioralData
-	 * @param salt
 	 */
-	async verifyPowCaptchaSolution(
-		challenge: PoWChallengeId,
-		providerChallengeSignature: string,
-		nonce: number,
-		timeout: number,
-		userTimestampSignature: string,
-		ipAddress: IPAddress,
-		headers: RequestHeaders,
-		behavioralData?: string,
-		salt?: string,
-		simdReadings?: string,
-		clientMetaData?: ClientMetaData,
-		fingerprintSummary?: FingerprintSummaryStored,
-	): Promise<VerifyPowCaptchaSolutionResult> {
+	async verifyPowCaptchaSolution({
+		challenge,
+		providerChallengeSignature,
+		nonce,
+		timeout,
+		userTimestampSignature,
+		ipAddress,
+		behavioralData,
+		salt,
+		simdReadings,
+		clientMetaData,
+		fingerprintSummary,
+	}: PowSolutionSubmission): Promise<VerifyPowCaptchaSolutionResult> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
 			challenge,
@@ -702,41 +701,24 @@ export class PowCaptchaManager extends CaptchaManager {
 	/**
 	 * @description Verifies a PoW Captcha for a given user and dapp. This is called by the server to verify the user's solution
 	 * and update the record in the database to show that the user has solved the captcha
-	 *
-	 * @param {string} dappAccount - the dapp that is requesting the captcha
-	 * @param {string} challenge - the starting string for the PoW challenge
-	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the PoW captcha
-	 * @param env - provider environment
-	 * @param ip - optional IP address for validation
-	 * @param userAccessRulesStorage - storage for querying user access policies
-	 * @param email
-	 * @param spamEmailDomainCheckingEnabled
-	 * @param spamFilter
-	 * @param trafficFilter
-	 * @param storeMetadata - when true, persists the dapp-server-provided
-	 *   `email` (and any future metadata fields) on the captcha record so
-	 *   it can be inspected for spam-rate analysis.
-	 * @param clientSessionId - the session id the site rendered the widget
-	 *   with. When supplied, the solve must carry the same value in its
-	 *   `clientMetaData` or it is disapproved.
-	 * @param ipValidationRules - the site's rules for comparing `ip` with the
-	 *   ip the challenge was issued to.
 	 */
-	async serverVerifyPowCaptchaSolution(
-		dappAccount: string,
-		challenge: string,
-		timeout: number,
-		env: ProviderEnvironment,
-		ip?: string,
-		userAccessRulesStorage?: AccessRulesStorage,
-		email?: string,
-		spamEmailDomainCheckingEnabled = false,
-		spamFilter?: ISpamFilterRules,
-		trafficFilter?: ITrafficFilter,
-		storeMetadata = false,
-		clientSessionId?: string,
-		ipValidationRules?: IIPValidationRules,
-	): Promise<{
+	async serverVerifyPowCaptchaSolution({
+		dappAccount,
+		challenge,
+		env,
+		settings: {
+			verifiedTimeout: timeout,
+			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
+			spamFilter,
+			trafficFilter,
+			storeMetadata = false,
+			ipValidationRules,
+		},
+		ip,
+		email,
+		clientSessionId,
+		userAccessRulesStorage,
+	}: ServerVerifyCaptchaSolutionArgs): Promise<{
 		verified: boolean;
 		score?: number;
 		reason?: string;
@@ -767,14 +749,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoError({
-				code: "INVALID_SOLUTION",
-				errorSite: "PROV-73",
-				context: {
-					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
-					challenge,
-				},
-			});
+			return notVerified("CAPTCHA.INVALID_SOLUTION", challengeRecord.sessionId);
 		}
 
 		if (challengeRecord.serverChecked)
@@ -1270,7 +1245,7 @@ export class PowCaptchaManager extends CaptchaManager {
 
 		return {
 			verified: true,
-			...(score ? { score } : {}),
+			...(Number.isFinite(score) && { score }),
 			...(challengeRecord.sessionId && {
 				sessionId: challengeRecord.sessionId,
 			}),

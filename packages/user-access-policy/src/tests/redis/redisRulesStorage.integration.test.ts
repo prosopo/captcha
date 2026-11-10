@@ -150,6 +150,27 @@ describe("redisAccessRulesStorage", () => {
 			expect(indexRecordsCount).toEqual(1);
 		});
 
+		test("returns the id of every inserted rule", async () => {
+			const accessRules: AccessRule[] = Array.from(
+				{ length: 6 },
+				(_, index): AccessRule => ({
+					type: AccessPolicyType.Block,
+					clientId: `client${index}`,
+				}),
+			);
+			const expectedIds = accessRules.map((accessRule) =>
+				getAccessRuleRedisKey(accessRule).slice(
+					ACCESS_RULE_REDIS_KEY_PREFIX.length,
+				),
+			);
+
+			const insertedIds = await accessRulesWriter.insertRules(
+				accessRules.map((rule) => ({ rule })),
+			);
+
+			expect(insertedIds).toEqual(expectedIds);
+		});
+
 		test("inserts time limited rule", async () => {
 			// given
 			const accessRule: AccessRule = {

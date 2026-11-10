@@ -448,14 +448,14 @@ describe("the piece's separation cue, swept over seeds", () => {
 			const prng = createPrng(seedAt(i));
 			const background = generateBackground(prng, 240, 160);
 			const shape = createNotchShape(prng, SIZE);
-			const { piece } = cutNotch(
+			const { piece } = cutNotch({
 				prng,
 				background,
 				shape,
-				SIZE,
-				{ targetX: 120, targetY: 80 },
-				0.55,
-			);
+				size: SIZE,
+				placement: { targetX: 120, targetY: 80 },
+				holeDarken: 0.55,
+			});
 
 			const { rim, core } = rimAndCore(piece, shape);
 			// Measured as a ratio so it is read the same way at both ends of the
@@ -483,14 +483,14 @@ describe("the piece's separation cue, swept over seeds", () => {
 			const prng = createPrng(seedAt(i + 5_000));
 			const background = generateBackground(prng, 240, 160);
 			const shape = createNotchShape(prng, SIZE);
-			const { piece } = cutNotch(
+			const { piece } = cutNotch({
 				prng,
 				background,
 				shape,
-				SIZE,
-				{ targetX: 120, targetY: 80 },
-				0.55,
-			);
+				size: SIZE,
+				placement: { targetX: 120, targetY: 80 },
+				holeDarken: 0.55,
+			});
 
 			const { rim, core } = rimAndCore(piece, shape);
 			if (rim > core) {
@@ -511,14 +511,14 @@ describe("the piece's separation cue, swept over seeds", () => {
 			const prng = createPrng(seedAt(i + 9_000));
 			const background = generateBackground(prng, 240, 160);
 			const shape = createNotchShape(prng, SIZE);
-			const { piece } = cutNotch(
+			const { piece } = cutNotch({
 				prng,
 				background,
 				shape,
-				SIZE,
-				{ targetX: 120, targetY: 80 },
-				0.55,
-			);
+				size: SIZE,
+				placement: { targetX: 120, targetY: 80 },
+				holeDarken: 0.55,
+			});
 
 			// Greyscale by luminance, then measure again. The cue is a luminance
 			// step, so it must be exactly as strong — this is the difference
@@ -560,14 +560,14 @@ describe("the piece's separation cue, swept over seeds", () => {
 			const prng = createPrng(seedAt(i + 11_000));
 			const background = generateBackground(prng, 240, 160);
 			const shape = createNotchShape(prng, SIZE);
-			const { piece } = cutNotch(
+			const { piece } = cutNotch({
 				prng,
 				background,
 				shape,
-				SIZE,
-				{ targetX: 120, targetY: 80 },
-				0.55,
-			);
+				size: SIZE,
+				placement: { targetX: 120, targetY: 80 },
+				holeDarken: 0.55,
+			});
 			const { rim, core } = rimAndCore(piece, shape);
 			// Reconstruct greys at the measured luminances and simulate. Working
 			// from the means rather than per-pixel keeps this fast while asking the
