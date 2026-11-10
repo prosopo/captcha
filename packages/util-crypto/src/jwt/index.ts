@@ -5,5 +5,5 @@
  * @summary Utilities for working with JWTs
  */
 
-export { jwtVerify } from "./jwtVerify.js";
+export { JWT_LIFETIME_EXCEEDED_ERROR, jwtVerify } from "./jwtVerify.js";
 export type { JWT, JWTPayload, JWTVerifyResult } from "../types.js";
