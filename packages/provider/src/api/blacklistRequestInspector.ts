@@ -495,11 +495,10 @@ export const getPrioritisedAccessRule = async ({
 	// others await the same Promise. Kills the wave-1 stampede where
 	// every retry-storm identity misses simultaneously.
 	const compute = async (): Promise<AccessRule[]> =>
-		userAccessRulesStorage.findRules(
-			filter,
-			true, // matchingFieldsOnly — engages the split-query hot path
-			true,
-		);
+		userAccessRulesStorage.findRules(filter, {
+			matchingFieldsOnly: true,
+			skipEmptyUserScopes: true,
+		});
 
 	// Only the *candidate fetch* is cached — the Redis round-trip is what the
 	// cache exists to absorb. Ranking stays outside it because `ruleApplies`
