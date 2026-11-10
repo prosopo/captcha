@@ -113,6 +113,7 @@ vi.mock("../../../tasks/tasks.js", () => ({
 	}),
 }));
 
+import { SITE_VERIFY_DEADLINE_MS } from "../../../api/siteVerify.js";
 import { prosopoVerifyRouter } from "../../../api/verify.js";
 
 const SITE_SECRET = "//SiteVerifyDapp";
@@ -261,4 +262,35 @@ describe("siteverify", () => {
 		expect(pass.json).toEqual({ status: "ok", verified: true });
 		expect(fail.json).toEqual({ status: "ok", verified: false });
 	});
+
+	it(
+		"answers verified when verification has not finished within the deadline, and ignores the late result",
+		async () => {
+			let finishVerify: (result: ServerVerifyResult) => void = () => {};
+			serverVerifyPowCaptchaSolution.mockImplementationOnce(
+				() =>
+					new Promise<ServerVerifyResult>((resolve) => {
+						finishVerify = resolve;
+					}),
+			);
+			const startedAt = Date.now();
+			const { status, json } = await siteVerify({
+				token: tokenFor(sitePair.address, CaptchaType.pow, "challenge"),
+				secret: SITE_SECRET,
+			});
+			expect(Date.now() - startedAt).toBeGreaterThanOrEqual(
+				SITE_VERIFY_DEADLINE_MS - 50,
+			);
+			expect(status).toBe(200);
+			expect(json).toEqual({ status: "ok", verified: true, score: 0 });
+
+			finishVerify({ verified: false });
+			const next = await siteVerify({
+				token: tokenFor(sitePair.address, CaptchaType.pow, "challenge"),
+				secret: SITE_SECRET,
+			});
+			expect(next.json).toEqual({ status: "ok", verified: true, score: 0.9 });
+		},
+		SITE_VERIFY_DEADLINE_MS + 5000,
+	);
 });

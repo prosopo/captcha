@@ -99,6 +99,17 @@ const verifyPathFor = (
 	}
 };
 
+// The hosted siteverify answers verified when the provider has not replied
+// within 5s, so a stalled provider cannot hold a site's logins open. Sites
+// integrate against that, so a provider answering siteverify must do the same,
+// whether the stall is here or at the issuer this forwards to.
+export const SITE_VERIFY_DEADLINE_MS = 5000;
+const TIMED_OUT_RESPONSE: VerificationResponse = {
+	[ApiParams.status]: "ok",
+	[ApiParams.verified]: true,
+	[ApiParams.score]: 0,
+};
+
 // The same fields the hosted siteverify returns. The provider's own
 // sessionId is for log correlation between Prosopo services, not for sites.
 const publicVerificationResponse = (
@@ -197,8 +208,25 @@ export const siteVerifyHandler = (
 	};
 
 	const sendJson = res.json.bind(res);
+	let answered = false;
+	const answerOnce = (body: VerificationResponse): Response => {
+		if (answered) return res;
+		answered = true;
+		clearTimeout(deadline);
+		return sendJson(body);
+	};
 	res.json = (body: VerificationResponse) =>
-		sendJson(res.statusCode < 300 ? publicVerificationResponse(body) : body);
+		answerOnce(res.statusCode < 300 ? publicVerificationResponse(body) : body);
+
+	const deadline = setTimeout(() => {
+		req.logger.error(() => ({
+			msg: "siteverify timed out, answering verified",
+			data: { siteKey: dapp, deadlineMs: SITE_VERIFY_DEADLINE_MS },
+		}));
+		res.status(200);
+		answerOnce(TIMED_OUT_RESPONSE);
+	}, SITE_VERIFY_DEADLINE_MS);
+	res.on("close", () => clearTimeout(deadline));
 
 	req.url = verifyPathFor(captchaType, challenge);
 	next();
