@@ -97,16 +97,16 @@ const main = async (): Promise<void> => {
 
 		// Same pipeline as renderPuzzle, but kept in PNG so the preview shows
 		// the raw output rather than WebP artefacts.
-		const background = createBackground(DEFAULT_GEOMETRY);
+		const background = createBackground({ geometry: DEFAULT_GEOMETRY });
 		const prng = createPrng(createSeed());
 		const shape = createNotchShape(prng, DEFAULT_GEOMETRY.notchSize);
-		const { background: cut, piece } = cutNotch(
+		const { background: cut, piece } = cutNotch({
 			prng,
 			background,
 			shape,
-			DEFAULT_GEOMETRY.notchSize,
+			size: DEFAULT_GEOMETRY.notchSize,
 			placement,
-		);
+		});
 
 		const [bgPng, piecePng] = await Promise.all([
 			encodePng(cut),
@@ -164,7 +164,10 @@ const main = async (): Promise<void> => {
 	const benchStart = process.hrtime.bigint();
 	const benchRuns = 20;
 	for (let i = 0; i < benchRuns; i++) {
-		await renderPuzzle(createBackground(), { targetX: 200, targetY: 100 });
+		await renderPuzzle({
+			background: createBackground(),
+			placement: { targetX: 200, targetY: 100 },
+		});
 	}
 	const perRenderMs =
 		Number(process.hrtime.bigint() - benchStart) / 1e6 / benchRuns;
