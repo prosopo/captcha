@@ -383,11 +383,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			solvedImagesCount: 9,
 		});
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		const input = createSessionInput();
 		expect(input.puzzleTolerance).toBeDefined();
@@ -403,11 +406,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		const input = createSessionInput();
 		expect(input.puzzleTolerance).toBeUndefined();

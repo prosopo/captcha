@@ -1369,12 +1369,13 @@ describe("ImgCaptchaManager", () => {
 				sessionRecord,
 			);
 
-			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
-				"userAccount",
-				"dappAccount",
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: "userAccount",
+				dappAccount: "dappAccount",
 				commitmentId,
-				mockEnv,
-			);
+				env: mockEnv,
+			});
 
 			expect(result).toEqual(
 				expect.objectContaining({ verified: true, score: 0, sessionId }),
