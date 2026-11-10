@@ -1,5 +1,6 @@
 ---
 "@prosopo/puzzle-assets": minor
+"@prosopo/native-puzzle": minor
 "@prosopo/provider": patch
 "@prosopo/types": patch
 "@prosopo/types-database": patch

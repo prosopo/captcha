@@ -16,6 +16,7 @@ import { generateBackground } from "./background.js";
 import { PUZZLE_RENDERER_VERSION, drawPuzzle } from "./draw.js";
 import { encodeBackground, encodePiece } from "./encode.js";
 import { pieceMask, placePiece } from "./placement.js";
+import type { Regrain } from "./presentation.js";
 import { createPrng, createSeed } from "./prng.js";
 import type {
 	NotchPlacement,
@@ -48,6 +49,7 @@ export {
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
 export { PUZZLE_RENDERER_VERSION } from "./draw.js";
 export { pieceMask, placePiece } from "./placement.js";
+export { type Regrain, drawRegrainSeed, regrain } from "./presentation.js";
 export {
 	encodeBackground,
 	encodePiece,
@@ -116,6 +118,7 @@ export const renderPuzzle = async ({
 	settings = DEFAULT_RENDER_SETTINGS,
 	seed = createSeed(),
 	rendererVersion = PUZZLE_RENDERER_VERSION,
+	regrain,
 }: {
 	background: RgbaImage;
 	placement: NotchPlacement;
@@ -123,6 +126,8 @@ export const renderPuzzle = async ({
 	settings?: PuzzleRenderSettings;
 	seed?: Buffer;
 	rendererVersion?: PuzzleRendererVersion;
+	/** Defaults to the JS `regrain`. */
+	regrain?: Regrain;
 }): Promise<RenderedPuzzle> => {
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
 	const { background: cut, piece } = drawPuzzle({
@@ -132,6 +137,7 @@ export const renderPuzzle = async ({
 		settings,
 		prng: createPrng(seed),
 		version: rendererVersion,
+		...(regrain && { regrain }),
 	});
 
 	const [backgroundWebp, pieceWebp] = await Promise.all([
@@ -163,6 +169,7 @@ export const renderPuzzleBoard = async ({
 	settings = DEFAULT_RENDER_SETTINGS,
 	seed = createSeed(),
 	rendererVersion = PUZZLE_RENDERER_VERSION,
+	regrain,
 }: {
 	background: RgbaImage;
 	placement: NotchPlacement;
@@ -171,6 +178,8 @@ export const renderPuzzleBoard = async ({
 	settings?: PuzzleRenderSettings;
 	seed?: Buffer;
 	rendererVersion?: PuzzleRendererVersion;
+	/** Defaults to the JS `regrain`. */
+	regrain?: Regrain;
 }): Promise<RenderedPuzzleBoard> => {
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
 	const { background: board, piece } = drawPuzzle({
@@ -180,6 +189,7 @@ export const renderPuzzleBoard = async ({
 		settings,
 		prng: createPrng(seed),
 		version: rendererVersion,
+		...(regrain && { regrain }),
 	});
 	placePiece(board, piece, start.x, start.y);
 	return {

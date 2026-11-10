@@ -19,6 +19,7 @@ mod background;
 mod contrast;
 mod palette;
 mod prng;
+mod regrain;
 
 use napi::bindgen_prelude::{Buffer, Error, Result, Status};
 
@@ -60,6 +61,29 @@ pub fn generate_background(seed: Buffer, width: u32, height: u32) -> Result<Buff
     let mut prng = prng::Prng::new(seed);
     let data = background::generate_background(&mut prng, width as usize, height as usize);
     Ok(data.into())
+}
+
+/// Swap an RGBA board's grain for fresh grain, byte-identical to `regrain`
+/// from @prosopo/puzzle-assets for the same seed. Returns a new buffer.
+#[napi(js_name = "regrain", catch_unwind)]
+pub fn regrain_board(data: Buffer, width: u32, height: u32, seed: Buffer) -> Result<Buffer> {
+    let seed: &[u8] = seed.as_ref();
+    check_inputs(seed.len(), width, height).map_err(|msg| Error::new(Status::InvalidArg, msg))?;
+    let expected = width as usize * height as usize * 4;
+    if data.len() != expected {
+        return Err(Error::new(
+            Status::InvalidArg,
+            format!(
+                "native-puzzle: expected {expected} bytes of RGBA, got {}",
+                data.len()
+            ),
+        ));
+    }
+
+    let mut out = data.to_vec();
+    let mut prng = prng::Prng::new(seed);
+    regrain::regrain(&mut out, width as usize, height as usize, &mut prng);
+    Ok(out.into())
 }
 
 /// As `generateBackground`, but evaluating each Gaussian field as a product of

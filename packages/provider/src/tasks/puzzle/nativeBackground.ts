@@ -16,6 +16,7 @@ import { createRequire } from "node:module";
 import {
 	DEFAULT_GEOMETRY,
 	type PuzzleGeometry,
+	type Regrain,
 	type RgbaImage,
 	createSeed,
 } from "@prosopo/puzzle-assets";
@@ -26,6 +27,12 @@ import { measureSync } from "../../api/metrics.js";
 // copies next to the bundle in production.
 type NativePuzzleModule = {
 	generateBackground: (seed: Buffer, width: number, height: number) => Buffer;
+	regrain: (
+		data: Buffer,
+		width: number,
+		height: number,
+		seed: Buffer,
+	) => Buffer;
 };
 const req = createRequire(import.meta.url);
 const nativePuzzle: NativePuzzleModule = (() => {
@@ -63,4 +70,11 @@ export const createBackgroundNative = (
 		nativePuzzle.generateBackground(seed, width, height),
 	);
 	return { image: { data, width, height }, seed };
+};
+
+/** `regrain` from @prosopo/puzzle-assets, in Rust. Byte-identical to the JS. */
+export const regrainNative: Regrain = (image, seed) => {
+	nativePuzzle
+		.regrain(image.data, image.width, image.height, seed)
+		.copy(image.data);
 };

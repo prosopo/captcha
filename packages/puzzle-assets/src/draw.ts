@@ -15,7 +15,13 @@
 import { cutNotch } from "./compose.js";
 import { paintDecoys } from "./decoys.js";
 import { createNotchShape } from "./notch.js";
-import { applyEffects, regrain, samplePresentation } from "./presentation.js";
+import {
+	type Regrain,
+	applyEffects,
+	drawRegrainSeed,
+	regrain as regrainInJs,
+	samplePresentation,
+} from "./presentation.js";
 import type { Prng } from "./prng.js";
 import type {
 	NotchPlacement,
@@ -44,6 +50,7 @@ export const drawPuzzle = ({
 	settings,
 	prng,
 	version,
+	regrain = regrainInJs,
 }: {
 	background: RgbaImage;
 	placement: NotchPlacement;
@@ -51,6 +58,7 @@ export const drawPuzzle = ({
 	settings: PuzzleRenderSettings;
 	prng: Prng;
 	version: PuzzleRendererVersion;
+	regrain?: Regrain;
 }): DrawnPuzzle => {
 	const presentation =
 		version >= 2
@@ -84,7 +92,7 @@ export const drawPuzzle = ({
 	});
 	if (!presentation) return cut;
 
-	regrain(cut.background, prng);
+	regrain(cut.background, drawRegrainSeed(prng));
 	const { effects, pieceOffset } = presentation;
 	applyEffects(cut.background, effects, 0, 0);
 	applyEffects(cut.piece, effects, pieceOffset.x, pieceOffset.y);

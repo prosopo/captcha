@@ -33,6 +33,7 @@ import {
 	getPuzzleBackgroundBuffer,
 	initPuzzleBackgroundBuffer,
 } from "./backgroundBuffer.js";
+import { regrainNative } from "./nativeBackground.js";
 import { createStratifiedSampler } from "./stratifiedSampler.js";
 
 export interface RenderedPuzzleImages {
@@ -182,6 +183,7 @@ export const renderPuzzleImages = async ({
 					? { ...DEFAULT_GEOMETRY, pieceSize }
 					: DEFAULT_GEOMETRY,
 			settings,
+			regrain: regrainNative,
 		}),
 	);
 
@@ -230,6 +232,7 @@ export const renderPuzzleBoardImages = async ({
 					? { ...DEFAULT_GEOMETRY, pieceSize }
 					: DEFAULT_GEOMETRY,
 			settings,
+			regrain: regrainNative,
 		}),
 	);
 

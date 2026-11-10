@@ -156,7 +156,7 @@ describe("regrain", () => {
 	it("is a 3x3 median per channel plus fresh grain", () => {
 		const image = randomImage(13, 9);
 		const source = Buffer.from(image.data);
-		regrain(image, createPrng(SEED));
+		regrain(image, SEED);
 
 		const prng = createPrng(SEED);
 		for (let y = 0; y < 9; y++) {

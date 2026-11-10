@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { GRAIN_AMPLITUDE } from "./background.js";
-import type { Prng } from "./prng.js";
+import { type Prng, SEED_BYTES, createPrng } from "./prng.js";
 import type { RgbaImage } from "./types.js";
 
 /** How the hole and every decoy are shaded. One per puzzle, shared by all. */
@@ -399,12 +399,19 @@ const median9 = (p: Int32Array): number => {
 };
 
 /**
+ * Replaces `image`'s pixels with the regrained board. The provider swaps in
+ * the native-puzzle port, which must match `regrain` byte for byte.
+ */
+export type Regrain = (image: RgbaImage, seed: Buffer) => void;
+
+/**
  * Swap the board's grain for fresh grain of the same strength: a 3x3 median
  * takes the original out, keeping edges, then new noise goes back in. The
  * piece keeps the grain it was cut with, which then appears nowhere on the
  * board. Mutates `image`.
  */
-export const regrain = (image: RgbaImage, prng: Prng): void => {
+export const regrain: Regrain = (image, seed) => {
+	const prng = createPrng(seed);
 	const { width, height } = image;
 	const source = Buffer.from(image.data);
 	const window = new Int32Array(9);
@@ -429,3 +436,7 @@ export const regrain = (image: RgbaImage, prng: Prng): void => {
 		}
 	}
 };
+
+/** A seed for `regrain`, drawn from the render's own stream. */
+export const drawRegrainSeed = (prng: Prng): Buffer =>
+	Buffer.from(Array.from({ length: SEED_BYTES }, () => prng.int(0, 255)));
