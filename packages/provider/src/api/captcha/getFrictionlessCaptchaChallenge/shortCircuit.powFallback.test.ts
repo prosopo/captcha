@@ -73,7 +73,7 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 	};
 
 	it("serves a PoW captcha when the pool is empty", async () => {
-		initDetectorBundlePool(dir); // empty dir ⇒ size 0
+		initDetectorBundlePool({ dir }); // empty dir ⇒ size 0
 		const sendPowCaptcha = vi.fn(async () => ({ captchaType: "pow" }));
 		const { res, json } = makeRes();
 
@@ -88,7 +88,7 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 	});
 
 	it("synthesises a non-empty session token when the client sent an empty token", async () => {
-		initDetectorBundlePool(dir); // empty ⇒ pow fallback
+		initDetectorBundlePool({ dir }); // empty ⇒ pow fallback
 		let captured: { token?: string } | undefined;
 		const sendPowCaptcha = vi.fn(async (params: unknown) => {
 			captured = params as { token?: string };
@@ -107,7 +107,7 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 
 	it("returns null when the pool has bundles, whatever the client sent", async () => {
 		addBundle(dir);
-		initDetectorBundlePool(dir); // size 1
+		initDetectorBundlePool({ dir }); // size 1
 		const sendPowCaptcha = vi.fn(async () => ({ captchaType: "pow" }));
 		const { res } = makeRes();
 
@@ -126,7 +126,7 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 	});
 
 	it("keeps the tcp-probe record on the bypass session", async () => {
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 		const sendPowCaptcha = vi.fn(async (_params: unknown) => ({
 			captchaType: "pow",
 		}));

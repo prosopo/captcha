@@ -45,10 +45,9 @@ import {
 	AccessPolicyType,
 	type AccessRule,
 	type AccessRulesStorage,
-	type UserScope,
-	type UserScopeRecord,
 } from "@prosopo/user-access-policy";
 import {
+	type GetPrioritisedAccessRuleArgs,
 	getPrioritisedAccessRule,
 	getRequestUserScope,
 	normalizeHeadersForMatching,
@@ -131,6 +130,23 @@ export interface HardBlockRecordView {
 	ja4: string;
 }
 
+export interface VerificationResponseArgs {
+	verified: boolean;
+	clientRecord: ClientRecord;
+	translateFn: TranslateFn;
+	score?: number;
+	reason?: string;
+	sessionId?: string;
+}
+
+export type CaptchaManagerDeps = {
+	db: IProviderDatabase;
+	pair: KeyringPair;
+	config: ProsopoConfigOutput;
+	logger?: Logger;
+	writeQueue?: RedisWriteQueue | null;
+};
+
 export class CaptchaManager {
 	pair: KeyringPair;
 	db: IProviderDatabase;
@@ -138,13 +154,7 @@ export class CaptchaManager {
 	logger: Logger;
 	writeQueue: RedisWriteQueue | null;
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		writeQueue?: RedisWriteQueue | null,
-	) {
+	constructor({ db, pair, config, logger, writeQueue }: CaptchaManagerDeps) {
 		this.pair = pair;
 		this.db = db;
 		this.config = config;
@@ -441,14 +451,21 @@ export class CaptchaManager {
 		return { valid: true };
 	}
 
-	async isValidRequest(
-		clientSettings: ClientRecord | IUserDataSlim,
-		requestedCaptchaType: CaptchaType,
-		env: ProviderEnvironment,
-		sessionId?: string,
-		userAccessPolicy?: AccessPolicy,
-		currentIP?: string,
-	): Promise<{
+	async isValidRequest({
+		clientSettings,
+		requestedCaptchaType,
+		env,
+		sessionId,
+		userAccessPolicy,
+		currentIP,
+	}: {
+		clientSettings: ClientRecord | IUserDataSlim;
+		requestedCaptchaType: CaptchaType;
+		env: ProviderEnvironment;
+		sessionId?: string;
+		userAccessPolicy?: AccessPolicy;
+		currentIP?: string;
+	}): Promise<{
 		valid: boolean;
 		reason?: TranslationKey;
 		sessionId?: string;
@@ -820,14 +837,14 @@ export class CaptchaManager {
 		return { valid: true, type: requestedCaptchaType };
 	}
 
-	getVerificationResponse(
-		verified: boolean,
-		clientRecord: ClientRecord,
-		translateFn: TranslateFn,
-		score?: number,
-		reason?: string,
-		sessionId?: string,
-	) {
+	getVerificationResponse({
+		verified,
+		clientRecord,
+		translateFn,
+		score,
+		reason,
+		sessionId,
+	}: VerificationResponseArgs) {
 		return {
 			status: translateFn(
 				verified ? "API.USER_VERIFIED" : "API.USER_NOT_VERIFIED",
@@ -847,31 +864,11 @@ export class CaptchaManager {
 	}
 
 	async getPrioritisedAccessPolicies(
-		userAccessRulesStorage: AccessRulesStorage,
-		clientId: string,
-		userScope: UserScope | UserScopeRecord,
-		// Raw request headers for header-restriction rules — see
-		// getPrioritisedAccessRule for why this has no default.
-		requestHeaders: Record<string, string>,
-		options?: {
-			blockOnly?: boolean;
-			// Widen a blockOnly pool to admit deferred rules of any type
-			// — see AccessRulesFilter.includeDeferred.
-			includeDeferred?: boolean;
-			// When a caller has an Express request in scope (e.g. the
-			// verify handler), passing it here shares the per-request memo
-			// with the block middleware — a duplicate lookup within one
-			// request collapses to zero extra Redis round-trips.
-			requestMemoHost?: object;
+		args: Omit<GetPrioritisedAccessRuleArgs, "skipCache"> & {
+			clientId: string;
 		},
 	) {
-		return getPrioritisedAccessRule(
-			userAccessRulesStorage,
-			userScope,
-			clientId,
-			requestHeaders,
-			options,
-		);
+		return getPrioritisedAccessRule(args);
 	}
 
 	/**
@@ -1042,20 +1039,29 @@ export class CaptchaManager {
 	 *
 	 * @returns The blocking policy if user should be blocked, undefined otherwise
 	 */
-	async checkForHardBlock(
-		userAccessRulesStorage: AccessRulesStorage,
-		challengeRecord: HardBlockRecordView,
-		userAccount: string,
-		headers: RequestHeaders,
-		// From the session the caller has already read for its own checks.
-		headHash: string | undefined,
-		coords?: [number, number][][],
-		countryCode?: string,
-		asn?: number,
-		// Returns the whole rule, not just its policy half: callers persist
-		// the matched rule (scope fields included) onto the record they
-		// disapprove, so the audit page can name the exact policy.
-	): Promise<AccessRule | undefined> {
+	// Returns the whole rule, not just its policy half: callers persist
+	// the matched rule (scope fields included) onto the record they
+	// disapprove, so the audit page can name the exact policy.
+	async checkForHardBlock({
+		userAccessRulesStorage,
+		challengeRecord,
+		userAccount,
+		headers,
+		headHash,
+		coords,
+		countryCode,
+		asn,
+	}: {
+		userAccessRulesStorage: AccessRulesStorage;
+		challengeRecord: HardBlockRecordView;
+		userAccount: string;
+		headers: RequestHeaders;
+		/** From the session the caller has already read for its own checks. */
+		headHash?: string;
+		coords?: [number, number][][];
+		countryCode?: string;
+		asn?: number;
+	}): Promise<AccessRule | undefined> {
 		// Serialize coords to string for querying
 		const coordsString = coords ? JSON.stringify(coords) : undefined;
 
@@ -1063,38 +1069,25 @@ export class CaptchaManager {
 			challengeRecord.ipAddress,
 		);
 
-		const userScope = getRequestUserScope(
-			headers,
-			challengeRecord.ja4,
-			ipAddressRecord.address,
-			userAccount,
+		const userScope = getRequestUserScope({
+			requestHeaders: headers,
+			ja4: challengeRecord.ja4,
+			ip: ipAddressRecord.address,
+			user: userAccount,
 			headHash,
-			coordsString,
+			coords: coordsString,
 			countryCode,
 			asn,
-		);
+		});
 
-		const accessPolicies = await this.getPrioritisedAccessPolicies(
+		const accessPolicies = await this.getPrioritisedAccessPolicies({
 			userAccessRulesStorage,
-			challengeRecord.dappAccount,
+			clientId: challengeRecord.dappAccount,
 			userScope,
-			// Raw headers for the in-code header-condition check. Available
-			// on the verify path too, so header rules fire there (e.g. an
-			// allow-list rule marked deferToVerify).
-			normalizeHeadersForMatching(headers),
-			// Hard-block lookup only — restrict the Redis-side candidate
-			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
-			// hard-block out of the top-N with routing-Block
-			// (captchaType-scoped) or plain Restrict entries.
-			//
-			// `includeDeferred` widens that pool to
-			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
-			// is skipped at request time and enforced here, so it is a
-			// valid hard block whatever its type — findHardBlockPolicy
-			// below already accepts one (case c), but a Block-only pool
-			// meant a deferred Restrict was never fetched to be found.
-			{ blockOnly: true, includeDeferred: true },
-		);
+			requestHeaders: normalizeHeadersForMatching(headers),
+			blockOnly: true,
+			includeDeferred: true,
+		});
 
 		return findHardBlockPolicy(accessPolicies);
 	}
@@ -1133,12 +1126,17 @@ export class CaptchaManager {
 	 * updates record / session state differently); this helper just returns
 	 * the verdict.
 	 */
-	async resolveTrafficFilterCheck(
-		recordIpInfo: IPInfoResponse | undefined,
-		trafficFilter: Partial<ITrafficFilter> | undefined,
-		currentIpInfo?: IPInfoResponse,
-		enrichedDnsEvent?: EnrichedDnsEvent,
-	): Promise<TrafficCheckResult> {
+	async resolveTrafficFilterCheck({
+		recordIpInfo,
+		trafficFilter,
+		currentIpInfo,
+		enrichedDnsEvent,
+	}: {
+		recordIpInfo?: IPInfoResponse;
+		trafficFilter?: Partial<ITrafficFilter>;
+		currentIpInfo?: IPInfoResponse;
+		enrichedDnsEvent?: EnrichedDnsEvent;
+	}): Promise<TrafficCheckResult> {
 		const effective: Partial<ITrafficFilter> = {
 			abuser: { action: TrafficFilterAction.Block },
 			...trafficFilter,
@@ -1156,12 +1154,12 @@ export class CaptchaManager {
 			return { isBlocked: false, matches: [] };
 		}
 
-		return checkTrafficFilter(
-			currentIpInfo ?? recordIpInfo,
-			effective,
-			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
-			enrichedDnsEvent?.pathValid,
-		);
+		return checkTrafficFilter({
+			ipInfo: currentIpInfo ?? recordIpInfo,
+			trafficFilter: effective,
+			extraIpInfos: extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
+			dnsPathValid: enrichedDnsEvent?.pathValid,
+		});
 	}
 
 	/**

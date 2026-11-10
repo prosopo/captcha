@@ -88,7 +88,7 @@ describe("router-supplied image rounds are held to the sitekey's bounds", () => 
 			lRules: { en: 1 },
 		} as unknown as ProsopoConfigOutput;
 
-		manager = new FrictionlessManager(db, pair, config);
+		manager = new FrictionlessManager({ db, pair, config });
 		manager.setSessionParams({
 			token: "tok",
 			score: 0.9,
