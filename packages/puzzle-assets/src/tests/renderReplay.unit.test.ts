@@ -49,13 +49,16 @@ const render = (overrides: {
 	settings?: PuzzleRenderSettings;
 }): Promise<RenderedPuzzle> => {
 	const geometry = overrides.geometry ?? DEFAULT_GEOMETRY;
-	return renderPuzzle(
-		createBackground(geometry, overrides.backgroundSeed ?? BACKGROUND_SEED),
-		overrides.placement ?? PLACEMENT,
+	return renderPuzzle({
+		background: createBackground({
+			geometry,
+			seed: overrides.backgroundSeed ?? BACKGROUND_SEED,
+		}),
+		placement: overrides.placement ?? PLACEMENT,
 		geometry,
-		overrides.settings ?? DEFAULT_RENDER_SETTINGS,
-		overrides.renderSeed ?? RENDER_SEED,
-	);
+		settings: overrides.settings ?? DEFAULT_RENDER_SETTINGS,
+		seed: overrides.renderSeed ?? RENDER_SEED,
+	});
 };
 
 describe("render replay from the stored record", () => {
@@ -74,14 +77,20 @@ describe("render replay from the stored record", () => {
 	});
 
 	it("mints a fresh render seed when none is supplied", async () => {
-		const first = await renderPuzzle(
-			createBackground(DEFAULT_GEOMETRY, BACKGROUND_SEED),
-			PLACEMENT,
-		);
-		const second = await renderPuzzle(
-			createBackground(DEFAULT_GEOMETRY, BACKGROUND_SEED),
-			PLACEMENT,
-		);
+		const first = await renderPuzzle({
+			background: createBackground({
+				geometry: DEFAULT_GEOMETRY,
+				seed: BACKGROUND_SEED,
+			}),
+			placement: PLACEMENT,
+		});
+		const second = await renderPuzzle({
+			background: createBackground({
+				geometry: DEFAULT_GEOMETRY,
+				seed: BACKGROUND_SEED,
+			}),
+			placement: PLACEMENT,
+		});
 		expect(first.seed.equals(second.seed)).toBe(false);
 		// Same background, different decoys and notch shape.
 		expect(first.background.equals(second.background)).toBe(false);
