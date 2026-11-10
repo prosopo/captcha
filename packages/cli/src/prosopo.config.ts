@@ -106,12 +106,17 @@ const getHost = (): string | undefined => {
 	return process.env.CADDY_DOMAIN || importMeta.env?.VITE_CADDY_DOMAIN;
 };
 
-export default function getConfig(
-	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
-	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
+export default function getConfig({
+	captchaSolutionsConfig,
+	captchaServeConfig,
 	who = "PROVIDER",
 	admin = "ADMIN",
-): ProsopoConfigOutput {
+}: {
+	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema;
+	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput;
+	who?: string;
+	admin?: string;
+} = {}): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
 		logLevel: parseLogLevel(process.env.PROSOPO_LOG_LEVEL, "info"),
 		host: getHost(),

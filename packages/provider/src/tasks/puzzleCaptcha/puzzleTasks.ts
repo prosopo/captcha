@@ -15,22 +15,16 @@
 import {
 	type CaptchaResult,
 	CaptchaType,
-	type ClientMetaData,
 	type DecisionMachineInput,
-	type IPAddress,
-	type ISpamFilterRules,
-	type ITrafficFilter,
 	type PoWChallengeId,
 	type PuzzleEvent,
-	type RequestHeaders,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { PuzzleCaptchaRecord } from "@prosopo/types-database";
-import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
+	type InteractiveSolutionSubmission,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
 import { isFarPuzzleMiss, validatePuzzleSolution } from "./puzzleTasksUtils.js";
@@ -146,31 +140,18 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 	 * @param headers
 	 * @param behavioralData
 	 */
-	async verifyPuzzleCaptchaSolution(
-		challenge: PoWChallengeId,
-		providerChallengeSignature: string,
-		finalX: number,
-		finalY: number,
-		puzzleEvents: PuzzleEvent[],
-		timeout: number,
-		userTimestampSignature: string,
-		ipAddress: IPAddress,
-		headers: RequestHeaders,
-		behavioralData?: string,
-		salt?: string,
-		simdReadings?: string,
-		clientMetaData?: ClientMetaData,
-	): Promise<boolean> {
+	async verifyPuzzleCaptchaSolution({
+		finalX,
+		finalY,
+		puzzleEvents,
+		...submission
+	}: InteractiveSolutionSubmission & {
+		finalX: number;
+		finalY: number;
+		puzzleEvents: PuzzleEvent[];
+	}): Promise<boolean> {
 		return this.submitInteractiveCaptchaSolution({
-			challenge,
-			providerChallengeSignature,
-			timeout,
-			userTimestampSignature,
-			ipAddress,
-			behavioralData,
-			salt,
-			simdReadings,
-			clientMetaData,
+			...submission,
 			isCorrect: (record) =>
 				validatePuzzleSolution(
 					finalX,
@@ -182,37 +163,9 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 			isFarMiss: (record) =>
 				isFarPuzzleMiss(finalX, finalY, record.targetX, record.targetY),
 			persistInteraction: () =>
-				this.db.updatePuzzleCaptchaRecord(challenge, { puzzleEvents }),
+				this.db.updatePuzzleCaptchaRecord(submission.challenge, {
+					puzzleEvents,
+				}),
 		});
-	}
-
-	async serverVerifyPuzzleCaptchaSolution(
-		dappAccount: string,
-		challenge: string,
-		timeout: number,
-		env: ProviderEnvironment,
-		ip?: string,
-		userAccessRulesStorage?: AccessRulesStorage,
-		email?: string,
-		spamEmailDomainCheckingEnabled = false,
-		spamFilter?: ISpamFilterRules,
-		trafficFilter?: ITrafficFilter,
-		storeMetadata = false,
-		clientSessionId?: string,
-	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
-		return this.serverVerifyInteractiveCaptchaSolution(
-			dappAccount,
-			challenge,
-			timeout,
-			env,
-			ip,
-			userAccessRulesStorage,
-			email,
-			spamEmailDomainCheckingEnabled,
-			spamFilter,
-			trafficFilter,
-			storeMetadata,
-			clientSessionId,
-		);
 	}
 }
