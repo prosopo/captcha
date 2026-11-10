@@ -55,6 +55,14 @@ export type BoardEffect =
 			sway: number;
 	  }
 	| { kind: "sawtooth"; angle: number; period: number; amplitude: number }
+	| {
+			kind: "tangent";
+			angle: number;
+			period: number;
+			amplitude: number;
+			/** Where tan is cut off; higher keeps more of each band flat. */
+			limit: number;
+	  }
 	| { kind: "dots"; spacing: number; radius: number; amplitude: number }
 	| { kind: "blotches"; blotches: Blotch[] }
 	| {
@@ -85,6 +93,7 @@ const EFFECT_KINDS = [
 	"stripes",
 	"waves",
 	"sawtooth",
+	"tangent",
 	"dots",
 	"blotches",
 	"rings",
@@ -141,6 +150,14 @@ const sampleEffect = (
 				angle: prng.range(0, Math.PI),
 				period: prng.range(10, 22),
 				amplitude: prng.range(0.04, 0.08),
+			};
+		case "tangent":
+			return {
+				kind,
+				angle: prng.range(0, Math.PI),
+				period: prng.range(14, 28),
+				amplitude: prng.range(0.05, 0.09),
+				limit: prng.range(2, 6),
 			};
 		case "dots":
 			return {
@@ -274,6 +291,13 @@ const effectGain = (effect: BoardEffect, x: number, y: number): number => {
 			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
 			const phase = along / effect.period - Math.floor(along / effect.period);
 			return 1 + effect.amplitude * (2 * phase - 1);
+		}
+		case "tangent": {
+			const along = x * Math.cos(effect.angle) + y * Math.sin(effect.angle);
+			const phase = along / effect.period - Math.floor(along / effect.period);
+			const t = Math.tan(Math.PI * (phase - 0.5));
+			const capped = Math.max(-effect.limit, Math.min(effect.limit, t));
+			return 1 + (effect.amplitude * capped) / effect.limit;
 		}
 		case "dots": {
 			const dx = x - Math.round(x / effect.spacing) * effect.spacing;

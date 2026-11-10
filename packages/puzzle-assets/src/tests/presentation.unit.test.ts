@@ -157,6 +157,23 @@ describe("applyEffects", () => {
 		expect(red(20)).toBeLessThan(red(19) - 30);
 	});
 
+	it("keeps tangent bands flat in the middle and steep at the ends", () => {
+		const image = solidSquare(40, 0);
+		const tangent: BoardEffect = {
+			kind: "tangent",
+			angle: 0,
+			period: 40,
+			amplitude: 0.1,
+			limit: 4,
+		};
+		applyEffects(image, [tangent], 0, 0);
+		const red = (x: number): number => image.data[x * 4] ?? 0;
+		expect(Math.abs(red(21) - red(19))).toBeLessThan(4);
+		expect(red(39) - red(33)).toBeGreaterThan(8);
+		expect(red(0)).toBeLessThanOrEqual(Math.round(200 * 0.9) + 1);
+		expect(red(39)).toBeLessThanOrEqual(Math.round(200 * 1.1));
+	});
+
 	it("reads the effect from the offset it is given", () => {
 		const atOrigin = solidSquare(20, 0);
 		const shifted = solidSquare(20, 0);
