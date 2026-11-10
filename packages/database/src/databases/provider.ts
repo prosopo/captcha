@@ -731,38 +731,6 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * @description Update a captcha
-	 * @param {Captcha}  captcha
-	 * @param {string}   datasetId  the id of the data set
-	 */
-	async updateCaptcha(captcha: Captcha, datasetId: Hash): Promise<void> {
-		if (!isHex(datasetId)) {
-			throw new ProsopoError({
-				code: "INVALID_DATA",
-				errorSite: "DBSE-14",
-				message: "Invalid hash",
-				context: { failedFuncName: this.updateCaptcha.name, datasetId },
-			});
-		}
-		try {
-			const filter: Pick<DatasetBase, "datasetId"> = { datasetId };
-			await this.tables?.captcha.updateOne(
-				filter,
-				{ $set: captcha },
-				{ upsert: false },
-			);
-		} catch (err) {
-			throw new ProsopoError({
-				code: "DB_QUERY_FAILED",
-				errorSite: "DBSE-15",
-				message: "Failed to update captcha",
-				cause: err,
-				context: { failedFuncName: this.getDatasetDetails.name },
-			});
-		}
-	}
-
-	/**
 	 * @description Remove captchas
 	 */
 	async removeCaptchas(captchaIds: string[]): Promise<void> {
@@ -3138,31 +3106,6 @@ export class ProviderDatabase
 				message: "Failed to flag solution as processed",
 				cause: err,
 				context: { captchaIds },
-			});
-		}
-	}
-
-	/**
-	 * @description Flag dapp users' commitments as used by calculated solution
-	 * @param {string[]} commitmentIds
-	 */
-	async flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void> {
-		try {
-			const distinctCommitmentIds = [...new Set(commitmentIds)];
-			await this.tables?.commitment
-				?.updateMany(
-					{ id: { $in: distinctCommitmentIds } },
-					{ $set: { processed: true } },
-					{ upsert: false },
-				)
-				.lean();
-		} catch (err) {
-			throw new ProsopoError({
-				code: "DB_QUERY_FAILED",
-				errorSite: "DBSE-49",
-				message: "Failed to flag commitment as processed",
-				cause: err,
-				context: { commitmentIds },
 			});
 		}
 	}
