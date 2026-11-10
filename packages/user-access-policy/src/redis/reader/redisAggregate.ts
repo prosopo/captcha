@@ -52,13 +52,19 @@ export const searchRedisKeysBounded = async (
 };
 
 // aggregation is used for cases when we need to get "unlimited" search results
-export const aggregateRedisKeys = async (
-	client: RedisClientType,
-	query: string,
-	logger: Logger,
-	batchHandler?: (keys: string[]) => Promise<void>,
-	maxKeys?: number,
-): Promise<string[]> => {
+export const aggregateRedisKeys = async ({
+	client,
+	query,
+	logger,
+	batchHandler,
+	maxKeys,
+}: {
+	client: RedisClientType;
+	query: string;
+	logger: Logger;
+	batchHandler?: (keys: string[]) => Promise<void>;
+	maxKeys?: number;
+}): Promise<string[]> => {
 	const keyField = "__key";
 
 	const recordSchema = z.object({
@@ -110,29 +116,35 @@ export const aggregateRedisKeys = async (
 		}
 	};
 
-	await executeAggregation(
+	await executeAggregation({
 		client,
 		query,
-		{
+		aggregateOptions: {
 			// #2 is a required option when the 'ismissing()' function is in the query body
 			DIALECT: REDIS_QUERY_DIALECT,
 			COUNT: REDIS_BATCH_SIZE,
 			LOAD: `@${keyField}`,
 		},
-		addRecordKeys,
-		() => stopRequested,
-	);
+		handleBatch: addRecordKeys,
+		shouldStop: () => stopRequested,
+	});
 
 	return foundKeys;
 };
 
-const executeAggregation = async (
-	client: RedisClientType,
-	query: string,
-	aggregateOptions: FtAggregateWithCursorOptions,
-	handleBatch: (records: object[]) => Promise<void>,
-	shouldStop?: () => boolean,
-): Promise<void> => {
+const executeAggregation = async ({
+	client,
+	query,
+	aggregateOptions,
+	handleBatch,
+	shouldStop,
+}: {
+	client: RedisClientType;
+	query: string;
+	aggregateOptions: FtAggregateWithCursorOptions;
+	handleBatch: (records: object[]) => Promise<void>;
+	shouldStop?: () => boolean;
+}): Promise<void> => {
 	const initialReply = await client.ft.aggregateWithCursor(
 		ACCESS_RULES_REDIS_INDEX_NAME,
 		query,
