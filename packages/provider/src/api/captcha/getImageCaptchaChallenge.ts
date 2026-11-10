@@ -340,7 +340,7 @@ export default (
 				);
 			const assetsResolver =
 				getSealedAssetsResolver() ??
-				getSignedAssetsResolver(ipAddress.toString()) ??
+				getSignedAssetsResolver(normalizedIp) ??
 				env.assetsResolver;
 
 			const padBytes = trafficVerdict.padBytes;
