@@ -44,6 +44,9 @@ export type AccessPolicy = {
 	captchaType?: CaptchaType;
 	description?: string;
 	solvedImagesCount?: number;
+	// Puzzle difficulty severity. Puzzle rules written before this field
+	// existed carry it in `solvedImagesCount`, which is read as the fallback.
+	severity?: number;
 	imageThreshold?: number;
 	powDifficulty?: number;
 	unsolvedImagesCount?: number;

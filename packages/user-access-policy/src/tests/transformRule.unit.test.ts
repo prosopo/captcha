@@ -117,6 +117,7 @@ describe("transformRule", () => {
 		captchaType: CaptchaType.frictionless,
 		description: "test",
 		solvedImagesCount: 1,
+		severity: 1,
 		imageThreshold: 1,
 		powDifficulty: 1,
 		unsolvedImagesCount: 1,
