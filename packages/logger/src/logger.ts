@@ -208,6 +208,31 @@ const inBrowser =
 
 const FormatJson = "json";
 const FormatPlain = "plain";
+export const REDACTED = "[redacted]";
+
+// Keys whose value is a credential wherever it appears. A whole config or env
+// object logged by mistake then still writes no secret, at any depth.
+const SECRET_KEY =
+	/pass(word|phrase)|secret|mnemonic|private_?key|api_?key|access_?key|keystore|authorization|cookie/i;
+
+// The password in a connection string such as mongodb://user:pass@host.
+const URL_CREDENTIALS = /(\b[a-z][a-z0-9+.-]*:\/\/[^\s/:@]*:)[^\s/@]+@/gi;
+
+export const redactSecrets = (key: string, value: unknown): unknown => {
+	if (
+		SECRET_KEY.test(key) &&
+		value !== null &&
+		value !== undefined &&
+		value !== ""
+	) {
+		return REDACTED;
+	}
+	if (typeof value === "string") {
+		return value.replace(URL_CREDENTIALS, `$1${REDACTED}@`);
+	}
+	return value;
+};
+
 export type Format = typeof FormatJson | typeof FormatPlain;
 
 /**
@@ -417,20 +442,23 @@ export class NativeLogger implements Logger {
 			// (and it recursed forever on cycles). A record that still can't be
 			// serialised, e.g. a cycle or a throwing toJSON, must not make the
 			// log call throw, so keep its plain fields and say what went wrong.
-			const output = stringifyJson(baseRecord, this.pretty).unwrapOrElse(
-				(error) =>
-					JSON.stringify(
-						{
-							...Object.fromEntries(
-								Object.entries(baseRecord).filter(
-									([, value]) => typeof value !== "object",
-								),
+			const output = stringifyJson(
+				baseRecord,
+				this.pretty,
+				redactSecrets,
+			).unwrapOrElse((error) =>
+				JSON.stringify(
+					{
+						...Object.fromEntries(
+							Object.entries(baseRecord).filter(
+								([, value]) => typeof value !== "object",
 							),
-							logSerialisationError: error.message,
-						},
-						null,
-						this.pretty,
-					),
+						),
+						logSerialisationError: error.message,
+					},
+					null,
+					this.pretty,
+				),
 			);
 			dest(output);
 		}

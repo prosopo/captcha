@@ -156,17 +156,21 @@ export const parseJson = (
  * decimal strings (as stringifyBigInts does), so values parsed by parseJson
  * with the default options can always be written back out. Cycles and
  * values JSON cannot represent at the top level (undefined, functions,
- * symbols) are errors.
+ * symbols) are errors. An optional replacer runs after the bigint
+ * conversion, with JSON.stringify's replacer semantics.
  */
 export const stringifyJson = (
 	value: unknown,
 	space?: string | number,
+	replacer?: (key: string, entry: unknown) => unknown,
 ): ParseResult<string> => {
 	try {
 		const text = JSON.stringify(
 			value,
-			(_key, entry: unknown) =>
-				typeof entry === "bigint" ? entry.toString() : entry,
+			(key: string, entry: unknown): unknown => {
+				const written = typeof entry === "bigint" ? entry.toString() : entry;
+				return replacer ? replacer(key, written) : written;
+			},
 			space,
 		);
 		// JSON.stringify's typings say string, but undefined, functions and
