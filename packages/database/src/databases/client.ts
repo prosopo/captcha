@@ -99,17 +99,23 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 		await this.connect();
 		// get remote client records that have been updated since the last task
 		//
-		// The query matches at document level, so an account is returned when
-		// ANY of its sites is new — the per-site test below is what decides
-		// which of them are actually carried across. `tier` is projected from
-		// the account: it does not exist on a site.
+		// An account is returned when ANY of its sites is new — the per-site
+		// test below is what decides which of them are actually carried
+		// across. `$elemMatch` is needed for the unstamped case: on an array,
+		// `"sites.updatedAt": { $exists: false }` only matches when no site
+		// has an `updatedAt` at all. `tier` is projected from the account: it
+		// does not exist on a site.
 		const accounts = await this.tables.accounts
 			.find<UpdatedClientAccount>(
 				{
-					$or: [
-						{ "sites.updatedAt": { $gt: updatedAtTimestamp } },
-						{ "sites.updatedAt": { $exists: false } },
-					],
+					sites: {
+						$elemMatch: {
+							$or: [
+								{ updatedAt: { $gt: updatedAtTimestamp } },
+								{ updatedAt: { $exists: false } },
+							],
+						},
+					},
 					"users.status": "active",
 					accountDisabled: { $ne: true },
 				},
