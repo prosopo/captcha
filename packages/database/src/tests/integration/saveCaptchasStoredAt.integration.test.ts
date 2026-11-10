@@ -87,12 +87,12 @@ describe("CaptchaDatabase.saveCaptchas — storedAtTimestamp", () => {
 	});
 
 	it("does not write storedAtTimestamp to any central collection", async () => {
-		await central.saveCaptchas(
-			[makeSession("session-stored-at")],
-			[makeCommitment("commitment-stored-at")],
-			[makePow("pow-stored-at")],
-			[makePuzzle("puzzle-stored-at")],
-		);
+		await central.saveCaptchas({
+			sessionEvents: [makeSession("session-stored-at")],
+			imageCaptchaEvents: [makeCommitment("commitment-stored-at")],
+			powCaptchaEvents: [makePow("pow-stored-at")],
+			puzzleCaptchaEvents: [makePuzzle("puzzle-stored-at")],
+		});
 
 		await central.connect();
 		const docs: Record<string, unknown>[] = [
@@ -123,11 +123,9 @@ describe("CaptchaDatabase.saveCaptchas — storedAtTimestamp", () => {
 			storedAtTimestamp,
 		});
 
-		await central.saveCaptchas(
-			[],
-			[],
-			[makePow("pow-already-stamped", new Date())],
-		);
+		await central.saveCaptchas({
+			powCaptchaEvents: [makePow("pow-already-stamped", new Date())],
+		});
 
 		await central.connect();
 		const doc = await central.tables.powcaptcha

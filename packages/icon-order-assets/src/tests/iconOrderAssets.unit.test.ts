@@ -271,9 +271,12 @@ describe("the collage background", () => {
 	});
 
 	it("still renders at zero clutter, as the operator escape hatch", async () => {
-		const challenge = await renderIconOrder(DEFAULT_GEOMETRY, {
-			...DEFAULT_RENDER_SETTINGS,
-			backgroundClutter: 0,
+		const challenge = await renderIconOrder({
+			geometry: DEFAULT_GEOMETRY,
+			settings: {
+				...DEFAULT_RENDER_SETTINGS,
+				backgroundClutter: 0,
+			},
 		});
 		const meta = await sharp(challenge.background).metadata();
 		expect(meta.width).toBe(DEFAULT_GEOMETRY.width);
@@ -310,7 +313,10 @@ describe("renderIconOrder", () => {
 			targetCount: 4,
 			decoyCount: 2,
 		};
-		const challenge = await renderIconOrder(DEFAULT_GEOMETRY, settings);
+		const challenge = await renderIconOrder({
+			geometry: DEFAULT_GEOMETRY,
+			settings,
+		});
 		expect(challenge.targets).toHaveLength(4);
 		const legend = await sharp(challenge.legend).metadata();
 		expect(legend.width).toBe(4 * (LEGEND_ICON_SIZE + 6) - 6);
@@ -327,20 +333,20 @@ describe("redrawIconOrder", () => {
 	};
 
 	it("returns the seed that rebuilds the render", async () => {
-		const challenge = await renderIconOrder(
-			DEFAULT_GEOMETRY,
-			DEFAULT_RENDER_SETTINGS,
-			seed(7),
-		);
+		const challenge = await renderIconOrder({
+			geometry: DEFAULT_GEOMETRY,
+			settings: DEFAULT_RENDER_SETTINGS,
+			seed: seed(7),
+		});
 		expect(challenge.seed).toBe(seed(7).toString("hex"));
 	});
 
 	it("places the same targets as the render it rebuilds", async () => {
-		const challenge = await renderIconOrder(
-			DEFAULT_GEOMETRY,
-			DEFAULT_RENDER_SETTINGS,
-			seed(7),
-		);
+		const challenge = await renderIconOrder({
+			geometry: DEFAULT_GEOMETRY,
+			settings: DEFAULT_RENDER_SETTINGS,
+			seed: seed(7),
+		});
 		const redrawn = redrawIconOrder(
 			challenge.seed,
 			DEFAULT_GEOMETRY,
