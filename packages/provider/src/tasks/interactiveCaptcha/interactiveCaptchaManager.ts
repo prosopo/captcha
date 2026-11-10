@@ -116,7 +116,7 @@ export interface InteractiveSubmission<TRecord>
 	 */
 	isFarMiss?: (record: TRecord) => boolean;
 	/** Persists the raw interaction trail, whatever the verdict. */
-	persistInteraction: () => Promise<void>;
+	persistInteraction: (record: TRecord) => Promise<void>;
 }
 
 /**
@@ -313,7 +313,7 @@ export abstract class InteractiveCaptchaManager<
 
 		// Unconditional, so the trail survives when the behavioural payload is
 		// missing or fails to decrypt; the decision machine reads it either way.
-		await submission.persistInteraction();
+		await submission.persistInteraction(challengeRecord);
 
 		const decodedPayloads = await this.decodeSubmissionPayloads(
 			challengeRecord.sessionId,
