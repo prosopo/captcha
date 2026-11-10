@@ -76,7 +76,10 @@ export const toStoredTargets = (
 export const renderIconOrderImages = async (
 	settings: IconOrderRenderSettings = DEFAULT_RENDER_SETTINGS,
 ): Promise<RenderedIconOrderImages> => {
-	const rendered = await renderIconOrder(ICON_ORDER_GEOMETRY, settings);
+	const rendered = await renderIconOrder({
+		geometry: ICON_ORDER_GEOMETRY,
+		settings,
+	});
 
 	return {
 		background: toDataUri(rendered.background),
