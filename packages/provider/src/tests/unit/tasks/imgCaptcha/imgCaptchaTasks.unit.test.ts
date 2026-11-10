@@ -563,11 +563,11 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(compareCaptchaSolutions).toHaveBeenCalled();
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
-				"commitmentId",
-				"CAPTCHA.INVALID_SOLUTION",
-				expect.anything(),
-			);
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
+				commitmentId: "commitmentId",
+				reason: "CAPTCHA.INVALID_SOLUTION",
+				coords: expect.anything(),
+			});
 			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
 		});
 
@@ -797,11 +797,11 @@ describe("ImgCaptchaManager", () => {
 			const result = await submit({ coords: [0, 0, 0, 0] }, { coords: [0, 0] });
 
 			expect(result.verified).toBe(false);
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
-				"commitmentId",
-				"CAPTCHA.INVALID_SOLUTION",
-				expect.anything(),
-			);
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
+				commitmentId: "commitmentId",
+				reason: "CAPTCHA.INVALID_SOLUTION",
+				coords: expect.anything(),
+			});
 			expect(compareCaptchaSolutions).not.toHaveBeenCalled();
 		});
 
@@ -1059,10 +1059,10 @@ describe("ImgCaptchaManager", () => {
 			expect(result.status).toBe("Suspicious behavior detected");
 
 			// Verify commitment was disapproved via streaming-aware method
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				expect.stringContaining("Suspicious behavior"),
-			);
+				reason: expect.stringContaining("Suspicious behavior"),
+			});
 
 			// Restore original decision machine
 			// biome-ignore lint/suspicious/noExplicitAny: tests
@@ -1701,10 +1701,10 @@ describe("ImgCaptchaManager", () => {
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.SPAM_EMAIL_DOMAIN",
-			);
+				reason: "API.SPAM_EMAIL_DOMAIN",
+			});
 		});
 
 		it("should allow when email domain is not in spam list", async () => {
@@ -1910,10 +1910,10 @@ describe("ImgCaptchaManager", () => {
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.SPAM_EMAIL_DOMAIN",
-			);
+				reason: "API.SPAM_EMAIL_DOMAIN",
+			});
 		});
 
 		it("should handle domain-only format correctly", async () => {
@@ -2172,10 +2172,10 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.DISALLOWED_WEBVIEW",
-			);
+				reason: "API.DISALLOWED_WEBVIEW",
+			});
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(
 				sessionId,
 				{
@@ -2224,10 +2224,10 @@ describe("ImgCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(result.status).toBe("API.DISALLOWED_WEBVIEW");
-			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith({
 				commitmentId,
-				"API.DISALLOWED_WEBVIEW",
-			);
+				reason: "API.DISALLOWED_WEBVIEW",
+			});
 		});
 
 		it("should not block when disallowWebView is false even if webview is detected", async () => {

@@ -220,13 +220,9 @@ describe("Interactive captcha records on the central DB", () => {
 			undefined,
 			logger,
 		);
-		await central.saveCaptchas(
-			[],
-			[],
-			[],
-			[],
-			[iconOrderRecord(challenge, {})],
-		);
+		await central.saveCaptchas({
+			iconOrderCaptchaEvents: [iconOrderRecord(challenge, {})],
+		});
 
 		const stored = await centralIconOrderTable(streamer)
 			.findOne({ challenge })
@@ -282,11 +278,10 @@ describe("Interactive captcha records on the central DB", () => {
 		});
 
 		const since = new Date(now.getTime() - 48 * 3600_000);
-		const swept = await provider.getUnstoredIconOrderCaptchaRecords(
-			1000,
-			undefined,
+		const swept = await provider.getUnstoredIconOrderCaptchaRecords({
+			limit: 1000,
 			since,
-		);
+		});
 		const sweptChallenges = swept.map((record) => record.challenge);
 		expect(sweptChallenges).toContain(recent);
 		expect(sweptChallenges).not.toContain(old);
