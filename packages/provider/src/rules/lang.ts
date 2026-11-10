@@ -25,8 +25,8 @@ export const checkLangRules = (
 			.map((lang) => lang.trim().split(";")[0]);
 
 		for (const lang of languages) {
-			if (lang && lConfig[lang]) {
-				lScore += lConfig[lang];
+			if (lang && Object.prototype.hasOwnProperty.call(lConfig, lang)) {
+				lScore += lConfig[lang] ?? 0;
 			}
 		}
 	}

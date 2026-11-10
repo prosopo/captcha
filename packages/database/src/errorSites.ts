@@ -27,8 +27,6 @@ declare module "@prosopo/common" {
 		"DBSE-11": true;
 		"DBSE-12": true;
 		"DBSE-13": true;
-		"DBSE-14": true;
-		"DBSE-15": true;
 		"DBSE-16": true;
 		"DBSE-17": true;
 		"DBSE-18": true;
@@ -61,7 +59,6 @@ declare module "@prosopo/common" {
 		"DBSE-46": true;
 		"DBSE-47": true;
 		"DBSE-48": true;
-		"DBSE-49": true;
 		"DBSE-50": true;
 		"DBSE-51": true;
 	}
