@@ -73,7 +73,7 @@ describe("a refreshed puzzle session", () => {
 			imageMaxRounds: 8,
 		};
 
-		const manager = new FrictionlessManager(db, pair, config);
+		const manager = new FrictionlessManager({ db, pair, config });
 		manager.setSessionParams({
 			token: "tok",
 			score: 0.9,

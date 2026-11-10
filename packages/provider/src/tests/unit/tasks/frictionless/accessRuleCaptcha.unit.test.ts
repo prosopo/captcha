@@ -70,7 +70,7 @@ describe("FrictionlessManager.sendAccessRuleCaptcha", () => {
 			captchas: { solved: { count: 2 }, unsolved: { count: 0 } },
 			lRules: { en: 1 },
 		} as unknown as ProsopoConfigOutput;
-		const manager = new FrictionlessManager(db, pair, config);
+		const manager = new FrictionlessManager({ db, pair, config });
 		manager.setSessionParams({
 			token: "tok",
 			score: 0,

@@ -21,13 +21,19 @@ export const puzzleDropDistance = (
 ): number => Math.sqrt((finalX - targetX) ** 2 + (finalY - targetY) ** 2);
 
 /** Validate that the puzzle solution is within tolerance of the target. */
-export const validatePuzzleSolution = (
-	finalX: number,
-	finalY: number,
-	targetX: number,
-	targetY: number,
-	tolerance: number,
-): boolean => puzzleDropDistance(finalX, finalY, targetX, targetY) <= tolerance;
+export const validatePuzzleSolution = ({
+	finalX,
+	finalY,
+	targetX,
+	targetY,
+	tolerance,
+}: {
+	finalX: number;
+	finalY: number;
+	targetX: number;
+	targetY: number;
+	tolerance: number;
+}): boolean => puzzleDropDistance(finalX, finalY, targetX, targetY) <= tolerance;
 
 /** A wrong answer at least this far from the target is not a near miss. */
 export const FAR_PUZZLE_MISS_DISTANCE = 50;
