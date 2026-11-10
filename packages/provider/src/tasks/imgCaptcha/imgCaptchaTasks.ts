@@ -515,11 +515,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 			) {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveDappUserCommitment({
 						commitmentId,
-						ResultReason.CAPTCHA_INVALID_SOLUTION,
-						pairs,
-					),
+						reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+						coords: pairs,
+					}),
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
@@ -582,11 +582,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 			} else {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveDappUserCommitment({
 						commitmentId,
-						ResultReason.CAPTCHA_INVALID_SOLUTION,
-						pairs,
-					),
+						reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+						coords: pairs,
+					}),
 				];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
@@ -1262,10 +1262,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 				writePromises.push(this.db.approveDappUserCommitment(commitmentId));
 			} else if (commitmentUpdates.result) {
 				writePromises.push(
-					this.db.disapproveDappUserCommitment(
+					this.db.disapproveDappUserCommitment({
 						commitmentId,
-						commitmentUpdates.result.reason,
-					),
+						reason: commitmentUpdates.result.reason,
+					}),
 				);
 			}
 		}
