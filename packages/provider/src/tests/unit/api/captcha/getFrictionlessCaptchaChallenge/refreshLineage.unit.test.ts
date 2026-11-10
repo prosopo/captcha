@@ -52,7 +52,12 @@ describe("resolveRefreshLineage", () => {
 	it("returns nothing when the request is not a refresh", async () => {
 		const db = dbReturning(ownSession({ createdAt: NOW }));
 		expect(
-			await resolveRefreshLineage(db, undefined, SITE_KEY, USER_HASH, NOW),
+			await resolveRefreshLineage({
+				db,
+				siteKey: SITE_KEY,
+				userSitekeyIpHash: USER_HASH,
+				now: NOW,
+			}),
 		).toBeUndefined();
 		expect(db.getSessionRecordBySessionId).not.toHaveBeenCalled();
 	});
@@ -62,8 +67,15 @@ describe("resolveRefreshLineage", () => {
 			ownSession({ createdAt: new Date(NOW.getTime() - 4000) }),
 		);
 		expect(
-			(await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW))
-				?.lineage,
+			(
+				await resolveRefreshLineage({
+					db,
+					refreshOf: "prev",
+					siteKey: SITE_KEY,
+					userSitekeyIpHash: USER_HASH,
+					now: NOW,
+				})
+			)?.lineage,
 		).toEqual({
 			refreshOf: "prev",
 			refreshCount: 1,
@@ -74,8 +86,15 @@ describe("resolveRefreshLineage", () => {
 	it("extends an existing chain", async () => {
 		const db = dbReturning(ownSession({ createdAt: NOW, refreshCount: 2 }));
 		expect(
-			(await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW))
-				?.lineage.refreshCount,
+			(
+				await resolveRefreshLineage({
+					db,
+					refreshOf: "prev",
+					siteKey: SITE_KEY,
+					userSitekeyIpHash: USER_HASH,
+					now: NOW,
+				})
+			)?.lineage.refreshCount,
 		).toBe(3);
 	});
 
@@ -88,8 +107,15 @@ describe("resolveRefreshLineage", () => {
 			}),
 		);
 		expect(
-			(await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW))
-				?.replaced,
+			(
+				await resolveRefreshLineage({
+					db,
+					refreshOf: "prev",
+					siteKey: SITE_KEY,
+					userSitekeyIpHash: USER_HASH,
+					now: NOW,
+				})
+			)?.replaced,
 		).toEqual({
 			captchaType: CaptchaType.image,
 			reason: FrictionlessReason.PUZZLE_USER_SWITCH,
@@ -98,13 +124,13 @@ describe("resolveRefreshLineage", () => {
 
 	it("ignores a session it cannot find", async () => {
 		expect(
-			await resolveRefreshLineage(
-				dbReturning(undefined),
-				"gone",
-				SITE_KEY,
-				USER_HASH,
-				NOW,
-			),
+			await resolveRefreshLineage({
+				db: dbReturning(undefined),
+				refreshOf: "gone",
+				siteKey: SITE_KEY,
+				userSitekeyIpHash: USER_HASH,
+				now: NOW,
+			}),
 		).toBeUndefined();
 	});
 
@@ -113,7 +139,13 @@ describe("resolveRefreshLineage", () => {
 			ownSession({ siteKey: "another-site", createdAt: NOW, refreshCount: 9 }),
 		);
 		expect(
-			await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW),
+			await resolveRefreshLineage({
+				db,
+				refreshOf: "prev",
+				siteKey: SITE_KEY,
+				userSitekeyIpHash: USER_HASH,
+				now: NOW,
+			}),
 		).toBeUndefined();
 	});
 
@@ -126,14 +158,26 @@ describe("resolveRefreshLineage", () => {
 			}),
 		);
 		expect(
-			await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW),
+			await resolveRefreshLineage({
+				db,
+				refreshOf: "prev",
+				siteKey: SITE_KEY,
+				userSitekeyIpHash: USER_HASH,
+				now: NOW,
+			}),
 		).toBeUndefined();
 	});
 
 	it("ignores a session that recorded no user", async () => {
 		const db = dbReturning({ siteKey: SITE_KEY, createdAt: NOW });
 		expect(
-			await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW),
+			await resolveRefreshLineage({
+				db,
+				refreshOf: "prev",
+				siteKey: SITE_KEY,
+				userSitekeyIpHash: USER_HASH,
+				now: NOW,
+			}),
 		).toBeUndefined();
 	});
 });
@@ -145,7 +189,13 @@ describe("resolveRefreshLineage with an unreadable createdAt", () => {
 	])("ignores a session with %s", async (_label, createdAt) => {
 		const db = dbReturning(ownSession({ createdAt, refreshCount: 1 }));
 		expect(
-			await resolveRefreshLineage(db, "prev", SITE_KEY, USER_HASH, NOW),
+			await resolveRefreshLineage({
+				db,
+				refreshOf: "prev",
+				siteKey: SITE_KEY,
+				userSitekeyIpHash: USER_HASH,
+				now: NOW,
+			}),
 		).toBeUndefined();
 	});
 });

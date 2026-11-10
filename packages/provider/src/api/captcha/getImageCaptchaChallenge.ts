@@ -196,16 +196,15 @@ export default (
 				? await tasks.db.getSessionRecordBySessionId(sessionId)
 				: undefined;
 
-			const userScope = getRequestUserScope(
-				flatten(req.headers),
-				req.ja4,
-				normalizedIp,
+			const userScope = getRequestUserScope({
+				requestHeaders: flatten(req.headers),
+				ja4: req.ja4,
+				ip: normalizedIp,
 				user,
-				sessionRecord?.decryptedHeadHash,
-				undefined, // coords
+				headHash: sessionRecord?.decryptedHeadHash,
 				countryCode,
 				asn,
-			);
+			});
 			// Skip deferToVerify policies at request time — they enforce at
 			// verify time via checkForHardBlock. Without this filter a
 			// Block+deferToVerify rule matches here, and because
@@ -216,12 +215,12 @@ export default (
 			// block at verify" pattern deferToVerify is meant to enable.
 			// Mirrors blockMiddleware's own deferToVerify filter.
 			const accessPolicies =
-				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
+				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies({
 					userAccessRulesStorage,
-					dapp,
+					clientId: dapp,
 					userScope,
-					normalizeHeadersForMatching(req.headers),
-				);
+					requestHeaders: normalizeHeadersForMatching(req.headers),
+				});
 			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
 			// A deferred rule must never reject at request time, so it is
 			// kept out of `isValidRequest` above. It does still carry the
@@ -237,14 +236,14 @@ export default (
 				reason,
 				sessionId: validSessionId,
 				solvedImagesCount,
-			} = await tasks.imgCaptchaManager.isValidRequest(
-				clientRecord,
-				CaptchaType.image,
+			} = await tasks.imgCaptchaManager.isValidRequest({
+				clientSettings: clientRecord,
+				requestedCaptchaType: CaptchaType.image,
 				env,
 				sessionId,
 				userAccessPolicy,
-				normalizedIp,
-			);
+				currentIP: normalizedIp,
+			});
 
 			if (!valid) {
 				return next(
@@ -326,18 +325,15 @@ export default (
 			}
 
 			const taskData =
-				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash(
+				await tasks.imgCaptchaManager.getRandomCaptchasAndRequestHash({
 					datasetId,
-					user,
+					userAccount: user,
 					ipAddress,
 					captchaConfig,
-					clientRecord.settings.imageThreshold ?? 0.8,
-					validSessionId,
-					// Persist the full ipinfo payload — consumers read
-					// individual flags off this object instead of separate
-					// flat fields.
-					req.ipInfo,
-				);
+					threshold: clientRecord.settings.imageThreshold ?? 0.8,
+					sessionId: validSessionId,
+					ipInfo: req.ipInfo,
+				});
 			const assetsResolver =
 				getSealedAssetsResolver() ??
 				getSignedAssetsResolver(normalizedIp) ??

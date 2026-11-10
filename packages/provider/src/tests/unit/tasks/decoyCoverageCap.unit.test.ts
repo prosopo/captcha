@@ -30,7 +30,13 @@ const coverage = (count: number, pieceSizePx: number): number =>
 	(count * pieceSizePx * pieceSizePx) / (W * H);
 
 const cap = (count: number, pieceSizePx: number, max: number): number =>
-	capDecoyCountForCoverage(count, pieceSizePx, W, H, max);
+	capDecoyCountForCoverage({
+		decoyCount: count,
+		pieceSizePx,
+		backgroundWidth: W,
+		backgroundHeight: H,
+		maxCoverage: max,
+	});
 
 describe("capDecoyCountForCoverage", () => {
 	it("leaves a render that is already within the ceiling untouched", () => {
@@ -68,8 +74,24 @@ describe("capDecoyCountForCoverage", () => {
 	});
 
 	it("is a no-op on degenerate geometry rather than throwing", () => {
-		expect(capDecoyCountForCoverage(12, 0, W, H, MAX_DECOY_COVERAGE)).toBe(12);
-		expect(capDecoyCountForCoverage(12, 40, 0, 0, MAX_DECOY_COVERAGE)).toBe(12);
+		expect(
+			capDecoyCountForCoverage({
+				decoyCount: 12,
+				pieceSizePx: 0,
+				backgroundWidth: W,
+				backgroundHeight: H,
+				maxCoverage: MAX_DECOY_COVERAGE,
+			}),
+		).toBe(12);
+		expect(
+			capDecoyCountForCoverage({
+				decoyCount: 12,
+				pieceSizePx: 40,
+				backgroundWidth: 0,
+				backgroundHeight: 0,
+				maxCoverage: MAX_DECOY_COVERAGE,
+			}),
+		).toBe(12);
 	});
 });
 

@@ -112,7 +112,11 @@ describe("AudioCaptchaManager", () => {
 			config: {},
 		} as unknown as ProviderEnvironment;
 
-		audioCaptchaManager = new AudioCaptchaManager(db, pair, mockEnv.config);
+		audioCaptchaManager = new AudioCaptchaManager({
+			db,
+			pair,
+			config: mockEnv.config,
+		});
 
 		vi.clearAllMocks();
 		vi.mocked(db.claimAudioCaptchaSubmission).mockResolvedValue(true);
@@ -248,14 +252,13 @@ describe("AudioCaptchaManager", () => {
 			);
 
 			await expect(submit(a, "96475")).resolves.toBe(true);
-			expect(db.updateAudioCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
-				a.userSignature,
-				undefined,
-			);
+			expect(db.updateAudioCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 
 		it("records a wrong answer as a user failure", async () => {
@@ -265,17 +268,16 @@ describe("AudioCaptchaManager", () => {
 			);
 
 			await expect(submit(a, "96476")).resolves.toBe(false);
-			expect(db.updateAudioCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{
+			expect(db.updateAudioCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 				},
-				false,
-				true,
-				a.userSignature,
-				undefined,
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 
 		it("refuses a second submission against the same challenge", async () => {
@@ -328,17 +330,16 @@ describe("AudioCaptchaManager", () => {
 			);
 
 			await expect(submit(a, "96475")).resolves.toBe(false);
-			expect(db.updateAudioCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{
+			expect(db.updateAudioCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge: a.challenge,
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 				},
-				false,
-				true,
-				a.userSignature,
-				undefined,
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: a.userSignature,
+			});
 		});
 
 		it("persists the normalised answer and the trail even when wrong", async () => {

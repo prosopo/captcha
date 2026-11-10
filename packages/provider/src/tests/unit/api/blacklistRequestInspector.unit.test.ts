@@ -47,7 +47,12 @@ describe("getRequestUserScope", () => {
 			"user-agent": userAgent,
 			"X-Forwarded-For": rawIp,
 		};
-		const userScope = getRequestUserScope(requestHeaders, ja4, rawIp, user);
+		const userScope = getRequestUserScope({
+			requestHeaders,
+			ja4,
+			ip: rawIp,
+			user,
+		});
 		expect(userScope).toEqual({
 			ja4Hash: ja4,
 			userAgent: userAgent,
@@ -66,7 +71,7 @@ describe("getRequestUserScope", () => {
 			"user-agent": userAgent,
 			"X-Forwarded-For": rawIp,
 		};
-		const userScope = getRequestUserScope(requestHeaders, ja4, rawIp);
+		const userScope = getRequestUserScope({ requestHeaders, ja4, ip: rawIp });
 		expect(userScope).toEqual({
 			ja4Hash: ja4,
 			userAgent: userAgent,
@@ -83,7 +88,7 @@ describe("getRequestUserScope", () => {
 			"user-agent": userAgent,
 			"X-Forwarded-For": rawIp,
 		};
-		const userScope = getRequestUserScope(requestHeaders, undefined, rawIp);
+		const userScope = getRequestUserScope({ requestHeaders, ip: rawIp });
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 			ip: rawIp,
@@ -97,7 +102,7 @@ describe("getRequestUserScope", () => {
 		const requestHeaders = {
 			"user-agent": userAgent,
 		};
-		const userScope = getRequestUserScope(requestHeaders);
+		const userScope = getRequestUserScope({ requestHeaders });
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 			os: "unknown",
@@ -108,45 +113,37 @@ describe("getRequestUserScope", () => {
 
 	it("classifies os and browser from the request User-Agent", () => {
 		const userScope = getRequestUserScope({
-			"user-agent":
-				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:120.0) Gecko/20100101 Firefox/120.0",
+			requestHeaders: {
+				"user-agent":
+					"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:120.0) Gecko/20100101 Firefox/120.0",
+			},
 		});
 		expect(userScope.os).toBe("macos");
 		expect(userScope.browser).toBe("firefox");
 	});
 
 	it("should include countryCode in the scope when provided", () => {
-		const userScope = getRequestUserScope(
-			{ "user-agent": "ua" },
-			"ja4",
-			"1.1.1.1",
-			"user1",
-			undefined,
-			undefined,
-			"DE",
-		);
+		const userScope = getRequestUserScope({
+			requestHeaders: { "user-agent": "ua" },
+			ja4: "ja4",
+			ip: "1.1.1.1",
+			user: "user1",
+			countryCode: "DE",
+		});
 		expect(userScope.countryCode).toBe("DE");
 	});
 
 	it("includes bypassKeyHash in the scope only when one is provided", () => {
 		const bypassKeyHash =
 			"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
-		const withKey = getRequestUserScope(
-			{ "user-agent": "ua" },
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			undefined,
-			undefined,
+		const withKey = getRequestUserScope({
+			requestHeaders: { "user-agent": "ua" },
 			bypassKeyHash,
-		);
+		});
 		expect(withKey.bypassKeyHash).toBe(bypassKeyHash);
-		expect(getRequestUserScope({ "user-agent": "ua" })).not.toHaveProperty(
-			"bypassKeyHash",
-		);
+		expect(
+			getRequestUserScope({ requestHeaders: { "user-agent": "ua" } }),
+		).not.toHaveProperty("bypassKeyHash");
 	});
 });
 
@@ -199,15 +196,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			validIpInfo("DE"),
-		);
+		await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 
 		// At least one of the prioritised sub-scopes must carry the
 		// countryCode — otherwise country-based rules can never fire
@@ -228,18 +225,18 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{
+		await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {
 				"user-agent":
 					"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 			},
-			{},
-			mockLogger,
-			validIpInfo("DE"),
-		);
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 
 		// OS is classified server-side from the UA, so an os-based access rule
 		// can fire at the earliest entry point (blockMiddleware).
@@ -259,15 +256,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			validIpInfo("DE"),
-		);
+		await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 
 		expect(seenScopes.length).toBeGreaterThan(0);
 		expect(seenScopes.every((scope) => scope.os === "unknown")).toBe(true);
@@ -285,15 +282,14 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			undefined,
-		);
+		await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+		});
 
 		const anyCountry = seenScopes.some((scope) => "countryCode" in scope);
 		expect(anyCountry).toBe(false);
@@ -311,15 +307,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			{ isValid: false, error: "lookup failed", ip: "1.1.1.1" },
-		);
+		await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: { isValid: false, error: "lookup failed", ip: "1.1.1.1" },
+		});
 
 		const anyCountry = seenScopes.some((scope) => "countryCode" in scope);
 		expect(anyCountry).toBe(false);
@@ -339,15 +335,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			validIpInfo("DE"),
-		);
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 		expect(shouldAbort).toBe(true);
 	});
 
@@ -369,15 +365,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			validIpInfo("DE"),
-		);
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 		expect(shouldAbort).toBe(false);
 	});
 
@@ -398,15 +394,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			validIpInfo("DE"),
-		);
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 		expect(shouldAbort).toBe(false);
 	});
 
@@ -432,15 +428,15 @@ describe("BlacklistRequestInspector.shouldAbortRequest", () => {
 			async () => undefined,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"ja4hash",
-			{},
-			{},
-			mockLogger,
-			validIpInfo("DE"),
-		);
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "ja4hash",
+			requestHeaders: {},
+			requestBody: {},
+			logger: mockLogger,
+			ipInfo: validIpInfo("DE"),
+		});
 		expect(shouldAbort).toBe(true);
 	});
 
@@ -592,15 +588,18 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			async () => undefined,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			BOT_JA4,
-			{ "user-agent": BOT_UA, "prosopo-site-key": "sk-twickets" },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: BOT_JA4,
+			requestHeaders: {
+				"user-agent": BOT_UA,
+				"prosopo-site-key": "sk-twickets",
+			},
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		expect(shouldAbort).toBe(true);
 
 		const blockLog = calls.find((c) => c.payload.msg === "Access policy block");
@@ -634,15 +633,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			db,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			BOT_JA4,
-			{ "user-agent": BOT_UA },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: BOT_JA4,
+			requestHeaders: { "user-agent": BOT_UA },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		expect(shouldAbort).toBe(true);
 		// Fire-and-forget — give the microtask queue a tick to drain the
 		// void'd promise before asserting on the spy.
@@ -684,15 +683,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			db,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"clean-ja4",
-			{ "user-agent": "clean-ua" },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "clean-ja4",
+			requestHeaders: { "user-agent": "clean-ua" },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		expect(shouldAbort).toBe(false);
 		await Promise.resolve();
 		expect(spy).not.toHaveBeenCalled();
@@ -714,15 +713,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			db,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			BOT_JA4,
-			{ "user-agent": BOT_UA },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: BOT_JA4,
+			requestHeaders: { "user-agent": BOT_UA },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		// Restrict policies don't 401 at middleware — they let the request
 		// through with modified captcha params; the downstream captcha-
 		// creation path then writes a normal session record. So no
@@ -749,15 +748,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			db,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			BOT_JA4,
-			{ "user-agent": BOT_UA },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: BOT_JA4,
+			requestHeaders: { "user-agent": BOT_UA },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		// deferToVerify policies are filtered before the block decision so
 		// the request passes through unimpeded — the verify-step path
 		// already writes its own commitment record.
@@ -784,15 +783,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			db,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			BOT_JA4,
-			{ "user-agent": BOT_UA },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: BOT_JA4,
+			requestHeaders: { "user-agent": BOT_UA },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		// The block decision returns synchronously; the void'd promise can
 		// reject in the background without affecting the 401.
 		expect(shouldAbort).toBe(true);
@@ -819,15 +818,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			async () => undefined,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			BOT_JA4,
-			{ "user-agent": BOT_UA },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: BOT_JA4,
+			requestHeaders: { "user-agent": BOT_UA },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		expect(shouldAbort).toBe(true);
 		expect(calls.some((c) => c.payload.msg === "Access policy block")).toBe(
 			true,
@@ -851,15 +850,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			db,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"unrelated-ja4",
-			{ "user-agent": BOT_UA },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "unrelated-ja4",
+			requestHeaders: { "user-agent": BOT_UA },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		expect(shouldAbort).toBe(true);
 		await Promise.resolve();
 		const written = spy.mock.calls[0]?.[0] as Record<string, unknown>;
@@ -884,15 +883,15 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 			db,
 		);
 
-		const shouldAbort = await inspector.shouldAbortRequest(
-			"/v1/prosopo/provider/client/captcha/frictionless",
-			"1.1.1.1",
-			"unrelated-ja4",
-			{ "user-agent": BOT_UA },
-			{},
+		const shouldAbort = await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: "unrelated-ja4",
+			requestHeaders: { "user-agent": BOT_UA },
+			requestBody: {},
 			logger,
-			validIpInfo("GB"),
-		);
+			ipInfo: validIpInfo("GB"),
+		});
 		expect(shouldAbort).toBe(true);
 		await Promise.resolve();
 		const written = spy.mock.calls[0]?.[0] as Record<string, unknown>;
@@ -1590,34 +1589,44 @@ describe("getPrioritisedAccessRule — request headers", () => {
 	const scope: UserScope = { ja4Hash: "ja4-header-verdict", headerMatch: "1" };
 
 	it("lets a request whose header is on the allow-list through", async () => {
-		const ranked = await getPrioritisedAccessRule(
-			storage,
-			scope,
-			"site",
-			{ "x-app": "ios" },
-			{ skipCache: true },
-		);
+		const ranked = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: { "x-app": "ios" },
+			skipCache: true,
+		});
 		expect(ranked).toEqual([]);
 	});
 
 	it("blocks a request that omits the header", async () => {
-		const ranked = await getPrioritisedAccessRule(
-			storage,
-			scope,
-			"site",
-			{},
-			{ skipCache: true },
-		);
+		const ranked = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: {},
+			skipCache: true,
+		});
 		expect(ranked).toEqual([allowList]);
 	});
 
 	it("ranks against each request's own headers even when the candidate fetch is cached", async () => {
 		// Same scope, same cache key. The candidate list is shared; the header
 		// verdict must not be.
-		const allowed = await getPrioritisedAccessRule(storage, scope, "site", {
-			"x-app": "android",
+		const allowed = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: {
+				"x-app": "android",
+			},
 		});
-		const blocked = await getPrioritisedAccessRule(storage, scope, "site", {});
+		const blocked = await getPrioritisedAccessRule({
+			userAccessRulesStorage: storage,
+			userScope: scope,
+			clientId: "site",
+			requestHeaders: {},
+		});
 		expect(allowed).toEqual([]);
 		expect(blocked).toEqual([allowList]);
 	});
