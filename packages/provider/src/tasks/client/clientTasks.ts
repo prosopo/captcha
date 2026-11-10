@@ -32,6 +32,7 @@ import {
 import type {
 	AudioCaptchaRecord,
 	ClientRecord,
+	DecisionMachineTarget,
 	IProviderDatabase,
 	IconOrderCaptchaRecord,
 	PuzzleCaptchaRecord,
@@ -91,11 +92,6 @@ export const matchesGlob = (pattern: string, text: string): boolean => {
 	while (p < pattern.length && pattern[p] === "*") p++;
 	return p === pattern.length;
 };
-
-/** A dapp-scoped decision machine always names the dapp it applies to. */
-export type DecisionMachineTarget =
-	| { scope: DecisionMachineScope.Global; dappAccount?: string }
-	| { scope: DecisionMachineScope.Dapp; dappAccount: string };
 
 export const toDecisionMachineTarget = (
 	scope: DecisionMachineScope,
@@ -182,10 +178,10 @@ export class ClientTaskManager {
 
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
-					await this.providerDB.getUnstoredDappUserCommitments(
-						BATCH_SIZE,
+					await this.providerDB.getUnstoredDappUserCommitments({
+						limit: BATCH_SIZE,
 						afterId,
-					),
+					}),
 				async (batch) => {
 					const filteredBatch = (
 						lastTask?.updated
@@ -202,7 +198,7 @@ export class ClientTaskManager {
 					// empty-id document on the node (~100K rows).
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], filteredBatch, []);
+						await captchaDB.saveCaptchas({ imageCaptchaEvents: filteredBatch });
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
 							sweepStartedAt,
@@ -218,17 +214,17 @@ export class ClientTaskManager {
 			let processedPowRecords = 0;
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
-					await this.providerDB.getUnstoredDappUserPoWCommitments(
-						BATCH_SIZE,
+					await this.providerDB.getUnstoredDappUserPoWCommitments({
+						limit: BATCH_SIZE,
 						afterId,
-					),
+					}),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], [], filteredBatch);
+						await captchaDB.saveCaptchas({ powCaptchaEvents: filteredBatch });
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
 							sweepStartedAt,
@@ -244,14 +240,17 @@ export class ClientTaskManager {
 			let processedSessionRecords = 0;
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
-					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, afterId),
+					await this.providerDB.getUnstoredSessionRecords({
+						limit: BATCH_SIZE,
+						afterId,
+					}),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatch, [], []);
+						await captchaDB.saveCaptchas({ sessionEvents: filteredBatch });
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
 							sweepStartedAt,
@@ -270,12 +269,12 @@ export class ClientTaskManager {
 			const processedPuzzleRecords = await this.resyncInteractiveRecords({
 				captchaType: CaptchaType.puzzle,
 				fetchBatch: (afterId) =>
-					this.providerDB.getUnstoredPuzzleCaptchaRecords(
-						BATCH_SIZE,
+					this.providerDB.getUnstoredPuzzleCaptchaRecords({
+						limit: BATCH_SIZE,
 						afterId,
-						interactiveSince,
-					),
-				save: (batch) => captchaDB.saveCaptchas([], [], [], batch),
+						since: interactiveSince,
+					}),
+				save: (batch) => captchaDB.saveCaptchas({ puzzleCaptchaEvents: batch }),
 				sweepStartedAt,
 				onlyUpdated,
 				batchSize: BATCH_SIZE,
@@ -283,12 +282,13 @@ export class ClientTaskManager {
 			const processedIconOrderRecords = await this.resyncInteractiveRecords({
 				captchaType: CaptchaType.iconOrder,
 				fetchBatch: (afterId) =>
-					this.providerDB.getUnstoredIconOrderCaptchaRecords(
-						BATCH_SIZE,
+					this.providerDB.getUnstoredIconOrderCaptchaRecords({
+						limit: BATCH_SIZE,
 						afterId,
-						interactiveSince,
-					),
-				save: (batch) => captchaDB.saveCaptchas([], [], [], [], batch),
+						since: interactiveSince,
+					}),
+				save: (batch) =>
+					captchaDB.saveCaptchas({ iconOrderCaptchaEvents: batch }),
 				sweepStartedAt,
 				onlyUpdated,
 				batchSize: BATCH_SIZE,
@@ -296,12 +296,12 @@ export class ClientTaskManager {
 			const processedAudioRecords = await this.resyncInteractiveRecords({
 				captchaType: CaptchaType.audio,
 				fetchBatch: (afterId) =>
-					this.providerDB.getUnstoredAudioCaptchaRecords(
-						BATCH_SIZE,
+					this.providerDB.getUnstoredAudioCaptchaRecords({
+						limit: BATCH_SIZE,
 						afterId,
-						interactiveSince,
-					),
-				save: (batch) => captchaDB.saveCaptchas([], [], [], [], [], batch),
+						since: interactiveSince,
+					}),
+				save: (batch) => captchaDB.saveCaptchas({ audioCaptchaEvents: batch }),
 				sweepStartedAt,
 				onlyUpdated,
 				batchSize: BATCH_SIZE,
