@@ -1,5 +1,14 @@
 # @prosopo/puzzle-assets
 
+## 0.3.0
+### Minor Changes
+
+- f7e7ea0: Add puzzle renderer version 2, record the renderer version on each puzzle, and deliver the puzzle piece inside the board image.
+
+### Patch Changes
+
+- 502ec6e: `createBackground`, `renderPuzzle`, `renderPuzzleToRgba`, `createPuzzle`, `cutNotch`, `paintDecoys` and `paintDecoyPiece` take one object argument instead of a long list of positional ones.
+
 ## 0.2.7
 ### Patch Changes
 

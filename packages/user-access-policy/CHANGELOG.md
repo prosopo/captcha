@@ -1,5 +1,32 @@
 # @prosopo/user-access-policy
 
+## 3.17.0
+### Minor Changes
+
+- 051d218: Access rules have a new `severity` field that sets how hard a puzzle rule's puzzle is. Puzzle rules used to carry this in `solvedImagesCount`, an image round count, which read like a mistake on a puzzle rule. The provider and the rule ranking now read `severity` first and fall back to `solvedImagesCount`, so rules already stored keep working. Block rules reject `severity`, as they already reject `solvedImagesCount`.
+
+### Patch Changes
+
+- 391182a: `findRules` takes its `matchingFieldsOnly` and `skipEmptyUserScopes` flags as one options object instead of two positional booleans. The internal Redis aggregation helpers take one object argument.
+- 0b6e928: An access rule with an invalid IP address or IP range is now reported as a validation error instead of throwing. Reading rules from Redis also skips a record whose parsing throws, so one bad record no longer makes the whole lookup return no rules, and the rules API answers such a value with a 400 rather than a 500.
+- 768c8f8: Escape every tag value in access rule searches, not only coordinates, group ids and Web Bot Auth agents. A site key, user id, header hash or other value containing a hyphen, dot, colon or slash used to make the search a syntax error, so the lookup quietly found no rules and admin find or delete calls filtered on it reported success having matched nothing.
+- 96e1295: Inserting access rules now returns the id of every inserted rule. It used to drop the first four ids of each batch and return the rest with their storage prefix still on, so the counts and ids logged by the insert endpoint were wrong.
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/types@5.29.0
+  - @prosopo/api@4.10.3
+  - @prosopo/logger@2.1.12
+  - @prosopo/util@3.7.1
+  - @prosopo/common@3.3.2
+  - @prosopo/api-route@2.6.72
+  - @prosopo/redis-client@1.0.49
+
 ## 3.16.2
 ### Patch Changes
 

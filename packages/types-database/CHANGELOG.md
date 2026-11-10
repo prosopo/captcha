@@ -1,5 +1,46 @@
 # @prosopo/types-database
 
+## 5.19.0
+### Minor Changes
+
+- c677fb6: Read the new X-TCP-Probe header from chaddy and save the whole record on the Session as `tcpProbe`. This adds IPv6 connections and the packets sent after the first handshake to what we store. The older X-TLS-* signals keep working.
+
+### Patch Changes
+
+- f9540f2: The scheduled client sync no longer brings back site keys from disabled accounts or deleted sites. It used to copy any recently edited site to the provider, so disabling an account or deleting a site shortly after an edit was undone on the next run. The sync now skips those sites and removes their keys from the provider on every run, so a disabled account stays off even if the direct removal call failed. Removing keys that are not stored no longer empties the client record cache.
+- 32075aa: `saveCaptchas`, the `getUnstored*` paging methods, `disapproveDappUserCommitment` and `getDecisionMachineArtifact` now take a single object argument instead of several optional positional ones.
+- 8e1ce57: The database methods that store and update captcha records (PoW, puzzle, audio, icon order, pending image commitments) now take one named-field object instead of long positional parameter lists. Stored data is unchanged.
+- a676f91: Importing `@prosopo/database` no longer prints `[Function: makeDirectory]` to the console at start-up, and the unused `make-dir` dependency is gone.
+  
+  Two provider database methods that nothing called are removed. `updateCaptcha` overwrote the first captcha it found in the dataset rather than the one passed to it. `flagProcessedDappUserCommitments` set a field the commitment schema does not have, so it never changed anything.
+- eb5b4ae: Image captcha requests that point at a record that is not there now get a clean "not verified" instead of a 500 error:
+  
+  - A server verify naming a commitment id that does not exist answers `verified: false` with `API.USER_NOT_VERIFIED_NO_SOLUTION`.
+  - Submitting a solution to an image request that was already answered (a double click or a network retry), or that never existed, answers `verified: false`.
+  
+  `getPendingImageCommitment` now returns `undefined` when no pending request matches, instead of throwing.
+- 2e606df: Puzzle records now store where the piece was dropped (`finalX`, `finalY`) and its distance from the target, so a rejected solve shows how far off it was.
+- f7e7ea0: Add puzzle renderer version 2, record the renderer version on each puzzle, and deliver the puzzle piece inside the board image.
+- c8f0b16: A puzzle challenge now takes its one submission with an atomic database update, as audio and icon-order challenges already do, so two answers sent at the same time cannot both be graded.
+- Updated dependencies [051d218]
+- Updated dependencies [391182a]
+- Updated dependencies [0b6e928]
+- Updated dependencies [88aa878]
+- Updated dependencies [768c8f8]
+- Updated dependencies [89c3078]
+- Updated dependencies [96e1295]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/user-access-policy@3.17.0
+  - @prosopo/types@5.29.0
+  - @prosopo/logger@2.1.12
+  - @prosopo/common@3.3.2
+  - @prosopo/locale@3.14.4
+
 ## 5.18.4
 ### Patch Changes
 

@@ -1,5 +1,63 @@
 # @prosopo/provider-mock
 
+## 2.8.223
+### Patch Changes
+
+- Updated dependencies [31ba8be]
+- Updated dependencies [051d218]
+- Updated dependencies [391182a]
+- Updated dependencies [8473b14]
+- Updated dependencies [ed81f2a]
+- Updated dependencies [9b460b4]
+- Updated dependencies [d30aaea]
+- Updated dependencies [1b71105]
+- Updated dependencies [6c07dfe]
+- Updated dependencies [f9540f2]
+- Updated dependencies [45ddb28]
+- Updated dependencies [88aa878]
+- Updated dependencies [39eeef9]
+- Updated dependencies [32075aa]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [a676f91]
+- Updated dependencies [821743e]
+- Updated dependencies [66f512b]
+- Updated dependencies [89c3078]
+- Updated dependencies [eb5b4ae]
+- Updated dependencies [898f642]
+- Updated dependencies [70eeb41]
+- Updated dependencies [14e524b]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [d89de6c]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [cfba6f9]
+- Updated dependencies [502ec6e]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [c8f0b16]
+- Updated dependencies [06d1e89]
+- Updated dependencies [8c68a26]
+- Updated dependencies [21877ba]
+- Updated dependencies [c677fb6]
+- Updated dependencies [818c669]
+  - @prosopo/provider@5.30.0
+  - @prosopo/api-express-router@3.3.19
+  - @prosopo/database@4.6.7
+  - @prosopo/types-database@5.19.0
+  - @prosopo/types@5.29.0
+  - @prosopo/logger@2.1.12
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.69
+  - @prosopo/locale@3.14.4
+
 ## 2.8.222
 ### Patch Changes
 

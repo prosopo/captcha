@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.7.1
+### Patch Changes
+
+- 206235c: Redact credential fields and connection-string passwords from log output.
+
 ## 3.7.0
 ### Minor Changes
 

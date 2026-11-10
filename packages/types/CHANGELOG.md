@@ -1,5 +1,26 @@
 # @prosopo/types
 
+## 5.29.0
+### Minor Changes
+
+- c677fb6: Read the new X-TCP-Probe header from chaddy and save the whole record on the Session as `tcpProbe`. This adds IPv6 connections and the packets sent after the first handshake to what we store. The older X-TLS-* signals keep working.
+
+### Patch Changes
+
+- 88aa878: The detector decoder can now report how many triggered-detector ids it dropped because they fall outside the detector catalogue (`outOfRangeDetectorIds` on `DetectorResult`). The provider counts them in a new `detector_out_of_range_ids_total` metric and logs a warning, so a client sending a malformed bitfield shows up instead of passing unnoticed.
+- 89c3078: The widget now sends the behavioural readings it has already gathered with the frictionless request, not only with the solution. The provider reads them with the same detector bundle it uses at submit and stores the device readings on the session, so a phone's first puzzle gets the touch sizing instead of waiting for a solve to report the touch screen. Readings that are missing or cannot be read leave the session as it was, and never fail the request.
+- 5345619: The PoW challenge id schema now fails validation for a missing or non-string value instead of throwing, so the 400 response lists the validation issues.
+- 2e606df: Puzzle records now store where the piece was dropped (`finalX`, `finalY`) and its distance from the target, so a rejected solve shows how far off it was.
+- f7e7ea0: Add puzzle renderer version 2, record the renderer version on each puzzle, and deliver the puzzle piece inside the board image.
+- 8c68a26: Reject a detector pool push that contains no bundles.
+  
+  The admin endpoint that replaces a provider's detector pool accepted `{"bundles": {}}`. It then emptied the pool in memory, deleted every bundle file on disk, and answered with success. The node was left with no detector bundles, which also survived a restart, until someone pushed a good pool. The request schema now requires at least one bundle, so an empty push is refused with a validation error and the existing pool stays as it was.
+- Updated dependencies [8473b14]
+- Updated dependencies [206235c]
+  - @prosopo/util-crypto@13.6.6
+  - @prosopo/util@3.7.1
+  - @prosopo/locale@3.14.4
+
 ## 5.28.2
 ### Patch Changes
 

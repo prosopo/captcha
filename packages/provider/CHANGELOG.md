@@ -1,5 +1,116 @@
 # @prosopo/provider
 
+## 5.30.0
+### Minor Changes
+
+- c677fb6: Read the new X-TCP-Probe header from chaddy and save the whole record on the Session as `tcpProbe`. This adds IPv6 connections and the packets sent after the first handshake to what we store. The older X-TLS-* signals keep working.
+
+### Patch Changes
+
+- 31ba8be: An access rule that names a captcha type now always gets that type. Before, the routing machine ran after the rule and could swap it, so a rule set to image could serve a puzzle while the session still recorded the image rule as the match. The enabled-type check and the user's own switches still apply after the rule. A reused session that matches such a rule is no longer evicted just because the routing machine would pick a different type.
+- 051d218: Access rules have a new `severity` field that sets how hard a puzzle rule's puzzle is. Puzzle rules used to carry this in `solvedImagesCount`, an image round count, which read like a mistake on a puzzle rule. The provider and the rule ranking now read `severity` first and fall back to `solvedImagesCount`, so rules already stored keep working. Block rules reject `severity`, as they already reject `solvedImagesCount`.
+- 391182a: `findRules` takes its `matchingFieldsOnly` and `skipEmptyUserScopes` flags as one options object instead of two positional booleans. The internal Redis aggregation helpers take one object argument.
+- ed81f2a: Admin route rate limits now only use the token's subject as the counter key once the token's signature has been checked against an admin key. Requests with a token that does not verify are counted against their IP. Before, the subject was read from the token without checking it, so a caller could pick a new subject on every request and never hit the limit. `getUserFromJWT` is removed; it read the subject without verifying it and had no other users.
+- 9b460b4: Image URLs signed with `PROSOPO_ASSET_TOKEN_BIND_IP` turned on are now bound to the client's IP address. They were bound to the text "[object Object]", so the image host rejected every image.
+- d30aaea: `renderAudioChallenge` and `renderIconOrder` take one optional object (`{ settings, sampleRate }` and `{ geometry, settings, seed }`) instead of several optional positional arguments.
+- 1b71105: Request-time access rules scoped to a user or a site key now also apply when the request carries those ids only in the `Prosopo-User` and `Prosopo-Site-Key` headers. The check looked the headers up by their capitalised names, but Node lower-cases header names, so it only ever saw ids sent in the request body. The body still takes precedence when it has them.
+- 6c07dfe: `getConfig` (exported as `defaultConfig`), `start` and `authMiddleware` take one object argument instead of several optional positional ones. CLI flags are unchanged.
+- f9540f2: The scheduled client sync no longer brings back site keys from disabled accounts or deleted sites. It used to copy any recently edited site to the provider, so disabling an account or deleting a site shortly after an edit was undone on the next run. The sync now skips those sites and removes their keys from the provider on every run, so a disabled account stays off even if the direct removal call failed. Removing keys that are not stored no longer empties the client record cache.
+- 88aa878: The detector decoder can now report how many triggered-detector ids it dropped because they fall outside the detector catalogue (`outOfRangeDetectorIds` on `DetectorResult`). The provider counts them in a new `detector_out_of_range_ids_total` metric and logs a warning, so a client sending a malformed bitfield shows up instead of passing unnoticed.
+- 32075aa: `saveCaptchas`, the `getUnstored*` paging methods, `disapproveDappUserCommitment` and `getDecisionMachineArtifact` now take a single object argument instead of several optional positional ones.
+- 8e1ce57: The database methods that store and update captcha records (PoW, puzzle, audio, icon order, pending image commitments) now take one named-field object instead of long positional parameter lists. Stored data is unchanged.
+- 821743e: When a dataset is loaded, a captcha with an empty solution now counts as unsolved in the checks for enough solved and unsolved captchas. Parsing fills a missing solution with `[]`, which counted as solved, so the solved check always passed and the unsolved check failed whenever unsolved captchas were required. Storing the dataset already treated an empty solution as unsolved; the checks now agree with it.
+- 66f512b: A puzzle served after a PoW solve now records the difficulty level it was drawn from, as puzzles served directly already do.
+- 89c3078: The widget now sends the behavioural readings it has already gathered with the frictionless request, not only with the solution. The provider reads them with the same detector bundle it uses at submit and stores the device readings on the session, so a phone's first puzzle gets the touch sizing instead of waiting for a solve to report the touch screen. Readings that are missing or cannot be read leave the session as it was, and never fail the request.
+- eb5b4ae: Image captcha requests that point at a record that is not there now get a clean "not verified" instead of a 500 error:
+  
+  - A server verify naming a commitment id that does not exist answers `verified: false` with `API.USER_NOT_VERIFIED_NO_SOLUTION`.
+  - Submitting a solution to an image request that was already answered (a double click or a network retry), or that never existed, answers `verified: false`.
+  
+  `getPendingImageCommitment` now returns `undefined` when no pending request matches, instead of throwing.
+- 70eeb41: Puzzle, audio and icon-order requests now update and invalidate the cached session the same way PoW and image requests do, so the cache no longer disagrees with the database after these challenges are issued or solved.
+- 14e524b: The `lRules` language score now only counts languages that are actually listed in the config. A language tag that happens to match a built-in object property (for example `constructor` or `__proto__`) used to be looked up on the object's prototype, which turned the score into a string and made the request fail; such tags now score 0 like any other unlisted language.
+- 8e1ce57: `getPrioritisedAccessRule`, `getPrioritisedAccessPolicies` and the interactive record resync now take one object. The access rule lookup options (`blockOnly`, `includeDeferred`, `requestMemoHost`, `skipCache`) sit beside the storage, scope, client id and headers instead of in a trailing optional argument.
+- 8e1ce57: `createAuthenticatedSession` now takes one object instead of eight positional arguments.
+- 8e1ce57: The captcha manager classes (base, frictionless, PoW, image and the interactive ones) now take one dependencies object in their constructors instead of a long list of positional, mostly optional arguments.
+- 8e1ce57: `CaptchaManager.isValidRequest`, `getVerificationResponse`, `checkForHardBlock` and `resolveTrafficFilterCheck` now take one named-argument object. The image captcha version of `getVerificationResponse` adds `commitmentId` as a named field, instead of slotting it into the middle of the argument list. HTTP requests and responses are unchanged.
+- 8e1ce57: `updateDecisionMachine` now takes one object. Its type requires a dapp account whenever the scope is dapp, so that check now happens when the request is parsed instead of inside the method.
+- 8e1ce57: `getBotScore`, `applyRouter`, `deepValidateIpAddress` and `buildAllWindowIncrements` now take one object instead of a list of positional arguments, several of them optional.
+- 8e1ce57: The provider's image captcha methods (`dappUserSolution`, `verifyImageCaptchaSolution`, `getRandomCaptchasAndRequestHash`) now take one named-argument object instead of long positional argument lists. `verifyImageCaptchaSolution` takes the site's settings as a single `settings` object. HTTP requests and responses are unchanged.
+- d89de6c: A request whose body is malformed JSON, too large, or in an unsupported encoding now gets the API's normal JSON error (`{ error: { code, message, ... } }`) with the same status as before (400, 413, 415). Before, these errors skipped every router's error handler and reached Express's default handler, which answered with an HTML page (including a stack trace outside production).
+- 8e1ce57: `getRequestUserScope` and `BlacklistRequestInspector.shouldAbortRequest` now take one named-argument object instead of 9–10 positional arguments. Callers no longer pass `undefined` placeholders to reach later values. Request handling is unchanged.
+- 8e1ce57: `checkTrafficFilter`, `buildEscalation`, `resolveRefreshLineage`, `renderPuzzleImages`, `validatePuzzleSolution`, `capDecoyCountForCoverage`, the detector bundle pool loaders and the interactive submission recorder now take one object. Several of these took runs of same-typed numbers or trailing optional values that were easy to pass in the wrong order.
+- cfba6f9: The provider's captcha verify methods (PoW, puzzle, icon order, audio and the server-side verify calls) now take one named-argument object instead of a long list of positional, mostly optional arguments. Unused `headers` arguments are gone. HTTP requests and responses are unchanged.
+- 502ec6e: `createBackground`, `renderPuzzle`, `renderPuzzleToRgba`, `createPuzzle`, `cutNotch`, `paintDecoys` and `paintDecoyPiece` take one object argument instead of a long list of positional ones.
+- 2e606df: Puzzle records now store where the piece was dropped (`finalX`, `finalY`) and its distance from the target, so a rejected solve shows how far off it was.
+- f7e7ea0: Add puzzle renderer version 2, record the renderer version on each puzzle, and deliver the puzzle piece inside the board image.
+- c8f0b16: A puzzle challenge now takes its one submission with an atomic database update, as audio and icon-order challenges already do, so two answers sent at the same time cannot both be graded.
+- 06d1e89: Registering a single site key through the admin API without `settings` now works and uses the same default settings as the bulk endpoint (`domains: ["localhost"]`). Before, it tried to build defaults without the required `domains` field, so every such request failed with a vague "Unknown API error" and the site key was not registered.
+- 8c68a26: Reject a detector pool push that contains no bundles.
+  
+  The admin endpoint that replaces a provider's detector pool accepted `{"bundles": {}}`. It then emptied the pool in memory, deleted every bundle file on disk, and answered with success. The node was left with no detector bundles, which also survived a restart, until someone pushed a good pool. The request schema now requires at least one bundle, so an empty push is refused with a validation error and the existing pool stays as it was.
+- 21877ba: Server verification of a PoW or puzzle token whose challenge was never approved now answers `verified: false` instead of a 500 error. Before, the user failing the captcha looked like a provider outage, and integrations that retry on 5xx kept retrying.
+  
+  A verify whose score is exactly 0 now includes `score: 0` for tiers that receive scores. Before, the PoW, puzzle and image verify paths dropped a score of 0, so the cleanest sessions came back with no score at all.
+- 818c669: A provider verifying a token it issued itself no longer fetches the provider list first. That fetch was only needed to decide whether to forward the request elsewhere, and when the list endpoint was slow every such verify waited for the full fetch timeout.
+  
+  Once the provider list has loaded, callers no longer wait on it again. An expired list is refreshed in the background while the previous one keeps being served, and a failed refresh keeps serving the previous list and tries again 30 seconds later, instead of discarding it so the next caller has to fetch from scratch.
+- Updated dependencies [051d218]
+- Updated dependencies [391182a]
+- Updated dependencies [8473b14]
+- Updated dependencies [d30aaea]
+- Updated dependencies [0b6e928]
+- Updated dependencies [6c07dfe]
+- Updated dependencies [f9540f2]
+- Updated dependencies [45ddb28]
+- Updated dependencies [88aa878]
+- Updated dependencies [39eeef9]
+- Updated dependencies [32075aa]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [a676f91]
+- Updated dependencies [768c8f8]
+- Updated dependencies [89c3078]
+- Updated dependencies [eb5b4ae]
+- Updated dependencies [898f642]
+- Updated dependencies [96e1295]
+- Updated dependencies [f868427]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [502ec6e]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [c8f0b16]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+- Updated dependencies [818c669]
+- Updated dependencies [12c3097]
+  - @prosopo/user-access-policy@3.17.0
+  - @prosopo/captcha-severity@1.5.0
+  - @prosopo/api-express-router@3.3.19
+  - @prosopo/util-crypto@13.6.6
+  - @prosopo/audio-assets@0.2.7
+  - @prosopo/icon-order-assets@0.2.7
+  - @prosopo/database@4.6.7
+  - @prosopo/types-database@5.19.0
+  - @prosopo/types@5.29.0
+  - @prosopo/api@4.10.3
+  - @prosopo/keyring@2.10.27
+  - @prosopo/logger@2.1.12
+  - @prosopo/util@3.7.1
+  - @prosopo/puzzle-assets@0.3.0
+  - @prosopo/native-puzzle@0.2.0
+  - @prosopo/load-balancer@2.11.31
+  - @prosopo/web-bot-auth@0.1.11
+  - @prosopo/datasets@3.2.27
+  - @prosopo/env@3.6.96
+  - @prosopo/fingerprint@2.8.18
+  - @prosopo/types-env@2.12.6
+  - @prosopo/common@3.3.2
+  - @prosopo/ipinfo@0.7.5
+  - @prosopo/api-route@2.6.72
+  - @prosopo/locale@3.14.4
+  - @prosopo/redis-client@1.0.49
+
 ## 5.29.2
 ### Patch Changes
 

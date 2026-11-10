@@ -1,5 +1,23 @@
 # @prosopo/keyring
 
+## 2.10.27
+### Patch Changes
+
+- f868427: `KeyringPair.vrfVerify` now checks the VRF output against the `signerPublic` key it is given (an address, hex public key or raw bytes). Before, it ignored that argument and always checked against the pair's own key, so it answered "did this pair sign it?" rather than "did `signerPublic` sign it?".
+- Updated dependencies [8473b14]
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/util-crypto@13.6.6
+  - @prosopo/types@5.29.0
+  - @prosopo/util@3.7.1
+  - @prosopo/common@3.3.2
+
 ## 2.10.26
 ### Patch Changes
 

@@ -1,5 +1,13 @@
 # @prosopo/icon-order-assets
 
+## 0.2.7
+### Patch Changes
+
+- d30aaea: `renderAudioChallenge` and `renderIconOrder` take one optional object (`{ settings, sampleRate }` and `{ geometry, settings, seed }`) instead of several optional positional arguments.
+- Updated dependencies [502ec6e]
+- Updated dependencies [f7e7ea0]
+  - @prosopo/puzzle-assets@0.3.0
+
 ## 0.2.6
 ### Patch Changes
 

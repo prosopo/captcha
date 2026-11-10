@@ -1,5 +1,12 @@
 # @prosopo/web-bot-auth
 
+## 0.1.11
+### Patch Changes
+
+- 12c3097: `verifyWebBotAuth` now returns a failure reason instead of throwing in two cases: a `Signature-Agent` header whose URL cannot be parsed (`unparseable-signature-agent`), and a key directory that lists a `null` or non-object entry before the matching key (such entries are now skipped). Both come from outside, so they should be ordinary verification failures like every other bad input.
+- Updated dependencies [206235c]
+  - @prosopo/util@3.7.1
+
 ## 0.1.10
 ### Patch Changes
 

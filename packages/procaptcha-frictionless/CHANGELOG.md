@@ -1,5 +1,32 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.25.3
+### Patch Changes
+
+- 89c3078: The widget now sends the behavioural readings it has already gathered with the frictionless request, not only with the solution. The provider reads them with the same detector bundle it uses at submit and stores the device readings on the session, so a phone's first puzzle gets the touch sizing instead of waiting for a solve to report the touch screen. Readings that are missing or cannot be read leave the session as it was, and never fail the request.
+- f7e7ea0: Add puzzle renderer version 2, record the renderer version on each puzzle, and deliver the puzzle piece inside the board image.
+- Updated dependencies [fe27353]
+- Updated dependencies [88aa878]
+- Updated dependencies [41af027]
+- Updated dependencies [89c3078]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/procaptcha-react@2.14.26
+  - @prosopo/types@5.29.0
+  - @prosopo/procaptcha-common@2.23.7
+  - @prosopo/api@4.10.3
+  - @prosopo/procaptcha-puzzle@2.18.7
+  - @prosopo/fingerprint@2.8.18
+  - @prosopo/procaptcha-audio@0.3.7
+  - @prosopo/procaptcha-icon-order@0.3.7
+  - @prosopo/procaptcha-pow@2.14.15
+  - @prosopo/common@3.3.2
+  - @prosopo/locale@3.14.4
+  - @prosopo/widget-skeleton@2.10.5
+
 ## 2.25.2
 ### Patch Changes
 
