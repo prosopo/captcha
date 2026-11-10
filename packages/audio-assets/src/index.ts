@@ -109,10 +109,13 @@ const renderBabble = (
 };
 
 /** The returned answer must stay on the challenge record and never reach the client. */
-export const renderAudioChallenge = (
-	settings: AudioRenderSettings = DEFAULT_RENDER_SETTINGS,
-	sampleRate: number = SAMPLE_RATE,
-): RenderedAudioChallenge => {
+export const renderAudioChallenge = ({
+	settings = DEFAULT_RENDER_SETTINGS,
+	sampleRate = SAMPLE_RATE,
+}: {
+	settings?: AudioRenderSettings;
+	sampleRate?: number;
+} = {}): RenderedAudioChallenge => {
 	const prng = createPrng(createSeed());
 
 	const utterances = chooseAnswer(prng, settings.digitCount);

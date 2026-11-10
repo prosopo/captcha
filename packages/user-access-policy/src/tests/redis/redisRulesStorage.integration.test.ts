@@ -436,8 +436,7 @@ describe("redisAccessRulesStorage", () => {
 				{
 					policyScopeMatch: FilterScopeMatch.Exact,
 				},
-				false,
-				false,
+				{ matchingFieldsOnly: false, skipEmptyUserScopes: false },
 			);
 
 			// then
@@ -1257,7 +1256,7 @@ describe("redisAccessRulesStorage", () => {
 					userScopeMatch: FilterScopeMatch.Exact,
 					blockOnly: true,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toEqual([accessRule]);
@@ -1290,7 +1289,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Exact,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			// then
@@ -1337,7 +1336,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId },
 					userScopeMatch: FilterScopeMatch.Exact,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			// then - the typeless doc must not crash the pipeline.
@@ -1381,7 +1380,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId },
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toEqual([validRule]);
@@ -1427,7 +1426,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId, numericIp: ipv6NumericIp },
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toEqual([accessRule]);
@@ -1481,7 +1480,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toHaveLength(2);
@@ -1522,7 +1521,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId },
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toHaveLength(2);
@@ -1584,7 +1583,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toHaveLength(2);
@@ -1711,7 +1710,7 @@ describe("redisAccessRulesStorage", () => {
 					userScopeMatch: FilterScopeMatch.Greedy,
 					blockOnly: true,
 				},
-				true, // matchingFieldsOnly — ranked path
+				{ matchingFieldsOnly: true },
 			);
 
 			// Restrict rules must not appear; at least the matching
@@ -1810,7 +1809,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true, // matchingFieldsOnly — production hot path
+				{ matchingFieldsOnly: true },
 			);
 
 			// The target rule MUST come back. Under the old ranker it
@@ -1862,7 +1861,7 @@ describe("redisAccessRulesStorage", () => {
 					userScopeMatch: FilterScopeMatch.Greedy,
 					blockOnly: true,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(found.map((rule) => rule.description).sort()).toEqual([

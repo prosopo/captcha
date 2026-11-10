@@ -149,7 +149,9 @@ describe("synthesiseUtterance", () => {
 describe("renderAudioChallenge", () => {
 	test("answer length matches digitCount and uses only the alphabet", () => {
 		for (const digitCount of [3, 5, 8]) {
-			const challenge = renderAudioChallenge(cleanSettings({ digitCount }));
+			const challenge = renderAudioChallenge({
+				settings: cleanSettings({ digitCount }),
+			});
 			expect(challenge.answer).toHaveLength(digitCount);
 			for (const character of challenge.answer) {
 				expect(ANSWER_ALPHABET).toContain(character);
@@ -158,7 +160,7 @@ describe("renderAudioChallenge", () => {
 	});
 
 	test("emits a valid RIFF/WAVE header the reported length agrees with", () => {
-		const challenge = renderAudioChallenge(cleanSettings());
+		const challenge = renderAudioChallenge({ settings: cleanSettings() });
 		const { wav } = challenge;
 
 		expect(wav.subarray(0, 4).toString("ascii")).toBe("RIFF");
@@ -179,7 +181,9 @@ describe("renderAudioChallenge", () => {
 	});
 
 	test("clip is long enough to hold every digit but stays reasonable", () => {
-		const challenge = renderAudioChallenge(cleanSettings({ digitCount: 5 }));
+		const challenge = renderAudioChallenge({
+			settings: cleanSettings({ digitCount: 5 }),
+		});
 		expect(challenge.durationMs).toBeGreaterThan(1500);
 		expect(challenge.durationMs).toBeLessThan(12000);
 	});
@@ -188,7 +192,7 @@ describe("renderAudioChallenge", () => {
 		const answers = new Set<string>();
 		const digests = new Set<string>();
 		for (let i = 0; i < 12; i++) {
-			const challenge = renderAudioChallenge(cleanSettings());
+			const challenge = renderAudioChallenge({ settings: cleanSettings() });
 			answers.add(challenge.answer);
 			digests.add(challenge.wav.toString("base64").slice(0, 256));
 		}
@@ -197,7 +201,9 @@ describe("renderAudioChallenge", () => {
 	});
 
 	test("does not clip: no sample is pinned at the rail", () => {
-		const challenge = renderAudioChallenge(DEFAULT_RENDER_SETTINGS);
+		const challenge = renderAudioChallenge({
+			settings: DEFAULT_RENDER_SETTINGS,
+		});
 		const samples = decodeWav(challenge.wav);
 		let pinned = 0;
 		for (const sample of samples) {
@@ -207,12 +213,16 @@ describe("renderAudioChallenge", () => {
 	});
 
 	test("babble adds energy without swamping the foreground", () => {
-		const withoutBabble = renderAudioChallenge(
-			cleanSettings({ digitCount: 4 }),
-		);
-		const withBabble = renderAudioChallenge(
-			cleanSettings({ digitCount: 4, babbleGain: 0.2, babbleVoices: 2 }),
-		);
+		const withoutBabble = renderAudioChallenge({
+			settings: cleanSettings({ digitCount: 4 }),
+		});
+		const withBabble = renderAudioChallenge({
+			settings: cleanSettings({
+				digitCount: 4,
+				babbleGain: 0.2,
+				babbleVoices: 2,
+			}),
+		});
 		// Both are peak-normalised, so compare RMS.
 		expect(rms(decodeWav(withBabble.wav))).toBeGreaterThan(
 			rms(decodeWav(withoutBabble.wav)) * 0.5,
@@ -276,7 +286,9 @@ describe("encodeWav", () => {
 	});
 
 	test("toDataUri produces a playable audio/wav URI", () => {
-		const challenge = renderAudioChallenge(cleanSettings({ digitCount: 2 }));
+		const challenge = renderAudioChallenge({
+			settings: cleanSettings({ digitCount: 2 }),
+		});
 		const uri = toDataUri(challenge.wav);
 		expect(uri.startsWith("data:audio/wav;base64,")).toBe(true);
 		const decoded = Buffer.from(uri.split(",")[1] ?? "", "base64");

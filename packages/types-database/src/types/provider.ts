@@ -1397,6 +1397,17 @@ export type ProjectedSession = Pick<
 	Extract<keyof typeof SESSION_PROJECTION, keyof Session> | "headers"
 >;
 
+/** A dapp-scoped decision machine always names the dapp it applies to. */
+export type DecisionMachineTarget =
+	| { scope: DecisionMachineScope.Global; dappAccount?: string }
+	| { scope: DecisionMachineScope.Dapp; dappAccount: string };
+
+/** Keyset paging over records still pending a central-DB sync. */
+export type UnstoredRecordsPage = {
+	limit?: number;
+	afterId?: unknown;
+};
+
 export type StoreCaptchaRecordArgs = {
 	challenge: PoWChallengeId;
 	components: PoWChallengeComponents;
@@ -1491,8 +1502,6 @@ export interface IProviderDatabase extends IDatabase {
 
 	getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>;
 
-	updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
-
 	removeCaptchas(captchaIds: string[]): Promise<void>;
 
 	getDatasetDetails(
@@ -1510,7 +1519,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	getPendingImageCommitment(
 		requestHash: string,
-	): Promise<PendingImageCaptchaRequest>;
+	): Promise<PendingImageCaptchaRequest | undefined>;
 
 	/**
 	 * Atomically flips a pending image request to not-pending. Resolves true
@@ -1555,11 +1564,11 @@ export interface IProviderDatabase extends IDatabase {
 		coords?: [number, number][][],
 	): Promise<void>;
 
-	disapproveDappUserCommitment(
-		commitmentId: string,
-		reason?: ResultReason,
-		coords?: [number, number][][],
-	): Promise<void>;
+	disapproveDappUserCommitment(args: {
+		commitmentId: string;
+		reason?: ResultReason;
+		coords?: [number, number][][];
+	}): Promise<void>;
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
@@ -1571,8 +1580,7 @@ export interface IProviderDatabase extends IDatabase {
 	 * size, not with total collection size.
 	 */
 	getUnstoredDappUserCommitments(
-		limit?: number,
-		afterId?: unknown,
+		page?: UnstoredRecordsPage,
 	): Promise<UserCommitmentRecord[]>;
 
 	markDappUserCommitmentsStored(
@@ -1609,8 +1617,7 @@ export interface IProviderDatabase extends IDatabase {
 	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
 	 */
 	getUnstoredDappUserPoWCommitments(
-		limit?: number,
-		afterId?: unknown,
+		page?: UnstoredRecordsPage,
 	): Promise<PoWCaptchaRecord[]>;
 
 	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
@@ -1633,8 +1640,6 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
-
-	flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
 
 	getLastScheduledTaskStatus(
 		task: ScheduledTaskNames,
@@ -1816,8 +1821,7 @@ export interface IProviderDatabase extends IDatabase {
 	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
 	 */
 	getUnstoredSessionRecords(
-		limit: number,
-		afterId?: unknown,
+		page?: UnstoredRecordsPage,
 	): Promise<SessionRecord[]>;
 
 	markSessionRecordsStored(
@@ -1831,23 +1835,17 @@ export interface IProviderDatabase extends IDatabase {
 	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
 	 */
 	getUnstoredPuzzleCaptchaRecords(
-		limit?: number,
-		afterId?: unknown,
-		since?: Date,
+		page?: UnstoredRecordsPage & { since?: Date },
 	): Promise<PuzzleCaptchaRecord[]>;
 
 	/** Same contract as {@link getUnstoredPuzzleCaptchaRecords}. */
 	getUnstoredIconOrderCaptchaRecords(
-		limit?: number,
-		afterId?: unknown,
-		since?: Date,
+		page?: UnstoredRecordsPage & { since?: Date },
 	): Promise<IconOrderCaptchaRecord[]>;
 
 	/** Same contract as {@link getUnstoredPuzzleCaptchaRecords}. */
 	getUnstoredAudioCaptchaRecords(
-		limit?: number,
-		afterId?: unknown,
-		since?: Date,
+		page?: UnstoredRecordsPage & { since?: Date },
 	): Promise<AudioCaptchaRecord[]>;
 
 	markInteractiveCaptchaRecordsStored(
@@ -1863,9 +1861,7 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	getDecisionMachineArtifact(
-		scope: DecisionMachineScope,
-		dappAccount?: string,
-		kind?: DecisionMachineKind,
+		target: DecisionMachineTarget & { kind?: DecisionMachineKind },
 	): Promise<DecisionMachineArtifact | undefined>;
 
 	getAllDecisionMachineArtifacts(): Promise<
