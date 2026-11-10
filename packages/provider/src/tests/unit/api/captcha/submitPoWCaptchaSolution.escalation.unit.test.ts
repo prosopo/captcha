@@ -346,6 +346,47 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		expect(input.originSessionId).toBe("origin-id");
 	});
 
+	it("records the difficulty level of a raised puzzle alongside its tolerance", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue({
+			...makeOriginSession(),
+			solvedImagesCount: 9,
+		});
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+			"challenge",
+		);
+
+		const input = createSessionInput();
+		expect(input.puzzleTolerance).toBeDefined();
+		expect(input.puzzleLevel).toBeGreaterThan(0);
+	});
+
+	it("leaves the puzzle level unset when the puzzle is not raised", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(
+			makeOriginSession(),
+		);
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+			"challenge",
+		);
+
+		const input = createSessionInput();
+		expect(input.puzzleTolerance).toBeUndefined();
+		expect(input.puzzleLevel).toBeUndefined();
+	});
+
 	it("escalates to image instead of puzzle when the site has puzzle switched off", async () => {
 		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
 			sessionId: "origin-id",
