@@ -212,20 +212,19 @@ export default (env: ProviderEnvironment) =>
 				| undefined;
 			const submitWindowMs: number =
 				persistedSolutionTimeout ?? clientRecord.settings.verifiedTimeout;
-			const result = await tasks.powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await tasks.powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				signature.provider.challenge,
+				providerChallengeSignature: signature.provider.challenge,
 				nonce,
-				submitWindowMs,
-				signature.user.timestamp,
-				getIPAddress(req.ip || ""),
-				flatHeaders,
+				timeout: submitWindowMs,
+				userTimestampSignature: signature.user.timestamp,
+				ipAddress: getIPAddress(req.ip || ""),
 				behavioralData,
 				salt,
 				simdReadings,
 				clientMetaData,
 				fingerprintSummary,
-			);
+			});
 
 			// Surface the routing machine's post-PoW decision (escalation +
 			// selection reason, e.g. FINGERPRINT_PROOF_INVALID) at the provider
