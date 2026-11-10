@@ -17,6 +17,7 @@ import { InputMethod } from "../datasets/captcha.js";
 import {
 	CaptchaSolutionBody,
 	type ProviderDetails,
+	ReplaceDetectorPoolBody,
 	providerDetailsSchema,
 } from "./api.js";
 
@@ -103,5 +104,21 @@ describe("CaptchaSolutionBody input methods", () => {
 			() => InputMethod.pointer,
 		);
 		expect(CaptchaSolutionBody.safeParse(body(tooMany)).success).toBe(false);
+	});
+});
+
+describe("ReplaceDetectorPoolBody", () => {
+	it("rejects an empty bundle set, which would wipe the pool", () => {
+		const result = ReplaceDetectorPoolBody.safeParse({ bundles: {} });
+
+		expect(result.success).toBe(false);
+	});
+
+	it("accepts a pool with at least one bundle", () => {
+		const result = ReplaceDetectorPoolBody.safeParse({
+			bundles: { "bundle-0": { js: "export {}", privateKey: "0xkey" } },
+		});
+
+		expect(result.success).toBe(true);
 	});
 });
