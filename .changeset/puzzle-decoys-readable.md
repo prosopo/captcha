@@ -14,4 +14,4 @@ Look-alike decoys keep clear of the real hole and of each other, so they no long
 
 The decoy cap no longer raises a small decoy count up to its minimum; it only ever lowers it.
 
-Four new board patterns join the existing ones: wavy stripes, sawtooth stripes that ramp up gradually and drop sharply, tangent stripes that stay flat through the middle and steepen towards a sharp seam, and stripes shaped by a random polynomial drawn for each puzzle.
+Boards vary much more. Six new patterns join the existing ones: wavy stripes, sawtooth stripes, tangent stripes, stripes shaped by a random polynomial drawn for each puzzle, a mosaic of tinted cells, and marble veining. Each board now gets one to three patterns, never two of the same family, and the stripe styles together are picked no more often than any other family, so boards no longer come out mostly ruled. The stripe and dot patterns can be bolder than before.

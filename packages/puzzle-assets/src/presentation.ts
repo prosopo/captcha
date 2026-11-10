@@ -41,6 +41,22 @@ interface Blotch {
 
 type Stroke = { x: number; y: number }[];
 
+interface CellSite {
+	x: number;
+	y: number;
+	/** Hue rotation inside the cell, degrees. */
+	hue: number;
+	gain: number;
+}
+
+/** Random values on a grid `spacing` px apart, wrapping at the edges. */
+interface NoiseLattice {
+	spacing: number;
+	columns: number;
+	rows: number;
+	values: number[];
+}
+
 /** A treatment laid over the board and, out of step, the piece. */
 export type BoardEffect =
 	| { kind: "stripes"; angle: number; period: number; amplitude: number }
@@ -91,7 +107,24 @@ export type BoardEffect =
 			degreesPerTurn: number;
 			degreesPerPixel: number;
 	  }
-	| { kind: "scribbles"; strokes: Stroke[]; width: number; darkness: number };
+	| { kind: "scribbles"; strokes: Stroke[]; width: number; darkness: number }
+	| {
+			kind: "cells";
+			sites: CellSite[];
+			/** Width of the blend across a cell border, px. */
+			softness: number;
+	  }
+	| {
+			kind: "marble";
+			/** Coarsest first; each finer octave counts half as much. */
+			octaves: NoiseLattice[];
+			angle: number;
+			frequency: number;
+			turbulence: number;
+			amplitude: number;
+			/** Peak hue rotation along the veins, degrees. */
+			hue: number;
+	  };
 
 export interface Presentation {
 	recess: RecessStyle;
@@ -100,18 +133,21 @@ export interface Presentation {
 	pieceOffset: { x: number; y: number };
 }
 
-const EFFECT_KINDS = [
-	"stripes",
-	"waves",
-	"sawtooth",
-	"tangent",
-	"polynomial",
-	"dots",
-	"blotches",
-	"rings",
-	"swirl",
-	"scribbles",
-] as const;
+/**
+ * Effects grouped by how they look. A board draws families with equal odds,
+ * then a member, so the five stripe profiles together are no likelier than
+ * marble — drawn flat, half the boards came out ruled.
+ */
+const EFFECT_FAMILIES: readonly (readonly BoardEffect["kind"][])[] = [
+	["stripes", "waves", "sawtooth", "tangent", "polynomial"],
+	["rings"],
+	["dots"],
+	["blotches"],
+	["swirl"],
+	["scribbles"],
+	["cells"],
+	["marble"],
+];
 
 const sampleStroke = (prng: Prng, width: number, height: number): Stroke => {
 	const x0 = prng.range(-0.1, 1.1) * width;
@@ -163,26 +199,76 @@ const samplePolynomialProfile = (
 	};
 };
 
+const sampleLattice = (
+	prng: Prng,
+	spacing: number,
+	width: number,
+	height: number,
+): NoiseLattice => {
+	const columns = Math.ceil(width / spacing) + 1;
+	const rows = Math.ceil(height / spacing) + 1;
+	const values: number[] = [];
+	for (let i = 0; i < columns * rows; i++) values.push(prng.range(-1, 1));
+	return { spacing, columns, rows, values };
+};
+
+const smoothstep = (t: number): number => t * t * (3 - 2 * t);
+
+const wrap = (i: number, n: number): number => ((i % n) + n) % n;
+
+const latticeAt = (lattice: NoiseLattice, x: number, y: number): number => {
+	const gx = x / lattice.spacing;
+	const gy = y / lattice.spacing;
+	const x0 = Math.floor(gx);
+	const y0 = Math.floor(gy);
+	const tx = smoothstep(gx - x0);
+	const ty = smoothstep(gy - y0);
+	const at = (cx: number, cy: number): number =>
+		lattice.values[
+			wrap(cy, lattice.rows) * lattice.columns + wrap(cx, lattice.columns)
+		] ?? 0;
+	const top = at(x0, y0) + (at(x0 + 1, y0) - at(x0, y0)) * tx;
+	const bottom = at(x0, y0 + 1) + (at(x0 + 1, y0 + 1) - at(x0, y0 + 1)) * tx;
+	return top + (bottom - top) * ty;
+};
+
+/** Fractal noise in roughly [-1, 1]. */
+const fractalNoise = (
+	octaves: readonly NoiseLattice[],
+	x: number,
+	y: number,
+): number => {
+	let sum = 0;
+	let weight = 1;
+	let total = 0;
+	for (const lattice of octaves) {
+		sum += latticeAt(lattice, x, y) * weight;
+		total += weight;
+		weight /= 2;
+	}
+	return total > 0 ? sum / total : 0;
+};
+
 const sampleEffect = (
 	prng: Prng,
+	kind: BoardEffect["kind"],
 	width: number,
 	height: number,
 ): BoardEffect => {
-	const kind = EFFECT_KINDS[prng.int(0, EFFECT_KINDS.length - 1)];
 	switch (kind) {
 		case "stripes":
 			return {
 				kind,
 				angle: prng.range(0, Math.PI),
 				period: prng.range(9, 18),
-				amplitude: prng.range(0.04, 0.08),
+				amplitude: prng.range(0.04, 0.12),
 			};
 		case "waves":
 			return {
 				kind,
 				angle: prng.range(0, Math.PI),
 				period: prng.range(9, 18),
-				amplitude: prng.range(0.05, 0.1),
+				amplitude: prng.range(0.05, 0.12),
 				wavelength: prng.range(40, 110),
 				sway: prng.range(4, 14),
 			};
@@ -191,14 +277,14 @@ const sampleEffect = (
 				kind,
 				angle: prng.range(0, Math.PI),
 				period: prng.range(10, 22),
-				amplitude: prng.range(0.04, 0.08),
+				amplitude: prng.range(0.04, 0.11),
 			};
 		case "polynomial":
 			return {
 				kind,
 				angle: prng.range(0, Math.PI),
 				period: prng.range(14, 30),
-				amplitude: prng.range(0.05, 0.09),
+				amplitude: prng.range(0.05, 0.12),
 				...samplePolynomialProfile(prng),
 			};
 		case "tangent":
@@ -206,15 +292,15 @@ const sampleEffect = (
 				kind,
 				angle: prng.range(0, Math.PI),
 				period: prng.range(14, 28),
-				amplitude: prng.range(0.05, 0.09),
+				amplitude: prng.range(0.05, 0.12),
 				limit: prng.range(2, 6),
 			};
 		case "dots":
 			return {
 				kind,
 				spacing: prng.range(10, 16),
-				radius: prng.range(1.5, 3),
-				amplitude: prng.range(0.06, 0.12),
+				radius: prng.range(1.5, 3.5),
+				amplitude: prng.range(0.06, 0.16),
 			};
 		case "blotches": {
 			const blotches: Blotch[] = [];
@@ -245,6 +331,36 @@ const sampleEffect = (
 				degreesPerTurn: prng.range(-90, 90),
 				degreesPerPixel: prng.range(-0.8, 0.8),
 			};
+		case "cells": {
+			const sites: CellSite[] = [];
+			const count = prng.int(6, 16);
+			for (let i = 0; i < count; i++) {
+				sites.push({
+					x: prng.range(0, width),
+					y: prng.range(0, height),
+					hue: prng.range(-50, 50),
+					gain: prng.range(0.88, 1.12),
+				});
+			}
+			return { kind, sites, softness: prng.range(2, 10) };
+		}
+		case "marble": {
+			const base = prng.range(30, 70);
+			const octaves: NoiseLattice[] = [];
+			const octaveCount = prng.int(2, 4);
+			for (let o = 0; o < octaveCount; o++) {
+				octaves.push(sampleLattice(prng, base / 2 ** o, width, height));
+			}
+			return {
+				kind,
+				octaves,
+				angle: prng.range(0, Math.PI),
+				frequency: prng.range(0.03, 0.09),
+				turbulence: prng.range(3, 8),
+				amplitude: prng.range(0.05, 0.12),
+				hue: prng.range(-25, 25),
+			};
+		}
 		default: {
 			const strokes: Stroke[] = [];
 			const count = prng.int(3, 7);
@@ -272,9 +388,13 @@ export const samplePresentation = (
 		desaturate: prng.next() < 0.5 ? 0 : prng.range(0.2, 0.6),
 	};
 	const effects: BoardEffect[] = [];
-	const count = prng.int(1, 2);
-	for (let i = 0; i < count; i++) {
-		effects.push(sampleEffect(prng, width, height));
+	const count = prng.int(1, 3);
+	const families = [...EFFECT_FAMILIES];
+	for (let i = 0; i < count && families.length > 0; i++) {
+		const [family] = families.splice(prng.int(0, families.length - 1), 1);
+		if (!family) continue;
+		const kind = family[prng.int(0, family.length - 1)];
+		if (kind) effects.push(sampleEffect(prng, kind, width, height));
 	}
 	return {
 		recess,
@@ -482,6 +602,50 @@ export const applyEffects = (
 						Math.sin(angle) * effect.degreesPerTurn +
 							reach * effect.degreesPerPixel,
 					);
+				} else if (effect.kind === "cells") {
+					let nearest: CellSite | undefined;
+					let second: CellSite | undefined;
+					let d1 = Number.POSITIVE_INFINITY;
+					let d2 = Number.POSITIVE_INFINITY;
+					for (const site of effect.sites) {
+						const d = Math.hypot(px - site.x, py - site.y);
+						if (d < d1) {
+							second = nearest;
+							d2 = d1;
+							nearest = site;
+							d1 = d;
+						} else if (d < d2) {
+							second = site;
+							d2 = d;
+						}
+					}
+					if (nearest) {
+						// Half-way blend at the border, fading to the cell's own
+						// value `softness` px inside it.
+						const mix =
+							second && d2 - d1 < effect.softness
+								? 0.5 * (1 - (d2 - d1) / effect.softness)
+								: 0;
+						const hue = nearest.hue + ((second?.hue ?? 0) - nearest.hue) * mix;
+						const gain =
+							nearest.gain + ((second?.gain ?? 1) - nearest.gain) * mix;
+						[r, g, b] = rotateHue(r, g, b, hue);
+						r *= gain;
+						g *= gain;
+						b *= gain;
+					}
+				} else if (effect.kind === "marble") {
+					const along =
+						px * Math.cos(effect.angle) + py * Math.sin(effect.angle);
+					const vein = Math.sin(
+						along * effect.frequency +
+							effect.turbulence * fractalNoise(effect.octaves, px, py),
+					);
+					[r, g, b] = rotateHue(r, g, b, effect.hue * vein);
+					const gain = 1 + effect.amplitude * vein;
+					r *= gain;
+					g *= gain;
+					b *= gain;
 				} else if (effect.kind === "scribbles" && strokeDistance) {
 					const d = strokeDistance[y * image.width + x] ?? effect.width + 1;
 					const coverage = Math.max(0, Math.min(1, effect.width / 2 + 0.5 - d));
