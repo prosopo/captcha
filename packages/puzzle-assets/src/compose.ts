@@ -244,14 +244,21 @@ export interface CutResult {
  * `background` is mutated in place — it is a freshly generated, single-use
  * image, so there is nothing to preserve.
  */
-export const cutNotch = (
-	prng: Prng,
-	background: RgbaImage,
-	shape: NotchShape,
-	size: number,
-	placement: NotchPlacement,
-	holeDarken: number,
-): CutResult => {
+export const cutNotch = ({
+	prng,
+	background,
+	shape,
+	size,
+	placement,
+	holeDarken,
+}: {
+	prng: Prng;
+	background: RgbaImage;
+	shape: NotchShape;
+	size: number;
+	placement: NotchPlacement;
+	holeDarken: number;
+}): CutResult => {
 	const half = size / 2;
 	const left = Math.round(placement.targetX - half);
 	const top = Math.round(placement.targetY - half);

@@ -77,25 +77,25 @@ export const renderPuzzleToRgba = (
 ): RenderedPuzzleRgba => {
 	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	paintDecoys(
+	paintDecoys({
 		background,
 		prng,
-		settings.decoyCount,
-		pieceSize,
-		placement,
-		settings.decoyEdgeDarkness,
-		settings.decoyBodyBrightness,
-		settings.decoyHoleDarken,
-	);
+		targetCount: settings.decoyCount,
+		notchSize: pieceSize,
+		notch: placement,
+		edgeDarkness: settings.decoyEdgeDarkness,
+		bodyBrightness: settings.decoyBodyBrightness,
+		holeDarken: settings.decoyHoleDarken,
+	});
 	const shape = createNotchShape(prng, pieceSize);
-	const { background: cut, piece } = cutNotch(
+	const { background: cut, piece } = cutNotch({
 		prng,
 		background,
 		shape,
-		pieceSize,
+		size: pieceSize,
 		placement,
-		settings.holeDarken,
-	);
+		holeDarken: settings.holeDarken,
+	});
 	return { background: cut, piece, pieceSize, seed };
 };
 

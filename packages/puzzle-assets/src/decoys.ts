@@ -138,16 +138,25 @@ const COUNT_JITTER = 0.3;
  * placed after `PLACEMENT_ATTEMPTS`, it is silently dropped — decoys are
  * cosmetic, so an occasional miss is fine.
  */
-export const paintDecoys = (
-	background: RgbaImage,
-	prng: Prng,
-	targetCount: number,
-	notchSize: number,
-	notch: NotchPlacement,
-	edgeDarkness: number,
-	bodyBrightness: number,
-	holeDarken: number,
-): void => {
+export const paintDecoys = ({
+	background,
+	prng,
+	targetCount,
+	notchSize,
+	notch,
+	edgeDarkness,
+	bodyBrightness,
+	holeDarken,
+}: {
+	background: RgbaImage;
+	prng: Prng;
+	targetCount: number;
+	notchSize: number;
+	notch: NotchPlacement;
+	edgeDarkness: number;
+	bodyBrightness: number;
+	holeDarken: number;
+}): void => {
 	if (targetCount <= 0) return;
 
 	// Draw an actual count near the target. Round to int, clamp to >=0.

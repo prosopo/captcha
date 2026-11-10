@@ -138,14 +138,14 @@ describe("cutNotch", () => {
 			geometry.height,
 		);
 		const shape = createNotchShape(prng, geometry.notchSize);
-		const { background, piece } = cutNotch(
+		const { background, piece } = cutNotch({
 			prng,
-			working,
+			background: working,
 			shape,
-			geometry.notchSize,
+			size: geometry.notchSize,
 			placement,
-			DEFAULT_RENDER_SETTINGS.holeDarken,
-		);
+			holeDarken: DEFAULT_RENDER_SETTINGS.holeDarken,
+		});
 
 		// Centre of the notch is darker than it was.
 		const centre = (placement.targetY * geometry.width + placement.targetX) * 4;
@@ -161,16 +161,16 @@ describe("cutNotch", () => {
 
 	it("makes the piece opaque inside the shape and transparent at the corners", () => {
 		const prng = createPrng(SEED_A);
-		const background = createBackground(geometry);
+		const background = createBackground({ geometry });
 		const shape = createNotchShape(prng, geometry.notchSize);
-		const { piece } = cutNotch(
+		const { piece } = cutNotch({
 			prng,
 			background,
 			shape,
-			geometry.notchSize,
+			size: geometry.notchSize,
 			placement,
-			DEFAULT_RENDER_SETTINGS.holeDarken,
-		);
+			holeDarken: DEFAULT_RENDER_SETTINGS.holeDarken,
+		});
 
 		const half = Math.floor(geometry.notchSize / 2);
 		const centreAlpha =
@@ -188,20 +188,20 @@ describe("cutNotch", () => {
 		// hangs off. Every piece pixel outside the frame must be
 		// transparent — the sampler no longer clamps to the edge.
 		const prng = createPrng(SEED_A);
-		const bg = createBackground(geometry);
+		const bg = createBackground({ geometry });
 		const shape = createNotchShape(prng, geometry.notchSize);
 		const overhangPlacement = {
 			targetX: geometry.width,
 			targetY: 0,
 		};
-		const { piece } = cutNotch(
+		const { piece } = cutNotch({
 			prng,
-			bg,
+			background: bg,
 			shape,
-			geometry.notchSize,
-			overhangPlacement,
-			DEFAULT_RENDER_SETTINGS.holeDarken,
-		);
+			size: geometry.notchSize,
+			placement: overhangPlacement,
+			holeDarken: DEFAULT_RENDER_SETTINGS.holeDarken,
+		});
 
 		const half = geometry.notchSize / 2;
 		const left = Math.round(overhangPlacement.targetX - half);
@@ -236,14 +236,14 @@ describe("cutNotch", () => {
 			geometry.height,
 		);
 		const shape = createNotchShape(prng, geometry.notchSize);
-		const { piece } = cutNotch(
+		const { piece } = cutNotch({
 			prng,
-			working,
+			background: working,
 			shape,
-			geometry.notchSize,
+			size: geometry.notchSize,
 			placement,
-			DEFAULT_RENDER_SETTINGS.holeDarken,
-		);
+			holeDarken: DEFAULT_RENDER_SETTINGS.holeDarken,
+		});
 
 		const half = geometry.notchSize / 2;
 		const left = Math.round(placement.targetX - half);
@@ -266,9 +266,12 @@ describe("cutNotch", () => {
 
 describe("renderPuzzle", () => {
 	it("encodes both halves as webp", async () => {
-		const rendered = await renderPuzzle(createBackground(), {
-			targetX: 200,
-			targetY: 100,
+		const rendered = await renderPuzzle({
+			background: createBackground(),
+			placement: {
+				targetX: 200,
+				targetY: 100,
+			},
 		});
 		// RIFF....WEBP
 		expect(rendered.background.subarray(0, 4).toString("ascii")).toBe("RIFF");
@@ -279,18 +282,21 @@ describe("renderPuzzle", () => {
 
 	it("honors a `pieceSize` override independently of `notchSize`", async () => {
 		const overrideSize = 180;
-		const rendered = await renderPuzzle(
-			createBackground(),
-			{ targetX: 150, targetY: 100 },
-			{ ...DEFAULT_GEOMETRY, pieceSize: overrideSize },
-		);
+		const rendered = await renderPuzzle({
+			background: createBackground(),
+			placement: { targetX: 150, targetY: 100 },
+			geometry: { ...DEFAULT_GEOMETRY, pieceSize: overrideSize },
+		});
 		expect(rendered.pieceSize).toBe(overrideSize);
 	});
 
 	it("stays small enough to inline as a data uri", async () => {
-		const rendered = await renderPuzzle(createBackground(), {
-			targetX: 200,
-			targetY: 100,
+		const rendered = await renderPuzzle({
+			background: createBackground(),
+			placement: {
+				targetX: 200,
+				targetY: 100,
+			},
 		});
 		const base64Bytes =
 			Math.ceil(rendered.background.length / 3) * 4 +
@@ -327,58 +333,58 @@ describe("paintDecoys", () => {
 	it("is a no-op for count <= 0", () => {
 		const bg = generateBackground(createPrng(SEED_A), 300, 200);
 		const before = Buffer.from(bg.data);
-		paintDecoys(
-			bg,
-			createPrng(SEED_A),
-			0,
-			DEFAULT_GEOMETRY.notchSize,
+		paintDecoys({
+			background: bg,
+			prng: createPrng(SEED_A),
+			targetCount: 0,
+			notchSize: DEFAULT_GEOMETRY.notchSize,
 			notch,
-			decoyEdgeDarkness,
-			decoyBodyBrightness,
-			decoyHoleDarken,
-		);
+			edgeDarkness: decoyEdgeDarkness,
+			bodyBrightness: decoyBodyBrightness,
+			holeDarken: decoyHoleDarken,
+		});
 		expect(bg.data.equals(before)).toBe(true);
 	});
 
 	it("mutates the background when count > 0", () => {
 		const bg = generateBackground(createPrng(SEED_A), 300, 200);
 		const before = Buffer.from(bg.data);
-		paintDecoys(
-			bg,
-			createPrng(SEED_B),
-			3,
-			DEFAULT_GEOMETRY.notchSize,
+		paintDecoys({
+			background: bg,
+			prng: createPrng(SEED_B),
+			targetCount: 3,
+			notchSize: DEFAULT_GEOMETRY.notchSize,
 			notch,
-			decoyEdgeDarkness,
-			decoyBodyBrightness,
-			decoyHoleDarken,
-		);
+			edgeDarkness: decoyEdgeDarkness,
+			bodyBrightness: decoyBodyBrightness,
+			holeDarken: decoyHoleDarken,
+		});
 		expect(bg.data.equals(before)).toBe(false);
 	});
 
 	it("is deterministic for a given prng seed", () => {
 		const bg1 = generateBackground(createPrng(SEED_A), 300, 200);
 		const bg2 = generateBackground(createPrng(SEED_A), 300, 200);
-		paintDecoys(
-			bg1,
-			createPrng(SEED_B),
-			3,
-			DEFAULT_GEOMETRY.notchSize,
+		paintDecoys({
+			background: bg1,
+			prng: createPrng(SEED_B),
+			targetCount: 3,
+			notchSize: DEFAULT_GEOMETRY.notchSize,
 			notch,
-			decoyEdgeDarkness,
-			decoyBodyBrightness,
-			decoyHoleDarken,
-		);
-		paintDecoys(
-			bg2,
-			createPrng(SEED_B),
-			3,
-			DEFAULT_GEOMETRY.notchSize,
+			edgeDarkness: decoyEdgeDarkness,
+			bodyBrightness: decoyBodyBrightness,
+			holeDarken: decoyHoleDarken,
+		});
+		paintDecoys({
+			background: bg2,
+			prng: createPrng(SEED_B),
+			targetCount: 3,
+			notchSize: DEFAULT_GEOMETRY.notchSize,
 			notch,
-			decoyEdgeDarkness,
-			decoyBodyBrightness,
-			decoyHoleDarken,
-		);
+			edgeDarkness: decoyEdgeDarkness,
+			bodyBrightness: decoyBodyBrightness,
+			holeDarken: decoyHoleDarken,
+		});
 		expect(bg1.data.equals(bg2.data)).toBe(true);
 	});
 
@@ -413,13 +419,13 @@ describe("paintDecoys", () => {
 
 describe("renderPuzzle with decoys", () => {
 	it("still returns a matching piece when decoys are present", async () => {
-		const bg = createBackground(DEFAULT_GEOMETRY);
-		const rendered = await renderPuzzle(
-			bg,
-			{ targetX: 150, targetY: 100 },
-			DEFAULT_GEOMETRY,
-			{ ...DEFAULT_RENDER_SETTINGS, decoyCount: 3 },
-		);
+		const bg = createBackground({ geometry: DEFAULT_GEOMETRY });
+		const rendered = await renderPuzzle({
+			background: bg,
+			placement: { targetX: 150, targetY: 100 },
+			geometry: DEFAULT_GEOMETRY,
+			settings: { ...DEFAULT_RENDER_SETTINGS, decoyCount: 3 },
+		});
 		expect(rendered.background.length).toBeGreaterThan(0);
 		expect(rendered.piece.length).toBeGreaterThan(0);
 		expect(rendered.pieceSize).toBe(DEFAULT_GEOMETRY.notchSize);
@@ -427,12 +433,12 @@ describe("renderPuzzle with decoys", () => {
 
 	it("honors decoyCount 0 (no decoys) end-to-end", async () => {
 		const target = { targetX: 150, targetY: 100 };
-		const rendered = await renderPuzzle(
-			createBackground(DEFAULT_GEOMETRY),
-			target,
-			DEFAULT_GEOMETRY,
-			{ ...DEFAULT_RENDER_SETTINGS, decoyCount: 0 },
-		);
+		const rendered = await renderPuzzle({
+			background: createBackground({ geometry: DEFAULT_GEOMETRY }),
+			placement: target,
+			geometry: DEFAULT_GEOMETRY,
+			settings: { ...DEFAULT_RENDER_SETTINGS, decoyCount: 0 },
+		});
 		expect(rendered.background.length).toBeGreaterThan(0);
 	});
 });
