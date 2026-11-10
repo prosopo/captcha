@@ -26,11 +26,15 @@ import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
 import { waitForEnvironment } from "./retryWithBackoff.js";
 
-export async function start(
-	env?: ProviderEnvironment,
-	admin?: boolean,
-	port?: number,
-) {
+export async function start({
+	env,
+	admin,
+	port,
+}: {
+	env?: ProviderEnvironment;
+	admin?: boolean;
+	port?: number;
+} = {}) {
 	if (!env) {
 		loadEnv();
 
@@ -38,9 +42,11 @@ export async function start(
 		getDB();
 
 		const secret = getSecret();
-		const config = getConfig(undefined, {
-			solved: { count: 2 },
-			unsolved: { count: 0 },
+		const config = getConfig({
+			captchaServeConfig: {
+				solved: { count: 2 },
+				unsolved: { count: 0 },
+			},
 		});
 
 		const pair = getPair(secret);
