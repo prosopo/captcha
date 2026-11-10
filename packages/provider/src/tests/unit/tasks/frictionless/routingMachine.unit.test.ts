@@ -84,13 +84,13 @@ describe("applyRouter", () => {
 		ctx: RoutingContext = buildCtx(),
 		base: RoutingMachineBaseline = baseline,
 	) =>
-		applyRouter(
-			runner as unknown as DecisionMachineRunner,
-			counters as unknown as UsageCounters,
-			base,
+		applyRouter({
+			runner: runner as unknown as DecisionMachineRunner,
+			counters: counters as unknown as UsageCounters,
+			baseline: base,
 			ctx,
 			logger,
-		);
+		});
 
 	it("returns baseline when no machine is configured (route returns undefined)", async () => {
 		const result = await run();
@@ -344,13 +344,13 @@ describe("applyRouter", () => {
 			},
 		];
 		runner.getRequiredCounters.mockResolvedValueOnce(specs);
-		const result = await applyRouter(
-			runner as unknown as DecisionMachineRunner,
-			null,
+		const result = await applyRouter({
+			runner: runner as unknown as DecisionMachineRunner,
+			counters: null,
 			baseline,
-			buildCtx(),
+			ctx: buildCtx(),
 			logger,
-		);
+		});
 		expect(result).toEqual(baseline);
 		expect(runner.route).not.toHaveBeenCalled();
 		expect(logger.warn).toHaveBeenCalled();
