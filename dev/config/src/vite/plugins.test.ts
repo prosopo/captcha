@@ -19,6 +19,7 @@ import type { Rollup } from "vite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { tsNoCheckPlugin } from "./TsNoCheckPlugin.js";
 import VitePluginCopy from "./vite-plugin-copy.js";
+import VitePluginDropBareNodeModuleImport from "./vite-plugin-drop-bare-node-module-import.js";
 import VitePluginExternalizeObfuscatorDeadCode from "./vite-plugin-externalize-obfuscator-deadcode.js";
 import VitePluginFixAbsoluteImports from "./vite-plugin-fix-absolute-imports.js";
 import {
@@ -361,5 +362,50 @@ describe("translation flatten/unflatten", () => {
 		expect(unflatten({ "a.b": 1, "a.c": true })).toEqual({
 			a: { b: 1, c: true },
 		});
+	});
+});
+
+describe("VitePluginDropBareNodeModuleImport", () => {
+	const run = (bundle: Rollup.OutputBundle): void =>
+		(
+			handlerOf(VitePluginDropBareNodeModuleImport().generateBundle) as (
+				options: unknown,
+				bundle: Rollup.OutputBundle,
+			) => void
+		)({}, bundle);
+
+	const generate = (code: string): string => {
+		const chunk = { type: "chunk", code } as Rollup.OutputChunk;
+		const bundle: Rollup.OutputBundle = { "runtime.js": chunk };
+		run(bundle);
+		return chunk.code;
+	};
+
+	it("drops the bindingless import left in Rolldown's runtime chunk", () => {
+		expect(generate('import "node:module";\n//#endregion\nexport {};\n')).toBe(
+			"//#endregion\nexport {};\n",
+		);
+	});
+
+	it("drops single-quoted and semicolon-free forms", () => {
+		expect(generate("import 'node:module'\nexport {};")).toBe("export {};");
+	});
+
+	it.each([
+		'import { createRequire } from "node:module";\n',
+		'import "node:fs";\n',
+		'const s = "import \\"node:module\\";";\n',
+	])("leaves %j alone", (code: string) => {
+		expect(generate(code)).toBe(code);
+	});
+
+	it("skips assets", () => {
+		const asset = {
+			type: "asset",
+			source: 'import "node:module";',
+		} as Rollup.OutputAsset;
+		const bundle: Rollup.OutputBundle = { "a.txt": asset };
+		run(bundle);
+		expect(asset.source).toBe('import "node:module";');
 	});
 });

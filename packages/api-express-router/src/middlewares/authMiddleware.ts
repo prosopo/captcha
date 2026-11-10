@@ -57,11 +57,15 @@ const isReplay = (
 	);
 };
 
-export const authMiddleware = (
-	pair: KeyringPair | undefined,
-	authAccount?: KeyringPair | undefined,
-	options: AuthMiddlewareOptions = {},
-) => {
+export const authMiddleware = ({
+	pair,
+	authAccount,
+	options = {},
+}: {
+	pair: KeyringPair | undefined;
+	authAccount?: KeyringPair;
+	options?: AuthMiddlewareOptions;
+}) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const jwt = extractJWT(req);

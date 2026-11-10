@@ -375,11 +375,11 @@ export async function startProviderApi(
 
 	//  Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
-	const adminAuth = authMiddleware(
-		env.pair,
-		env.authAccount,
-		adminAuthOptions(process.env, env.config.host),
-	);
+	const adminAuth = authMiddleware({
+		pair: env.pair,
+		authAccount: env.authAccount,
+		options: adminAuthOptions(process.env, env.config.host),
+	});
 	apiApp.use("/v1/prosopo/provider/admin", adminAuth);
 	if (apiRuleRoutesProvider) {
 		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
