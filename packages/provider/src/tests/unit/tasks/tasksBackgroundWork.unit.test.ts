@@ -53,4 +53,38 @@ describe("Tasks background work", () => {
 
 		expect(getClient).not.toHaveBeenCalled();
 	});
+
+	it("gives every captcha manager the same session cache write queue", () => {
+		const connection: RedisConnection = {
+			isReady: () => true,
+			getClient: () => Promise.reject(new Error("unexpected Redis call")),
+			getAwaitingTimeMs: () => 0,
+		};
+		const db = Object.create(ProviderDatabase.prototype) as ProviderDatabase;
+		db.getRedisConnection = () => connection;
+		const config = {
+			logLevel: LogLevel.enum.error,
+			captchas: { solved: { count: 1 }, unsolved: { count: 1 } },
+		} as ProviderEnvironment["config"];
+		const getDb: ProviderEnvironment["getDb"] = () => db;
+		const env = {
+			config,
+			pair: { address: "provider" } as KeyringPair,
+			getDb,
+		} as ProviderEnvironment;
+
+		const tasks = new Tasks(env, getLogger(LogLevel.enum.error, "tasksQueue"));
+
+		expect(tasks.writeQueue).not.toBeNull();
+		for (const manager of [
+			tasks.powCaptchaManager,
+			tasks.imgCaptchaManager,
+			tasks.puzzleCaptchaManager,
+			tasks.audioCaptchaManager,
+			tasks.iconOrderCaptchaManager,
+			tasks.frictionlessManager,
+		]) {
+			expect(manager.writeQueue).toBe(tasks.writeQueue);
+		}
+	});
 });
