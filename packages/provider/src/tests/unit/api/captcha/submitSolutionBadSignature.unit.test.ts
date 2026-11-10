@@ -90,24 +90,24 @@ beforeAll(async () => {
 		db: {
 			getClientRecord: async () => ({ settings: { verifiedTimeout: 60_000 } }),
 		},
-		imgCaptchaManager: new ImgCaptchaManager(
-			unreachableDb,
-			providerPair,
+		imgCaptchaManager: new ImgCaptchaManager({
+			db: unreachableDb,
+			pair: providerPair,
 			config,
 			logger,
-		),
-		powCaptchaManager: new PowCaptchaManager(
-			unreachableDb,
-			providerPair,
+		}),
+		powCaptchaManager: new PowCaptchaManager({
+			db: unreachableDb,
+			pair: providerPair,
 			config,
 			logger,
-		),
-		puzzleCaptchaManager: new PuzzleCaptchaManager(
-			unreachableDb,
-			providerPair,
+		}),
+		puzzleCaptchaManager: new PuzzleCaptchaManager({
+			db: unreachableDb,
+			pair: providerPair,
 			config,
 			logger,
-		),
+		}),
 	};
 
 	const env = { logger } as ProviderEnvironment;

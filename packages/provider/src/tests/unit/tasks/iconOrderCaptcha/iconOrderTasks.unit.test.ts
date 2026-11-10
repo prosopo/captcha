@@ -113,7 +113,7 @@ describe("IconOrderCaptchaManager", () => {
 		} as unknown as KeyringPair;
 
 		mockEnv = { config: {} } as unknown as ProviderEnvironment;
-		manager = new IconOrderCaptchaManager(db, pair, mockEnv.config);
+		manager = new IconOrderCaptchaManager({ db, pair, config: mockEnv.config });
 
 		vi.clearAllMocks();
 		vi.mocked(u8aToHex).mockReturnValue("0xsigned");
@@ -222,14 +222,13 @@ describe("IconOrderCaptchaManager", () => {
 				]),
 			).resolves.toBe(true);
 
-			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
-				"0xuser",
-				undefined,
-			);
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
 		});
 
 		it("rejects the right icons clicked in the wrong order", async () => {
@@ -245,17 +244,16 @@ describe("IconOrderCaptchaManager", () => {
 				]),
 			).resolves.toBe(false);
 
-			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
 				},
-				false,
-				true,
-				"0xuser",
-				undefined,
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
 		});
 
 		it("rejects clicks that miss the icons", async () => {
@@ -350,17 +348,16 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 240, y: 150 },
 				]),
 			).resolves.toBe(false);
-			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 				},
-				false,
-				true,
-				"0xuser",
-				undefined,
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
 		});
 
 		it("persists the clicks and pointer trail even on a failed solve", async () => {

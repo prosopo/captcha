@@ -61,14 +61,14 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 		userSignature: string,
 		coords: [number, number][][] | undefined,
 	): Promise<void> {
-		return this.db.updateAudioCaptchaRecordResult(
+		return this.db.updateAudioCaptchaRecordResult({
 			challenge,
 			result,
-			false,
-			true,
+			serverChecked: false,
+			userSubmitted: true,
 			userSignature,
 			coords,
-		);
+		});
 	}
 
 	/** Atomic, so concurrent submissions cannot each be graded. */
