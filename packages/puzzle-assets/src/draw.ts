@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { cutNotch } from "./compose.js";
-import { paintDecoys } from "./decoys.js";
+import { SEPARATED_DECOY_SPACING, paintDecoys } from "./decoys.js";
 import { createNotchShape } from "./notch.js";
 import {
 	type Regrain,
@@ -79,6 +79,7 @@ export const drawPuzzle = ({
 		bodyBrightness: settings.decoyBodyBrightness,
 		holeDarken: settings.decoyHoleDarken,
 		style: presentation?.recess,
+		...(version >= 2 && { spacing: SEPARATED_DECOY_SPACING }),
 	});
 	const shape = sharedShape ?? createNotchShape(prng, pieceSize);
 	const cut = cutNotch({

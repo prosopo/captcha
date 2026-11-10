@@ -43,6 +43,24 @@ const NOTCH_CLEARANCE = 0;
 /** Placement retries per decoy before giving up on that slot. */
 const PLACEMENT_ATTEMPTS = 8;
 
+/**
+ * Spacing for decoys that share the real piece's outline (renderer 2+). With
+ * every hole the same shape, overlap is what a human gets wrong: two decoys
+ * piled together, or a decoy over the target, read as one deeper cut than the
+ * real hole. Clearance is centre-to-centre in notch-sizes, against the target
+ * and every decoy already placed; the extra attempts keep a crowded board from
+ * dropping most of its decoys.
+ */
+export interface DecoySpacing {
+	clearance: number;
+	attempts: number;
+}
+
+export const SEPARATED_DECOY_SPACING: DecoySpacing = {
+	clearance: 1,
+	attempts: 32,
+};
+
 const clamp255 = (v: number): number => (v < 0 ? 0 : v > 255 ? 255 : v);
 
 const distanceSquared = (
@@ -155,10 +173,10 @@ const COUNT_JITTER = 0.3;
  * Paint decoys onto `background`. The actual number placed varies per-
  * challenge within ±COUNT_JITTER of `targetCount`, so a solver can't
  * hard-code the expected count. Decoys avoid only the real notch
- * placement (they may freely overlap each other). If a slot cannot be
- * placed after `PLACEMENT_ATTEMPTS`, it is silently dropped — decoys are
- * cosmetic, so an occasional miss is fine. Every decoy takes `shape` when one
- * is given; otherwise each draws its own.
+ * placement (they may freely overlap each other) unless `spacing` is given.
+ * If a slot cannot be placed after the allowed attempts, it is silently
+ * dropped — decoys are cosmetic, so an occasional miss is fine. Every decoy
+ * takes `shape` when one is given; otherwise each draws its own.
  */
 export const paintDecoys = ({
 	background,
@@ -171,6 +189,7 @@ export const paintDecoys = ({
 	bodyBrightness,
 	holeDarken,
 	style,
+	spacing,
 }: {
 	background: RgbaImage;
 	prng: Prng;
@@ -182,6 +201,7 @@ export const paintDecoys = ({
 	bodyBrightness: number;
 	holeDarken: number;
 	style?: RecessStyle;
+	spacing?: DecoySpacing;
 }): void => {
 	if (targetCount <= 0) return;
 
@@ -190,7 +210,11 @@ export const paintDecoys = ({
 	const count = Math.max(0, Math.round(targetCount * jitter));
 	if (count === 0) return;
 
-	const notchClearanceSq = (notchSize * NOTCH_CLEARANCE) ** 2;
+	const notchClearanceSq =
+		(notchSize * (spacing?.clearance ?? NOTCH_CLEARANCE)) ** 2;
+	const decoyClearanceSq = spacing ? (notchSize * spacing.clearance) ** 2 : 0;
+	const attempts = spacing?.attempts ?? PLACEMENT_ATTEMPTS;
+	const placed: { cx: number; cy: number }[] = [];
 	// Centre may sit anywhere on the frame; a decoy that overhangs the edge
 	// is clipped by `paintDecoyPiece`, matching the real piece's overhang
 	// behaviour. Without this, large pieces would render zero decoys because
@@ -201,15 +225,19 @@ export const paintDecoys = ({
 	const maxY = background.height;
 
 	for (let i = 0; i < count; i++) {
-		for (let attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
+		for (let attempt = 0; attempt < attempts; attempt++) {
 			const cx = prng.range(minX, maxX);
 			const cy = prng.range(minY, maxY);
 			if (
 				distanceSquared(cx, cy, { cx: notch.targetX, cy: notch.targetY }) <
-				notchClearanceSq
+					notchClearanceSq ||
+				placed.some(
+					(other) => distanceSquared(cx, cy, other) < decoyClearanceSq,
+				)
 			) {
 				continue;
 			}
+			placed.push({ cx, cy });
 			paintDecoyPiece({
 				background,
 				shape: shape ?? createNotchShape(prng, notchSize),

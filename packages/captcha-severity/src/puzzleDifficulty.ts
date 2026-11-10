@@ -150,9 +150,14 @@ export const PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL = 2;
  *      decoy count alone would leak the level, and a solver could tell
  *      "I am suspected" from one render.
  *
- * L0 reproduces the shipped defaults (decoyCount 5, decoyEdgeDarkness 20,
- * decoyHoleDarken 0.7, tolerance 15, pieceScale 0.15-0.45) so a site that
+ * L0 brackets the shipped defaults (decoyCount 3, decoyEdgeDarkness 12,
+ * decoyHoleDarken 0.84, tolerance 15, pieceScale 0.15-0.45) so a site that
  * never escalates sees no change in behaviour.
+ *
+ * Every decoy shares the real piece's outline, so the only thing telling a
+ * human which hole is real is that it is the darkest. L0 and L1 therefore keep
+ * decoys well clear of `holeDarken` and few in number; only L2 and above, which
+ * only suspected sessions reach, close that gap.
  *
  * The numbers above L0 are STARTING POINTS, not calibrated values. They need
  * validating against observed human first-attempt solve rate per level,
@@ -163,23 +168,23 @@ export const PUZZLE_DIFFICULTY_LEVELS: readonly PuzzleDifficultyBand[] = [
 	{
 		level: 0,
 		tolerance: { min: 14, max: 16 },
-		decoyCount: { min: 4, max: 6 },
-		decoyHoleDarken: { min: 0.68, max: 0.72 },
-		decoyEdgeDarkness: { min: 18, max: 22 },
+		decoyCount: { min: 2, max: 4 },
+		decoyHoleDarken: { min: 0.8, max: 0.88 },
+		decoyEdgeDarkness: { min: 10, max: 14 },
 		pieceScale: { min: 0.15, max: 0.45 },
 	},
 	{
 		level: 1,
 		tolerance: { min: 12, max: 15 },
-		decoyCount: { min: 6, max: 10 },
-		decoyHoleDarken: { min: 0.66, max: 0.7 },
-		decoyEdgeDarkness: { min: 20, max: 24 },
+		decoyCount: { min: 3, max: 7 },
+		decoyHoleDarken: { min: 0.72, max: 0.82 },
+		decoyEdgeDarkness: { min: 14, max: 19 },
 		pieceScale: { min: 0.14, max: 0.4 },
 	},
 	{
 		level: 2,
 		tolerance: { min: 10, max: 13 },
-		decoyCount: { min: 10, max: 16 },
+		decoyCount: { min: 7, max: 16 },
 		decoyHoleDarken: { min: 0.64, max: 0.68 },
 		decoyEdgeDarkness: { min: 22, max: 27 },
 		pieceScale: { min: 0.12, max: 0.34 },

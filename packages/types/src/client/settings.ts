@@ -81,15 +81,15 @@ export const ipDetectorRiskWeightDefault = 0;
 // `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
 // authoritative bounds and defaults; the renderer just receives resolved
 // values from the provider.
-export const puzzleDecoyCountDefault = 5;
-export const puzzleDecoyEdgeDarknessDefault = 20;
+export const puzzleDecoyCountDefault = 3;
+export const puzzleDecoyEdgeDarknessDefault = 12;
 export const puzzleDecoyBodyBrightnessDefault = 4;
 export const puzzleHoleDarkenDefault = 0.55;
 // Multiplier on decoy pixels, mirroring `holeDarken` for the real cut.
 // Lower = darker decoys. Kept looser than `holeDarken` so the real hole is
 // still the deepest region on the frame; too close and humans can't tell,
 // too far and a solver keys on brightness alone.
-export const puzzleDecoyHoleDarkenDefault = 0.7;
+export const puzzleDecoyHoleDarkenDefault = 0.84;
 // Piece size as a fraction of the background width. The provider draws a
 // fresh value from [min, max] per challenge so a solver can't hard-code
 // the expected silhouette scale. Defaults preserve the historical 44px

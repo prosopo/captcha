@@ -134,7 +134,7 @@ export const MAX_DECOY_COVERAGE = 1.2;
 export const MAX_DECOY_COVERAGE_TOUCH = 0.85;
 
 /** Never trim below the lowest count any band asks for. */
-export const MIN_DECOY_COUNT = 4;
+export const MIN_DECOY_COUNT = 2;
 
 /**
  * Trim `decoyCount` so the decoys cannot cover more of the background than the
@@ -163,5 +163,5 @@ export const capDecoyCountForCoverage = ({
 	if (perDecoyCoverage <= 0) return decoyCount;
 
 	const allowed = Math.floor(maxCoverage / perDecoyCoverage);
-	return Math.max(MIN_DECOY_COUNT, Math.min(decoyCount, allowed));
+	return Math.min(decoyCount, Math.max(MIN_DECOY_COUNT, allowed));
 };
