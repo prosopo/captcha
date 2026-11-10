@@ -19,6 +19,9 @@ prosopo-ja4 = "0.1"
 napi-build = "2.1"
 
 [profile.release]
+# Release otherwise wraps on integer overflow silently; a wrapped counter or
+# length is worse than a panic.
+overflow-checks = true
 lto = true
 codegen-units = 1
 strip = "symbols"

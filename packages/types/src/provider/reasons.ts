@@ -31,6 +31,9 @@ export enum FrictionlessReason {
 	BOT_SCORE_PUZZLE_BAND = "BOT_SCORE_PUZZLE_BAND",
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
+	// The bot score or a threshold it is compared against was NaN or infinite.
+	// Every comparison with NaN is false, so it would otherwise read as clean.
+	INVALID_SCORE = "INVALID_SCORE",
 	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",
 	MISSING_CURRENT_URL = "MISSING_CURRENT_URL",
 	// A verified PoW solve arrived without click coordinates encoded in its

@@ -107,6 +107,23 @@ describe("Frictionless Task Manager", () => {
 			expect(result.scoreComponents.accessPolicy).toBe(1);
 		});
 	});
+	describe("timestampTooOld", () => {
+		const now = 10_000_000_000;
+		beforeEach(() => {
+			vi.spyOn(Date, "now").mockReturnValue(now);
+		});
+
+		it.each<[string, number, boolean]>([
+			["a current timestamp", now, false],
+			["a timestamp a few seconds ahead", now + 5_000, false],
+			["a timestamp eleven minutes old", now - 11 * 60_000, true],
+			["a timestamp an hour in the future", now + 3_600_000, true],
+			["a NaN timestamp", Number.NaN, true],
+		])("treats %s as stale: %s", (_, timestamp: number, stale: boolean) => {
+			expect(FrictionlessManager.timestampTooOld(timestamp)).toBe(stale);
+		});
+	});
+
 	describe("scoreIncreaseTimestamp", () => {
 		it("should return the correct score increase when a timestamp is more than the 10 mins old", () => {
 			const defaults = FrictionlessPenalties.parse({});

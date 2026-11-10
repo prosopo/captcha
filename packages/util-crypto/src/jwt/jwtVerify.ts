@@ -32,6 +32,8 @@ const verifySr25519Signature = (
 		return false;
 	}
 };
+const MAX_CLOCK_SKEW_SECONDS = 30;
+
 const isNumericDate = (value: unknown): value is number =>
 	typeof value === "number" && Number.isFinite(value);
 
@@ -134,6 +136,17 @@ export const jwtVerify = (
 		return {
 			isValid: false,
 			error: "JWT not valid yet",
+			crypto: header.alg,
+			publicKey,
+			isWrapped: false,
+		};
+	}
+	// Without this a token dated ahead passes the lifetime bound below yet stays
+	// usable from now until its far-off `exp`.
+	if (iat > now + MAX_CLOCK_SKEW_SECONDS) {
+		return {
+			isValid: false,
+			error: "JWT issued in the future",
 			crypto: header.alg,
 			publicKey,
 			isWrapped: false,
