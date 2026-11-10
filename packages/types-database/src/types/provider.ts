@@ -1505,8 +1505,6 @@ export interface IProviderDatabase extends IDatabase {
 
 	getCaptchaById(captchaId: string[]): Promise<Captcha[] | undefined>;
 
-	updateCaptcha(captcha: Captcha, datasetId: string): Promise<void>;
-
 	removeCaptchas(captchaIds: string[]): Promise<void>;
 
 	getDatasetDetails(
@@ -1645,8 +1643,6 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	flagProcessedDappUserSolutions(captchaIds: Hash[]): Promise<void>;
-
-	flagProcessedDappUserCommitments(commitmentIds: Hash[]): Promise<void>;
 
 	getLastScheduledTaskStatus(
 		task: ScheduledTaskNames,
