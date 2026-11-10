@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import {
+	AutoIncrementID,
+	type AutoIncrementIDOptions,
+} from "@typegoose/auto-increment";
 import mongoose, { Schema } from "mongoose";
 
 export interface UserInterface {
@@ -41,5 +45,9 @@ const UserSchema = new Schema<UserInterface>({
 		required: true,
 	},
 });
+
+// Applied here rather than per connection: the schema is shared by every
+// connection, and each extra application adds a hook that bumps the counter.
+UserSchema.plugin(AutoIncrementID, { field: "id" } as AutoIncrementIDOptions);
 
 export default UserSchema;

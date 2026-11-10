@@ -337,7 +337,7 @@ const login = async (
 					},
 				}));
 
-				if (verified) {
+				if (verified === true) {
 					// password hash
 					// !!!DUMMY CODE!!! - Do not use in production. Use bcrypt or similar for password hashing.
 					const passwordHash = hashPassword(
