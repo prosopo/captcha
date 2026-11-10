@@ -17,14 +17,13 @@
 // a <canvas> directly.
 
 import { generateBackground } from "./background.js";
-import { cutNotch } from "./compose.js";
-import { paintDecoys } from "./decoys.js";
-import { createNotchShape } from "./notch.js";
+import { PUZZLE_RENDERER_VERSION, drawPuzzle } from "./draw.js";
 import { createPrng, createSeed } from "./prng.js";
 import type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RgbaImage,
 } from "./types.js";
 
@@ -33,10 +32,12 @@ export type { Prng } from "./prng.js";
 export { hslToRgb } from "./palette.js";
 export { generateBackground } from "./background.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
+export { PUZZLE_RENDERER_VERSION } from "./draw.js";
 export type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RenderedPuzzle,
 	RgbaImage,
 } from "./types.js";
@@ -74,33 +75,23 @@ export const renderPuzzleToRgba = ({
 	geometry = DEFAULT_GEOMETRY,
 	settings = DEFAULT_RENDER_SETTINGS,
 	seed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
 }: {
 	background: RgbaImage;
 	placement: NotchPlacement;
 	geometry?: PuzzleGeometry;
 	settings?: PuzzleRenderSettings;
 	seed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
 }): RenderedPuzzleRgba => {
-	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	paintDecoys({
+	const { background: cut, piece } = drawPuzzle({
 		background,
-		prng,
-		targetCount: settings.decoyCount,
-		notchSize: pieceSize,
-		notch: placement,
-		edgeDarkness: settings.decoyEdgeDarkness,
-		bodyBrightness: settings.decoyBodyBrightness,
-		holeDarken: settings.decoyHoleDarken,
-	});
-	const shape = createNotchShape(prng, pieceSize);
-	const { background: cut, piece } = cutNotch({
-		prng,
-		background,
-		shape,
-		size: pieceSize,
 		placement,
-		holeDarken: settings.holeDarken,
+		pieceSize,
+		settings,
+		prng: createPrng(seed),
+		version: rendererVersion,
 	});
 	return { background: cut, piece, pieceSize, seed };
 };

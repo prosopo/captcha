@@ -46,6 +46,7 @@ import {
 	type IconOrderEvent,
 	type ImageVerificationResponse,
 	type ModeEnum,
+	PUZZLE_KEY_HEADER,
 	type PowCaptchaSolutionResponse,
 	type ProcaptchaToken,
 	type Provider,
@@ -677,7 +678,12 @@ export default class ProviderApi
 		// Re-attach to the returned object so downstream code (widget,
 		// FrictionlessState) consumes it identically to before.
 		const hp = headers.get("x-prosopo-meta");
-		return hp ? { ...data, [ApiParams.hp]: hp } : data;
+		const puzzleKey = headers.get(PUZZLE_KEY_HEADER);
+		return {
+			...data,
+			...(hp && { [ApiParams.hp]: hp }),
+			...(puzzleKey && { [ApiParams.puzzleKey]: puzzleKey }),
+		};
 	}
 
 	public submitUserEvents(

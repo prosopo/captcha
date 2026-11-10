@@ -33,6 +33,7 @@ import {
 	ClientApiPaths,
 	type CombinedApiPaths,
 	INTEGRATION_HEADER,
+	PUZZLE_KEY_HEADER,
 } from "@prosopo/types";
 import {
 	AccessRuleApiRoutes,
@@ -100,7 +101,7 @@ const tlsFiles = (): { key: string; cert: string } | undefined => {
  * provider must accept a new widget header before any widget sends it.
  */
 export const providerCorsOptions: CorsOptions = {
-	exposedHeaders: ["x-prosopo-meta"],
+	exposedHeaders: ["x-prosopo-meta", PUZZLE_KEY_HEADER],
 	allowedHeaders: [
 		"Accept",
 		"Accept-Language",

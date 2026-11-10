@@ -41,6 +41,7 @@ import {
 } from "../../../tasks/audioAlternative.js";
 import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
+import { attachPuzzleKey } from "../../../tasks/puzzle/puzzleKey.js";
 import {
 	deriveDevice,
 	deriveTrafficPolicies,
@@ -163,6 +164,7 @@ export default (
 			const sessionToken = token || `notoken-${uuidv4()}`;
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
+			attachPuzzleKey(res, normalizedIp);
 			// Always persist a concrete mode on the session — the client only
 			// sends `mode` when it wants to opt into invisible; visible is the
 			// implicit default. Previously the visible path collapsed to

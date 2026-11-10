@@ -31,10 +31,10 @@ import type {
 import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { renderPuzzleImagesMock } = vi.hoisted(() => ({
-	renderPuzzleImagesMock:
+const { renderPuzzleBoardImagesMock } = vi.hoisted(() => ({
+	renderPuzzleBoardImagesMock:
 		vi.fn<
-			typeof import("../../../../tasks/puzzle/puzzleRenderer.js").renderPuzzleImages
+			typeof import("../../../../tasks/puzzle/puzzleRenderer.js").renderPuzzleBoardImages
 		>(),
 }));
 
@@ -45,7 +45,10 @@ vi.mock(
 			await importOriginal<
 				typeof import("../../../../tasks/puzzle/puzzleRenderer.js")
 			>();
-		return { ...actual, renderPuzzleImages: renderPuzzleImagesMock };
+		return {
+			...actual,
+			renderPuzzleBoardImages: renderPuzzleBoardImagesMock,
+		};
 	},
 );
 
@@ -55,6 +58,7 @@ import type {
 	IssuedChallenge,
 } from "../../../../api/captcha/interactiveCaptchaChallenge.js";
 import type { RequestTimeTrafficVerdict } from "../../../../api/captcha/trafficFilterRequestTime.js";
+import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import type { Tasks } from "../../../../tasks/index.js";
 
 const IPHONE_UA =
@@ -113,7 +117,7 @@ const buildContext = (overrides: {
 	} as unknown as ProjectedSession,
 	trafficVerdict: overrides.trafficVerdict ?? { kind: "pass" },
 	provenance: {
-		ipAddress: { type: "v4", v4: 0 } as never,
+		ipAddress: getCompositeIpAddress("203.0.113.5"),
 		headers: { "user-agent": overrides.userAgent },
 		ja4: "ja4",
 		sessionId: "session",
@@ -140,7 +144,7 @@ const servedTolerance = (): number | undefined => {
 
 /** The piece size in px handed to the renderer. */
 const servedPieceSize = (): number => {
-	const call = renderPuzzleImagesMock.mock.calls[0];
+	const call = renderPuzzleBoardImagesMock.mock.calls[0];
 	if (!call) throw new Error("nothing was rendered");
 	const { pieceSize } = call[0];
 	if (pieceSize === undefined) throw new Error("no piece size was served");
@@ -164,12 +168,13 @@ describe("per-device puzzle floors at issuance", () => {
 			tolerance: 12,
 			providerSignature: "sig",
 		});
-		renderPuzzleImagesMock.mockResolvedValue({
+		renderPuzzleBoardImagesMock.mockResolvedValue({
 			background: "bg",
-			piece: "piece",
+			mask: Buffer.alloc(4),
 			pieceSize: 60,
 			backgroundSeed: "seed",
 			renderSeed: "seed",
+			rendererVersion: 2,
 		});
 	});
 
@@ -275,12 +280,13 @@ describe("the floors need corroboration", () => {
 			tolerance: 5,
 			providerSignature: "sig",
 		});
-		renderPuzzleImagesMock.mockResolvedValue({
+		renderPuzzleBoardImagesMock.mockResolvedValue({
 			background: "bg",
-			piece: "piece",
+			mask: Buffer.alloc(4),
 			pieceSize: 30,
 			backgroundSeed: "seed",
 			renderSeed: "seed",
+			rendererVersion: 2,
 		});
 	});
 
@@ -332,12 +338,13 @@ describe("the session's fingerprint summary at issuance", () => {
 			tolerance: 12,
 			providerSignature: "sig",
 		});
-		renderPuzzleImagesMock.mockResolvedValue({
+		renderPuzzleBoardImagesMock.mockResolvedValue({
 			background: "bg",
-			piece: "piece",
+			mask: Buffer.alloc(4),
 			pieceSize: 60,
 			backgroundSeed: "seed",
 			renderSeed: "seed",
+			rendererVersion: 2,
 		});
 	});
 

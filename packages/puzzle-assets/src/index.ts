@@ -13,16 +13,18 @@
 // limitations under the License.
 
 import { generateBackground } from "./background.js";
-import { cutNotch } from "./compose.js";
-import { paintDecoys } from "./decoys.js";
+import { PUZZLE_RENDERER_VERSION, drawPuzzle } from "./draw.js";
 import { encodeBackground, encodePiece } from "./encode.js";
-import { createNotchShape } from "./notch.js";
+import { pieceMask, placePiece } from "./placement.js";
+import type { Regrain } from "./presentation.js";
 import { createPrng, createSeed } from "./prng.js";
 import type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RenderedPuzzle,
+	RenderedPuzzleBoard,
 	RgbaImage,
 } from "./types.js";
 
@@ -45,6 +47,9 @@ export {
 	type Rgb,
 } from "./palette.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
+export { PUZZLE_RENDERER_VERSION } from "./draw.js";
+export { pieceMask, placePiece } from "./placement.js";
+export { type Regrain, drawRegrainSeed, regrain } from "./presentation.js";
 export {
 	encodeBackground,
 	encodePiece,
@@ -55,7 +60,9 @@ export type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RenderedPuzzle,
+	RenderedPuzzleBoard,
 	RgbaImage,
 } from "./types.js";
 
@@ -110,37 +117,27 @@ export const renderPuzzle = async ({
 	geometry = DEFAULT_GEOMETRY,
 	settings = DEFAULT_RENDER_SETTINGS,
 	seed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
+	regrain,
 }: {
 	background: RgbaImage;
 	placement: NotchPlacement;
 	geometry?: PuzzleGeometry;
 	settings?: PuzzleRenderSettings;
 	seed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
+	/** Defaults to the JS `regrain`. */
+	regrain?: Regrain;
 }): Promise<RenderedPuzzle> => {
-	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	// Decoys go on first so the real cut sits on top of any overlap and
-	// always reads as the deepest, darkest region on the board. Decoys use
-	// the same size as the real piece so a solver can't key on scale to
-	// disambiguate the target.
-	paintDecoys({
+	const { background: cut, piece } = drawPuzzle({
 		background,
-		prng,
-		targetCount: settings.decoyCount,
-		notchSize: pieceSize,
-		notch: placement,
-		edgeDarkness: settings.decoyEdgeDarkness,
-		bodyBrightness: settings.decoyBodyBrightness,
-		holeDarken: settings.decoyHoleDarken,
-	});
-	const shape = createNotchShape(prng, pieceSize);
-	const { background: cut, piece } = cutNotch({
-		prng,
-		background,
-		shape,
-		size: pieceSize,
 		placement,
-		holeDarken: settings.holeDarken,
+		pieceSize,
+		settings,
+		prng: createPrng(seed),
+		version: rendererVersion,
+		...(regrain && { regrain }),
 	});
 
 	const [backgroundWebp, pieceWebp] = await Promise.all([
@@ -153,6 +150,54 @@ export const renderPuzzle = async ({
 		piece: pieceWebp,
 		pieceSize,
 		seed,
+		rendererVersion,
+	};
+};
+
+/**
+ * Cut a notch at `placement`, draw the piece back onto the board centred on
+ * `start`, and encode the board. The piece leaves as its mask alone; the
+ * widget lifts the piece's pixels out of the board with it.
+ *
+ * The background is consumed (mutated) by this call.
+ */
+export const renderPuzzleBoard = async ({
+	background,
+	placement,
+	start,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
+	regrain,
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	start: { x: number; y: number };
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	seed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
+	/** Defaults to the JS `regrain`. */
+	regrain?: Regrain;
+}): Promise<RenderedPuzzleBoard> => {
+	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
+	const { background: board, piece } = drawPuzzle({
+		background,
+		placement,
+		pieceSize,
+		settings,
+		prng: createPrng(seed),
+		version: rendererVersion,
+		...(regrain && { regrain }),
+	});
+	placePiece(board, piece, start.x, start.y);
+	return {
+		board: await encodeBackground(board),
+		mask: pieceMask(piece),
+		pieceSize,
+		seed,
+		rendererVersion,
 	};
 };
 
@@ -169,12 +214,14 @@ export const createPuzzle = async ({
 	settings = DEFAULT_RENDER_SETTINGS,
 	backgroundSeed = createSeed(),
 	renderSeed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
 }: {
 	placement: NotchPlacement;
 	geometry?: PuzzleGeometry;
 	settings?: PuzzleRenderSettings;
 	backgroundSeed?: Buffer;
 	renderSeed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
 }): Promise<RenderedPuzzle> =>
 	renderPuzzle({
 		background: createBackground({ geometry, seed: backgroundSeed }),
@@ -182,4 +229,5 @@ export const createPuzzle = async ({
 		geometry,
 		settings,
 		seed: renderSeed,
+		rendererVersion,
 	});

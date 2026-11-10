@@ -17,9 +17,13 @@ import {
 	DEFAULT_GEOMETRY,
 	createPrng,
 	generateBackground,
+	regrain,
 } from "@prosopo/puzzle-assets";
 import { describe, expect, it } from "vitest";
-import { createBackgroundNative } from "../../../../tasks/puzzle/nativeBackground.js";
+import {
+	createBackgroundNative,
+	regrainNative,
+} from "../../../../tasks/puzzle/nativeBackground.js";
 
 const require = createRequire(import.meta.url);
 const native = require("@prosopo/native-puzzle") as {
@@ -101,5 +105,32 @@ describe("native puzzle background", () => {
 		expect(() =>
 			native.generateBackground(Buffer.alloc(8), width, height),
 		).toThrow(/seed must be at least 16 bytes/);
+	});
+});
+
+describe("native puzzle regrain", () => {
+	it("matches the JS reference implementation byte for byte", () => {
+		for (const [index, seed] of SEEDS.entries()) {
+			const board = generateBackground(
+				createPrng(SEEDS[(index + 1) % SEEDS.length] ?? seed),
+				width,
+				height,
+			);
+			const reference = { ...board, data: Buffer.from(board.data) };
+			const actual = { ...board, data: Buffer.from(board.data) };
+			regrain(reference, seed);
+			regrainNative(actual, seed);
+			expect(
+				actual.data.equals(reference.data),
+				`seed ${seed.toString("hex")} diverged from @prosopo/puzzle-assets`,
+			).toBe(true);
+		}
+	});
+
+	it("rejects a buffer that is not width x height RGBA", () => {
+		const seed = SEEDS[0] ?? Buffer.alloc(16);
+		expect(() =>
+			regrainNative({ data: Buffer.alloc(10), width, height }, seed),
+		).toThrow(/expected/);
 	});
 });

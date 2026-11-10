@@ -36,6 +36,7 @@ import {
 import type * as entrypoint from "../index.js";
 import { mountProcaptchaPuzzle } from "../index.js";
 import { Manager } from "../services/Manager.js";
+import type { PuzzleChallengeWithPiece } from "../services/pieceMask.js";
 import {
 	challengeResponse,
 	config,
@@ -115,7 +116,7 @@ describe("Manager's types", () => {
 		// manager returns the challenge — the widget cannot render a board
 		// without the origin/target coordinates.
 		expectTypeOf<ReturnType<typeof Manager>["start"]>().toEqualTypeOf<
-			(x?: number, y?: number) => Promise<GetPuzzleCaptchaResponse | undefined>
+			(x?: number, y?: number) => Promise<PuzzleChallengeWithPiece | undefined>
 		>();
 	});
 

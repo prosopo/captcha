@@ -106,6 +106,8 @@ export type FrictionlessState = {
 	// carried `captchaType: authenticated`; consumed by the badge widget so
 	// the operator can see which agent verified (e.g. "chatgpt.com").
 	agent?: string;
+	// Unscrambles puzzle pieces; see `GetFrictionlessCaptchaResponse.puzzleKey`.
+	puzzleKey?: string;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;

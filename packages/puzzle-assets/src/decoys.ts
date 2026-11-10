@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createNotchShape } from "./notch.js";
-import { coverageFromDistance } from "./notch.js";
+import {
+	type NotchShape,
+	coverageFromDistance,
+	createNotchShape,
+} from "./notch.js";
+import { type RecessStyle, recessShadow, towardsGrey } from "./presentation.js";
 import type { Prng } from "./prng.js";
 import type { NotchPlacement, RgbaImage } from "./types.js";
 
@@ -64,24 +68,25 @@ const DECOY_INNER_SHADOW = 0.35;
  */
 export const paintDecoyPiece = ({
 	background,
-	prng,
+	shape,
 	size,
 	cx,
 	cy,
 	edgeDarkness,
 	bodyBrightness,
 	holeDarken,
+	style,
 }: {
 	background: RgbaImage;
-	prng: Prng;
+	shape: NotchShape;
 	size: number;
 	cx: number;
 	cy: number;
 	edgeDarkness: number;
 	bodyBrightness: number;
 	holeDarken: number;
+	style?: RecessStyle;
 }): void => {
-	const shape = createNotchShape(prng, size);
 	const half = size / 2;
 	const left = Math.round(cx - half);
 	const top = Math.round(cy - half);
@@ -108,11 +113,18 @@ export const paintDecoyPiece = ({
 			// cut's structure. Without this, decoys were just faint edge
 			// tints and the real hole stood out as the only deep region on
 			// the frame — trivially findable by eye or by luminance.
-			const edge = d > -3 ? DECOY_INNER_SHADOW * (1 + d / 3) : 0;
+			const edge = style
+				? recessShadow(d, lx, ly, size, DECOY_INNER_SHADOW, style)
+				: d > -3
+					? DECOY_INNER_SHADOW * (1 + d / 3)
+					: 0;
 			const factor = holeDarken * (1 - edge);
-			const dr = r * factor;
-			const dg = g * factor;
-			const db = b * factor;
+			const [sr, sg, sb] = style
+				? towardsGrey(r, g, b, style.desaturate)
+				: [r, g, b];
+			const dr = sr * factor;
+			const dg = sg * factor;
+			const db = sb * factor;
 
 			// Existing additive tweak stays on top, so operators keep the
 			// same rim / body knobs — they now fine-tune the multiplicative
@@ -145,26 +157,31 @@ const COUNT_JITTER = 0.3;
  * hard-code the expected count. Decoys avoid only the real notch
  * placement (they may freely overlap each other). If a slot cannot be
  * placed after `PLACEMENT_ATTEMPTS`, it is silently dropped — decoys are
- * cosmetic, so an occasional miss is fine.
+ * cosmetic, so an occasional miss is fine. Every decoy takes `shape` when one
+ * is given; otherwise each draws its own.
  */
 export const paintDecoys = ({
 	background,
 	prng,
 	targetCount,
+	shape,
 	notchSize,
 	notch,
 	edgeDarkness,
 	bodyBrightness,
 	holeDarken,
+	style,
 }: {
 	background: RgbaImage;
 	prng: Prng;
 	targetCount: number;
+	shape?: NotchShape;
 	notchSize: number;
 	notch: NotchPlacement;
 	edgeDarkness: number;
 	bodyBrightness: number;
 	holeDarken: number;
+	style?: RecessStyle;
 }): void => {
 	if (targetCount <= 0) return;
 
@@ -195,13 +212,14 @@ export const paintDecoys = ({
 			}
 			paintDecoyPiece({
 				background,
-				prng,
+				shape: shape ?? createNotchShape(prng, notchSize),
 				size: notchSize,
 				cx,
 				cy,
 				edgeDarkness,
 				bodyBrightness,
 				holeDarken,
+				style,
 			});
 			break;
 		}

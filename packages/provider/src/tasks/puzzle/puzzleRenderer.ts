@@ -18,7 +18,9 @@ import {
 	DEFAULT_RENDER_SETTINGS,
 	type NotchPlacement,
 	type PuzzleRenderSettings,
+	type PuzzleRendererVersion,
 	renderPuzzle,
+	renderPuzzleBoard,
 	toDataUri,
 } from "@prosopo/puzzle-assets";
 import {
@@ -31,6 +33,7 @@ import {
 	getPuzzleBackgroundBuffer,
 	initPuzzleBackgroundBuffer,
 } from "./backgroundBuffer.js";
+import { regrainNative } from "./nativeBackground.js";
 import { createStratifiedSampler } from "./stratifiedSampler.js";
 
 export interface RenderedPuzzleImages {
@@ -46,6 +49,7 @@ export interface RenderedPuzzleImages {
 	 */
 	backgroundSeed: string;
 	renderSeed: string;
+	rendererVersion: PuzzleRendererVersion;
 }
 
 /**
@@ -179,6 +183,7 @@ export const renderPuzzleImages = async ({
 					? { ...DEFAULT_GEOMETRY, pieceSize }
 					: DEFAULT_GEOMETRY,
 			settings,
+			regrain: regrainNative,
 		}),
 	);
 
@@ -188,5 +193,55 @@ export const renderPuzzleImages = async ({
 		pieceSize: rendered.pieceSize,
 		backgroundSeed: background.seed.toString("hex"),
 		renderSeed: rendered.seed.toString("hex"),
+		rendererVersion: rendered.rendererVersion,
+	};
+};
+
+export interface RenderedPuzzleBoardImages {
+	/** Board with the notch cut and the piece drawn at its start, data URI. */
+	background: string;
+	/** The piece's alpha, one byte per pixel. */
+	mask: Buffer;
+	pieceSize: number;
+	backgroundSeed: string;
+	renderSeed: string;
+	rendererVersion: PuzzleRendererVersion;
+}
+
+export const renderPuzzleBoardImages = async ({
+	placement,
+	start,
+	settings = DEFAULT_RENDER_SETTINGS,
+	pieceSize,
+}: {
+	placement: NotchPlacement;
+	start: { x: number; y: number };
+	settings?: PuzzleRenderSettings;
+	pieceSize?: number;
+}): Promise<RenderedPuzzleBoardImages> => {
+	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
+	const background = buffer.take();
+
+	const rendered = await measureSync("puzzle_render", () =>
+		renderPuzzleBoard({
+			background: background.image,
+			placement,
+			start,
+			geometry:
+				pieceSize !== undefined
+					? { ...DEFAULT_GEOMETRY, pieceSize }
+					: DEFAULT_GEOMETRY,
+			settings,
+			regrain: regrainNative,
+		}),
+	);
+
+	return {
+		background: toDataUri(rendered.board),
+		mask: rendered.mask,
+		pieceSize: rendered.pieceSize,
+		backgroundSeed: background.seed.toString("hex"),
+		renderSeed: rendered.seed.toString("hex"),
+		rendererVersion: rendered.rendererVersion,
 	};
 };

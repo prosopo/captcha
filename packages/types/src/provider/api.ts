@@ -539,10 +539,20 @@ export interface GetPowCaptchaResponse extends ApiResponse {
  */
 export interface GetPuzzleCaptchaResponse extends ApiResponse {
 	[ApiParams.challenge]: PoWChallengeId;
-	/** Background with the notch cut into it, as a data URI. */
+	/**
+	 * Background with the notch cut into it, as a data URI. When `pieceMask`
+	 * is set the piece is also drawn on it, centred on the origin.
+	 */
 	[ApiParams.background]: string;
 	/** The draggable piece on transparency, as a data URI. */
-	[ApiParams.piece]: string;
+	[ApiParams.piece]?: string;
+	/**
+	 * The piece's alpha, one byte per pixel, scrambled under a key derived from
+	 * `puzzleKey` and the challenge. Base64.
+	 */
+	[ApiParams.pieceMask]?: string;
+	/** First 8 bytes of the SHA-256 of the unscrambled mask, hex. */
+	[ApiParams.pieceMaskCheck]?: string;
 	/** Piece bounding-box size in px. */
 	[ApiParams.pieceSize]: number;
 	[ApiParams.originX]: number;
@@ -618,7 +628,12 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// Whether the site has the audio alternative on (`isAudioAlternativeEnabled`
 	// in the provider), sent only with a visual challenge.
 	audioAlternativeAvailable?: boolean;
+	// Key for unscrambling puzzle pieces, bound to the caller's network. Like
+	// `hp`, it arrives in a header (`PUZZLE_KEY_HEADER`), not the JSON body.
+	[ApiParams.puzzleKey]?: string;
 }
+
+export const PUZZLE_KEY_HEADER = "x-prosopo-trace";
 
 export interface PowCaptchaSolutionEscalation {
 	[ApiParams.captchaType]: InteractiveCaptchaType;

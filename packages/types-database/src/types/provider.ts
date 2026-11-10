@@ -525,6 +525,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 				},
 				backgroundSeed: { type: String, required: true },
 				renderSeed: { type: String, required: true },
+				renderer: { type: Number, required: false },
 			},
 			{ _id: false },
 		),

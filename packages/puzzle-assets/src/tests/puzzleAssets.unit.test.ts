@@ -402,7 +402,7 @@ describe("paintDecoys", () => {
 		// the pixels never reach exactly zero.
 		paintDecoyPiece({
 			background: bg,
-			prng: createPrng(SEED_B),
+			shape: createNotchShape(createPrng(SEED_B), DEFAULT_GEOMETRY.notchSize),
 			size: DEFAULT_GEOMETRY.notchSize,
 			cx,
 			cy,

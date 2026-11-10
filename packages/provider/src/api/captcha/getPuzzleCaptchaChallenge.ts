@@ -23,13 +23,18 @@ import {
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
 import {
 	MAX_DECOY_COVERAGE,
 	MAX_DECOY_COVERAGE_TOUCH,
 	capDecoyCountForCoverage,
 } from "../../tasks/puzzle/puzzleDifficulty.js";
 import {
-	renderPuzzleImages,
+	networkPuzzleKey,
+	scramblePieceMask,
+} from "../../tasks/puzzle/puzzleKey.js";
+import {
+	renderPuzzleBoardImages,
 	resolvePuzzlePieceScaleRange,
 	resolvePuzzleRenderSettings,
 	samplePuzzlePieceSize,
@@ -162,14 +167,20 @@ export const issuePuzzleChallenge = async ({
 	// before it is expressed in pixels, so a crash between the two
 	// cannot leave a challenge the user can see but the server cannot
 	// score. Imagery is derived from the same target that was persisted.
-	const images = await renderPuzzleImages({
+	const images = await renderPuzzleBoardImages({
 		placement: {
 			targetX: challenge.targetX,
 			targetY: challenge.targetY,
 		},
+		start: { x: challenge.originX, y: challenge.originY },
 		settings: renderedPuzzleSettings,
 		pieceSize: effectivePieceSize,
 	});
+	const scrambled = scramblePieceMask(
+		images.mask,
+		networkPuzzleKey(getIpAddressFromComposite(provenance.ipAddress)),
+		challenge.challenge,
+	);
 
 	// A second write rather than an argument to storePuzzleCaptchaRecord: the
 	// sampled piece size and the seeds only exist once the render has run, and
@@ -196,6 +207,7 @@ export const issuePuzzleChallenge = async ({
 				},
 				backgroundSeed: images.backgroundSeed,
 				renderSeed: images.renderSeed,
+				renderer: images.rendererVersion,
 			},
 		})
 		.catch((updateErr: unknown) => {
@@ -218,7 +230,8 @@ export const issuePuzzleChallenge = async ({
 			[ApiParams.status]: "ok",
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.background]: images.background,
-			[ApiParams.piece]: images.piece,
+			[ApiParams.pieceMask]: scrambled.mask,
+			[ApiParams.pieceMaskCheck]: scrambled.check,
 			[ApiParams.pieceSize]: images.pieceSize,
 			[ApiParams.originX]: challenge.originX,
 			[ApiParams.originY]: challenge.originY,

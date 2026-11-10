@@ -393,6 +393,7 @@ const customDetectBot: BotDetectionFunction = async (
 			userAccount: userAccount,
 			error: captcha.error,
 			hp: captcha.hp,
+			puzzleKey: captcha.puzzleKey,
 			agent: captcha.agent,
 			audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		};
@@ -486,6 +487,7 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount: userAccount,
 		error: captcha.error,
 		hp: captcha.hp,
+		puzzleKey: captcha.puzzleKey,
 		agent: captcha.agent,
 		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		...behaviour,
