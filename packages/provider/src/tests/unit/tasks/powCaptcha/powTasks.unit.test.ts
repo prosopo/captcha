@@ -173,7 +173,11 @@ describe("PowCaptchaManager", () => {
 			},
 		} as unknown as ProviderEnvironment;
 
-		powCaptchaManager = new PowCaptchaManager(db, pair, mockEnv.config);
+		powCaptchaManager = new PowCaptchaManager({
+			db,
+			pair,
+			config: mockEnv.config,
+		});
 
 		vi.clearAllMocks();
 	});
@@ -247,22 +251,14 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
 			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(1);
 
-			const verifyPowCaptchaSolutionArgs: Parameters<
-				typeof powCaptchaManager.verifyPowCaptchaSolution
-			> = [
+			const result = await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				providerSignature,
+				providerChallengeSignature: providerSignature,
 				nonce,
 				timeout,
-				userSignature,
+				userTimestampSignature: userSignature,
 				ipAddress,
-				headers,
-				undefined, // salt (optional)
-			];
-
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
-				...verifyPowCaptchaSolutionArgs,
-			);
+			});
 
 			expect(result.verified).toBe(true);
 
@@ -300,17 +296,16 @@ describe("PowCaptchaManager", () => {
 
 			const updatePowCaptchaRecordArgs: Parameters<
 				typeof db.updatePowCaptchaRecordResult
-			> = [
+			>[0] = {
 				challenge,
-				{ status: CaptchaStatus.approved },
-				false,
-				true,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
 				userSignature,
-				undefined, // coords (optional)
-			];
+			};
 
 			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
-				...updatePowCaptchaRecordArgs,
+				updatePowCaptchaRecordArgs,
 			);
 		});
 
@@ -343,15 +338,14 @@ describe("PowCaptchaManager", () => {
 				challengeRecord as PoWCaptchaRecord,
 			);
 
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				"testSignature",
-				12345,
-				1000,
-				"testTimestampSignature",
+				providerChallengeSignature: "testSignature",
+				nonce: 12345,
+				timeout: 1000,
+				userTimestampSignature: "testTimestampSignature",
 				ipAddress,
-				headers,
-			);
+			});
 
 			expect(result.verified).toBe(false);
 			expect(db.updatePowCaptchaRecordResult).not.toHaveBeenCalled();
@@ -396,16 +390,14 @@ describe("PowCaptchaManager", () => {
 
 			expect(
 				(
-					await powCaptchaManager.verifyPowCaptchaSolution(
+					await powCaptchaManager.verifyPowCaptchaSolution({
 						challenge,
-						signature,
+						providerChallengeSignature: signature,
 						nonce,
 						timeout,
-						timestampSignature,
+						userTimestampSignature: timestampSignature,
 						ipAddress,
-						headers,
-						undefined, // salt (optional)
-					)
+					})
 				).verified,
 			).toBe(false);
 		});
@@ -416,15 +408,14 @@ describe("PowCaptchaManager", () => {
 				const challenge =
 					`${timestamp}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount` as PoWChallengeId;
 				await expect(
-					powCaptchaManager.verifyPowCaptchaSolution(
+					powCaptchaManager.verifyPowCaptchaSolution({
 						challenge,
-						"testSignature",
-						12345,
-						1000,
-						"testTimestampSignature",
-						getIPAddress("1.1.1.1"),
-						{},
-					),
+						providerChallengeSignature: "testSignature",
+						nonce: 12345,
+						timeout: 1000,
+						userTimestampSignature: "testTimestampSignature",
+						ipAddress: getIPAddress("1.1.1.1"),
+					}),
 				).rejects.toMatchObject({
 					code: "INVALID_TIMESTAMP",
 					errorSite: "PROV-96",
@@ -465,30 +456,30 @@ describe("PowCaptchaManager", () => {
 
 			const malformedSalt = "0x010200";
 
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				signature,
+				providerChallengeSignature: signature,
 				nonce,
 				timeout,
-				timestampSignature,
+				userTimestampSignature: timestampSignature,
 				ipAddress,
-				headers,
-				undefined, // behavioralData
-				malformedSalt,
-			);
+				salt: malformedSalt,
+			});
 
 			expect(result.verified).toBe(false);
-			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
+			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
-				{
+				result: {
 					status: CaptchaStatus.disapproved,
 					reason: ResultReason.CAPTCHA_INVALID_SALT,
 				},
-				false, // serverChecked
-				true, // userSubmitted
-				timestampSignature,
-				undefined, // coords must NOT be the bad value
-			);
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: timestampSignature,
+			});
+			const [{ coords }] = vi.mocked(db.updatePowCaptchaRecordResult).mock
+				.calls[0] ?? [{}];
+			expect(coords).toBeUndefined();
 			expect(verifyRecency).not.toHaveBeenCalled();
 			expect(validateSolution).not.toHaveBeenCalled();
 		});
@@ -530,17 +521,14 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
 			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(undefined);
 
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				providerSignature,
+				providerChallengeSignature: providerSignature,
 				nonce,
 				timeout,
-				userSignature,
+				userTimestampSignature: userSignature,
 				ipAddress,
-				headers,
-				undefined, // behavioralData
-				undefined, // salt — no coords supplied
-			);
+			});
 
 			expect(result.verified).toBe(true);
 			expect(result.routingOutput).toEqual({
@@ -584,17 +572,14 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
 
-			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+			const result = await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				providerSignature,
+				providerChallengeSignature: providerSignature,
 				nonce,
 				timeout,
-				userSignature,
+				userTimestampSignature: userSignature,
 				ipAddress,
-				headers,
-				undefined, // behavioralData
-				undefined, // salt — no coords supplied
-			);
+			});
 
 			expect(result.verified).toBe(true);
 			expect(result.routingOutput).toBeUndefined();
@@ -659,17 +644,15 @@ describe("PowCaptchaManager", () => {
 
 				// A salt carrying coords, so the missing-coords rule cannot be
 				// what produces the escalation under test.
-				return powCaptchaManager.verifyPowCaptchaSolution(
+				return powCaptchaManager.verifyPowCaptchaSolution({
 					challenge,
-					providerSignature,
+					providerChallengeSignature: providerSignature,
 					nonce,
 					timeout,
-					userSignature,
-					getIPAddress(solvedIp),
-					headers,
-					undefined,
-					saltWithCoords,
-				);
+					userTimestampSignature: userSignature,
+					ipAddress: getIPAddress(solvedIp),
+					salt: saltWithCoords,
+				});
 			};
 
 			it("escalates to an image captcha when the address changed", async () => {
@@ -750,17 +733,14 @@ describe("PowCaptchaManager", () => {
 				vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
 				vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(undefined);
 
-				const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				const result = await powCaptchaManager.verifyPowCaptchaSolution({
 					challenge,
-					providerSignature,
+					providerChallengeSignature: providerSignature,
 					nonce,
 					timeout,
-					userSignature,
-					getIPAddress("2.2.2.2"),
-					headers,
-					undefined,
-					undefined, // no salt, so no coords either
-				);
+					userTimestampSignature: userSignature,
+					ipAddress: getIPAddress("2.2.2.2"),
+				});
 
 				expect(result.routingOutput).toEqual({
 					captchaType: CaptchaType.image,
@@ -825,17 +805,14 @@ describe("PowCaptchaManager", () => {
 						raw: { headers, userAgent: "" },
 					});
 
-					const result = await powCaptchaManager.verifyPowCaptchaSolution(
+					const result = await powCaptchaManager.verifyPowCaptchaSolution({
 						challenge,
-						providerSignature,
-						12345,
-						1000,
-						"testTimestampSignature",
+						providerChallengeSignature: providerSignature,
+						nonce: 12345,
+						timeout: 1000,
+						userTimestampSignature: "testTimestampSignature",
 						ipAddress,
-						headers,
-						undefined,
-						undefined, // no salt, so no coords
-					);
+					});
 
 					expect(result.verified).toBe(true);
 					expect(result.routingOutput).toEqual({ captchaType: routedType });
@@ -866,12 +843,12 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+			});
 
 			expect(result.verified).toBe(true);
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
@@ -907,12 +884,12 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const verified = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const verified = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+			});
 			expect(verified.verified).toBe(true);
 			expect(verified.sessionId).toBe("session-abc");
 
@@ -922,12 +899,12 @@ describe("PowCaptchaManager", () => {
 				...challengeRecord,
 				serverChecked: true,
 			} as PoWCaptchaRecord);
-			const replayed = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const replayed = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+			});
 			expect(replayed.verified).toBe(false);
 			expect(replayed.sessionId).toBe("session-abc");
 		});
@@ -955,13 +932,13 @@ describe("PowCaptchaManager", () => {
 				new Promise<void>(() => {}),
 			);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-				"1.1.1.1",
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+				ip: "1.1.1.1",
+			});
 
 			expect(result.verified).toBe(true);
 			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
@@ -990,12 +967,12 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(0);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
 
 			expect(result.verified).toBe(false);
 			expect(result.reason).toBe("API.USER_ALREADY_VERIFIED");
@@ -1009,15 +986,99 @@ describe("PowCaptchaManager", () => {
 			const timeout = 1000;
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(null);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+			});
 			expect(result.verified).toBe(false);
 
 			expect(db.getPowCaptchaRecordByChallenge).toHaveBeenCalledWith(challenge);
+		});
+
+		it("returns verified:false, not an error, when the challenge was never approved", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				serverChecked: false,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+				},
+				sessionId: "unapproved-session",
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
+				dappAccount,
+				challenge,
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
+
+			expect(result).toEqual({
+				verified: false,
+				reason: "CAPTCHA.INVALID_SOLUTION",
+				sessionId: "unapproved-session",
+			});
+			expect(db.markDappUserPoWCommitmentsChecked).not.toHaveBeenCalled();
+		});
+
+		it("returns a score of exactly 0 rather than dropping it", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const sessionId = "zero-score-session";
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				sessionId,
+			};
+			const sessionRecord: Session = {
+				sessionId,
+				createdAt: new Date(),
+				token: "test-token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				captchaType: CaptchaType.pow,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "h".repeat(16),
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
+				dappAccount,
+				challenge,
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
+
+			expect(result).toEqual({ verified: true, score: 0, sessionId });
 		});
 
 		it("should return verified:false when user is blocked by access policy", async () => {
@@ -1089,14 +1150,13 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-				undefined, // ip
-				mockAccessRulesStorage,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+				userAccessRulesStorage: mockAccessRulesStorage,
+			});
 
 			expect(result.verified).toBe(false);
 			// The rule that did it is stamped onto the session, so the audit
@@ -1186,14 +1246,13 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-				undefined, // ip
-				mockAccessRulesStorage,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+				userAccessRulesStorage: mockAccessRulesStorage,
+			});
 
 			// Should pass since the Block policy has captchaType (not a hard block)
 			expect(result.verified).toBe(true);
@@ -1242,14 +1301,13 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-				undefined, // ip
-				mockAccessRulesStorage,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+				userAccessRulesStorage: mockAccessRulesStorage,
+			});
 
 			expect(result.verified).toBe(true);
 		});
@@ -1295,12 +1353,12 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+			});
 
 			expect(result.verified).toBe(true);
 		});
@@ -1355,12 +1413,12 @@ describe("PowCaptchaManager", () => {
 			);
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: timeout },
+				});
 
 				expect(result.verified).toBe(false);
 				// The DM's reason string must land on the commitment record.
@@ -1418,12 +1476,12 @@ describe("PowCaptchaManager", () => {
 			);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
+			});
 
 			expect(result.verified).toBe(true);
 		});
@@ -1473,12 +1531,12 @@ describe("PowCaptchaManager", () => {
 			);
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: timeout },
+				});
 
 				// Should default to allow on error
 				expect(result.verified).toBe(true);
@@ -1570,12 +1628,12 @@ describe("PowCaptchaManager", () => {
 			mockDecisionMachine(decideSpy);
 
 			try {
-				await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: timeout },
+				});
 
 				expect(decideSpy).toHaveBeenCalledOnce();
 				const input = decideSpy.mock.calls[0]?.[0];
@@ -1605,21 +1663,18 @@ describe("PowCaptchaManager", () => {
 			ip: string | undefined,
 			ipValidationRules: IIPValidationRules | undefined,
 		) =>
-			powCaptchaManager.serverVerifyPowCaptchaSolution(
+			powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: 1000,
+					spamEmailDomainCheckEnabled: false,
+					storeMetadata: false,
+					ipValidationRules,
+				},
 				ip,
-				undefined,
-				undefined,
-				false,
-				undefined,
-				undefined,
-				false,
-				undefined,
-				ipValidationRules,
-			);
+			});
 
 		it("should skip IP validation when ipValidationRules is undefined", async () => {
 			const dappAccount = "testDappAccount";
@@ -1652,13 +1707,13 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
+				env: mockEnv,
+				settings: { verifiedTimeout: timeout },
 				ip,
-			);
+			});
 
 			// Should succeed without IP validation
 			expect(result.verified).toBe(true);
@@ -2005,12 +2060,12 @@ module.exports = (input) => {
 			});
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: timeout },
+				});
 
 				// The captcha should be DENIED because:
 				// 1. cache-control header contains "no-cache"
@@ -2128,12 +2183,12 @@ module.exports = (input) => {
 			});
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: timeout },
+				});
 
 				// Should be allowed because behavioral data exists
 				expect(result.verified).toBe(true);
@@ -2234,12 +2289,12 @@ module.exports = (input) => {
 			});
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: timeout },
+				});
 
 				// Should be allowed because no-cache header is missing
 				expect(result.verified).toBe(true);
@@ -2291,16 +2346,16 @@ module.exports = (input) => {
 				domain: "spammydomain.com",
 			});
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-				undefined,
-				undefined,
-				spamEmail,
-				true,
-			);
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: timeout,
+					spamEmailDomainCheckEnabled: true,
+				},
+				email: spamEmail,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
@@ -2362,16 +2417,16 @@ module.exports = (input) => {
 			}));
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-					undefined,
-					undefined,
-					legitimateEmail,
-					true,
-				);
+					env: mockEnv,
+					settings: {
+						verifiedTimeout: timeout,
+						spamEmailDomainCheckEnabled: true,
+					},
+					email: legitimateEmail,
+				});
 
 				expect(result.verified).toBe(true);
 				expect(db.getSpamEmailDomain).toHaveBeenCalledWith("legitimate.com");
@@ -2430,15 +2485,12 @@ module.exports = (input) => {
 			}));
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-					undefined,
-					undefined,
-					undefined, // No email provided
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: timeout },
+				});
 
 				expect(result.verified).toBe(true);
 				expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
@@ -2488,16 +2540,16 @@ module.exports = (input) => {
 				domain: "spammydomain.com",
 			});
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-				undefined,
-				undefined,
-				atDomainEmail,
-				true,
-			);
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: timeout,
+					spamEmailDomainCheckEnabled: true,
+				},
+				email: atDomainEmail,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
@@ -2554,16 +2606,16 @@ module.exports = (input) => {
 				domain: "spammydomain.com",
 			});
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
-				undefined,
-				undefined,
-				domainOnly,
-				true,
-			);
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: timeout,
+					spamEmailDomainCheckEnabled: true,
+				},
+				email: domainOnly,
+			});
 
 			expect(result.verified).toBe(false);
 			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
@@ -2617,16 +2669,16 @@ module.exports = (input) => {
 			}));
 
 			try {
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					timeout,
-					mockEnv,
-					undefined,
-					undefined,
+					env: mockEnv,
+					settings: {
+						verifiedTimeout: timeout,
+						spamEmailDomainCheckEnabled: true,
+					},
 					email,
-					true,
-				);
+				});
 
 				// Should continue and verify successfully despite spam check error
 				expect(result.verified).toBe(true);
@@ -2679,15 +2731,14 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			await powCaptchaManager.verifyPowCaptchaSolution(
+			await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				"sig",
-				12345,
-				1000,
-				"userSig",
+				providerChallengeSignature: "sig",
+				nonce: 12345,
+				timeout: 1000,
+				userTimestampSignature: "userSig",
 				ipAddress,
-				headers,
-			);
+			});
 
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
 				userSubmitted: true,
@@ -2732,15 +2783,14 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			await powCaptchaManager.verifyPowCaptchaSolution(
+			await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				"sig",
-				12345,
-				1000,
-				"userSig",
+				providerChallengeSignature: "sig",
+				nonce: 12345,
+				timeout: 1000,
+				userTimestampSignature: "userSig",
 				ipAddress,
-				headers,
-			);
+			});
 
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
 				userSubmitted: true,
@@ -2787,15 +2837,14 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			await powCaptchaManager.verifyPowCaptchaSolution(
+			await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				"sig",
-				12345,
-				1000,
-				"userSig",
+				providerChallengeSignature: "sig",
+				nonce: 12345,
+				timeout: 1000,
+				userTimestampSignature: "userSig",
 				ipAddress,
-				headers,
-			);
+			});
 
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(sessionId, {
 				userSubmitted: true,
@@ -2844,15 +2893,14 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			await powCaptchaManager.verifyPowCaptchaSolution(
+			await powCaptchaManager.verifyPowCaptchaSolution({
 				challenge,
-				"sig",
-				12345,
-				1000,
-				"userSig",
+				providerChallengeSignature: "sig",
+				nonce: 12345,
+				timeout: 1000,
+				userTimestampSignature: "userSig",
 				ipAddress,
-				headers,
-			);
+			});
 
 			expect(db.updateSessionRecord).not.toHaveBeenCalled();
 		});
@@ -2883,12 +2931,12 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
 
 			expect(result.verified).toBe(true);
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(
@@ -2928,12 +2976,12 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: test mock
 			(db.updateSessionRecord as any) = vi.fn().mockResolvedValue(undefined);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				1000,
-				mockEnv,
-			);
+				env: mockEnv,
+				settings: { verifiedTimeout: 1000 },
+			});
 
 			expect(result.verified).toBe(false);
 			expect(db.updateSessionRecord).toHaveBeenCalledWith(
@@ -2993,15 +3041,14 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updateSessionRecord as any).mockResolvedValue(undefined);
 
-				await powCaptchaManager.verifyPowCaptchaSolution(
+				await powCaptchaManager.verifyPowCaptchaSolution({
 					challenge,
-					"sig",
-					12345,
-					1000,
-					"userSig",
+					providerChallengeSignature: "sig",
+					nonce: 12345,
+					timeout: 1000,
+					userTimestampSignature: "userSig",
 					ipAddress,
-					headers,
-				);
+				});
 
 				// Both record result and session should be updated
 				expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledOnce();
@@ -3049,15 +3096,14 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updateSessionRecord as any).mockResolvedValue(undefined);
 
-				const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				const result = await powCaptchaManager.verifyPowCaptchaSolution({
 					challenge,
-					"sig",
-					12345,
-					1000,
-					"userSig",
+					providerChallengeSignature: "sig",
+					nonce: 12345,
+					timeout: 1000,
+					userTimestampSignature: "userSig",
 					ipAddress,
-					headers,
-				);
+				});
 
 				expect(result.verified).toBe(false);
 				expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledOnce();
@@ -3114,12 +3160,12 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
 
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 				expect(result.verified).toBe(true);
 				// markChecked is always written first (anti-replay)
@@ -3180,13 +3226,13 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.getSessionRecordBySessionId as any).mockResolvedValue(undefined);
 
-				await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-					"2.2.2.2", // provided IP
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+					ip: "2.2.2.2",
+				});
 
 				// Should write providedIp in single batch call
 				expect(db.updatePowCaptchaRecord).toHaveBeenCalledOnce();
@@ -3231,16 +3277,16 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-					undefined,
-					undefined,
-					"user@spam.com",
-					true, // spam checking enabled but shouldn't run
-				);
+					env: mockEnv,
+					settings: {
+						verifiedTimeout: 1000,
+						spamEmailDomainCheckEnabled: true,
+					},
+					email: "user@spam.com",
+				});
 
 				expect(result.verified).toBe(false);
 				expect(result.reason).toBe("API.TIMESTAMP_TOO_OLD");
@@ -3267,13 +3313,13 @@ module.exports = (input) => {
 					challengeRecord as PoWCaptchaRecord,
 				);
 
-				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-					"1.1.1.1",
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+					ip: "1.1.1.1",
+				});
 
 				expect(result.reason).toBe("API.TIMESTAMP_TOO_OLD");
 				expect(db.getSessionRecordBySessionId).toHaveBeenCalledWith(
@@ -3316,12 +3362,12 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 
-				await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				await powCaptchaManager.serverVerifyPowCaptchaSolution({
 					dappAccount,
 					challenge,
-					1000,
-					mockEnv,
-				);
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000 },
+				});
 
 				// Should batch the failure result into a single write
 				expect(db.updatePowCaptchaRecord).toHaveBeenCalledOnce();
@@ -3353,30 +3399,30 @@ module.exports = (input) => {
 			maxEmailSubmissionCount: number | undefined;
 			storeMetadata: boolean;
 		}) =>
-			powCaptchaManager.serverVerifyPowCaptchaSolution(
+			powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				60_000, // timeout
-				mockEnv,
-				undefined, // ip
-				undefined, // userAccessRulesStorage
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: 60_000,
+					spamEmailDomainCheckEnabled: false,
+					spamFilter:
+						maxEmailSubmissionCount !== undefined
+							? {
+									enabled: true,
+									emailRules: {
+										enabled: true,
+										maxEmailSubmissionCount,
+										normaliseGmail: false,
+										useDefaultPatterns: false,
+										customRegexBlocklist: [],
+									},
+								}
+							: undefined,
+					storeMetadata,
+				},
 				email,
-				false, // spamEmailDomainCheckingEnabled
-				maxEmailSubmissionCount !== undefined
-					? {
-							enabled: true,
-							emailRules: {
-								enabled: true,
-								maxEmailSubmissionCount,
-								normaliseGmail: false,
-								useDefaultPatterns: false,
-								customRegexBlocklist: [],
-							},
-						}
-					: undefined,
-				undefined, // trafficFilter
-				storeMetadata,
-			);
+			});
 
 		const seedApprovedChallenge = (
 			challenge: PoWChallengeId,
@@ -3519,20 +3565,17 @@ module.exports = (input) => {
 			dappAccount: string,
 			clientSessionId: string | undefined,
 		) =>
-			powCaptchaManager.serverVerifyPowCaptchaSolution(
+			powCaptchaManager.serverVerifyPowCaptchaSolution({
 				dappAccount,
 				challenge,
-				60_000, // timeout
-				mockEnv,
-				undefined, // ip
-				undefined, // userAccessRulesStorage
-				undefined, // email
-				false, // spamEmailDomainCheckingEnabled
-				undefined, // spamFilter
-				undefined, // trafficFilter
-				false, // storeMetadata
+				env: mockEnv,
+				settings: {
+					verifiedTimeout: 60_000,
+					spamEmailDomainCheckEnabled: false,
+					storeMetadata: false,
+				},
 				clientSessionId,
-			);
+			});
 
 		const seedApprovedChallenge = (
 			challenge: PoWChallengeId,

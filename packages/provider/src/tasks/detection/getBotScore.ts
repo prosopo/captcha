@@ -153,18 +153,26 @@ export type DecodedDetectorPayload = {
 	isIframe: boolean;
 	decryptedHeadHash: string;
 	triggeredDetectors?: number[];
+	outOfRangeDetectorIds?: number;
 	shadowDomPenalty?: boolean;
 	d?: DetectorData;
 };
 
-export const getBotScore = async (
-	payload: string,
-	headHash: string,
-	privateKeyString?: string,
-	innerConfigEncoded?: string,
-	payloadLayoutEncoded?: string,
-	keyMapEncoded?: string,
-): Promise<DecodedDetectorPayload> => {
+export const getBotScore = async ({
+	payload,
+	headHash,
+	privateKeyString,
+	innerConfigEncoded,
+	payloadLayoutEncoded,
+	keyMapEncoded,
+}: {
+	payload: string;
+	headHash: string;
+	privateKeyString?: string;
+	innerConfigEncoded?: string;
+	payloadLayoutEncoded?: string;
+	keyMapEncoded?: string;
+}): Promise<DecodedDetectorPayload> => {
 	const result = await decode<DetectorResult>("payload", [
 		payload,
 		headHash,
@@ -195,6 +203,7 @@ export const getBotScore = async (
 		isIframe: result.isIframe ?? false,
 		decryptedHeadHash: result.decryptedHeadHash,
 		triggeredDetectors: result.triggeredDetectors,
+		outOfRangeDetectorIds: result.outOfRangeDetectorIds,
 		shadowDomPenalty: result.shadowDomPenalty,
 		d: sanitiseDetectorData(result.d),
 	};

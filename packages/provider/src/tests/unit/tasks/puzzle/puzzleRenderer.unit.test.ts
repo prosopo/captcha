@@ -32,7 +32,7 @@ describe("renderPuzzleImages", () => {
 	});
 
 	it("returns both seeds as 128-bit hex", async () => {
-		const images = await renderPuzzleImages(PLACEMENT);
+		const images = await renderPuzzleImages({ placement: PLACEMENT });
 		expect(images.backgroundSeed).toMatch(/^[0-9a-f]{32}$/);
 		expect(images.renderSeed).toMatch(/^[0-9a-f]{32}$/);
 		expect(images.backgroundSeed).not.toBe(images.renderSeed);
@@ -47,22 +47,22 @@ describe("renderPuzzleImages", () => {
 	 */
 	it("returns seeds that reproduce the served imagery byte for byte", async () => {
 		const pieceSize = 51;
-		const served = await renderPuzzleImages(
-			PLACEMENT,
-			DEFAULT_RENDER_SETTINGS,
+		const served = await renderPuzzleImages({
+			placement: PLACEMENT,
+			settings: DEFAULT_RENDER_SETTINGS,
 			pieceSize,
-		);
+		});
 
-		const replayed = await renderPuzzle(
-			createBackground(
-				DEFAULT_GEOMETRY,
-				Buffer.from(served.backgroundSeed, "hex"),
-			),
-			PLACEMENT,
-			{ ...DEFAULT_GEOMETRY, pieceSize },
-			DEFAULT_RENDER_SETTINGS,
-			Buffer.from(served.renderSeed, "hex"),
-		);
+		const replayed = await renderPuzzle({
+			background: createBackground({
+				geometry: DEFAULT_GEOMETRY,
+				seed: Buffer.from(served.backgroundSeed, "hex"),
+			}),
+			placement: PLACEMENT,
+			geometry: { ...DEFAULT_GEOMETRY, pieceSize },
+			settings: DEFAULT_RENDER_SETTINGS,
+			seed: Buffer.from(served.renderSeed, "hex"),
+		});
 
 		expect(toDataUri(replayed.background)).toBe(served.background);
 		expect(toDataUri(replayed.piece)).toBe(served.piece);
@@ -70,17 +70,17 @@ describe("renderPuzzleImages", () => {
 	});
 
 	it("reports the piece size it actually drew", async () => {
-		const images = await renderPuzzleImages(
-			PLACEMENT,
-			DEFAULT_RENDER_SETTINGS,
-			37,
-		);
+		const images = await renderPuzzleImages({
+			placement: PLACEMENT,
+			settings: DEFAULT_RENDER_SETTINGS,
+			pieceSize: 37,
+		});
 		expect(images.pieceSize).toBe(37);
 	});
 
 	it("gives consecutive challenges different seeds", async () => {
-		const first = await renderPuzzleImages(PLACEMENT);
-		const second = await renderPuzzleImages(PLACEMENT);
+		const first = await renderPuzzleImages({ placement: PLACEMENT });
+		const second = await renderPuzzleImages({ placement: PLACEMENT });
 		// Single-use backgrounds are a security property of the buffer; two
 		// challenges sharing a seed would mean it handed the same image out
 		// twice.

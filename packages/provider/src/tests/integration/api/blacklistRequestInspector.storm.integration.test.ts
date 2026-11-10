@@ -246,13 +246,13 @@ describe("blacklistRequestInspector storm behaviour", () => {
 	test(`pure retry storm: ${STORM_CONCURRENCY} in-flight × ${STORM_WAVE_COUNT} waves through getPrioritisedAccessRule`, async () => {
 		// Warm-up: page the FT index in and let the redis-client
 		// pipeline settle.
-		await getPrioritisedAccessRule(
-			accessRulesStorage,
-			{ numericIp: ipv4(999_997) },
-			"warmup",
-			{},
-			{ blockOnly: true },
-		);
+		await getPrioritisedAccessRule({
+			userAccessRulesStorage: accessRulesStorage,
+			userScope: { numericIp: ipv4(999_997) },
+			clientId: "warmup",
+			requestHeaders: {},
+			blockOnly: true,
+		});
 		// Warm-up populated the cache with a "no match" verdict for
 		// the warm-up scope; clear so subsequent measurements aren't
 		// affected by any of it.
@@ -277,13 +277,13 @@ describe("blacklistRequestInspector storm behaviour", () => {
 			await Promise.all(
 				Array.from({ length: STORM_CONCURRENCY }, async () => {
 					const start = performance.now();
-					const results = await getPrioritisedAccessRule(
-						accessRulesStorage,
-						HOT_SCOPE.userScope,
-						HOT_SCOPE.clientId,
-						{},
-						{ blockOnly: true },
-					);
+					const results = await getPrioritisedAccessRule({
+						userAccessRulesStorage: accessRulesStorage,
+						userScope: HOT_SCOPE.userScope,
+						clientId: HOT_SCOPE.clientId,
+						requestHeaders: {},
+						blockOnly: true,
+					});
 					const dur = performance.now() - start;
 					waveSamples.push(dur);
 					// The hot scope's numericIp matches a seeded
@@ -368,13 +368,13 @@ describe("blacklistRequestInspector storm behaviour", () => {
 		// Reset the unique-scope counter so runs are deterministic.
 		uniqueCounter = 0;
 
-		await getPrioritisedAccessRule(
-			accessRulesStorage,
-			{ numericIp: ipv4(999_996) },
-			"warmup",
-			{},
-			{ blockOnly: true },
-		);
+		await getPrioritisedAccessRule({
+			userAccessRulesStorage: accessRulesStorage,
+			userScope: { numericIp: ipv4(999_996) },
+			clientId: "warmup",
+			requestHeaders: {},
+			blockOnly: true,
+		});
 		getVerdictCache().clear();
 		uniqueCounter = 0;
 
@@ -422,13 +422,13 @@ describe("blacklistRequestInspector storm behaviour", () => {
 			await Promise.all(
 				requests.map(async (req) => {
 					const start = performance.now();
-					await getPrioritisedAccessRule(
-						accessRulesStorage,
-						req.scope.userScope,
-						req.scope.clientId,
-						{},
-						{ blockOnly: true },
-					);
+					await getPrioritisedAccessRule({
+						userAccessRulesStorage: accessRulesStorage,
+						userScope: req.scope.userScope,
+						clientId: req.scope.clientId,
+						requestHeaders: {},
+						blockOnly: true,
+					});
 					const dur = performance.now() - start;
 					if (req.kind === "hot") {
 						waveHot.push(dur);
@@ -527,13 +527,13 @@ describe("blacklistRequestInspector storm behaviour", () => {
 			const concurrency = 50;
 			const results = await Promise.all(
 				Array.from({ length: concurrency }, () =>
-					getPrioritisedAccessRule(
-						accessRulesStorage,
-						HOT_SCOPE.userScope,
-						HOT_SCOPE.clientId,
-						{},
-						{ blockOnly: true },
-					),
+					getPrioritisedAccessRule({
+						userAccessRulesStorage: accessRulesStorage,
+						userScope: HOT_SCOPE.userScope,
+						clientId: HOT_SCOPE.clientId,
+						requestHeaders: {},
+						blockOnly: true,
+					}),
 				),
 			);
 

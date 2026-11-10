@@ -143,13 +143,19 @@ export const MIN_DECOY_COUNT = 4;
  * Only ever reduces: a render already inside the ceiling is returned
  * unchanged, so this cannot make a puzzle harder than the ladder intended.
  */
-export const capDecoyCountForCoverage = (
-	decoyCount: number,
-	pieceSizePx: number,
-	backgroundWidth: number,
-	backgroundHeight: number,
-	maxCoverage: number,
-): number => {
+export const capDecoyCountForCoverage = ({
+	decoyCount,
+	pieceSizePx,
+	backgroundWidth,
+	backgroundHeight,
+	maxCoverage,
+}: {
+	decoyCount: number;
+	pieceSizePx: number;
+	backgroundWidth: number;
+	backgroundHeight: number;
+	maxCoverage: number;
+}): number => {
 	const backgroundArea = backgroundWidth * backgroundHeight;
 	if (pieceSizePx <= 0 || backgroundArea <= 0) return decoyCount;
 
