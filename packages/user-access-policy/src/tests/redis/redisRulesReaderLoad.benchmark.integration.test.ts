@@ -234,7 +234,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 				userScopeMatch: FilterScopeMatch.Greedy,
 				blockOnly: true,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		const samples: number[] = [];
@@ -261,7 +261,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 					userScopeMatch: FilterScopeMatch.Greedy,
 					blockOnly: true,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 			samples.push(performance.now() - start);
 		}
@@ -293,7 +293,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 				userScopeMatch: FilterScopeMatch.Greedy,
 				blockOnly: true,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		// The exact-IP rule must be among the returned candidates —
@@ -317,7 +317,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 				userScopeMatch: FilterScopeMatch.Greedy,
 				blockOnly: true,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		const found = results.find(
@@ -344,7 +344,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 				userScopeMatch: FilterScopeMatch.Greedy,
 				blockOnly: true,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		const ja4Rule = results.find(
@@ -363,7 +363,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 				userScopeMatch: FilterScopeMatch.Greedy,
 				blockOnly: true,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		// No IP-scoped rule should apply; only fall-through matches
@@ -405,7 +405,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 				userScopeMatch: FilterScopeMatch.Greedy,
 				blockOnly: true,
 			},
-			true,
+			{ matchingFieldsOnly: true },
 		);
 
 		// Identical scope for every request. Hits a real rule
@@ -450,7 +450,7 @@ describe("redisRulesReader load-shape benchmark (17k IP-only rules)", () => {
 							userScopeMatch: FilterScopeMatch.Greedy,
 							blockOnly: true,
 						},
-						true,
+						{ matchingFieldsOnly: true },
 					);
 					const dur = performance.now() - start;
 					waveSamples.push(dur);
