@@ -137,6 +137,47 @@ describe("ClientDatabase.getUpdatedClients", () => {
 		expect(records.map((r) => r.account)).toEqual(["freshKey"]);
 	});
 
+	it("carries an unstamped site whose account's other sites are older than the cutoff", async () => {
+		const db = await seed();
+		await db.tables.accounts.collection.insertOne({
+			signupEmail: "unstamped@example.com",
+			tier: Tier.Free,
+			users: [{ email: "unstamped@example.com", status: "active" }],
+			sites: [
+				{
+					name: "a",
+					siteKey: "stampedKeyA",
+					secretKey: "s1",
+					settings: settingsFor("a.example.com"),
+					createdAt: 1,
+					updatedAt: 500,
+					active: true,
+				},
+				{
+					name: "b",
+					siteKey: "stampedKeyB",
+					secretKey: "s2",
+					settings: settingsFor("b.example.com"),
+					createdAt: 1,
+					updatedAt: 100,
+					active: true,
+				},
+				{
+					name: "c",
+					siteKey: "unstampedKey",
+					secretKey: "s3",
+					settings: settingsFor("c.example.com"),
+					createdAt: 1,
+					active: true,
+				},
+			],
+		});
+
+		const records = await db.getUpdatedClients(1000);
+
+		expect(records.map((r) => r.account)).toEqual(["unstampedKey"]);
+	});
+
 	it("skips accounts with no active user", async () => {
 		const db = await seed();
 		await db.tables.accounts.create({
