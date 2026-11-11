@@ -248,13 +248,7 @@ export const mountProcaptchaFrictionless = (
 		loading: boolean,
 		onChange?: CheckboxProps["onChange"],
 	) => {
-		clearSlot();
-
-		if ("invisible" === mode) {
-			return;
-		}
-
-		placeholder = mountWidgetCheckbox(slot, {
+		const props: CheckboxProps = {
 			theme: "light" === config.theme ? lightTheme : darkTheme,
 			onChange: onChange ?? (() => undefined),
 			checked: false,
@@ -262,7 +256,22 @@ export const mountProcaptchaFrictionless = (
 			error: errorMessage,
 			loadingText: i18n.isInitialized ? i18n.t("WIDGET.CHECKING") : undefined,
 			loading,
-		});
+		};
+
+		// A checkbox drawn in a frame reloads the frame when it is remounted,
+		// so one already in the slot is updated instead.
+		if (placeholder && !solver && "invisible" !== mode) {
+			placeholder.update(props);
+			return;
+		}
+
+		clearSlot();
+
+		if ("invisible" === mode) {
+			return;
+		}
+
+		placeholder = mountWidgetCheckbox(slot, props);
 	};
 
 	// `??`, not `||`: every caller that wants the counter back at zero passes
