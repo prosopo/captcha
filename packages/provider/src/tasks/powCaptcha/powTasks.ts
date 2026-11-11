@@ -14,6 +14,7 @@
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
+import { mergeSubmitDetectorData } from "@prosopo/database";
 import {
 	CaptchaType,
 	DecisionMachineDecision,
@@ -627,6 +628,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			solve: solveDeviceSignals(behavioralDataPacked),
 		});
 
+		// The submission that triggered this routing may have carried detector
+		// data of its own; decodeSubmissionPayloads stored it as dSubmit.
+		const detectorData = sessionRecord.dSubmit
+			? mergeSubmitDetectorData(sessionRecord.d, sessionRecord.dSubmit)
+			: sessionRecord.d;
 		const ctx: RoutingContext = {
 			dappAccount,
 			userAccount,
@@ -639,7 +645,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			platform: device.platform,
 			// Off the originating session — the PoW submit carries no detector
 			// payload of its own.
-			...(sessionRecord.d !== undefined && { d: sessionRecord.d }),
+			...(detectorData !== undefined && { d: detectorData }),
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
