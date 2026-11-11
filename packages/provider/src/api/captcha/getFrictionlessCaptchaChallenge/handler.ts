@@ -92,6 +92,7 @@ import {
 	runConfiguredCaptchaTypeShortCircuit,
 	runEmptyDetectorPoolPowFallback,
 } from "./shortCircuit.js";
+import { evaluateWebRtc } from "./webrtcSignal.js";
 
 export default (
 	env: ProviderEnvironment,
@@ -133,6 +134,7 @@ export default (
 				fingerprintProof,
 				widgetSlot,
 				bypassKey,
+				webrtc: webrtcReport,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 			const bypassKeyHash = bypassKey ? hashBypassKey(bypassKey) : undefined;
 
@@ -252,6 +254,7 @@ export default (
 				frictionlessSolveDevice,
 				{ existingToken, dedup },
 				clientRecord,
+				webrtc,
 			] = await Promise.all([
 				decryptIncomingSimdReadings(
 					tasks.frictionlessManager,
@@ -272,6 +275,13 @@ export default (
 				}),
 				resolveSessionDedup(tasks, token, userSitekeyIpHash, req.logger),
 				tasks.db.getClientRecord(dapp),
+				evaluateWebRtc({
+					report: webrtcReport,
+					requestIp: normalizedIp,
+					socketPath: env.config.stunProbe?.socketPath,
+					ipInfoService: env.ipInfoService,
+					logger: req.logger,
+				}),
 			]);
 
 			if (existingToken) {
@@ -713,6 +723,7 @@ export default (
 				...(refresh && { refresh: refresh.lineage }),
 				...(retry && { retry }),
 				...(solveDevice && { solveDevice }),
+				...(webrtc && { webrtc }),
 			};
 
 			const userScope = getRequestUserScope({
@@ -1002,6 +1013,7 @@ export default (
 				...(d !== undefined && { d }),
 				...(clientSessionId && { clientMetaData: { clientSessionId } }),
 				...(fingerprintSummary && { fingerprintSummary }),
+				...(webrtc && { webrtc }),
 				...refresh?.lineage,
 				...retry,
 				...(solveDevice && { solveDevice }),

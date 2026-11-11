@@ -75,6 +75,7 @@ import {
 } from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
 import { type TcpProbeRecord, TcpProbeRecordSchema } from "./tcpProbe.js";
+import { type WebRtcSignal, WebRtcSignalSchema } from "./webrtc.js";
 
 export interface BrowserInfo {
 	name: string;
@@ -690,6 +691,7 @@ export const SessionSchema = object({
 	// See Session.clientMetaData.
 	clientMetaData: ClientMetaDataDbSchema.optional(),
 	fingerprintSummary: FingerprintSummarySchema.optional(),
+	webrtc: WebRtcSignalSchema.optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -908,6 +910,8 @@ export type Session = {
 	// on the captcha record, and reject the token when they disagree.
 	clientMetaData?: ClientMetaData;
 	fingerprintSummary?: FingerprintSummaryStored;
+	// See WebRtcSignalSchema. Collection-only: nothing routes on it yet.
+	webrtc?: WebRtcSignal;
 };
 
 // Zod schema for PoWCaptchaStored

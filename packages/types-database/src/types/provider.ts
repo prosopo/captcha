@@ -43,6 +43,9 @@ import {
 	Tier,
 	type UserCommitment,
 	type UserSolutionSchema,
+	WebRtcClientStatus,
+	WebRtcOutcome,
+	type WebRtcSignal,
 } from "@prosopo/types";
 import {
 	type Captcha,
@@ -889,8 +892,35 @@ ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
 
 export type SessionRecord = mongoose.Document & Session;
 
+const WebRtcSignalRecordSchema = new Schema<WebRtcSignal>(
+	{
+		outcome: { type: String, enum: WebRtcOutcome, required: true },
+		clientStatus: { type: String, enum: WebRtcClientStatus, required: true },
+		gatherMs: { type: Number, required: true },
+		srflxCount: { type: Number, required: true },
+		hostMdnsCount: { type: Number, required: true },
+		hostRawCount: { type: Number, required: true },
+		requestIpSeen: { type: Boolean, required: false },
+		leaked: {
+			type: new Schema(
+				{
+					asnNumber: { type: Number, required: false },
+					countryCode: { type: String, required: false },
+					isProxy: { type: Boolean, required: false },
+					isVPN: { type: Boolean, required: false },
+					isDatacenter: { type: Boolean, required: false },
+				},
+				{ _id: false },
+			),
+			required: false,
+		},
+	},
+	{ _id: false },
+);
+
 export const SessionRecordSchema = new Schema<SessionRecord>({
 	fingerprintSummary: fingerprintSummaryField,
+	webrtc: { type: WebRtcSignalRecordSchema, required: false },
 	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
 	token: { type: String, required: true },

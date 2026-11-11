@@ -21,6 +21,7 @@ import {
 	type ScoreComponents,
 	type SolveDeviceSignals,
 	type TcpProbeRecord,
+	type WebRtcSignal,
 	clampImageRounds,
 	isConcreteCaptchaType,
 } from "@prosopo/types";
@@ -67,6 +68,7 @@ export type ShortCircuitInput = {
 	// type is judged on the failed solve's device, as it is everywhere else.
 	retry?: ResolvedRetry;
 	solveDevice?: SolveDeviceSignals;
+	webrtc?: WebRtcSignal;
 };
 
 // Builds the session params used by the bypass paths (configured captcha type
@@ -112,6 +114,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		...input.refresh,
 		...input.retry,
 		...(input.solveDevice && { solveDevice: input.solveDevice }),
+		...(input.webrtc && { webrtc: input.webrtc }),
 		...(input.tcpToChelloUs !== undefined && {
 			tcpToChelloUs: input.tcpToChelloUs,
 		}),

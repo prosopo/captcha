@@ -432,6 +432,11 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			password: string().optional(),
 		}),
 		dnsServers: array(string()).optional(),
+		// The co-located stun-probe sidecar. Both set or the WebRTC check is off.
+		stunProbe: object({
+			socketPath: string(),
+			url: string(),
+		}).optional(),
 	}),
 );
 
