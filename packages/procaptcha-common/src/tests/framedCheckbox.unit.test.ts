@@ -79,26 +79,38 @@ afterEach(() => {
 });
 
 describe("mounting", () => {
-	test("loads the frame page with a nonce, hidden until it reports ready", () => {
+	test("draws the checkbox in the page at once, with the frame loading hidden over it", () => {
 		expect(frame().src.startsWith(FRAME_URL.href)).toBe(true);
 		expect(nonce()).toMatch(/^[0-9a-f]{32}$/);
 		expect(frame().style.opacity).toBe("0");
+		expect(frame().style.pointerEvents).toBe("none");
 		expect(frame().title).toBe("I am human");
+		expect(mounted.container.querySelector("input")).not.toBeNull();
 	});
 
-	test("draws the checkbox in the page when the frame never reports ready", () => {
+	test("keeps the in-page checkbox while the frame is ready but has not drawn", () => {
+		fromFrame({ t: "ready" });
+		fromFrame({ t: "size", w: 240, h: 60 });
+
+		expect(frame().style.opacity).toBe("0");
+		expect(mounted.container.querySelector("input")).not.toBeNull();
+	});
+
+	test("swaps to the frame once it has drawn, and keeps it past the timeout", () => {
+		fromFrame({ t: "ready" });
+		fromFrame({ t: "drawn" });
+		vi.advanceTimersByTime(FRAME_READY_TIMEOUT_MS);
+
+		expect(frame().style.opacity).toBe("1");
+		expect(frame().style.pointerEvents).toBe("auto");
+		expect(mounted.container.querySelector("input")).toBeNull();
+	});
+
+	test("drops the frame and keeps the in-page checkbox when the frame never draws", () => {
 		vi.advanceTimersByTime(FRAME_READY_TIMEOUT_MS);
 
 		expect(mounted.container.querySelector("iframe")).toBeNull();
 		expect(mounted.container.querySelector("input")).not.toBeNull();
-	});
-
-	test("keeps the frame once it has reported ready", () => {
-		fromFrame({ t: "ready" });
-		vi.advanceTimersByTime(FRAME_READY_TIMEOUT_MS);
-
-		expect(frame().style.opacity).toBe("1");
-		expect(mounted.container.querySelector("input")).toBeNull();
 	});
 });
 
@@ -125,6 +137,7 @@ describe("talking to the frame", () => {
 			top: 50,
 		} as DOMRect);
 		fromFrame({ t: "ready" });
+		fromFrame({ t: "drawn" });
 		fromFrame({
 			t: "activate",
 			x: 12,
@@ -145,6 +158,7 @@ describe("talking to the frame", () => {
 			top: 50,
 		} as DOMRect);
 		fromFrame({ t: "ready" });
+		fromFrame({ t: "drawn" });
 		fromFrame({ t: "activate", x: 0, y: 0, inputMethod: InputMethod.keyboard });
 
 		expect(onChange).toHaveBeenCalledWith({
@@ -152,6 +166,13 @@ describe("talking to the frame", () => {
 			y: 0,
 			inputMethod: InputMethod.keyboard,
 		});
+	});
+
+	test("ignores an activation from a frame that is not shown yet", () => {
+		fromFrame({ t: "ready" });
+		fromFrame({ t: "activate", x: 1, y: 1, inputMethod: InputMethod.pointer });
+
+		expect(onChange).not.toHaveBeenCalled();
 	});
 
 	test("sizes the frame to the checkbox it drew", () => {

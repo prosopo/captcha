@@ -42,6 +42,7 @@ export type CheckboxFrameParentMessage = {
 export type CheckboxFrameMessage =
 	| { pf: string; t: "ready" }
 	| { pf: string; t: "size"; w: number; h: number }
+	| { pf: string; t: "drawn" }
 	| ({ pf: string; t: "activate" } & Activation)
 	| { pf: string; t: "pointer"; type: string; pointerType: string };
 
@@ -63,6 +64,12 @@ const frameProps = ({
  * receives the click. It reports the activation back over postMessage, from
  * a trusted event in its own document. Messages are only accepted from this
  * frame's window, at the frame's origin, carrying the nonce it was given.
+ *
+ * The frame takes a moment to load and draw, so the checkbox is drawn in the
+ * page straight away and the frame loads invisibly on top of it. The two swap
+ * once the frame reports it has painted the checkbox; until then,
+ * and for good if the frame never arrives, the in-page checkbox is the one in
+ * use.
  */
 export const mountFramedCheckbox = (
 	container: HTMLElement,
@@ -72,7 +79,18 @@ export const mountFramedCheckbox = (
 	const teardown = new Teardown();
 	let props = initialProps;
 	let ready = false;
-	let fallback: Component<CheckboxProps> | undefined;
+	let shown = false;
+
+	const host = document.createElement("div");
+	applyStyles(host, { position: "relative" });
+	container.appendChild(host);
+	teardown.add(() => host.remove());
+
+	let standIn: Component<CheckboxProps> | undefined = mountCheckbox(
+		host,
+		props,
+	);
+	teardown.add(() => standIn?.destroy());
 
 	const nonce = createNonce();
 	const src = new URL(frameUrl.href);
@@ -85,14 +103,38 @@ export const mountFramedCheckbox = (
 	applyStyles(frame, {
 		border: "0",
 		display: "block",
+		position: "absolute",
+		top: "0",
+		left: "0",
 		width: `${FRAME_WIDTH_PX}px`,
 		height: `${FRAME_HEIGHT_PX}px`,
 		background: "transparent",
 		colorScheme: props.theme.palette.mode,
 		opacity: "0",
+		pointerEvents: "none",
 	});
-	container.appendChild(frame);
-	teardown.add(() => frame.remove());
+	host.appendChild(frame);
+
+	const dropFrame = (): void => {
+		if (!shown) {
+			frame.remove();
+		}
+	};
+	const timer = setTimeout(dropFrame, FRAME_READY_TIMEOUT_MS);
+	teardown.add(() => clearTimeout(timer));
+	teardown.addEventListener(frame, "error", dropFrame);
+
+	const showFrame = (): void => {
+		shown = true;
+		clearTimeout(timer);
+		applyStyles(frame, {
+			position: "static",
+			opacity: "1",
+			pointerEvents: "auto",
+		});
+		standIn?.destroy();
+		standIn = undefined;
+	};
 
 	const postProps = (): void => {
 		const message: CheckboxFrameParentMessage = {
@@ -102,18 +144,6 @@ export const mountFramedCheckbox = (
 		};
 		frame.contentWindow?.postMessage(message, src.origin);
 	};
-
-	const mountInPage = (): void => {
-		if (ready || fallback) {
-			return;
-		}
-		teardown.run();
-		fallback = mountCheckbox(container, props);
-	};
-
-	const timer = setTimeout(mountInPage, FRAME_READY_TIMEOUT_MS);
-	teardown.add(() => clearTimeout(timer));
-	teardown.addEventListener(frame, "error", mountInPage);
 
 	const activate = ({ x, y, inputMethod }: Activation): void => {
 		// (0, 0) means the activation had no position, which a keyboard press
@@ -131,20 +161,21 @@ export const mountFramedCheckbox = (
 		if (
 			message.source !== frame.contentWindow ||
 			message.origin !== src.origin ||
-			message.data?.pf !== nonce
+			message.data?.pf !== nonce ||
+			!frame.isConnected
 		) {
 			return;
 		}
 		const data = message.data;
 		if ("ready" === data.t) {
 			ready = true;
-			clearTimeout(timer);
-			frame.style.opacity = "1";
 			postProps();
 		} else if ("size" === data.t) {
 			frame.style.width = `${data.w}px`;
 			frame.style.height = `${data.h}px`;
-		} else if ("activate" === data.t) {
+		} else if ("drawn" === data.t && !shown) {
+			showFrame();
+		} else if ("activate" === data.t && shown) {
 			activate(data);
 		}
 	});
@@ -152,10 +183,7 @@ export const mountFramedCheckbox = (
 	return {
 		update(next: CheckboxProps): void {
 			props = next;
-			if (fallback) {
-				fallback.update(next);
-				return;
-			}
+			standIn?.update(next);
 			frame.title = next.labelText;
 			frame.style.colorScheme = next.theme.palette.mode;
 			if (ready) {
@@ -163,7 +191,6 @@ export const mountFramedCheckbox = (
 			}
 		},
 		destroy(): void {
-			fallback?.destroy();
 			teardown.run();
 		},
 	};
@@ -240,6 +267,11 @@ export const runCheckboxFrame = (): void => {
 				if ("undefined" !== typeof ResizeObserver) {
 					new ResizeObserver(postSize).observe(document.body);
 				}
+				// The second frame callback runs after the first paint, so the
+				// page never swaps to a frame that has not drawn yet.
+				requestAnimationFrame(() =>
+					requestAnimationFrame(() => post({ pf: nonce, t: "drawn" })),
+				);
 			}
 			postSize();
 		},
