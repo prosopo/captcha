@@ -24,8 +24,8 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	mountCheckbox,
 	mountHoneypot,
+	mountWidgetCheckbox,
 } from "@prosopo/procaptcha-common";
 import {
 	ModeEnum,
@@ -177,7 +177,7 @@ export const mountProcaptchaPowWidget = (
 	});
 
 	if (!isInvisible) {
-		checkbox = mountCheckbox(root, checkboxProps());
+		checkbox = mountWidgetCheckbox(root, checkboxProps());
 	}
 
 	teardown.add(scheduler.cancel);

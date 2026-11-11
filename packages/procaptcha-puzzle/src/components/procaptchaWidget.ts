@@ -32,8 +32,8 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	mountCheckbox,
 	mountHoneypot,
+	mountWidgetCheckbox,
 } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
@@ -369,7 +369,7 @@ export const mountProcaptchaPuzzleWidget = (
 	// Checkbox — only in visible mode. Invisible mode is driven by the host
 	// page's execute() call (e.g. on form submit).
 	if (!isInvisible) {
-		checkbox = mountCheckbox(root, checkboxProps());
+		checkbox = mountWidgetCheckbox(root, checkboxProps());
 	}
 
 	teardown.add(scheduler.cancel);

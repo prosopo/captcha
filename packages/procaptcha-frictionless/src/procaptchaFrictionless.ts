@@ -28,8 +28,8 @@ import {
 	getRestartDelayMs,
 	isEventTrusted,
 	isSecureBrowserContext,
-	mountCheckbox,
 	mountTestModeBanner,
+	mountWidgetCheckbox,
 	providerRetry,
 } from "@prosopo/procaptcha-common";
 import {
@@ -254,7 +254,7 @@ export const mountProcaptchaFrictionless = (
 			return;
 		}
 
-		placeholder = mountCheckbox(slot, {
+		placeholder = mountWidgetCheckbox(slot, {
 			theme: "light" === config.theme ? lightTheme : darkTheme,
 			onChange: onChange ?? (() => undefined),
 			checked: false,

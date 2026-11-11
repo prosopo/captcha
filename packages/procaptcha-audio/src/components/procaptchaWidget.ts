@@ -32,8 +32,8 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	mountCheckbox,
 	mountHoneypot,
+	mountWidgetCheckbox,
 } from "@prosopo/procaptcha-common";
 import {
 	type AudioEvent,
@@ -293,7 +293,7 @@ export const mountProcaptchaAudioWidget = (
 
 	// Invisible mode has no checkbox: the host page's execute() drives it.
 	if (!isInvisible) {
-		checkbox = mountCheckbox(root, checkboxProps());
+		checkbox = mountWidgetCheckbox(root, checkboxProps());
 	}
 
 	teardown.add(scheduler.cancel);

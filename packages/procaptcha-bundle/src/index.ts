@@ -17,6 +17,9 @@ import {
 	getWindowCallback,
 	startPageBehaviourCapture,
 } from "@prosopo/procaptcha-common";
+
+// The framed checkbox's page imports this from the bundle it sits beside.
+export { runCheckboxFrame } from "@prosopo/procaptcha-common";
 import {
 	type EnvironmentTypes,
 	PROCAPTCHA_START_EVENT,
