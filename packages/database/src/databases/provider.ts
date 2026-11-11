@@ -35,6 +35,7 @@ import {
 	DatasetWithIdsAndTreeSchema,
 	type DecisionMachineArtifact,
 	DecisionMachineKind,
+	type DetectorData,
 	type Hash,
 	type IconOrderCaptchaStored,
 	type InteractiveCaptchaStored,
@@ -116,6 +117,7 @@ import type {
 	MarkStoredCallback,
 } from "./centralDbStreamer.js";
 import { clientRecordCache } from "./clientRecordCache.js";
+import { submitDetectorDataSets } from "./submitDetectorData.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
@@ -2391,6 +2393,35 @@ export class ProviderDatabase
 				code: "DB_QUERY_FAILED",
 				errorSite: "DBSE-34",
 				message: "Failed to get session",
+				cause: err,
+				context: { sessionId },
+			});
+		}
+	}
+
+	async mergeSessionSubmitDetectorData(
+		sessionId: string,
+		data: DetectorData,
+	): Promise<boolean> {
+		const sets = submitDetectorDataSets(data);
+		if (Object.keys(sets).length === 0) return false;
+		try {
+			const result = await this.tables.session.updateOne(
+				{ sessionId },
+				{
+					$set: {
+						...sets,
+						lastUpdatedTimestamp: new Date(),
+						pendingStage: true,
+					},
+				},
+			);
+			return result.matchedCount > 0;
+		} catch (err) {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-52",
+				message: "Failed to merge submitted detector data into the session",
 				cause: err,
 				context: { sessionId },
 			});

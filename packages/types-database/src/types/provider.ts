@@ -28,6 +28,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type DetectorData,
 	type FingerprintSummaryStored,
 	type IconOrderCaptchaStored,
 	IpAddressType,
@@ -1061,6 +1062,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// store. Mongoose would silently drop an undeclared subdocument under
 	// strict mode, which is exactly the failure this field exists to end.
 	d: { type: Schema.Types.Mixed, required: false },
+	// Detector data sent with a solution submission. See Session.dSubmit.
+	dSubmit: { type: Schema.Types.Mixed, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.
@@ -1334,6 +1337,7 @@ export const SESSION_PROJECTION = {
 	// per-signal list silently read `undefined` for anything anyone
 	// forgot to add, and several were forgotten.
 	d: 1,
+	dSubmit: 1,
 	userSitekeyIpHash: 1,
 	simdReadings: 1,
 	bundleId: 1,
@@ -1845,6 +1849,16 @@ export interface IProviderDatabase extends IDatabase {
 			assetSeen?: boolean;
 		},
 		receivedAtIfAbsent: Date,
+	): Promise<boolean>;
+
+	/**
+	 * Merge detector data sent with a solution submission into the session's
+	 * `dSubmit`, one level deep, with dotted-path `$set`s so two submissions
+	 * cannot overwrite each other's keys. Returns true if the session existed.
+	 */
+	mergeSessionSubmitDetectorData(
+		sessionId: string,
+		data: DetectorData,
 	): Promise<boolean>;
 
 	getSessionByuserSitekeyIpHash(
