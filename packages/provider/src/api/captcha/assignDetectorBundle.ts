@@ -91,6 +91,7 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		_next: NextFunction,
 	): Promise<Response> => {
+		res.setHeader("Timing-Allow-Origin", "*");
 		try {
 			const noBundle: AssignDetectorBundleResponse = {
 				[ApiParams.useProviderBundle]: false,
