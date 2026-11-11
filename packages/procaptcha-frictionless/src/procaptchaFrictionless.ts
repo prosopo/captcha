@@ -15,6 +15,7 @@
 import { ProsopoError, toPublicError } from "@prosopo/common";
 import { loadI18next, localiseError, toCallbackError } from "@prosopo/locale";
 import {
+	type Activation,
 	type CheckboxProps,
 	type Component,
 	type StaticComponent,
@@ -701,26 +702,22 @@ export const mountProcaptchaFrictionless = (
 		}
 	}
 
-	const clickCoords = (
-		event: MouseEvent | KeyboardEvent | TouchEvent,
-	): RetryCoords | null =>
-		"clientX" in event && "clientY" in event
-			? normaliseRetryCoords(event.clientX, event.clientY)
-			: null;
+	const clickCoords = (activation: Activation): RetryCoords | null =>
+		normaliseRetryCoords(activation.x, activation.y);
 
 	const manualCheckboxHandler: CheckboxProps["onChange"] = async (
-		event: MouseEvent | KeyboardEvent | TouchEvent,
+		activation: Activation,
 	): Promise<void> => {
-		await startManually(true, clickCoords(event) ?? undefined);
+		await startManually(true, clickCoords(activation) ?? undefined);
 	};
 
 	// Detection takes seconds, and the user should not have to wait it out
 	// before the checkbox responds. A click while it runs is held and replayed
 	// on the solver detection picks, so no token is issued any sooner.
 	const holdClickUntilDetected: CheckboxProps["onChange"] = (
-		event: MouseEvent | KeyboardEvent | TouchEvent,
+		activation: Activation,
 	): void => {
-		pendingRetryCoords.current = clickCoords(event);
+		pendingRetryCoords.current = clickCoords(activation);
 		nextMountAutoStart = true;
 		renderPlaceholder(config.mode, undefined, true);
 	};

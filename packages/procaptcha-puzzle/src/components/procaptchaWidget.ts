@@ -20,6 +20,7 @@ import {
 	toCallbackError,
 } from "@prosopo/locale";
 import {
+	type Activation,
 	type CheckboxProps,
 	type Component,
 	type HoneypotComponent,
@@ -33,7 +34,6 @@ import {
 	createRenderScheduler,
 	mountCheckbox,
 	mountHoneypot,
-	trustedClickCoords,
 } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
@@ -331,9 +331,7 @@ export const mountProcaptchaPuzzleWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading: loading || "submitting" === puzzlePhase,
-		onChange: async (
-			event: MouseEvent | KeyboardEvent | TouchEvent,
-		): Promise<void> => {
+		onChange: async ({ x, y }: Activation): Promise<void> => {
 			if (loading) {
 				return;
 			}
@@ -341,7 +339,6 @@ export const mountProcaptchaPuzzleWidget = (
 			showRetry = false;
 			scheduler.schedule();
 
-			const { x, y } = trustedClickCoords(event);
 			lastCoords = { x, y };
 			try {
 				const challenge = await manager.start(x, y);

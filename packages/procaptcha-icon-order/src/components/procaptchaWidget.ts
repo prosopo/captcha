@@ -20,6 +20,7 @@ import {
 	toCallbackError,
 } from "@prosopo/locale";
 import {
+	type Activation,
 	type CheckboxProps,
 	type ClickCoords,
 	type Component,
@@ -34,7 +35,6 @@ import {
 	createRenderScheduler,
 	mountCheckbox,
 	mountHoneypot,
-	trustedClickCoords,
 } from "@prosopo/procaptcha-common";
 import {
 	type GetIconOrderCaptchaResponse,
@@ -297,8 +297,7 @@ export const mountProcaptchaIconOrderWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading: loading || "submitting" === iconOrderPhase,
-		onChange: (event: MouseEvent | KeyboardEvent | TouchEvent) =>
-			beginChallenge(trustedClickCoords(event)),
+		onChange: (activation: Activation) => beginChallenge(activation),
 	});
 
 	// Invisible mode has no checkbox: the host page's execute() drives it.
