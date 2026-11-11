@@ -23,18 +23,54 @@ export const normalizeAuthPath = (
 	return collapsed.length > 1 ? collapsed.replace(/\/$/, "") : collapsed;
 };
 
-const escapeRegExp = (value: string): string =>
-	value.replace(/[.+?^${}()|[\]\\]/g, "\\$&");
+const matchesSegment = (pattern: string, segment: string): boolean => {
+	const parts = pattern.split("*");
+	if (parts.length === 1) {
+		return pattern === segment;
+	}
+	const first = parts[0] ?? "";
+	const last = parts[parts.length - 1] ?? "";
+	if (
+		segment.length < first.length + last.length ||
+		!segment.startsWith(first) ||
+		!segment.endsWith(last)
+	) {
+		return false;
+	}
+	let cursor = first.length;
+	const end = segment.length - last.length;
+	for (const part of parts.slice(1, -1)) {
+		const found = segment.indexOf(part, cursor);
+		if (found === -1 || found + part.length > end) {
+			return false;
+		}
+		cursor = found + part.length;
+	}
+	return true;
+};
 
-const toPattern = (endpoint: string): RegExp => {
-	const source = endpoint
-		.split("/")
-		.map((segment) =>
-			segment === "**" ? "**" : escapeRegExp(segment).replaceAll("*", "[^/]*"),
-		)
-		.join("/")
-		.replaceAll("/**", "(?:/.*)?");
-	return new RegExp(`^${source}$`);
+const matchesSegments = (
+	patterns: readonly string[],
+	segments: readonly string[],
+): boolean => {
+	const [pattern, ...restPatterns] = patterns;
+	if (pattern === undefined) {
+		return segments.length === 0;
+	}
+	if (pattern === "**") {
+		for (let skip = 0; skip <= segments.length; skip++) {
+			if (matchesSegments(restPatterns, segments.slice(skip))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	const [segment, ...restSegments] = segments;
+	return (
+		segment !== undefined &&
+		matchesSegment(pattern, segment) &&
+		matchesSegments(restPatterns, restSegments)
+	);
 };
 
 export type PathMatcher = (path: string) => boolean;
@@ -46,8 +82,9 @@ export const createPathMatcher = (
 		if (!endpoint.includes("*")) {
 			return (path: string): boolean => path === endpoint;
 		}
-		const pattern = toPattern(endpoint);
-		return (path: string): boolean => pattern.test(path);
+		const patterns = endpoint.split("/");
+		return (path: string): boolean =>
+			matchesSegments(patterns, path.split("/"));
 	});
 	return (path: string): boolean => matchers.some((matches) => matches(path));
 };

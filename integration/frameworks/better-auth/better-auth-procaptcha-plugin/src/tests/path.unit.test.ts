@@ -48,6 +48,26 @@ describe("createPathMatcher", () => {
 		expect(deep("/sign-up/email")).toBe(false);
 	});
 
+	it("matches partial-segment wildcards and ** in the middle", () => {
+		const partial = createPathMatcher(["/sign-*/e*l"]);
+		expect(partial("/sign-in/email")).toBe(true);
+		expect(partial("/sign-up/el")).toBe(true);
+		expect(partial("/sign-in/e")).toBe(false);
+		expect(partial("/signin/email")).toBe(false);
+
+		const many = createPathMatcher(["/a*b*c"]);
+		expect(many("/abc")).toBe(true);
+		expect(many("/axxbyyc")).toBe(true);
+		expect(many("/abbc")).toBe(true);
+		expect(many("/acb")).toBe(false);
+		expect(many("/axc")).toBe(false);
+
+		const middle = createPathMatcher(["/**/email"]);
+		expect(middle("/email")).toBe(true);
+		expect(middle("/sign-in/social/email")).toBe(true);
+		expect(middle("/sign-in/email/x")).toBe(false);
+	});
+
 	it("treats regex characters in endpoints literally", () => {
 		const matches = createPathMatcher(["/a.b/*"]);
 		expect(matches("/a.b/c")).toBe(true);
