@@ -15,17 +15,16 @@
 import { createTranslator, loadI18next, localiseError } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import {
+	type Activation,
 	type CheckboxProps,
 	type Component,
 	type HoneypotComponent,
 	type ProcaptchaStateHandle,
 	Teardown,
-	activationOf,
 	audioAlternativeOffer,
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	isEventTrusted,
 	mountCheckbox,
 	mountHoneypot,
 	mountTestModeBanner,
@@ -230,19 +229,12 @@ export const mountProcaptchaImageWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading,
-		onChange: async (
-			event: MouseEvent | KeyboardEvent | TouchEvent,
-		): Promise<void> => {
-			if (!isEventTrusted(event)) {
-				return;
-			}
+		onChange: async ({ x, y, inputMethod }: Activation): Promise<void> => {
 			if (loading) {
 				return;
 			}
 			loading = true;
 			scheduler.schedule();
-
-			const { x, y, inputMethod } = activationOf(event);
 
 			lastCoords = { x, y };
 			try {
