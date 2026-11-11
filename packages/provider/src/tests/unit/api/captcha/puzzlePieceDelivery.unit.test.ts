@@ -18,9 +18,12 @@ import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { getIPAddress } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { renderPuzzleBoardImagesMock } = vi.hoisted(() => ({
-	renderPuzzleBoardImagesMock: vi.fn(),
-}));
+const { renderPuzzleBoardImagesMock, renderPuzzleImagesMock } = vi.hoisted(
+	() => ({
+		renderPuzzleBoardImagesMock: vi.fn(),
+		renderPuzzleImagesMock: vi.fn(),
+	}),
+);
 
 vi.mock(
 	"../../../../tasks/puzzle/puzzleRenderer.js",
@@ -32,21 +35,29 @@ vi.mock(
 		return {
 			...actual,
 			renderPuzzleBoardImages: renderPuzzleBoardImagesMock,
+			renderPuzzleImages: renderPuzzleImagesMock,
 		};
 	},
 );
 
-import { issuePuzzleChallenge } from "../../../../api/captcha/getPuzzleCaptchaChallenge.js";
+import {
+	issuePuzzleChallenge,
+	widgetLiftsPieceFromBoard,
+} from "../../../../api/captcha/getPuzzleCaptchaChallenge.js";
 import type { ChallengeIssueContext } from "../../../../api/captcha/interactiveCaptchaChallenge.js";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import type { Tasks } from "../../../../tasks/index.js";
-import { networkPuzzleKey } from "../../../../tasks/puzzle/puzzleKey.js";
+import {
+	networkPuzzleKey,
+	puzzleKeySecret,
+} from "../../../../tasks/puzzle/puzzleKey.js";
 
 const CALLER_IP = "203.0.113.5";
 const CHALLENGE = "1700000000000___user___dapp";
 const MASK = Buffer.from([0, 128, 255, 255, 64, 0]);
+const PAIR = { encodePkcs8: (): Uint8Array => new Uint8Array(32).fill(3) };
 
-const buildContext = (): ChallengeIssueContext => ({
+const buildContext = (widgetVersion = "3.10.12"): ChallengeIssueContext => ({
 	tasks: {
 		puzzleCaptchaManager: {
 			getPuzzleCaptchaChallenge: vi.fn().mockResolvedValue({
@@ -65,6 +76,7 @@ const buildContext = (): ChallengeIssueContext => ({
 			updatePuzzleCaptchaRecord: vi.fn().mockResolvedValue(undefined),
 		},
 		logger: { warn: vi.fn() },
+		pair: PAIR,
 	} as unknown as Tasks,
 	user: "user",
 	dapp: "dapp",
@@ -74,14 +86,20 @@ const buildContext = (): ChallengeIssueContext => ({
 	trafficVerdict: { kind: "pass" },
 	provenance: {
 		ipAddress: getCompositeIpAddress(CALLER_IP),
-		headers: { "user-agent": "Mozilla/5.0 (X11; Linux x86_64)" },
+		headers: {
+			"user-agent": "Mozilla/5.0 (X11; Linux x86_64)",
+			"x-prosopo-bundle-version": widgetVersion,
+		},
 		ja4: "ja4",
 		sessionId: "session",
 	},
 });
 
 const unscramble = (scrambled: string): Buffer => {
-	const key = createHmac("sha256", networkPuzzleKey(getIPAddress(CALLER_IP)))
+	const key = createHmac(
+		"sha256",
+		networkPuzzleKey(getIPAddress(CALLER_IP), puzzleKeySecret(PAIR)),
+	)
 		.update(CHALLENGE)
 		.digest();
 	const decipher = createDecipheriv(
@@ -106,6 +124,14 @@ describe("puzzle piece delivery", () => {
 			renderSeed: "seed",
 			rendererVersion: 2,
 		});
+		renderPuzzleImagesMock.mockResolvedValue({
+			background: "board",
+			piece: "piece",
+			pieceSize: 60,
+			backgroundSeed: "seed",
+			renderSeed: "seed",
+			rendererVersion: 2,
+		});
 	});
 
 	it("draws the piece at its start and sends only its scrambled mask", async () => {
@@ -120,5 +146,41 @@ describe("puzzle piece delivery", () => {
 		expect(scrambled).toBeDefined();
 		expect(unscramble(scrambled ?? "")).toEqual(MASK);
 		expect(served[ApiParams.pieceMaskCheck]).toMatch(/^[0-9a-f]{16}$/);
+	});
+
+	it("sends a widget released before board delivery a separate piece", async () => {
+		const { response: served } = await issuePuzzleChallenge(
+			buildContext("3.10.10"),
+		);
+		expect(renderPuzzleBoardImagesMock).not.toHaveBeenCalled();
+		expect(served[ApiParams.piece]).toBe("piece");
+		expect(served[ApiParams.background]).toBe("board");
+		expect(served[ApiParams.pieceMask]).toBeUndefined();
+	});
+});
+
+describe("widgetLiftsPieceFromBoard", () => {
+	const lifts = (version?: string): boolean =>
+		widgetLiftsPieceFromBoard(
+			version === undefined ? {} : { "x-prosopo-bundle-version": version },
+		);
+
+	it("is true from the first board-lifting release on", () => {
+		expect(lifts("3.10.12")).toBe(true);
+		expect(lifts("3.10.13")).toBe(true);
+		expect(lifts("3.11.0")).toBe(true);
+		expect(lifts("4.0.0")).toBe(true);
+	});
+
+	it("is false for earlier releases", () => {
+		expect(lifts("3.10.11")).toBe(false);
+		expect(lifts("3.9.40")).toBe(false);
+		expect(lifts("2.99.99")).toBe(false);
+	});
+
+	it("is false when the version is missing or unreadable", () => {
+		expect(lifts()).toBe(false);
+		expect(lifts("")).toBe(false);
+		expect(lifts("dev")).toBe(false);
 	});
 });

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { createDecipheriv, createHmac } from "node:crypto";
+import { getPair } from "@prosopo/keyring";
 import { PUZZLE_KEY_HEADER } from "@prosopo/types";
 import { getIPAddress } from "@prosopo/util";
 import type { Response } from "express";
@@ -20,6 +21,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	attachPuzzleKey,
 	networkPuzzleKey,
+	puzzleKeySecret,
 	scramblePieceMask,
 } from "../../../../tasks/puzzle/puzzleKey.js";
 
@@ -47,6 +49,20 @@ describe("networkPuzzleKey", () => {
 		const address = getIPAddress("203.0.113.5");
 		expect(networkPuzzleKey(address, SECRET)).not.toEqual(
 			networkPuzzleKey(address, Buffer.alloc(32, 8)),
+		);
+	});
+});
+
+describe("puzzleKeySecret", () => {
+	it("is the same in every container holding the provider's pair", () => {
+		expect(puzzleKeySecret(getPair("//Alice"))).toEqual(
+			puzzleKeySecret(getPair("//Alice")),
+		);
+	});
+
+	it("differs between providers", () => {
+		expect(puzzleKeySecret(getPair("//Alice"))).not.toEqual(
+			puzzleKeySecret(getPair("//Bob")),
 		);
 	});
 });
@@ -103,7 +119,7 @@ describe("attachPuzzleKey", () => {
 
 	it("sets the key header for a parseable address", () => {
 		const { res, setHeader } = responseSpy();
-		attachPuzzleKey(res, "203.0.113.5");
+		attachPuzzleKey(res, "203.0.113.5", SECRET);
 		expect(setHeader).toHaveBeenCalledWith(
 			PUZZLE_KEY_HEADER,
 			expect.stringMatching(/^[0-9a-f]{64}$/),
@@ -112,7 +128,7 @@ describe("attachPuzzleKey", () => {
 
 	it("sets nothing for an address that does not parse", () => {
 		const { res, setHeader } = responseSpy();
-		attachPuzzleKey(res, "not-an-ip");
+		attachPuzzleKey(res, "not-an-ip", SECRET);
 		expect(setHeader).not.toHaveBeenCalled();
 	});
 });
