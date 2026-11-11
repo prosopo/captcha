@@ -140,4 +140,22 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 
 		expect(JSON.stringify(sendPowCaptcha.mock.calls[0])).toContain("no_record");
 	});
+
+	it("keeps the TCP stack signals on the bypass session", async () => {
+		initDetectorBundlePool({ dir });
+		const sendPowCaptcha = vi.fn(async (_params: unknown) => ({
+			captchaType: "pow",
+		}));
+		const { res } = makeRes();
+
+		await runEmptyDetectorPoolPowFallback(
+			{ ...makeInput(sendPowCaptcha), tcpMss: 1460, observedTtl: 52 },
+			res,
+		);
+
+		expect(sendPowCaptcha.mock.calls[0]?.[0]).toMatchObject({
+			tcpMss: 1460,
+			observedTtl: 52,
+		});
+	});
 });

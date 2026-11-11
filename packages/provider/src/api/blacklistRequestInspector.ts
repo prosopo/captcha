@@ -50,6 +50,10 @@ import {
 	hardBlockCacheKey,
 } from "./hardBlockVerdictCache.js";
 import { recordBlockedRequest } from "./metrics.js";
+import {
+	getRawTlsSignals,
+	rawTlsSignalsFromRecord,
+} from "./rawTlsSignalsMiddleware.js";
 
 export type BlockOutcome = {
 	messageKey?: ResultReason;
@@ -810,6 +814,7 @@ export class BlacklistRequestInspector {
 			ruleType,
 			ruleDescription,
 			matchedRule: describeMatchedRule(accessPolicy),
+			...rawTlsSignalsFromRecord(getRawTlsSignals(headers, logger)),
 			// blocked + deleted are stamped inside storeBlockedSession so
 			// the synthetic record is unmistakably a block-middleware
 			// artefact and can never be picked up by the captcha flow.

@@ -20,7 +20,6 @@ import {
 	type RequestHeaders,
 	type ScoreComponents,
 	type SolveDeviceSignals,
-	type TcpProbeRecord,
 	type WebRtcSignal,
 	clampImageRounds,
 	isConcreteCaptchaType,
@@ -33,6 +32,10 @@ import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js";
 import type { Tasks } from "../../../tasks/index.js";
+import {
+	type RawTlsSignals,
+	rawTlsSignalsFromRecord,
+} from "../../rawTlsSignalsMiddleware.js";
 import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 import type { RefreshLineage } from "./refreshLineage.js";
@@ -60,7 +63,6 @@ export type ShortCircuitInput = {
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
-	tcpProbe?: TcpProbeRecord;
 	// Carried onto the session so a site pinned to a captcha type still
 	// records refreshes, and its refresh limit can still apply.
 	refresh?: RefreshLineage;
@@ -69,7 +71,7 @@ export type ShortCircuitInput = {
 	retry?: ResolvedRetry;
 	solveDevice?: SolveDeviceSignals;
 	webrtc?: WebRtcSignal;
-};
+} & Partial<RawTlsSignals>;
 
 // Builds the session params used by the bypass paths (configured captcha type
 // and empty-pool fallback). Score 0 — these paths do not run bot detection, so
@@ -121,7 +123,7 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		...(input.chelloToHandshakeUs !== undefined && {
 			chelloToHandshakeUs: input.chelloToHandshakeUs,
 		}),
-		...(input.tcpProbe !== undefined && { tcpProbe: input.tcpProbe }),
+		...rawTlsSignalsFromRecord(input),
 	};
 };
 
