@@ -26,6 +26,7 @@ import {
 	type ProcaptchaIconOrderHandle,
 	mountProcaptchaIconOrderWidget,
 } from "../components/procaptchaWidget.js";
+import type { IconOrderSubmitOutcome } from "../services/Manager.js";
 import { type Mounted, fire, mount, settle } from "./domHarness.js";
 import { challengeResponse, config, frictionless } from "./managerHarness.js";
 
@@ -41,7 +42,10 @@ const mocks = vi.hoisted(() => {
 		>();
 	const submitSolution =
 		vi.fn<
-			(clicks: IconClick[], events: IconOrderEvent[]) => Promise<boolean>
+			(
+				clicks: IconClick[],
+				events: IconOrderEvent[],
+			) => Promise<IconOrderSubmitOutcome>
 		>();
 	const resetState = vi.fn<() => void>();
 	const dispose = vi.fn<() => void>();

@@ -33,6 +33,7 @@ import type { Tier } from "../client/user.js";
 import type { ModeEnum } from "../config/mode.js";
 import type {
 	AudioEvent,
+	IconClick,
 	IconOrderEvent,
 	PuzzleEvent,
 	RequestHeaders,
@@ -500,9 +501,17 @@ export interface RoutingMachineRawSignals {
 	// `postPow` and the dedup replay they come from the originating Session.
 	// Undefined when none fired or the payload could not be read.
 	triggeredDetectors?: number[];
+	// `postIconOrder` only: the solve being judged. The pointer trail over the
+	// challenge canvas and the clicks, both in canvas pixels, and the device
+	// class the widget reported with its behavioural data.
+	iconOrderEvents?: IconOrderEvent[];
+	iconOrderClicks?: IconClick[];
+	deviceCapability?: string;
 }
 
-export type RoutingMachinePhase = "route" | "postPow";
+// `postPow` runs after a correct PoW solve and `postIconOrder` after a correct
+// icon order solve. Either may escalate the user to another challenge.
+export type RoutingMachinePhase = "route" | "postPow" | "postIconOrder";
 
 export interface RoutingMachineInputBase {
 	phase: RoutingMachinePhase;

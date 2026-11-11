@@ -527,6 +527,7 @@ export const mountProcaptchaFrictionless = (
 			solver = mount(slot, {
 				...takeWidgetProps(),
 				onReload,
+				onEscalate,
 				...(offerAudio && {
 					audioAlternativeAvailable: true,
 					onRequestAudioAlternative,

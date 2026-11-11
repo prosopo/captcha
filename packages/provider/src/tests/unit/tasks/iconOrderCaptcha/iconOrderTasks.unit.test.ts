@@ -15,7 +15,9 @@
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { GlyphKind, type IconPlacement } from "@prosopo/icon-order-assets";
 import {
+	type CaptchaSolutionEscalation,
 	CaptchaStatus,
+	CaptchaType,
 	type IconOrderCaptchaStored,
 	type KeyringPair,
 	type PoWChallengeId,
@@ -26,12 +28,15 @@ import {
 import type {
 	IProviderDatabase,
 	IconOrderCaptchaRecord,
+	SessionRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { applyRouter } from "../../../../tasks/frictionless/routingMachine.js";
 import type { RenderedIconOrderImages } from "../../../../tasks/iconOrder/iconOrderRenderer.js";
 import { IconOrderCaptchaManager } from "../../../../tasks/iconOrderCaptcha/iconOrderTasks.js";
+import type { PostSolveRouting } from "../../../../tasks/postSolveRouting.js";
 import { checkPowSignature } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 
 vi.mock("@polkadot/util", async (importOriginal) => {
@@ -48,6 +53,10 @@ vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),
 }));
 
+vi.mock("../../../../tasks/frictionless/routingMachine.js", () => ({
+	applyRouter: vi.fn(),
+}));
+
 const asRecord = (
 	partial: Partial<IconOrderCaptchaStored>,
 ): IconOrderCaptchaRecord =>
@@ -55,6 +64,13 @@ const asRecord = (
 		submittedAtTimestamp: new Date(),
 		...partial,
 	}) as unknown as IconOrderCaptchaRecord;
+
+const asSession = (sessionId: string): SessionRecord =>
+	({
+		sessionId,
+		scoreComponents: { baseScore: 0 },
+		webView: false,
+	}) as unknown as SessionRecord;
 
 const targets: StoredIconTarget[] = [
 	{ x: 60, y: 50, size: 38, kind: GlyphKind.ring },
@@ -220,7 +236,7 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 180, y: 90 },
 					{ x: 240, y: 150 },
 				]),
-			).resolves.toBe(true);
+			).resolves.toEqual({ verified: true });
 
 			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
@@ -228,6 +244,136 @@ describe("IconOrderCaptchaManager", () => {
 				serverChecked: false,
 				userSubmitted: true,
 				userSignature: "0xuser",
+			});
+		});
+
+		describe("post-solve routing", () => {
+			const SESSION_ID = "session-1";
+			const ESCALATION: CaptchaSolutionEscalation = {
+				captchaType: CaptchaType.image,
+				sessionId: "escalated-session",
+			};
+			const rightClicks = [
+				{ x: 60, y: 50 },
+				{ x: 180, y: 90 },
+				{ x: 240, y: 150 },
+			];
+			const events = [
+				{ x: 10, y: 10, t: 0 },
+				{ x: 60, y: 50, t: 40 },
+			];
+			const escalate = vi.fn<PostSolveRouting["escalate"]>();
+			const postSolve: Pick<PostSolveRouting, "context" | "escalate"> = {
+				context: {
+					ip: "1.1.1.1",
+					device: { userAgent: "Mozilla/5.0", headers: {} },
+					raw: { headers: {}, userAgent: "Mozilla/5.0" },
+				},
+				escalate,
+			};
+			const submitWithRouting = (clicks: { x: number; y: number }[]) =>
+				manager.verifyIconOrderCaptchaSolution({
+					challenge,
+					providerChallengeSignature: "0xprovider",
+					clicks,
+					iconOrderEvents: events,
+					timeout: 60000,
+					userTimestampSignature: "0xuser",
+					ipAddress: ip,
+					postSolve,
+				});
+
+			beforeEach(() => {
+				vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+					storedRecord({ sessionId: SESSION_ID }),
+				);
+				vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+					asSession(SESSION_ID),
+				);
+				escalate.mockResolvedValue(ESCALATION);
+			});
+
+			it("escalates a solve the routing machine sends on, and keeps its token from verifying", async () => {
+				vi.mocked(applyRouter).mockResolvedValue({
+					captchaType: CaptchaType.image,
+					solvedImagesCount: 3,
+					reason: "ICON_ORDER_SCRIPTED_TRAIL",
+				});
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: false,
+					escalation: ESCALATION,
+				});
+
+				expect(vi.mocked(applyRouter).mock.calls[0]?.[0]).toMatchObject({
+					phase: "postIconOrder",
+					baseline: { captchaType: CaptchaType.iconOrder },
+					ctx: {
+						dappAccount: "dapp",
+						userAccount: "user",
+						raw: { iconOrderEvents: events, iconOrderClicks: rightClicks },
+					},
+				});
+				expect(escalate.mock.calls[0]?.[0].origin).toEqual({
+					sessionId: SESSION_ID,
+					dappAccount: "dapp",
+					captchaType: CaptchaType.iconOrder,
+					behavioralDataPacked: undefined,
+				});
+				expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+					expect.objectContaining({
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.CAPTCHA_DECISION_MACHINE_DENIED,
+						},
+					}),
+				);
+				expect(db.updateSessionRecord).toHaveBeenCalledWith(
+					SESSION_ID,
+					expect.not.objectContaining({ blocked: true }),
+				);
+			});
+
+			it("lets a solve the machine keeps on icon order stand", async () => {
+				vi.mocked(applyRouter).mockResolvedValue({
+					captchaType: CaptchaType.iconOrder,
+				});
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: true,
+				});
+				expect(escalate).not.toHaveBeenCalled();
+			});
+
+			it("lets the solve stand when the site cannot serve the escalation", async () => {
+				vi.mocked(applyRouter).mockResolvedValue({
+					captchaType: CaptchaType.image,
+				});
+				escalate.mockResolvedValue(undefined);
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: true,
+				});
+				expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+					expect.objectContaining({
+						result: { status: CaptchaStatus.approved },
+					}),
+				);
+			});
+
+			it("lets the solve stand when routing throws", async () => {
+				vi.mocked(applyRouter).mockRejectedValue(new Error("vm timeout"));
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: true,
+				});
+			});
+
+			it("never asks the machine about a wrong answer", async () => {
+				await expect(
+					submitWithRouting([...rightClicks].reverse()),
+				).resolves.toEqual({ verified: false });
+				expect(applyRouter).not.toHaveBeenCalled();
 			});
 		});
 
@@ -242,7 +388,7 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 60, y: 50 },
 					{ x: 240, y: 150 },
 				]),
-			).resolves.toBe(false);
+			).resolves.toEqual({ verified: false });
 
 			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
@@ -266,7 +412,7 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 10, y: 10 },
 					{ x: 15, y: 15 },
 				]),
-			).resolves.toBe(false);
+			).resolves.toEqual({ verified: false });
 		});
 
 		it("rejects a submission with the wrong number of clicks", async () => {
@@ -278,7 +424,7 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 60, y: 50 },
 					{ x: 180, y: 90 },
 				]),
-			).resolves.toBe(false);
+			).resolves.toEqual({ verified: false });
 		});
 
 		it("refuses a second submission against the same challenge", async () => {
@@ -293,7 +439,7 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 180, y: 90 },
 					{ x: 240, y: 150 },
 				]),
-			).resolves.toBe(false);
+			).resolves.toEqual({ verified: false });
 			expect(db.updateIconOrderCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
@@ -309,7 +455,7 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 180, y: 90 },
 					{ x: 240, y: 150 },
 				]),
-			).resolves.toBe(false);
+			).resolves.toEqual({ verified: false });
 			expect(db.updateIconOrderCaptchaRecordResult).not.toHaveBeenCalled();
 			expect(db.updateIconOrderCaptchaRecord).not.toHaveBeenCalled();
 		});
@@ -332,7 +478,9 @@ describe("IconOrderCaptchaManager", () => {
 			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
 				null,
 			);
-			await expect(submit([{ x: 60, y: 50 }])).resolves.toBe(false);
+			await expect(submit([{ x: 60, y: 50 }])).resolves.toEqual({
+				verified: false,
+			});
 		});
 
 		it("disapproves a submission that arrives outside the window", async () => {
@@ -347,7 +495,7 @@ describe("IconOrderCaptchaManager", () => {
 					{ x: 180, y: 90 },
 					{ x: 240, y: 150 },
 				]),
-			).resolves.toBe(false);
+			).resolves.toEqual({ verified: false });
 			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge,
 				result: {

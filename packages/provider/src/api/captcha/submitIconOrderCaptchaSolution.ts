@@ -14,13 +14,19 @@
 import { SubmitIconOrderCaptchaSolutionBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
+import {
+	escalationConnectionSignals,
+	escalationSiteConstraints,
+	mintEscalation,
+} from "./escalation.js";
 import { interactiveSolutionHandler } from "./interactiveCaptchaSolution.js";
+import { buildPostSolveRoutingContext } from "./postSolveRoutingContext.js";
 
 export default (env: ProviderEnvironment) =>
 	interactiveSolutionHandler(env, {
 		label: "icon-order",
 		parse: (body) => SubmitIconOrderCaptchaSolutionBody.parse(body),
-		verify: (tasks, body, submitWindowMs, req) =>
+		verify: (tasks, body, submitWindowMs, req, clientRecord) =>
 			tasks.iconOrderCaptchaManager.verifyIconOrderCaptchaSolution({
 				challenge: body.challenge,
 				providerChallengeSignature: body.signature.provider.challenge,
@@ -33,5 +39,17 @@ export default (env: ProviderEnvironment) =>
 				salt: body.salt,
 				simdReadings: body.simdReadings,
 				clientMetaData: body.clientMetaData,
+				postSolve: {
+					context: buildPostSolveRoutingContext(req, clientRecord),
+					escalate: ({ routingOutput, device, origin }) =>
+						mintEscalation({
+							tasks,
+							routingOutput,
+							origin,
+							device,
+							perConnectionSignals: escalationConnectionSignals(req),
+							siteConstraints: escalationSiteConstraints(clientRecord),
+						}),
+				},
 			}),
 	});
