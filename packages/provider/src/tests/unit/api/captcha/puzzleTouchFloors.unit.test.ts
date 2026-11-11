@@ -78,6 +78,7 @@ const buildTasks = (): Tasks =>
 			updatePuzzleCaptchaRecord: vi.fn().mockResolvedValue(undefined),
 		},
 		logger: { warn: vi.fn() },
+		pair: { encodePkcs8: (): Uint8Array => new Uint8Array(32) },
 	}) as unknown as Tasks;
 
 const buildContext = (overrides: {
@@ -118,7 +119,10 @@ const buildContext = (overrides: {
 	trafficVerdict: overrides.trafficVerdict ?? { kind: "pass" },
 	provenance: {
 		ipAddress: getCompositeIpAddress("203.0.113.5"),
-		headers: { "user-agent": overrides.userAgent },
+		headers: {
+			"user-agent": overrides.userAgent,
+			"x-prosopo-bundle-version": "3.10.12",
+		},
 		ja4: "ja4",
 		sessionId: "session",
 		// The floors need a device signal; the carrier bit is the one
