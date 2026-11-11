@@ -100,6 +100,10 @@ export default defineConfig(async ({ command, mode }) => {
 			...frontendConfig.define,
 			__PROSOPO_ALLOW_UNTRUSTED_EVENTS__: JSON.stringify(allowUntrustedEvents),
 			__PROSOPO_BUNDLE_VERSION__: JSON.stringify(version),
+			// Draws the widget's checkbox in a frame served beside the bundle.
+			__PROSOPO_FRAMED_CHECKBOX__: JSON.stringify(
+				process.env.PROSOPO_FRAMED_CHECKBOX === "1",
+			),
 		},
 		worker: {
 			format: "es",
@@ -215,6 +219,12 @@ export default defineConfig(async ({ command, mode }) => {
 				srcDir: copyDir.srcDir,
 				destDir: copyDir.destDir,
 				include: ["*/widget.json"],
+			}),
+			// The page the framed checkbox loads; it imports this bundle's entry.
+			VitePluginCopy({
+				srcDir: `${workspaceRoot}/packages/procaptcha-bundle/src/frame`,
+				destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle`,
+				include: ["checkbox-frame.html"],
 			}),
 
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),

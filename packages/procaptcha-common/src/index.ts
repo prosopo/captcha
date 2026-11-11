@@ -40,6 +40,8 @@ export * from "./dom/lazyMount.js";
 export * from "./components/reload.js";
 export * from "./components/audioAlternative.js";
 export * from "./components/checkbox.js";
+export * from "./components/framedCheckbox.js";
+export * from "./components/widgetCheckbox.js";
 export * from "./components/challengeSurface.js";
 export * from "./components/honeypot.js";
 export * from "./components/testModeBanner.js";
