@@ -3,6 +3,9 @@ packages:
   - packages/*
   - demos/*
   - integration/*
+  # The framework wrappers under integration/frameworks are npm-managed and
+  # stay out; the Better Auth plugin is a plain workspace package.
+  - integration/frameworks/better-auth/*
   # Compose bundles, versioned so deploys can pin them. Not docker/*: the
   # docker/images wrappers stay out of the workspace (see docker/bake.mjs),
   # except vector, whose config tests run in CI via `pnpm run test:all`.
