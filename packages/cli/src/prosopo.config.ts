@@ -200,5 +200,12 @@ export default function getConfig({
 		// a provider.
 		maxmindAsnDbPath: process.env.MAXMIND_ASN_DB_PATH,
 		dnsServers: getDnsServers(),
+		...(process.env.PROSOPO_STUN_PROBE_SOCKET &&
+			process.env.PROSOPO_STUN_URL && {
+				stunProbe: {
+					socketPath: process.env.PROSOPO_STUN_PROBE_SOCKET,
+					url: process.env.PROSOPO_STUN_URL,
+				},
+			}),
 	} as ProsopoConfigInput);
 }

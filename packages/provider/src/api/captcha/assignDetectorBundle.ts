@@ -92,9 +92,13 @@ export default (env: ProviderEnvironment) =>
 		_next: NextFunction,
 	): Promise<Response> => {
 		res.setHeader("Timing-Allow-Origin", "*");
+		const stun = env.config.stunProbe && {
+			[ApiParams.stunUrl]: env.config.stunProbe.url,
+		};
 		try {
 			const noBundle: AssignDetectorBundleResponse = {
 				[ApiParams.useProviderBundle]: false,
+				...stun,
 				status: "ok",
 			};
 
@@ -140,6 +144,7 @@ export default (env: ProviderEnvironment) =>
 				[ApiParams.detectorSessionId]: detectorSessionId,
 				[ApiParams.detectorScript]: bundle.js,
 				...(await siteConfig(tasks, req.body, req.logger)),
+				...stun,
 				status: "ok",
 			};
 			return res.json(response);
@@ -152,6 +157,7 @@ export default (env: ProviderEnvironment) =>
 			}));
 			return res.json({
 				[ApiParams.useProviderBundle]: false,
+				...stun,
 				status: "ok",
 			} satisfies AssignDetectorBundleResponse);
 		}

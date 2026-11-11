@@ -72,6 +72,7 @@ import type {
 	RequestHashSignature,
 } from "../procaptcha/index.js";
 import { OPEN_DETECTOR_FORMAT } from "./detection.js";
+import { WebRtcProbeReportSchema } from "./webrtc.js";
 
 /**
  * An error as a client receives it. `code` is what the widget branches on and
@@ -829,6 +830,9 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// A site bypass key read from the page's cookie. Never stored: the provider
 	// hashes it and only the hash is compared with the site's Allow rules.
 	[ApiParams.bypassKey]: boundedString(INPUT_LIMITS.ID).optional(),
+	// ICE candidates gathered against the provider's STUN server. Checked
+	// against the provider's stun-probe; the candidates themselves are not stored.
+	[ApiParams.webrtc]: WebRtcProbeReportSchema.optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -854,6 +858,9 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 	[ApiParams.detectorScript]?: string;
 	[ApiParams.clientUrl]?: string;
 	[ApiParams.assetOrigin]?: string;
+	// Set when this provider runs a stun-probe; the widget gathers ICE
+	// candidates against it and reports them with the frictionless request.
+	[ApiParams.stunUrl]?: string;
 }
 
 export const ReplaceDetectorPoolBody = object({

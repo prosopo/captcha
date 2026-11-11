@@ -1,6 +1,7 @@
 # Base provider stack. Always layer an env overlay on top, plus any optional ones:
 #   docker compose -f docker-compose.provider.yml -f docker-compose.provider.<production|staging|development>.yml up -d
 #   ... -f docker-compose.provider.tcp-probe.yml   # optional eBPF sidecar
+#   ... -f docker-compose.provider.stun-probe.yml  # optional STUN sidecar
 # Later files override earlier ones. Relative paths in every overlay resolve
 # against this directory, so keep the overlays beside this file.
 x-provider: &provider

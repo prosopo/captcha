@@ -74,6 +74,7 @@ import {
 	type UpdateProviderClientsResponse,
 	type VerificationResponse,
 	type VerifySolutionBodyTypeInput,
+	type WebRtcProbeReport,
 } from "@prosopo/types";
 import {
 	ClearAllCountersBody,
@@ -633,6 +634,7 @@ export default class ProviderApi
 		retryOf?: string,
 		bypassKey?: string,
 		behavioralData?: string,
+		webrtc?: WebRtcProbeReport,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
@@ -663,6 +665,7 @@ export default class ProviderApi
 			...(retryOf && { [ApiParams.retryOf]: retryOf }),
 			...(bypassKey && { [ApiParams.bypassKey]: bypassKey }),
 			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(webrtc && { [ApiParams.webrtc]: webrtc }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

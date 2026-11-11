@@ -220,6 +220,7 @@ export class FrictionlessManager extends CaptchaManager {
 			retryOf: params.retryOf,
 			solveDevice: params.solveDevice,
 			fingerprintSummary: params.fingerprintSummary,
+			webrtc: params.webrtc,
 		};
 	}
 
@@ -288,6 +289,7 @@ export class FrictionlessManager extends CaptchaManager {
 			matchedRule,
 			clientMetaData,
 			fingerprintSummary,
+			webrtc,
 			webView = false,
 			iFrame = false,
 			decryptedHeadHash = "",
@@ -358,6 +360,7 @@ export class FrictionlessManager extends CaptchaManager {
 			// session that is never solved still correlates back to the render.
 			...(clientMetaData && { clientMetaData }),
 			...(fingerprintSummary && { fingerprintSummary }),
+			...(webrtc && { webrtc }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);

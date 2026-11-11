@@ -114,6 +114,8 @@ export enum ApiParams {
 	bypassKey = "bypassKey",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
+	webrtc = "webrtc",
+	stunUrl = "stunUrl",
 	clip = "clip",
 	answer = "answer",
 	audioEvents = "audioEvents",
