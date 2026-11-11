@@ -1,5 +1,25 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.26.0
+### Minor Changes
+
+- b877bd4: Check where a browser's WebRTC traffic comes from. When a provider runs the stun-probe sidecar, it gives the widget a STUN address. The widget gathers WebRTC candidates while detection runs and sends them with the frictionless request. The provider asks stun-probe whether the STUN request really arrived and from which address, and stores the result on the session. A mismatch with the HTTP address means the HTTP traffic went through a proxy that the UDP traffic skipped. Only the outcome and the leaked address's network are stored, never the address. Nothing routes on it yet.
+
+### Patch Changes
+
+- Updated dependencies [a7a60f4]
+- Updated dependencies [b877bd4]
+  - @prosopo/types@5.30.0
+  - @prosopo/api@4.11.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.20
+  - @prosopo/procaptcha-audio@0.3.9
+  - @prosopo/procaptcha-common@2.23.9
+  - @prosopo/procaptcha-icon-order@0.3.9
+  - @prosopo/procaptcha-pow@2.14.17
+  - @prosopo/procaptcha-puzzle@2.18.9
+  - @prosopo/procaptcha-react@2.14.28
+
 ## 2.25.4
 ### Patch Changes
 

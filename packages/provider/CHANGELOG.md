@@ -1,5 +1,34 @@
 # @prosopo/provider
 
+## 5.31.0
+### Minor Changes
+
+- b877bd4: Check where a browser's WebRTC traffic comes from. When a provider runs the stun-probe sidecar, it gives the widget a STUN address. The widget gathers WebRTC candidates while detection runs and sends them with the frictionless request. The provider asks stun-probe whether the STUN request really arrived and from which address, and stores the result on the session. A mismatch with the HTTP address means the HTTP traffic went through a proxy that the UDP traffic skipped. Only the outcome and the leaked address's network are stored, never the address. Nothing routes on it yet.
+
+### Patch Changes
+
+- 2df0139: Send Timing-Allow-Origin on the detector bundle response.
+- a7a60f4: Accept the tcp-probe v2 record as the probe actually sends it. The schema expected `syn.ip_options` to be a hex string, but tcp-probe sends a boolean (whether the IP header had options; the bytes are in `raw`). So every record with a saved SYN failed validation and was dropped, and no session ever stored `tcpProbe`.
+- a7a60f4: Keep the TCP stack signals (MSS, TTL, window, options and the rest) on two kinds of session that were dropping them.
+  
+  The first is sessions on sites pinned to one captcha type, and the empty-pool fallback. They kept the raw tcp-probe record but not the fields the routing rules read, so every TCP rule was blind for those sites. The second is the record written when an access policy blocks a request. It had no TCP or TLS fields at all, so blocked traffic could not be compared with allowed traffic on its network stack.
+- Updated dependencies [a7a60f4]
+- Updated dependencies [b877bd4]
+  - @prosopo/types@5.30.0
+  - @prosopo/types-database@5.20.0
+  - @prosopo/api@4.11.0
+  - @prosopo/api-express-router@3.3.21
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.9
+  - @prosopo/datasets@3.2.29
+  - @prosopo/env@3.6.98
+  - @prosopo/fingerprint@2.8.20
+  - @prosopo/ipinfo@0.7.7
+  - @prosopo/keyring@2.10.29
+  - @prosopo/load-balancer@2.11.33
+  - @prosopo/types-env@2.12.8
+  - @prosopo/user-access-policy@3.17.2
+
 ## 5.30.2
 ### Patch Changes
 
