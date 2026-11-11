@@ -1,0 +1,50 @@
+# Overlay: the stun-probe sidecar. Layer it after the env overlay:
+#   docker compose -f docker-compose.provider.yml -f docker-compose.provider.<env>.yml \
+#     -f docker-compose.provider.stun-probe.yml up -d
+# The providers also need PROSOPO_STUN_PROBE_SOCKET and PROSOPO_STUN_URL in their
+# env files; ansible writes both for hosts with `stun_probe_enabled`.
+x-stun-reader: &stun-reader
+  group_add:
+    - "${STUN_PROBE_GID:-10501}"
+  volumes:
+    - /var/run/stun-probe:/var/run/stun-probe:ro
+
+services:
+  provider1:
+    <<: *stun-reader
+  provider2:
+    <<: *stun-reader
+  # Answers STUN Binding requests on UDP 3478 and records where each came from,
+  # so the providers can check a browser's srflx candidate against what really
+  # arrived. Ships in the tcp-probe image but runs apart from it, with no
+  # capabilities beyond CHOWN, because it parses untrusted UDP.
+  stun-probe:
+    container_name: stun-probe
+    image: prosopo/tcp-probe:${STUN_PROBE_IMAGE:?set STUN_PROBE_IMAGE to a version}
+    entrypoint: ["/usr/local/bin/stun-probe"]
+    network_mode: host
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "vector.stun-probe=true"
+      - "vector.docker=true"
+    volumes:
+      - /var/run/stun-probe:/var/run/stun-probe
+    command:
+      - "--port"
+      - "3478"
+      - "--socket-gid"
+      - "${STUN_PROBE_GID:-10501}"
+      - "--lookup-socket"
+      - "/var/run/stun-probe/lookup.sock"
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
