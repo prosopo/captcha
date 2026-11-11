@@ -37,6 +37,7 @@ import type {
 	ProcaptchaClientConfigOutput,
 	ProviderSelectRetryContext,
 	RefreshSwitchTarget,
+	WebRtcProbeReport,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import { readBypassKeyCookie } from "./bypassKeyCookie.js";
@@ -49,6 +50,7 @@ import {
 	type PrefetchedDetector,
 	takePrefetchedDetector,
 } from "./detectorPrefetch.js";
+import { gatherWebRtcCandidates } from "./webRtcProbe.js";
 
 // Upper bound on the assign POST, which serves the detector bundle inline
 // (~215 KB gzipped). The hop is always cold — /healthz pins a different
@@ -309,6 +311,7 @@ const customDetectBot: BotDetectionFunction = async (
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
 	let detectorOptions: DetectorOptions | undefined;
+	let webrtcReport: Promise<WebRtcProbeReport> | undefined;
 	try {
 		// Reuse the prefetched assignment when the entry already fetched one for
 		// this provider; otherwise issue it now.
@@ -318,6 +321,9 @@ const customDetectBot: BotDetectionFunction = async (
 				providerApi.assignDetectorBundle(config.account.address),
 				ASSIGN_TIMEOUT_MS,
 			));
+		if (assigned.stunUrl) {
+			webrtcReport = gatherWebRtcCandidates(assigned.stunUrl);
+		}
 		if (assigned.useProviderBundle && assigned.detectorScript) {
 			// Deliberately untimed: this is a local parse + evaluate, so a timer
 			// cannot rescue a stalled main thread — it can only throw away a bundle
@@ -381,6 +387,8 @@ const customDetectBot: BotDetectionFunction = async (
 				widgetSlot,
 				retryOf,
 				readBypassKeyCookie(),
+				undefined,
+				await webrtcReport,
 			),
 			10000,
 		);
@@ -469,6 +477,7 @@ const customDetectBot: BotDetectionFunction = async (
 		retryOf,
 		readBypassKeyCookie(),
 		behavioralData,
+		await webrtcReport,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

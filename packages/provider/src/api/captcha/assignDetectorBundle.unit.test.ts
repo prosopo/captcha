@@ -92,7 +92,7 @@ const makeRes = (): {
 	return { res: { json, setHeader } as unknown as Response, json, setHeader };
 };
 
-const env = {} as unknown as ProviderEnvironment;
+const env = { config: {} } as unknown as ProviderEnvironment;
 const next: NextFunction = vi.fn();
 
 describe("assignDetectorBundle", () => {
@@ -129,6 +129,27 @@ describe("assignDetectorBundle", () => {
 			status: "ok",
 		});
 		expect(cacheDetectorBundle).not.toHaveBeenCalled();
+	});
+
+	it("advertises the STUN url when this provider runs a stun-probe", async () => {
+		initDetectorBundlePool({ dir });
+		const { res, json } = makeRes();
+		const withStun = {
+			config: {
+				stunProbe: {
+					socketPath: "/var/run/stun-probe/lookup.sock",
+					url: "stun:pronode1.prosopo.io:3478",
+				},
+			},
+		} as unknown as ProviderEnvironment;
+
+		await assignDetectorBundle(withStun)(makeReq(), res, next);
+
+		expect(json).toHaveBeenCalledWith({
+			useProviderBundle: false,
+			stunUrl: "stun:pronode1.prosopo.io:3478",
+			status: "ok",
+		});
 	});
 
 	it("assigns a bundle, stores the binding, and returns the script", async () => {
