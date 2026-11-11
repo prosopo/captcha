@@ -156,7 +156,7 @@ const probeHit: TcpProbeHit = {
 		ip_id: 0,
 		frag_flags: 0,
 		flow_label: 12345,
-		ip_options: "",
+		ip_options: false,
 		seq: 7,
 		data_offset_resv: 160,
 		tcp_flags: 2,
@@ -169,7 +169,118 @@ const probeHit: TcpProbeHit = {
 	tcp_info: { state: 1, snd_cwnd: 10 },
 };
 
+// A record captured from tcp-probe v2 on staging, addresses replaced. Written
+// from the wire rather than from the schema, so a schema that disagrees with
+// what the probe sends fails here.
+const capturedV6Hit: TcpProbeHit = {
+	ack_tsecr: 3240538491,
+	ack_tsval: 397830579,
+	ack_window: 507,
+	est_mss: 1428,
+	est_ns: 1991669376458802,
+	est_srtt_us: 106401,
+	flags: 15,
+	hit: true,
+	is_v6: true,
+	last_state: 1,
+	local_ip: "2001:db8::443",
+	local_port: 443,
+	pkts: [
+		{
+			flags: 24,
+			len: 549,
+			ns: 4135637,
+			tsval: 397830583,
+			window: 507,
+		},
+		{
+			flags: 16,
+			len: 32,
+			ns: 115606308,
+			tsval: 397830692,
+			window: 505,
+		},
+	],
+	remote_ip: "2001:db8::1",
+	remote_port: 35542,
+	retrans: 0,
+	rtt_us: [106401],
+	syn: {
+		data_offset_resv: 160,
+		flow_label: 556646,
+		frag_flags: 0,
+		ip_id: 0,
+		ip_options: false,
+		opts: [
+			{
+				data: "05a0",
+				kind: 2,
+			},
+			{
+				data: "",
+				kind: 4,
+			},
+			{
+				data: "17b6694800000000",
+				kind: 8,
+			},
+			{
+				data: "",
+				kind: 1,
+			},
+			{
+				data: "07",
+				kind: 3,
+			},
+		],
+		opts_malformed: false,
+		raw: "60000000",
+		seq: 910862214,
+		tcp_flags: 2,
+		tos: 0,
+		total_len: 80,
+		ttl: 52,
+		urg_ptr: 0,
+		window: 64800,
+	},
+	syn_ns: 1991669269997656,
+	tcp_info: {
+		advmss: 1428,
+		bytes_acked: 3800,
+		bytes_received: 1157,
+		bytes_sent: 3933,
+		ca_state: 0,
+		delivery_rate: 39438,
+		lost: 0,
+		min_rtt: 106401,
+		options: 7,
+		pmtu: 1500,
+		rcv_mss: 536,
+		rcv_rtt: 0,
+		rcv_wscale: 7,
+		reordering: 3,
+		rto: 320000,
+		rtt: 107132,
+		rttvar: 23545,
+		segs_in: 9,
+		segs_out: 7,
+		snd_cwnd: 10,
+		snd_mss: 1428,
+		snd_wnd: 64896,
+		snd_wscale: 7,
+		state: 1,
+		total_retrans: 0,
+	},
+	v: 2,
+};
+
 describe("parseTcpProbeHeader", () => {
+	it("accepts a record exactly as tcp-probe v2 emits it", () => {
+		expect(
+			parseTcpProbeHeader(encodeProbe(capturedV6Hit), mockLogger()),
+		).toEqual(capturedV6Hit);
+	});
+
 	it("decodes a full IPv6 hit, keeping post-handshake packets", () => {
 		expect(parseTcpProbeHeader(encodeProbe(probeHit), mockLogger())).toEqual(
 			probeHit,

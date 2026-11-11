@@ -38,7 +38,8 @@ const TcpProbeSynSchema = z.object({
 	ip_id: u32,
 	frag_flags: u16,
 	flow_label: u32,
-	ip_options: hex,
+	// Whether the IP header carried options; their bytes are in `raw`.
+	ip_options: z.boolean(),
 	seq: u32,
 	data_offset_resv: u8,
 	tcp_flags: u8,
