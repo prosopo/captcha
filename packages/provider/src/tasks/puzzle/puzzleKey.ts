@@ -12,29 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createCipheriv, createHash, createHmac } from "node:crypto";
 import {
-	createCipheriv,
-	createHash,
-	createHmac,
-	randomBytes,
-} from "node:crypto";
-import { type IPAddress, PUZZLE_KEY_HEADER } from "@prosopo/types";
+	type IPAddress,
+	type KeyringPair,
+	PUZZLE_KEY_HEADER,
+} from "@prosopo/types";
 import { getIPAddress } from "@prosopo/util";
 import type { Response } from "express";
 import { subscriberNetwork } from "../../util.js";
 
+const secrets = new WeakMap<Pick<KeyringPair, "encodePkcs8">, Buffer>();
+
 /**
- * Per-process: the widget fetches its key and its puzzle from the same
- * provider seconds apart, and a key orphaned by a restart is recovered by the
- * widget re-running frictionless.
+ * Drawn from the provider's key pair rather than generated per process, so
+ * every process serving one provider identity hands out the same key: the
+ * widget's key and its puzzle can come from different processes.
  */
-const PROCESS_SECRET = randomBytes(32);
+export const puzzleKeySecret = (
+	pair: Pick<KeyringPair, "encodePkcs8">,
+): Buffer => {
+	let secret = secrets.get(pair);
+	if (!secret) {
+		secret = createHmac("sha256", pair.encodePkcs8())
+			.update("procaptcha-puzzle-key-secret")
+			.digest();
+		secrets.set(pair, secret);
+	}
+	return secret;
+};
 
 /** Key for the subscriber network `address` belongs to. */
-export const networkPuzzleKey = (
-	address: IPAddress,
-	secret: Buffer = PROCESS_SECRET,
-): Buffer =>
+export const networkPuzzleKey = (address: IPAddress, secret: Buffer): Buffer =>
 	createHmac("sha256", secret)
 		.update("procaptcha-puzzle-network\0")
 		.update(subscriberNetwork(address))
@@ -44,6 +53,7 @@ export const networkPuzzleKey = (
 export const attachPuzzleKey = (
 	res: Pick<Response, "setHeader">,
 	ip: string,
+	secret: Buffer,
 ): void => {
 	let address: IPAddress;
 	try {
@@ -51,7 +61,10 @@ export const attachPuzzleKey = (
 	} catch {
 		return;
 	}
-	res.setHeader(PUZZLE_KEY_HEADER, networkPuzzleKey(address).toString("hex"));
+	res.setHeader(
+		PUZZLE_KEY_HEADER,
+		networkPuzzleKey(address, secret).toString("hex"),
+	);
 };
 
 export interface ScrambledPieceMask {

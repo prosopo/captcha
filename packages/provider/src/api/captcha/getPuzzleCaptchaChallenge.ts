@@ -18,8 +18,10 @@ import {
 import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
+	BUNDLE_VERSION_HEADER,
 	CaptchaType,
 	type GetPuzzleCaptchaResponse,
+	type RequestHeaders,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -31,10 +33,12 @@ import {
 } from "../../tasks/puzzle/puzzleDifficulty.js";
 import {
 	networkPuzzleKey,
+	puzzleKeySecret,
 	scramblePieceMask,
 } from "../../tasks/puzzle/puzzleKey.js";
 import {
 	renderPuzzleBoardImages,
+	renderPuzzleImages,
 	resolvePuzzlePieceScaleRange,
 	resolvePuzzleRenderSettings,
 	samplePuzzlePieceSize,
@@ -47,6 +51,26 @@ import {
 	interactiveChallengeHandler,
 } from "./interactiveCaptchaChallenge.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
+
+/** The first widget release that lifts the piece out of a board it is drawn on. */
+const FIRST_BOARD_LIFTING_WIDGET = [3, 10, 12];
+
+/**
+ * Widgets older than {@link FIRST_BOARD_LIFTING_WIDGET} read only a separate
+ * piece image. Pages open since before a release keep running them, so they
+ * still get one.
+ */
+export const widgetLiftsPieceFromBoard = (headers: RequestHeaders): boolean => {
+	const parts = (headers[BUNDLE_VERSION_HEADER.toLowerCase()] ?? "")
+		.split(".")
+		.map(Number);
+	if (parts.length < 3 || parts.some(Number.isNaN)) return false;
+	for (const [i, minimum] of FIRST_BOARD_LIFTING_WIDGET.entries()) {
+		const part = parts[i] ?? 0;
+		if (part !== minimum) return part > minimum;
+	}
+	return true;
+};
 
 /** Exported for unit testing only; the default export is the entry point. */
 export const issuePuzzleChallenge = async ({
@@ -167,20 +191,42 @@ export const issuePuzzleChallenge = async ({
 	// before it is expressed in pixels, so a crash between the two
 	// cannot leave a challenge the user can see but the server cannot
 	// score. Imagery is derived from the same target that was persisted.
-	const images = await renderPuzzleBoardImages({
-		placement: {
-			targetX: challenge.targetX,
-			targetY: challenge.targetY,
-		},
-		start: { x: challenge.originX, y: challenge.originY },
-		settings: renderedPuzzleSettings,
-		pieceSize: effectivePieceSize,
-	});
-	const scrambled = scramblePieceMask(
-		images.mask,
-		networkPuzzleKey(getIpAddressFromComposite(provenance.ipAddress)),
-		challenge.challenge,
-	);
+	const placement = {
+		targetX: challenge.targetX,
+		targetY: challenge.targetY,
+	};
+	const images = widgetLiftsPieceFromBoard(provenance.headers)
+		? await renderPuzzleBoardImages({
+				placement,
+				start: { x: challenge.originX, y: challenge.originY },
+				settings: renderedPuzzleSettings,
+				pieceSize: effectivePieceSize,
+			})
+		: await renderPuzzleImages({
+				placement,
+				settings: renderedPuzzleSettings,
+				pieceSize: effectivePieceSize,
+			});
+	let pieceDelivery: Pick<
+		GetPuzzleCaptchaResponse,
+		ApiParams.piece | ApiParams.pieceMask | ApiParams.pieceMaskCheck
+	>;
+	if ("mask" in images) {
+		const scrambled = scramblePieceMask(
+			images.mask,
+			networkPuzzleKey(
+				getIpAddressFromComposite(provenance.ipAddress),
+				puzzleKeySecret(tasks.pair),
+			),
+			challenge.challenge,
+		);
+		pieceDelivery = {
+			[ApiParams.pieceMask]: scrambled.mask,
+			[ApiParams.pieceMaskCheck]: scrambled.check,
+		};
+	} else {
+		pieceDelivery = { [ApiParams.piece]: images.piece };
+	}
 
 	// A second write rather than an argument to storePuzzleCaptchaRecord: the
 	// sampled piece size and the seeds only exist once the render has run, and
@@ -231,8 +277,7 @@ export const issuePuzzleChallenge = async ({
 			[ApiParams.status]: "ok",
 			[ApiParams.challenge]: challenge.challenge,
 			[ApiParams.background]: images.background,
-			[ApiParams.pieceMask]: scrambled.mask,
-			[ApiParams.pieceMaskCheck]: scrambled.check,
+			...pieceDelivery,
 			[ApiParams.pieceSize]: images.pieceSize,
 			[ApiParams.originX]: challenge.originX,
 			[ApiParams.originY]: challenge.originY,
