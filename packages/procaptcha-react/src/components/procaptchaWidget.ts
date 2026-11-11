@@ -25,9 +25,9 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	mountCheckbox,
 	mountHoneypot,
 	mountTestModeBanner,
+	mountWidgetCheckbox,
 } from "@prosopo/procaptcha-common";
 import {
 	ProcaptchaConfigSchema,
@@ -254,7 +254,7 @@ export const mountProcaptchaImageWidget = (
 	});
 
 	if (!isInvisible) {
-		checkbox = mountCheckbox(root, checkboxProps());
+		checkbox = mountWidgetCheckbox(root, checkboxProps());
 	}
 
 	teardown.add(scheduler.cancel);
