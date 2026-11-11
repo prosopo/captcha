@@ -157,7 +157,9 @@ jobs:
           branch_name="release/cli-v${{ env.cli_version }}"
           
           git checkout -b "$branch_name"
-          git commit -m "chore: version bump cli-v${{ env.cli_version }}"
+          # `changeset version` commits the bump itself; this picks up only what
+          # the lockfile refresh and lint-fix changed afterwards, if anything.
+          git diff --cached --quiet || git commit -m "chore: version bump cli-v${{ env.cli_version }}"
           timeout 4m git push --set-upstream origin "$branch_name"
           
           timeout 4m gh pr create \
