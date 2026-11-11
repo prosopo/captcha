@@ -82,9 +82,14 @@ const assignOnce = async (ip?: string): Promise<void> => {
 	await assignOnceWith(ip);
 };
 
-const makeRes = (): { res: Response; json: ReturnType<typeof vi.fn> } => {
+const makeRes = (): {
+	res: Response;
+	json: ReturnType<typeof vi.fn>;
+	setHeader: ReturnType<typeof vi.fn>;
+} => {
 	const json = vi.fn((body: unknown) => body);
-	return { res: { json } as unknown as Response, json };
+	const setHeader = vi.fn((_name: string, _value: string) => undefined);
+	return { res: { json, setHeader } as unknown as Response, json, setHeader };
 };
 
 const env = {} as unknown as ProviderEnvironment;
@@ -102,6 +107,15 @@ describe("assignDetectorBundle", () => {
 	afterEach(() => {
 		rmSync(dir, { recursive: true, force: true });
 		vi.clearAllMocks();
+	});
+
+	it("lets the page read the response's timings, bundle or not", async () => {
+		initDetectorBundlePool({ dir });
+		const { res, setHeader } = makeRes();
+
+		await assignDetectorBundle(env)(makeReq(), res, next);
+
+		expect(setHeader).toHaveBeenCalledWith("Timing-Allow-Origin", "*");
 	});
 
 	it("returns useProviderBundle:false when the pool is empty", async () => {

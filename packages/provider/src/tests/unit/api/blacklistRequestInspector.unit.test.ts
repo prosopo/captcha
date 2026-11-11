@@ -673,6 +673,44 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 		expect(result.status).toBe("Disapproved");
 	});
 
+	it("records the TCP stack signals the blocked request carried", async () => {
+		const { logger } = captureLogger();
+		const { db, spy } = buildDb();
+		const storage = buildStorage([
+			{
+				type: AccessPolicyType.Block,
+				ja4Hash: BOT_JA4,
+				description: "ja4 block — Solver",
+			},
+		]);
+		const inspector = new BlacklistRequestInspector(
+			storage,
+			async () => undefined,
+			db,
+		);
+
+		await inspector.shouldAbortRequest({
+			requestedRoute: "/v1/prosopo/provider/client/captcha/frictionless",
+			rawIp: "1.1.1.1",
+			ja4: BOT_JA4,
+			requestHeaders: {
+				"user-agent": BOT_UA,
+				"x-tls-tcp-mss": "1460",
+				"x-tls-observed-ttl": "52",
+				"x-tls-tcp-window": "65535",
+			},
+			requestBody: {},
+			logger,
+			ipInfo: validIpInfo("GB"),
+		});
+		await Promise.resolve();
+
+		const written = spy.mock.calls[0]?.[0] as Record<string, unknown>;
+		expect(written.tcpMss).toBe(1460);
+		expect(written.observedTtl).toBe(52);
+		expect(written.tcpWindow).toBe(65535);
+	});
+
 	it("does NOT call storeBlockedSession when no rule matches", async () => {
 		const { logger } = captureLogger();
 		const { db, spy } = buildDb();
