@@ -82,6 +82,7 @@ describe("CaptchaManager", () => {
 		db = {
 			checkAndRemoveSession: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
+			mergeSessionSubmitDetectorData: vi.fn().mockResolvedValue(true),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -163,6 +164,41 @@ describe("CaptchaManager", () => {
 
 			expect(got).toBe(session);
 			expect(dbGet()).toHaveBeenCalledTimes(1);
+		});
+
+		it("merges detector data sent at submit over the bag", async () => {
+			const session = {
+				sessionId: "sess",
+				captchaType: CaptchaType.pow,
+				d: { b: { first: ["x"] }, k: 1 },
+				dSubmit: { b: { second: ["y"] } },
+			} as unknown as Session;
+			dbGet().mockResolvedValue(session);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
+
+			expect(got?.d).toEqual({ b: { first: ["x"], second: ["y"] }, k: 1 });
+		});
+
+		it("keeps the origin's bag under an escalation's submitted data", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				d: { b: { first: ["x"] }, k: 1 },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				dSubmit: { b: { second: ["y"] } },
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.d).toEqual({ b: { first: ["x"], second: ["y"] }, k: 1 });
 		});
 
 		it("returns undefined when the session isn't found", async () => {
@@ -2268,6 +2304,54 @@ describe("CaptchaManager", () => {
 
 			expect(decoded.behavioural).toBeUndefined();
 			expect(decoded.simd).toEqual({ ops: [1] });
+		});
+
+		const behaviourWith = (l?: Record<string, unknown>): BehavioralDataResult =>
+			({
+				collector1: [],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+				...(l && { l }),
+			}) as BehavioralDataResult;
+
+		const mergeSubmit = () =>
+			db.mergeSessionSubmitDetectorData as unknown as ReturnType<typeof vi.fn>;
+
+		it("stores the detector data a behaviour payload carried", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviourWith({ b: { second: ["y"] } }),
+			);
+
+			await captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" });
+
+			expect(mergeSubmit()).toHaveBeenCalledWith("s1", {
+				b: { second: ["y"] },
+			});
+		});
+
+		it("stores nothing when the behaviour payload carried none", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviourWith(),
+			);
+
+			await captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" });
+
+			expect(mergeSubmit()).not.toHaveBeenCalled();
+		});
+
+		it("still returns the payloads when storing the detector data fails", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviourWith({ b: { second: ["y"] } }),
+			);
+			mergeSubmit().mockRejectedValue(new Error("mongo down"));
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+			});
+
+			expect(decoded.behavioural).toBeDefined();
 		});
 
 		it("does not resolve a bundle when there is nothing to decode", async () => {

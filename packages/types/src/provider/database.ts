@@ -836,6 +836,10 @@ export type Session = {
 	// pass through. Keys are assigned by the detector; nothing in this repo
 	// enumerates them.
 	d?: DetectorData;
+	// Detector data that arrived with a solution submission rather than at
+	// detection time. Kept apart from `d` so it cannot stand in for an
+	// escalation's missing bag; reads merge it over `d`.
+	dSubmit?: DetectorData;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a

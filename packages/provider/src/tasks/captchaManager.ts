@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { RedisWriteQueue } from "@prosopo/database";
+import {
+	type RedisWriteQueue,
+	mergeSubmitDetectorData,
+} from "@prosopo/database";
 import type { TranslateFn, TranslationKey } from "@prosopo/locale";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
@@ -61,6 +64,7 @@ import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
 import { decode } from "./detection/decoderPool.js";
+import { sanitiseDetectorData } from "./detection/getBotScore.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
@@ -146,6 +150,12 @@ export type CaptchaManagerDeps = {
 	logger?: Logger;
 	writeQueue?: RedisWriteQueue | null;
 };
+
+/** `dSubmit` merged over `d`; the session itself when nothing came at submit. */
+const withSubmitDetectorData = (session: ProjectedSession): ProjectedSession =>
+	session.dSubmit
+		? { ...session, d: mergeSubmitDetectorData(session.d, session.dSubmit) }
+		: session;
 
 export class CaptchaManager {
 	pair: KeyringPair;
@@ -236,7 +246,7 @@ export class CaptchaManager {
 	): Promise<ProjectedSession | undefined> {
 		const session = await this.db.getSessionRecordBySessionId(sessionId);
 		if (!session) return undefined;
-		if (!session.originSessionId) return session;
+		if (!session.originSessionId) return withSubmitDetectorData(session);
 
 		const needsSimd =
 			session.simdReadings === undefined || session.simdReadings === null;
@@ -251,18 +261,18 @@ export class CaptchaManager {
 		const needsFingerprint = session.fingerprintSummary === undefined;
 
 		if (!needsSimd && !needsDns && !needsData && !needsFingerprint) {
-			return session;
+			return withSubmitDetectorData(session);
 		}
 
 		const origin = await this.db.getSessionRecordBySessionId(
 			session.originSessionId,
 		);
-		if (!origin) return session;
+		if (!origin) return withSubmitDetectorData(session);
 
 		const mergedData =
 			origin.d === undefined ? session.d : { ...origin.d, ...escalationData };
 
-		return {
+		return withSubmitDetectorData({
 			...session,
 			...(needsSimd &&
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
@@ -272,7 +282,7 @@ export class CaptchaManager {
 				origin.fingerprintSummary && {
 					fingerprintSummary: origin.fingerprintSummary,
 				}),
-		};
+		});
 	}
 
 	/**
@@ -347,10 +357,36 @@ export class CaptchaManager {
 			),
 		]);
 
+		await this.recordSubmitDetectorData(sessionId, decodedBehavioural?.l);
+
 		return {
 			...(decodedBehavioural && { behavioural: decodedBehavioural }),
 			...(decodedSimd && { simd: decodedSimd }),
 		};
+	}
+
+	/**
+	 * Store the detector data a submission's behaviour payload carried, for
+	 * verify to read through {@link getSessionRecordWithOriginFallback}. A
+	 * failure is logged and swallowed: the solution is still worth judging on
+	 * what detection reported at load.
+	 */
+	private async recordSubmitDetectorData(
+		sessionId: string | undefined,
+		submitted: unknown,
+	): Promise<void> {
+		if (!sessionId) return;
+		const data = sanitiseDetectorData(submitted);
+		if (!data || Object.keys(data).length === 0) return;
+		try {
+			await this.db.mergeSessionSubmitDetectorData(sessionId, data);
+		} catch (err) {
+			this.logger?.warn(() => ({
+				msg: "Failed to store detector data from a submission",
+				data: { sessionId },
+				err,
+			}));
+		}
 	}
 
 	/**
