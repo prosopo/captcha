@@ -18,6 +18,7 @@ export * from "./requestHeaders.js";
 export * from "./usageBeacon.js";
 export * from "./protectSession.js";
 export * from "./events/activation.js";
+export * from "./events/inputModality.js";
 export * from "./events/trust.js";
 export * from "./events/execute.js";
 export * from "./state/builder.js";

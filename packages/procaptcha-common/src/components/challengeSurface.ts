@@ -17,6 +17,7 @@ import { isDevMode, randomToken } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
 import { Teardown } from "../dom/component.js";
 import { type StyleMap, applyStyles, createElement } from "../dom/element.js";
+import { lastInputWasPointer } from "../events/inputModality.js";
 
 /**
  * The layer every challenge is presented on. Appended to `document.body` so a
@@ -239,6 +240,7 @@ export const mountChallengeSurface = (
 	let openTeardown: Teardown | null = null;
 	let opener: HTMLElement | null = null;
 	let dialogOpen = false;
+	let openedByPointer = false;
 
 	// Drawn per mount: a name scraped from one page load names nothing on the
 	// next. The placement pair is drawn up front so switching placement at
@@ -252,6 +254,9 @@ export const mountChallengeSurface = (
 
 	const content = createElement("div", {
 		className: names.content,
+		// The panel only takes focus as a stand-in for the dialog as a whole,
+		// so it draws no ring of its own.
+		style: { outline: "none" },
 		attributes: { "data-cy": isDevMode() ? "challenge-content" : undefined },
 	});
 
@@ -301,9 +306,15 @@ export const mountChallengeSurface = (
 			document.activeElement instanceof HTMLElement
 				? document.activeElement
 				: null;
-		// The panel itself is the fallback so the dialog's name is still
-		// announced when it holds nothing focusable.
-		(focusableWithin(content)[0] ?? content).focus();
+		// After a pointer activation the panel takes focus rather than its
+		// first control, so nothing in it draws a keyboard focus ring the user
+		// did not ask for. The panel is also the fallback, so the dialog's name
+		// is still announced when it holds nothing focusable.
+		openedByPointer = lastInputWasPointer();
+		(openedByPointer
+			? content
+			: (focusableWithin(content)[0] ?? content)
+		).focus();
 	};
 
 	/**
@@ -314,7 +325,11 @@ export const mountChallengeSurface = (
 	 * panel, so a user who has since moved is left alone.
 	 */
 	const upgradeDialogFocus = () => {
-		if (!dialogOpen || document.activeElement !== content) {
+		if (
+			!dialogOpen ||
+			openedByPointer ||
+			document.activeElement !== content
+		) {
 			return;
 		}
 		focusableWithin(content)[0]?.focus();

@@ -15,6 +15,7 @@
 import { type Component, Teardown } from "../dom/component.js";
 import { applyStyles } from "../dom/element.js";
 import type { Activation } from "../events/activation.js";
+import { noteInputMethod, watchInputMethod } from "../events/inputModality.js";
 import { type CheckboxProps, mountCheckbox } from "./checkbox.js";
 
 /** The page the bundle ships beside its chunks to host the checkbox. */
@@ -80,6 +81,7 @@ export const mountFramedCheckbox = (
 	let props = initialProps;
 	let ready = false;
 	let shown = false;
+	watchInputMethod();
 
 	const host = document.createElement("div");
 	applyStyles(host, { position: "relative" });
@@ -146,6 +148,7 @@ export const mountFramedCheckbox = (
 	};
 
 	const activate = ({ x, y, inputMethod }: Activation): void => {
+		noteInputMethod(inputMethod);
 		// (0, 0) means the activation had no position, which a keyboard press
 		// never does; it stays (0, 0) rather than becoming the frame's corner.
 		if (0 === x && 0 === y) {
