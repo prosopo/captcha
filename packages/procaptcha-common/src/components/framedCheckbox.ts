@@ -34,10 +34,37 @@ const FRAME_HEIGHT_PX = 58;
 /** Everything the frame needs to draw the checkbox. Functions do not cross. */
 export type CheckboxFrameProps = Omit<CheckboxProps, "onChange">;
 
-export type CheckboxFrameParentMessage = {
+export type CheckboxFrameParentMessage =
+	| { pf: string; t: "props"; props: CheckboxFrameProps }
+	| { pf: string; t: "offset"; left: number; top: number };
+
+/** A touch the frame forwards, already in the page's coordinates. */
+export type ForwardedTouch = {
+	x: number;
+	y: number;
+	id: number;
+	force?: number;
+	rx?: number;
+	ry?: number;
+	rot?: number;
+};
+
+/**
+ * Input inside the frame never reaches the page's own behaviour collection, so
+ * the frame forwards it in page coordinates.
+ */
+export type CheckboxFrameInputMessage = {
 	pf: string;
-	t: "props";
-	props: CheckboxFrameProps;
+	t: "input";
+	type: string;
+	x?: number;
+	y?: number;
+	button?: number;
+	ctrlKey?: boolean;
+	shiftKey?: boolean;
+	altKey?: boolean;
+	touches?: ForwardedTouch[];
+	changed?: ForwardedTouch[];
 };
 
 export type CheckboxFrameMessage =
@@ -45,7 +72,8 @@ export type CheckboxFrameMessage =
 	| { pf: string; t: "size"; w: number; h: number }
 	| { pf: string; t: "drawn" }
 	| ({ pf: string; t: "activate" } & Activation)
-	| { pf: string; t: "pointer"; type: string; pointerType: string };
+	| { pf: string; t: "pointer"; type: string; pointerType: string }
+	| CheckboxFrameInputMessage;
 
 const createNonce = (): string =>
 	Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte: number) =>
@@ -126,6 +154,35 @@ export const mountFramedCheckbox = (
 	teardown.add(() => clearTimeout(timer));
 	teardown.addEventListener(frame, "error", dropFrame);
 
+	// The frame adds its own position on the page to the input it forwards.
+	const postOffset = (): void => {
+		const rect = frame.getBoundingClientRect();
+		const message: CheckboxFrameParentMessage = {
+			pf: nonce,
+			t: "offset",
+			left: rect.left,
+			top: rect.top,
+		};
+		frame.contentWindow?.postMessage(message, src.origin);
+	};
+	let offsetQueued = false;
+	const queueOffset = (): void => {
+		if (offsetQueued || !ready) {
+			return;
+		}
+		offsetQueued = true;
+		requestAnimationFrame(() => {
+			offsetQueued = false;
+			postOffset();
+		});
+	};
+	const viewportChange: AddEventListenerOptions = {
+		capture: true,
+		passive: true,
+	};
+	teardown.addEventListener(window, "scroll", queueOffset, viewportChange);
+	teardown.addEventListener(window, "resize", queueOffset, viewportChange);
+
 	const showFrame = (): void => {
 		shown = true;
 		clearTimeout(timer);
@@ -136,6 +193,7 @@ export const mountFramedCheckbox = (
 		});
 		standIn?.destroy();
 		standIn = undefined;
+		postOffset();
 	};
 
 	const postProps = (): void => {
@@ -172,6 +230,7 @@ export const mountFramedCheckbox = (
 		const data = message.data;
 		if ("ready" === data.t) {
 			ready = true;
+			postOffset();
 			postProps();
 		} else if ("size" === data.t) {
 			frame.style.width = `${data.w}px`;
@@ -198,6 +257,22 @@ export const mountFramedCheckbox = (
 		},
 	};
 };
+
+const MOUSE_INPUT = [
+	"mousemove",
+	"mousedown",
+	"mouseup",
+	"click",
+	"dblclick",
+	"contextmenu",
+] as const;
+
+const TOUCH_INPUT = [
+	"touchstart",
+	"touchmove",
+	"touchend",
+	"touchcancel",
+] as const;
 
 const POINTER_EVENTS = [
 	"pointerover",
@@ -236,6 +311,7 @@ export const runCheckboxFrame = (): void => {
 	};
 
 	let checkbox: Component<CheckboxProps> | undefined;
+	let offset = { left: 0, top: 0 };
 
 	// The frame page lays its body out inline-block, so the body's box is the
 	// checkbox's size rather than the frame's.
@@ -247,11 +323,14 @@ export const runCheckboxFrame = (): void => {
 	addEventListener(
 		"message",
 		(event: MessageEvent<CheckboxFrameParentMessage>) => {
-			if (
-				event.source !== window.parent ||
-				event.data?.pf !== nonce ||
-				"props" !== event.data.t
-			) {
+			if (event.source !== window.parent || event.data?.pf !== nonce) {
+				return;
+			}
+			if ("offset" === event.data.t) {
+				offset = { left: event.data.left, top: event.data.top };
+				return;
+			}
+			if ("props" !== event.data.t) {
 				return;
 			}
 			// Without a matching color-scheme Chrome paints the frame's canvas
@@ -290,6 +369,54 @@ export const runCheckboxFrame = (): void => {
 						t: "pointer",
 						type,
 						pointerType: event.pointerType,
+					});
+				}
+			},
+			{ capture: true, passive: true },
+		);
+	}
+
+	const forwardTouch = (touch: Touch): ForwardedTouch => ({
+		x: touch.clientX + offset.left,
+		y: touch.clientY + offset.top,
+		id: touch.identifier,
+		force: touch.force,
+		rx: touch.radiusX,
+		ry: touch.radiusY,
+		rot: touch.rotationAngle,
+	});
+	for (const type of MOUSE_INPUT) {
+		addEventListener(
+			type,
+			(event: MouseEvent) => {
+				if (event.isTrusted) {
+					post({
+						pf: nonce,
+						t: "input",
+						type,
+						x: event.clientX + offset.left,
+						y: event.clientY + offset.top,
+						button: event.button,
+						ctrlKey: event.ctrlKey,
+						shiftKey: event.shiftKey,
+						altKey: event.altKey,
+					});
+				}
+			},
+			{ capture: true, passive: true },
+		);
+	}
+	for (const type of TOUCH_INPUT) {
+		addEventListener(
+			type,
+			(event: TouchEvent) => {
+				if (event.isTrusted) {
+					post({
+						pf: nonce,
+						t: "input",
+						type,
+						touches: Array.from(event.touches, forwardTouch),
+						changed: Array.from(event.changedTouches, forwardTouch),
 					});
 				}
 			},
