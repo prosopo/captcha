@@ -84,6 +84,15 @@ describe("the base URL", () => {
 		await client().get("");
 		expect(fetchStub.last().url).toBe(BASE_URL);
 	});
+
+	test.each(["/", "///"])(
+		"a base URL ending in %s does not produce a double slash",
+		async (trailing: string) => {
+			fetchStub.respond({});
+			await new TestClient(`${BASE_URL}${trailing}`).get("/status");
+			expect(fetchStub.last().url).toBe(`${BASE_URL}/status`);
+		},
+	);
 });
 
 describe("fetch", () => {
@@ -204,6 +213,15 @@ describe("post", () => {
 	test("a zero-length array body is sent, not dropped", async () => {
 		await client().send("/events", []);
 		expect(fetchStub.last().init?.body).toBe("[]");
+	});
+
+	test("a bigint in the body is sent as a decimal string, not thrown", async () => {
+		await client().send("/solve", { nonce: 12345678901234567890n });
+		expect(fetchStub.last().init?.body).toBe(
+			'{"nonce":"12345678901234567890"}',
+		);
+		await client().sendWithHeaders("/solve", { nonce: 1n });
+		expect(fetchStub.last().init?.body).toBe('{"nonce":"1"}');
 	});
 
 	test("returns the parsed response", async () => {
@@ -352,5 +370,61 @@ describe("ApiClient", () => {
 		}
 		await new Probe("", "account").go();
 		expect(fetchStub.last().url).toBe("https:///status");
+	});
+});
+
+describe("default headers", () => {
+	const LANGUAGE: Record<string, string> = {
+		"Prosopo-Lang": "tr,en",
+	};
+	const withDefaults = (): TestClient =>
+		new TestClient(BASE_URL, "", undefined, LANGUAGE);
+
+	test("go with every GET", async () => {
+		await withDefaults().get("/status");
+		expect(fetchStub.last().headers).toEqual(LANGUAGE);
+	});
+
+	test("go with every POST, next to the JSON content type", async () => {
+		await withDefaults().send("/captcha", { a: 1 });
+		expect(fetchStub.last().headers).toEqual({
+			"Content-Type": "application/json",
+			...LANGUAGE,
+		});
+	});
+
+	test("go with postWithHeaders too", async () => {
+		await withDefaults().sendWithHeaders("/captcha", { a: 1 });
+		expect(fetchStub.last().headers["Prosopo-Lang"]).toBe("tr,en");
+	});
+
+	test("lose to a header the call passes itself", async () => {
+		await withDefaults().get("/status", {
+			headers: { "Prosopo-Lang": "de" },
+		});
+		expect(fetchStub.last().headers["Prosopo-Lang"]).toBe("de");
+		await withDefaults().send(
+			"/captcha",
+			{},
+			{
+				headers: { "Prosopo-Lang": "fr" },
+			},
+		);
+		expect(fetchStub.last().headers["Prosopo-Lang"]).toBe("fr");
+	});
+
+	test("are passed on by ApiClient", async () => {
+		class Language extends ApiClient {
+			public go(): Promise<unknown> {
+				return this.fetch("/status");
+			}
+		}
+		await new Language(BASE_URL, "account", undefined, LANGUAGE).go();
+		expect(fetchStub.last().headers).toEqual(LANGUAGE);
+	});
+
+	test("leave a GET's init untouched when there are none", async () => {
+		await client().get("/status");
+		expect(fetchStub.last().headers).toEqual({});
 	});
 });

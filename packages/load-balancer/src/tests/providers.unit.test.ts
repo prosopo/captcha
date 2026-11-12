@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { EnvironmentTypes } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { HardcodedProvider } from "../balancer.js";
+import type { HardcodedProvider, IpMode } from "../balancer.js";
 import {
+	PROVIDER_LIST_FAILED_REFRESH_RETRY_MS,
+	PROVIDER_LIST_MISS_RELOAD_MS,
+	PROVIDER_LIST_TTL_MS,
 	_resetHealthzRetryPolicy,
 	_resetPinCache,
 	_resetProviderListCache,
 	_setHealthzRetryPolicy,
+	findProvider,
 	getProviders,
 	getRandomActiveProvider,
 	getRandomProviderFromList,
@@ -28,8 +33,14 @@ import {
 // can be exercised without real network calls. getRandomActiveProvider tests
 // don't use loadBalancer, so this mock leaves them unaffected.
 const loadBalancer = vi.fn();
+// Defaults to "no override" so these cases exercise the normal healthz
+// discovery path; the override's own behaviour is covered in
+// providerUrlOverride.unit.test.ts.
+const getProviderListOverride = vi.fn<() => HardcodedProvider[]>(() => []);
 vi.mock("../balancer.js", () => ({
 	loadBalancer: (...args: unknown[]) => loadBalancer(...args),
+	getProviderListOverride: (...args: unknown[]) =>
+		getProviderListOverride(...(args as [])),
 }));
 
 const originalFetch = globalThis.fetch;
@@ -45,8 +56,21 @@ const mockHealthzFetch = (host: string, ok = true, status = 200) => {
 	return mocked;
 };
 
+// The provider-list cache ages off Date.now(), so drive it from the test
+// rather than sleeping. Nothing else in this package reads the clock.
+const originalDateNow = Date.now;
+const CLOCK_START = 1_700_000_000_000;
+let clock = CLOCK_START;
+const advanceClock = (ms: number) => {
+	clock += ms;
+};
+const flushBackgroundRefresh = (): Promise<void> =>
+	new Promise((resolve) => setTimeout(resolve, 0));
+
 beforeEach(() => {
 	_resetPinCache();
+	clock = CLOCK_START;
+	Date.now = () => clock;
 	// Keep the retry policy but drop backoff to zero so failure-path tests
 	// don't sit waiting on real timers.
 	_setHealthzRetryPolicy({ baseDelayMs: 0, maxDelayMs: 0 });
@@ -54,6 +78,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	globalThis.fetch = originalFetch;
+	Date.now = originalDateNow;
 	_resetHealthzRetryPolicy();
 });
 
@@ -242,6 +267,216 @@ describe("getProviders", () => {
 		const retry = await getProviders("production");
 		expect(retry).toBe(providers);
 		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("keeps a separate entry per ipMode and passes it to loadBalancer", async () => {
+		const dual: HardcodedProvider[] = [
+			{ address: "5xyz", url: "https://p1", datasetId: "0x0", weight: 1 },
+		];
+		const v4: HardcodedProvider[] = [
+			{ address: "5xyz", url: "https://ipv4.p1", datasetId: "0x0", weight: 1 },
+		];
+		loadBalancer.mockImplementation(
+			async (_env: EnvironmentTypes, ipMode?: IpMode) =>
+				ipMode === "ipv4" ? v4 : dual,
+		);
+
+		expect(await getProviders("production")).toBe(dual);
+		expect(await getProviders("production", "ipv4")).toBe(v4);
+		// Both are now cached independently.
+		expect(await getProviders("production")).toBe(dual);
+		expect(await getProviders("production", "ipv4")).toBe(v4);
+
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+		expect(loadBalancer).toHaveBeenCalledWith("production", undefined);
+		expect(loadBalancer).toHaveBeenCalledWith("production", "ipv4");
+	});
+
+	it("refreshes an expired list in the background while serving the old one", async () => {
+		const first: HardcodedProvider[] = [
+			{ address: "5A", url: "https://p1", datasetId: "0x0", weight: 1 },
+		];
+		const second: HardcodedProvider[] = [
+			{ address: "5B", url: "https://p2", datasetId: "0x0", weight: 1 },
+		];
+		loadBalancer.mockResolvedValueOnce(first).mockResolvedValueOnce(second);
+
+		expect(await getProviders("production")).toBe(first);
+		advanceClock(PROVIDER_LIST_TTL_MS - 1);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
+		advanceClock(1);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+		await flushBackgroundRefresh();
+		expect(await getProviders("production")).toBe(second);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("never makes a caller wait on a refresh once a list has loaded", async () => {
+		const first: HardcodedProvider[] = [
+			{ address: "5A", url: "https://p1", datasetId: "0x0", weight: 1 },
+		];
+		loadBalancer
+			.mockResolvedValueOnce(first)
+			.mockReturnValueOnce(new Promise<HardcodedProvider[]>(() => {}));
+
+		await getProviders("production");
+		advanceClock(PROVIDER_LIST_TTL_MS);
+
+		expect(await getProviders("production")).toBe(first);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("keeps serving the last good list after a failed refresh, without refetching per call", async () => {
+		const first: HardcodedProvider[] = [
+			{ address: "5A", url: "https://p1", datasetId: "0x0", weight: 1 },
+		];
+		const second: HardcodedProvider[] = [
+			{ address: "5B", url: "https://p2", datasetId: "0x0", weight: 1 },
+		];
+		loadBalancer
+			.mockResolvedValueOnce(first)
+			.mockRejectedValueOnce(new Error("timeout"))
+			.mockResolvedValueOnce(second);
+
+		await getProviders("production");
+		advanceClock(PROVIDER_LIST_TTL_MS);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+
+		await flushBackgroundRefresh();
+		expect(await getProviders("production")).toBe(first);
+		advanceClock(PROVIDER_LIST_FAILED_REFRESH_RETRY_MS - 1);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+
+		advanceClock(1);
+		expect(await getProviders("production")).toBe(first);
+		expect(loadBalancer).toHaveBeenCalledTimes(3);
+		await flushBackgroundRefresh();
+		expect(await getProviders("production")).toBe(second);
+	});
+});
+
+describe("findProvider", () => {
+	const providers: HardcodedProvider[] = [
+		{ address: "5A", url: "https://pronode1.io", datasetId: "0x0", weight: 1 },
+		{ address: "5B", url: "https://pronode2.io", datasetId: "0x0", weight: 1 },
+	];
+
+	beforeEach(() => {
+		_resetProviderListCache();
+		loadBalancer.mockReset();
+	});
+
+	it("matches the issuing provider by exact url", async () => {
+		loadBalancer.mockResolvedValue(providers);
+
+		const found = await findProvider("production", "https://pronode2.io");
+
+		expect(found?.address).toBe("5B");
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
+	});
+
+	it("serves a hit from cache without reloading the list", async () => {
+		loadBalancer.mockResolvedValue(providers);
+
+		await findProvider("production", "https://pronode1.io");
+		await findProvider("production", "https://pronode1.io");
+		await findProvider("production", "https://pronode1.io");
+
+		expect(loadBalancer).toHaveBeenCalledTimes(1);
+	});
+
+	it("looks in the ipMode section the token was minted against", async () => {
+		const v4: HardcodedProvider[] = [
+			{
+				address: "5A",
+				url: "https://ipv4.pronode1.io",
+				datasetId: "0x0",
+				weight: 1,
+			},
+		];
+		loadBalancer.mockImplementation(
+			async (_env: EnvironmentTypes, ipMode?: IpMode) =>
+				ipMode === "ipv4" ? v4 : providers,
+		);
+
+		const found = await findProvider(
+			"production",
+			"https://ipv4.pronode1.io",
+			"ipv4",
+		);
+
+		expect(found?.address).toBe("5A");
+	});
+
+	it("reloads on a miss so a provider added mid-TTL still verifies", async () => {
+		const added: HardcodedProvider[] = [
+			...providers,
+			{
+				address: "5C",
+				url: "https://pronode3.io",
+				datasetId: "0x0",
+				weight: 1,
+			},
+		];
+		loadBalancer.mockResolvedValueOnce(providers).mockResolvedValueOnce(added);
+
+		// Warm the cache with the list that predates pronode3.
+		await findProvider("production", "https://pronode1.io");
+		advanceClock(PROVIDER_LIST_MISS_RELOAD_MS);
+
+		const found = await findProvider("production", "https://pronode3.io");
+
+		expect(found?.address).toBe("5C");
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("rate-limits the reload so an unknown url can't refetch per request", async () => {
+		loadBalancer.mockResolvedValue(providers);
+
+		await findProvider("production", "https://pronode1.io");
+		advanceClock(PROVIDER_LIST_MISS_RELOAD_MS);
+		// First miss after the floor is allowed to reload...
+		expect(await findProvider("production", "https://attacker.io")).toBe(
+			undefined,
+		);
+		// ...the ones immediately behind it are not.
+		expect(await findProvider("production", "https://attacker.io")).toBe(
+			undefined,
+		);
+		expect(await findProvider("production", "https://attacker.io")).toBe(
+			undefined,
+		);
+
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("falls back to the last good list when the miss reload fails", async () => {
+		loadBalancer
+			.mockResolvedValueOnce(providers)
+			.mockRejectedValueOnce(new Error("timeout"));
+
+		await findProvider("production", "https://pronode1.io");
+		advanceClock(PROVIDER_LIST_MISS_RELOAD_MS);
+
+		expect(await findProvider("production", "https://pronode3.io")).toBe(
+			undefined,
+		);
+		expect(
+			(await findProvider("production", "https://pronode2.io"))?.address,
+		).toBe("5B");
+		expect(loadBalancer).toHaveBeenCalledTimes(2);
+	});
+
+	it("returns undefined for a token with no providerUrl without loading", async () => {
+		loadBalancer.mockResolvedValue(providers);
+
+		expect(await findProvider("production", undefined)).toBe(undefined);
+		expect(loadBalancer).not.toHaveBeenCalled();
 	});
 });
 

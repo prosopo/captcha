@@ -19,6 +19,7 @@ import {
 	createTestRedisConnection,
 	setupRedisIndex,
 } from "@prosopo/redis-client";
+import { ResultReason } from "@prosopo/types";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
@@ -42,6 +43,7 @@ import {
 } from "#policy/redis/redisRulesWriter.js";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
 import {
+	type AccessRulesFilter,
 	type AccessRulesReader,
 	type AccessRulesWriter,
 	FilterScopeMatch,
@@ -146,6 +148,27 @@ describe("redisAccessRulesStorage", () => {
 
 			expect(insertedAccessRule).toEqual(accessRule);
 			expect(indexRecordsCount).toEqual(1);
+		});
+
+		test("returns the id of every inserted rule", async () => {
+			const accessRules: AccessRule[] = Array.from(
+				{ length: 6 },
+				(_, index): AccessRule => ({
+					type: AccessPolicyType.Block,
+					clientId: `client${index}`,
+				}),
+			);
+			const expectedIds = accessRules.map((accessRule) =>
+				getAccessRuleRedisKey(accessRule).slice(
+					ACCESS_RULE_REDIS_KEY_PREFIX.length,
+				),
+			);
+
+			const insertedIds = await accessRulesWriter.insertRules(
+				accessRules.map((rule) => ({ rule })),
+			);
+
+			expect(insertedIds).toEqual(expectedIds);
 		});
 
 		test("inserts time limited rule", async () => {
@@ -413,8 +436,7 @@ describe("redisAccessRulesStorage", () => {
 				{
 					policyScopeMatch: FilterScopeMatch.Exact,
 				},
-				false,
-				false,
+				{ matchingFieldsOnly: false, skipEmptyUserScopes: false },
 			);
 
 			// then
@@ -1214,6 +1236,32 @@ describe("redisAccessRulesStorage", () => {
 			expect(found).toContainEqual(targetBlockRule);
 		}, 60_000);
 
+		test("keeps a Block rule's messageKey through the request-time block lookup", async () => {
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				userId,
+				messageKey: ResultReason.TOO_MANY_LOCALHOST,
+			};
+
+			await insertRules([accessRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId },
+					userScopeMatch: FilterScopeMatch.Exact,
+					blockOnly: true,
+				},
+				{ matchingFieldsOnly: true },
+			);
+
+			expect(foundAccessRules).toEqual([accessRule]);
+		});
+
 		test("finds rules with matchingFieldsOnly when only userId is set and all IP fields are missing", async () => {
 			// This is the exact scenario from the production error where the query
 			// contained duplicate ismissing(@numericIpMaskMin) ismissing(@numericIpMaskMax)
@@ -1241,7 +1289,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Exact,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			// then
@@ -1288,7 +1336,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId },
 					userScopeMatch: FilterScopeMatch.Exact,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			// then - the typeless doc must not crash the pipeline.
@@ -1332,7 +1380,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId },
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toEqual([validRule]);
@@ -1378,7 +1426,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId, numericIp: ipv6NumericIp },
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toEqual([accessRule]);
@@ -1432,7 +1480,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toHaveLength(2);
@@ -1473,7 +1521,7 @@ describe("redisAccessRulesStorage", () => {
 					userScope: { userId: userId },
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toHaveLength(2);
@@ -1535,7 +1583,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true,
+				{ matchingFieldsOnly: true },
 			);
 
 			expect(foundAccessRules).toHaveLength(2);
@@ -1662,7 +1710,7 @@ describe("redisAccessRulesStorage", () => {
 					userScopeMatch: FilterScopeMatch.Greedy,
 					blockOnly: true,
 				},
-				true, // matchingFieldsOnly — ranked path
+				{ matchingFieldsOnly: true },
 			);
 
 			// Restrict rules must not appear; at least the matching
@@ -1761,7 +1809,7 @@ describe("redisAccessRulesStorage", () => {
 					},
 					userScopeMatch: FilterScopeMatch.Greedy,
 				},
-				true, // matchingFieldsOnly — production hot path
+				{ matchingFieldsOnly: true },
 			);
 
 			// The target rule MUST come back. Under the old ranker it
@@ -1775,6 +1823,136 @@ describe("redisAccessRulesStorage", () => {
 					r.description === "Too Many Requests",
 			);
 			expect(targetFound).toBeDefined();
+		});
+
+		test("returns a global rule's exclusions on the request-time path so the ranker can apply them", async () => {
+			const numericIp = 1482864477n;
+			const excludedSite = getUniqueString();
+
+			const excludingGlobalRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				description: "excluding",
+				excludedClientIds: [excludedSite, getUniqueString()],
+			};
+			const plainGlobalRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				description: "plain",
+			};
+			const excludedSitesOwnRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				clientId: excludedSite,
+				description: "own",
+			};
+
+			await insertRules([
+				excludingGlobalRule,
+				plainGlobalRule,
+				excludedSitesOwnRule,
+			]);
+
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: excludedSite },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: { numericIp },
+					userScopeMatch: FilterScopeMatch.Greedy,
+					blockOnly: true,
+				},
+				{ matchingFieldsOnly: true },
+			);
+
+			expect(found.map((rule) => rule.description).sort()).toEqual([
+				"excluding",
+				"own",
+				"plain",
+			]);
+			expect(
+				found.find((rule) => rule.description === "excluding")
+					?.excludedClientIds,
+			).toEqual(excludingGlobalRule.excludedClientIds);
+		});
+
+		test("finds rule ids by a hyphenated group id", async () => {
+			const groupedRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				asn: 64512,
+				groupId: "example-rule-group",
+			};
+			const otherGroupRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				asn: 64512,
+				groupId: "other-rule-group",
+			};
+
+			await insertRules([groupedRule, otherGroupRule]);
+
+			const ruleIds = await accessRulesReader.findRuleIds({
+				groupId: "example-rule-group",
+				userScope: { asn: 64512 },
+				userScopeMatch: FilterScopeMatch.Exact,
+				policyScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			expect(ruleIds).toEqual([
+				getAccessRuleRedisKey(groupedRule).slice(
+					ACCESS_RULE_REDIS_KEY_PREFIX.length,
+				),
+			]);
+		});
+
+		test("rejects rather than finding no rule ids when the search fails", async () => {
+			const disconnectedClient: RedisClientType = redisClient.duplicate();
+			const reader = new RedisRulesReader(disconnectedClient, mockLogger);
+			const filter: AccessRulesFilter = {
+				userScope: { ja4Hash: "ja4" },
+			};
+
+			await expect(reader.findRuleIds(filter)).rejects.toThrow();
+		});
+
+		test("finds rules whose client id and user scope hold tag punctuation", async () => {
+			const rule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId: "client-a.b",
+				headersHash: "h:1/2",
+			};
+			await insertRules([rule]);
+
+			const ruleIds = await accessRulesReader.findRuleIds({
+				policyScope: { clientId: "client-a.b" },
+				policyScopeMatch: FilterScopeMatch.Exact,
+				userScope: { headersHash: "h:1/2" },
+				userScopeMatch: FilterScopeMatch.Exact,
+			});
+
+			expect(ruleIds).toEqual([
+				getAccessRuleRedisKey(rule).slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
+			]);
+		});
+	});
+
+	describe("writer exclusions", () => {
+		test("re-pushing a rule without exclusions clears the previous list", async () => {
+			const writer = new RedisRulesWriter(redisClient, mockLogger);
+			const rule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp: 100n,
+			};
+			const ruleKey = getAccessRuleRedisKey(rule);
+
+			await writer.insertRules([
+				{ rule: { ...rule, excludedClientIds: ["site-a"] } },
+			]);
+			expect(await redisClient.hGet(ruleKey, "excludedClientIds")).toBe(
+				"site-a",
+			);
+
+			await writer.insertRules([{ rule }]);
+
+			expect(await redisClient.hGet(ruleKey, "excludedClientIds")).toBeNull();
 		});
 	});
 

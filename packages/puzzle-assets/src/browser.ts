@@ -17,24 +17,27 @@
 // a <canvas> directly.
 
 import { generateBackground } from "./background.js";
-import { cutNotch } from "./compose.js";
-import { paintDecoys } from "./decoys.js";
-import { createNotchShape } from "./notch.js";
+import { PUZZLE_RENDERER_VERSION, drawPuzzle } from "./draw.js";
 import { createPrng, createSeed } from "./prng.js";
 import type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RgbaImage,
 } from "./types.js";
 
 export { createPrng, createSeed, SEED_BYTES } from "./prng.js";
+export type { Prng } from "./prng.js";
+export { hslToRgb } from "./palette.js";
 export { generateBackground } from "./background.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
+export { PUZZLE_RENDERER_VERSION } from "./draw.js";
 export type {
 	NotchPlacement,
 	PuzzleGeometry,
 	PuzzleRenderSettings,
+	PuzzleRendererVersion,
 	RenderedPuzzle,
 	RgbaImage,
 } from "./types.js";
@@ -46,17 +49,20 @@ export const DEFAULT_GEOMETRY: PuzzleGeometry = {
 };
 
 export const DEFAULT_RENDER_SETTINGS: PuzzleRenderSettings = {
-	decoyCount: 5,
-	decoyEdgeDarkness: 20,
+	decoyCount: 3,
+	decoyEdgeDarkness: 12,
 	decoyBodyBrightness: 4,
 	holeDarken: 0.55,
-	decoyHoleDarken: 0.7,
+	decoyHoleDarken: 0.84,
+	lookalikeDecoys: 0,
 };
 
 export interface RenderedPuzzleRgba {
 	background: RgbaImage;
 	piece: RgbaImage;
 	pieceSize: number;
+	/** See `RenderedPuzzle.seed` and the secrecy note in prng.ts. */
+	seed: Buffer;
 }
 
 /**
@@ -64,37 +70,35 @@ export interface RenderedPuzzleRgba {
  * than WebP-encoded buffers, so browser consumers can `putImageData` onto
  * a canvas without needing sharp.
  */
-export const renderPuzzleToRgba = (
-	background: RgbaImage,
-	placement: NotchPlacement,
-	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-): RenderedPuzzleRgba => {
-	const prng = createPrng(createSeed());
+export const renderPuzzleToRgba = ({
+	background,
+	placement,
+	geometry = DEFAULT_GEOMETRY,
+	settings = DEFAULT_RENDER_SETTINGS,
+	seed = createSeed(),
+	rendererVersion = PUZZLE_RENDERER_VERSION,
+}: {
+	background: RgbaImage;
+	placement: NotchPlacement;
+	geometry?: PuzzleGeometry;
+	settings?: PuzzleRenderSettings;
+	seed?: Buffer;
+	rendererVersion?: PuzzleRendererVersion;
+}): RenderedPuzzleRgba => {
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
-	paintDecoys(
+	const { background: cut, piece } = drawPuzzle({
 		background,
-		prng,
-		settings.decoyCount,
-		pieceSize,
 		placement,
-		settings.decoyEdgeDarkness,
-		settings.decoyBodyBrightness,
-		settings.decoyHoleDarken,
-	);
-	const shape = createNotchShape(prng, pieceSize);
-	const { background: cut, piece } = cutNotch(
-		prng,
-		background,
-		shape,
 		pieceSize,
-		placement,
-		settings.holeDarken,
-	);
-	return { background: cut, piece, pieceSize };
+		settings,
+		prng: createPrng(seed),
+		version: rendererVersion,
+	});
+	return { background: cut, piece, pieceSize, seed };
 };
 
 export const createBackground = (
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
+	seed: Buffer = createSeed(),
 ): RgbaImage =>
-	generateBackground(createPrng(createSeed()), geometry.width, geometry.height);
+	generateBackground(createPrng(seed), geometry.width, geometry.height);

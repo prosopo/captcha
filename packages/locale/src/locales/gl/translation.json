@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Non se puido codificar un enderezo non válido",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "O compromiso da solución do captcha non existe",
+		"SIGNER_UNDEFINED": "Asinante sen definir",
+		"CANNOT_FIND_KEYPAIR": "Non se atopa o par de chaves",
+		"INVALID_DATA_FORMAT": "Formato de datos non válido"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Solicitouse un contorno descoñecido",
+		"INVALID_CAPTCHA_NUMBER": "Configura correctamente as opcións dos captchas",
+		"INVALID_LOG_LEVEL": "Nivel de rexistro non válido",
+		"INVALID_PACKAGE_DIR": "Directorio de paquete non válido"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Erro ao analizar o conxunto de datos",
+		"SOLUTION_PARSE_ERROR": "Erro ao analizar o conxunto de datos",
+		"HASH_ERROR": "Erro ao calcular o hash do conxunto de datos",
+		"DATASET_ID_UNDEFINED": "ID do conxunto de datos sen definir",
+		"NOT_ENOUGH_LABELS": "Non hai suficientes etiquetas",
+		"NOT_ENOUGH_IMAGES": "Non hai suficientes imaxes",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "O número de captchas do conxunto de datos é inferior ao número configurado",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "O número de solucións do conxunto de datos é inferior ao número configurado",
+		"DUPLICATE_IMAGE": "detectouse unha imaxe duplicada",
+		"MERKLE_ERROR": "Erro ao crear a árbore de Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Non se puido importar o motor da base de datos",
+		"DATABASE_UNDEFINED": "O cliente da base de datos non está conectado",
+		"DATABASE_HOST_UNDEFINED": "O enderezo do servidor da base de datos non está definido",
+		"DATASET_LOAD_FAILED": "Fallou a carga do conxunto de datos",
+		"DATASET_GET_FAILED": "Non se puido obter o conxunto de datos",
+		"CAPTCHA_GET_FAILED": "Non se puido obter o captcha",
+		"CAPTCHA_UPDATE_FAILED": "Non se puido actualizar o captcha",
+		"IMAGE_GET_FAILED": "Non se puido obter a imaxe",
+		"PENDING_RECORD_NOT_FOUND": "Non se atopou ningún rexistro pendente",
+		"INVALID_HASH": "Hash non válido",
+		"SOLUTION_GET_FAILED": "Non se puido obter a solución",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Non se atoparon conxuntos de datos co número de solucións requirido",
+		"SOLUTION_APPROVE_FAILED": "Non se puido aprobar a solución",
+		"SOLUTION_FLAG_FAILED": "Non se puido marcar a solución como procesada",
+		"TABLES_UNDEFINED": "Táboas sen definir",
+		"CONNECTION_UNDEFINED": "Conexión sen definir",
+		"COMMITMENT_FLAG_FAILED": "Non se puido marcar o compromiso como procesado",
+		"UNKNOWN": "Erro descoñecido da base de datos",
+		"QUERY_ERROR": "Fallou a consulta á base de datos",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Conexión das regras de acceso de Redis sen definir",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Almacenamento das regras de acceso de usuarios sen definir",
+		"SESSION_STORE_FAILED": "Non se puido gardar a sesión",
+		"SESSION_CHECK_REMOVE_FAILED": "Non se puido comprobar e eliminar a sesión",
+		"SESSION_GET_FAILED": "Non se puido obter a sesión"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Non se pode modificar o usuario propietario",
+		"CANNOT_DELETE_OWN_USER": "Non podes eliminar a túa propia conta",
+		"CANNOT_DELETE_LAST_USER": "Non se pode eliminar o último usuario",
+		"USER_ALREADY_EXISTS": "O usuario xa existe",
+		"NO_SUGGESTIONS_FOUND": "Non se atoparon suxestións",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Non se pode desactivar o último sitio activo",
+		"DUPLICATE_SITE_NAME": "Xa existe un sitio con este nome",
+		"INVALID_SITE_NAME": "O nome do sitio só pode conter letras, números, guións e guións baixos"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parámetro non válido"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Non se atopou o ficheiro",
+		"FILE_ALREADY_EXISTS": "O ficheiro xa existe",
+		"INVALID_DIR_FORMAT": "Formato de directorio non válido"
+	}
+}

@@ -18,7 +18,7 @@
 		"@angular/common": "20.3.28",
 		"@angular/core": "20.3.28",
 		"@angular/platform-browser": "20.3.25",
-		"@angular/router": "20.3.25",
+		"@angular/router": "20.3.33",
 		"@prosopo/angular-procaptcha-wrapper": "1.1.102"
 	},
 	"main": "dist/index.js",

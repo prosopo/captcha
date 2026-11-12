@@ -16,6 +16,10 @@ import type { PoWCaptcha, UserCommitment } from "@prosopo/types";
 import { type QueryFilter, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
+	type AudioCaptchaRecord,
+	AudioCaptchaRecordSchema,
+	type IconOrderCaptchaRecord,
+	IconOrderCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type PuzzleCaptchaRecord,
@@ -31,28 +35,51 @@ export type StoredSession = SessionRecord;
 
 export const StoredSessionRecordSchema: Schema = SessionRecordSchema;
 
+const ONE_YEAR = 60 * 60 * 24 * 365;
+
+const storedAtTimestamp = { type: Date, required: false, expires: ONE_YEAR };
+
 export const StoredUserCommitmentRecordSchema: Schema = new Schema({
 	...UserCommitmentRecordSchema.obj,
 });
 StoredUserCommitmentRecordSchema.index({ sessionId: 1 });
+StoredUserCommitmentRecordSchema.add({ storedAtTimestamp });
 
 export const StoredPoWCaptchaRecordSchema: Schema = new Schema({
 	...PoWCaptchaRecordSchema.obj,
 });
 StoredPoWCaptchaRecordSchema.index({ sessionId: 1 });
+StoredPoWCaptchaRecordSchema.add({ storedAtTimestamp });
 
 export const StoredPuzzleCaptchaRecordSchema: Schema = new Schema({
 	...PuzzleCaptchaRecordSchema.obj,
 });
 StoredPuzzleCaptchaRecordSchema.index({ sessionId: 1 });
+StoredPuzzleCaptchaRecordSchema.add({ storedAtTimestamp });
+
+export const StoredAudioCaptchaRecordSchema: Schema = new Schema({
+	...AudioCaptchaRecordSchema.obj,
+});
+StoredAudioCaptchaRecordSchema.index({ sessionId: 1 });
+StoredAudioCaptchaRecordSchema.add({ storedAtTimestamp });
+
+export const StoredIconOrderCaptchaRecordSchema: Schema = new Schema({
+	...IconOrderCaptchaRecordSchema.obj,
+});
+StoredIconOrderCaptchaRecordSchema.index({ sessionId: 1 });
+StoredIconOrderCaptchaRecordSchema.add({ storedAtTimestamp });
+
+export type SaveCaptchasArgs = {
+	sessionEvents?: StoredSession[];
+	imageCaptchaEvents?: UserCommitmentRecord[];
+	powCaptchaEvents?: PoWCaptchaRecord[];
+	puzzleCaptchaEvents?: PuzzleCaptchaRecord[];
+	iconOrderCaptchaEvents?: IconOrderCaptchaRecord[];
+	audioCaptchaEvents?: AudioCaptchaRecord[];
+};
 
 export interface ICaptchaDatabase extends IDatabase {
-	saveCaptchas(
-		sessionEvents: StoredSession[],
-		imageCaptchaEvents: UserCommitmentRecord[],
-		powCaptchaEvents: PoWCaptchaRecord[],
-		puzzleCaptchaEvents?: PuzzleCaptchaRecord[],
-	): Promise<void>;
+	saveCaptchas(events: SaveCaptchasArgs): Promise<void>;
 	getCaptchas(
 		filter: QueryFilter<CaptchaProperties>,
 		limit: number,
@@ -60,6 +87,8 @@ export interface ICaptchaDatabase extends IDatabase {
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
+		audioCaptchaRecords: AudioCaptchaRecord[];
+		iconOrderCaptchaRecords: IconOrderCaptchaRecord[];
 	}>;
 }
 

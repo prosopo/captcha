@@ -1,0 +1,554 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import { stringToHex, u8aToHex } from "@polkadot/util";
+import { GlyphKind, type IconPlacement } from "@prosopo/icon-order-assets";
+import {
+	type CaptchaSolutionEscalation,
+	CaptchaStatus,
+	CaptchaType,
+	type IconOrderCaptchaStored,
+	type KeyringPair,
+	type PoWChallengeId,
+	ResultReason,
+	type StoredIconTarget,
+	iconOrderToleranceDefault,
+} from "@prosopo/types";
+import type {
+	IProviderDatabase,
+	IconOrderCaptchaRecord,
+	SessionRecord,
+} from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import { getIPAddress, verifyRecency } from "@prosopo/util";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { applyRouter } from "../../../../tasks/frictionless/routingMachine.js";
+import type { RenderedIconOrderImages } from "../../../../tasks/iconOrder/iconOrderRenderer.js";
+import { IconOrderCaptchaManager } from "../../../../tasks/iconOrderCaptcha/iconOrderTasks.js";
+import type { PostSolveRouting } from "../../../../tasks/postSolveRouting.js";
+import { checkPowSignature } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+
+vi.mock("@polkadot/util", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@polkadot/util")>();
+	return { ...actual, u8aToHex: vi.fn(), stringToHex: vi.fn() };
+});
+
+vi.mock("@prosopo/util", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@prosopo/util")>();
+	return { ...actual, verifyRecency: vi.fn() };
+});
+
+vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
+	checkPowSignature: vi.fn(),
+}));
+
+vi.mock("../../../../tasks/frictionless/routingMachine.js", () => ({
+	applyRouter: vi.fn(),
+}));
+
+const asRecord = (
+	partial: Partial<IconOrderCaptchaStored>,
+): IconOrderCaptchaRecord =>
+	({
+		submittedAtTimestamp: new Date(),
+		...partial,
+	}) as unknown as IconOrderCaptchaRecord;
+
+const asSession = (sessionId: string): SessionRecord =>
+	({
+		sessionId,
+		scoreComponents: { baseScore: 0 },
+		webView: false,
+	}) as unknown as SessionRecord;
+
+const targets: StoredIconTarget[] = [
+	{ x: 60, y: 50, size: 38, kind: GlyphKind.ring },
+	{ x: 180, y: 90, size: 38, kind: GlyphKind.star },
+	{ x: 240, y: 150, size: 38, kind: GlyphKind.bolt },
+];
+
+const asPlacements = (): IconPlacement[] =>
+	targets.map((target) => ({
+		...target,
+		kind: target.kind as GlyphKind,
+		rotation: 0,
+		hue: 0,
+	}));
+
+const renderedImages = (): RenderedIconOrderImages => ({
+	background: "data:image/webp;base64,BG",
+	legend: "data:image/webp;base64,LEGEND",
+	legendIconSize: 26,
+	targets: asPlacements(),
+	render: {
+		geometry: { width: 300, height: 200, iconSize: 38 },
+		settings: {
+			targetCount: 3,
+			decoyCount: 4,
+			strokeWidth: 3,
+			iconOpacity: 0.92,
+			haloOpacity: 0.7,
+			backgroundClutter: 8,
+		},
+		seed: "00112233445566778899aabbccddeeff",
+	},
+});
+
+describe("IconOrderCaptchaManager", () => {
+	let db: IProviderDatabase;
+	let pair: KeyringPair;
+	let manager: IconOrderCaptchaManager;
+	let mockEnv: ProviderEnvironment;
+
+	beforeEach(() => {
+		db = {
+			storeIconOrderCaptchaRecord: vi.fn(),
+			getIconOrderCaptchaRecordByChallenge: vi.fn(),
+			claimIconOrderCaptchaSubmission: vi.fn().mockResolvedValue(true),
+			updateIconOrderCaptchaRecord: vi.fn(),
+			updateIconOrderCaptchaRecordResult: vi.fn(),
+			getClientRecord: vi.fn(),
+			getSessionRecordBySessionId: vi.fn(),
+			updateSessionRecord: vi.fn(),
+		} as unknown as IProviderDatabase;
+
+		pair = {
+			sign: vi.fn().mockReturnValue(new Uint8Array()),
+			address: "testAddress",
+		} as unknown as KeyringPair;
+
+		mockEnv = { config: {} } as unknown as ProviderEnvironment;
+		manager = new IconOrderCaptchaManager({ db, pair, config: mockEnv.config });
+
+		vi.clearAllMocks();
+		vi.mocked(u8aToHex).mockReturnValue("0xsigned");
+		vi.mocked(stringToHex).mockImplementation((s) => `0xhex:${s}`);
+		vi.mocked(verifyRecency).mockReturnValue(true);
+	});
+
+	describe("getIconOrderCaptchaChallenge", () => {
+		it("mints a signed challenge carrying the rendered targets", async () => {
+			const render = vi.fn().mockResolvedValue(renderedImages());
+			const challenge = await manager.getIconOrderCaptchaChallenge(
+				"user",
+				"dapp",
+				0.5,
+				render,
+			);
+
+			expect(challenge.challenge).toContain("___user___dapp___");
+			expect(challenge.providerSignature).toBe("0xsigned");
+			expect(challenge.tolerance).toBe(0.5);
+			expect(challenge.targets).toEqual(targets);
+			expect(render).toHaveBeenCalledOnce();
+		});
+
+		it("strips render-only fields from the persisted targets", async () => {
+			const render = vi.fn().mockResolvedValue(renderedImages());
+			const challenge = await manager.getIconOrderCaptchaChallenge(
+				"user",
+				"dapp",
+				undefined,
+				render,
+			);
+
+			for (const target of challenge.targets) {
+				expect(Object.keys(target).sort()).toEqual(["kind", "size", "x", "y"]);
+			}
+		});
+
+		it("keeps the imagery apart from the answer and the seed that rebuilds it", async () => {
+			const render = vi.fn().mockResolvedValue(renderedImages());
+			const challenge = await manager.getIconOrderCaptchaChallenge(
+				"user",
+				"dapp",
+				undefined,
+				render,
+			);
+
+			expect(challenge.images).toEqual({
+				background: "data:image/webp;base64,BG",
+				legend: "data:image/webp;base64,LEGEND",
+				legendIconSize: 26,
+			});
+			expect(JSON.stringify(challenge.images)).not.toContain("240");
+			expect(challenge.render.seed).toBe("00112233445566778899aabbccddeeff");
+		});
+
+		it("falls back to the default tolerance when none is resolved", async () => {
+			const challenge = await manager.getIconOrderCaptchaChallenge(
+				"user",
+				"dapp",
+				undefined,
+				vi.fn().mockResolvedValue(renderedImages()),
+			);
+			expect(challenge.tolerance).toBe(iconOrderToleranceDefault);
+		});
+	});
+
+	describe("verifyIconOrderCaptchaSolution", () => {
+		const challenge: PoWChallengeId = `${Date.now()}___user___dapp___1`;
+		const ip = getIPAddress("1.1.1.1");
+
+		const submit = (clicks: { x: number; y: number }[]) =>
+			manager.verifyIconOrderCaptchaSolution({
+				challenge,
+				providerChallengeSignature: "0xprovider",
+				clicks,
+				iconOrderEvents: [],
+				timeout: 60000,
+				userTimestampSignature: "0xuser",
+				ipAddress: ip,
+			});
+
+		const storedRecord = (over: Partial<IconOrderCaptchaStored> = {}) =>
+			asRecord({
+				challenge,
+				userAccount: "user",
+				dappAccount: "dapp",
+				targets,
+				tolerance: 0.6,
+				userSubmitted: false,
+				serverChecked: false,
+				result: { status: CaptchaStatus.pending },
+				...over,
+			});
+
+		it("approves the target icons clicked in the right order", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord(),
+			);
+
+			await expect(
+				submit([
+					{ x: 60, y: 50 },
+					{ x: 180, y: 90 },
+					{ x: 240, y: 150 },
+				]),
+			).resolves.toEqual({ verified: true });
+
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge,
+				result: { status: CaptchaStatus.approved },
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
+		});
+
+		describe("post-solve routing", () => {
+			const SESSION_ID = "session-1";
+			const ESCALATION: CaptchaSolutionEscalation = {
+				captchaType: CaptchaType.image,
+				sessionId: "escalated-session",
+			};
+			const rightClicks = [
+				{ x: 60, y: 50 },
+				{ x: 180, y: 90 },
+				{ x: 240, y: 150 },
+			];
+			const events = [
+				{ x: 10, y: 10, t: 0 },
+				{ x: 60, y: 50, t: 40 },
+			];
+			const escalate = vi.fn<PostSolveRouting["escalate"]>();
+			const postSolve: Pick<PostSolveRouting, "context" | "escalate"> = {
+				context: {
+					ip: "1.1.1.1",
+					device: { userAgent: "Mozilla/5.0", headers: {} },
+					raw: { headers: {}, userAgent: "Mozilla/5.0" },
+				},
+				escalate,
+			};
+			const submitWithRouting = (clicks: { x: number; y: number }[]) =>
+				manager.verifyIconOrderCaptchaSolution({
+					challenge,
+					providerChallengeSignature: "0xprovider",
+					clicks,
+					iconOrderEvents: events,
+					timeout: 60000,
+					userTimestampSignature: "0xuser",
+					ipAddress: ip,
+					postSolve,
+				});
+
+			beforeEach(() => {
+				vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+					storedRecord({ sessionId: SESSION_ID }),
+				);
+				vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+					asSession(SESSION_ID),
+				);
+				escalate.mockResolvedValue(ESCALATION);
+			});
+
+			it("escalates a solve the routing machine sends on, and keeps its token from verifying", async () => {
+				vi.mocked(applyRouter).mockResolvedValue({
+					captchaType: CaptchaType.image,
+					solvedImagesCount: 3,
+					reason: "ICON_ORDER_SCRIPTED_TRAIL",
+				});
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: false,
+					escalation: ESCALATION,
+				});
+
+				expect(vi.mocked(applyRouter).mock.calls[0]?.[0]).toMatchObject({
+					phase: "postIconOrder",
+					baseline: { captchaType: CaptchaType.iconOrder },
+					ctx: {
+						dappAccount: "dapp",
+						userAccount: "user",
+						raw: { iconOrderEvents: events, iconOrderClicks: rightClicks },
+					},
+				});
+				expect(escalate.mock.calls[0]?.[0].origin).toEqual({
+					sessionId: SESSION_ID,
+					dappAccount: "dapp",
+					captchaType: CaptchaType.iconOrder,
+					behavioralDataPacked: undefined,
+				});
+				expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+					expect.objectContaining({
+						result: {
+							status: CaptchaStatus.disapproved,
+							reason: ResultReason.CAPTCHA_DECISION_MACHINE_DENIED,
+						},
+					}),
+				);
+				expect(db.updateSessionRecord).toHaveBeenCalledWith(
+					SESSION_ID,
+					expect.not.objectContaining({ blocked: true }),
+				);
+			});
+
+			it("lets a solve the machine keeps on icon order stand", async () => {
+				vi.mocked(applyRouter).mockResolvedValue({
+					captchaType: CaptchaType.iconOrder,
+				});
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: true,
+				});
+				expect(escalate).not.toHaveBeenCalled();
+			});
+
+			it("lets the solve stand when the site cannot serve the escalation", async () => {
+				vi.mocked(applyRouter).mockResolvedValue({
+					captchaType: CaptchaType.image,
+				});
+				escalate.mockResolvedValue(undefined);
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: true,
+				});
+				expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith(
+					expect.objectContaining({
+						result: { status: CaptchaStatus.approved },
+					}),
+				);
+			});
+
+			it("lets the solve stand when routing throws", async () => {
+				vi.mocked(applyRouter).mockRejectedValue(new Error("vm timeout"));
+
+				await expect(submitWithRouting(rightClicks)).resolves.toEqual({
+					verified: true,
+				});
+			});
+
+			it("never asks the machine about a wrong answer", async () => {
+				await expect(
+					submitWithRouting([...rightClicks].reverse()),
+				).resolves.toEqual({ verified: false });
+				expect(applyRouter).not.toHaveBeenCalled();
+			});
+		});
+
+		it("rejects the right icons clicked in the wrong order", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord(),
+			);
+
+			await expect(
+				submit([
+					{ x: 180, y: 90 },
+					{ x: 60, y: 50 },
+					{ x: 240, y: 150 },
+				]),
+			).resolves.toEqual({ verified: false });
+
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+				},
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
+		});
+
+		it("rejects clicks that miss the icons", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord(),
+			);
+			await expect(
+				submit([
+					{ x: 5, y: 5 },
+					{ x: 10, y: 10 },
+					{ x: 15, y: 15 },
+				]),
+			).resolves.toEqual({ verified: false });
+		});
+
+		it("rejects a submission with the wrong number of clicks", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord(),
+			);
+			await expect(
+				submit([
+					{ x: 60, y: 50 },
+					{ x: 180, y: 90 },
+				]),
+			).resolves.toEqual({ verified: false });
+		});
+
+		it("refuses a second submission against the same challenge", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord({ userSubmitted: true }),
+			);
+			vi.mocked(db.claimIconOrderCaptchaSubmission).mockResolvedValue(false);
+
+			await expect(
+				submit([
+					{ x: 60, y: 50 },
+					{ x: 180, y: 90 },
+					{ x: 240, y: 150 },
+				]),
+			).resolves.toEqual({ verified: false });
+			expect(db.updateIconOrderCaptchaRecordResult).not.toHaveBeenCalled();
+		});
+
+		it("grades nothing when it loses the claim on an unsubmitted record", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord({ userSubmitted: false }),
+			);
+			vi.mocked(db.claimIconOrderCaptchaSubmission).mockResolvedValue(false);
+
+			await expect(
+				submit([
+					{ x: 60, y: 50 },
+					{ x: 180, y: 90 },
+					{ x: 240, y: 150 },
+				]),
+			).resolves.toEqual({ verified: false });
+			expect(db.updateIconOrderCaptchaRecordResult).not.toHaveBeenCalled();
+			expect(db.updateIconOrderCaptchaRecord).not.toHaveBeenCalled();
+		});
+
+		it("claims the submission before grading it", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord({ userSubmitted: false }),
+			);
+
+			await submit([
+				{ x: 60, y: 50 },
+				{ x: 180, y: 90 },
+				{ x: 240, y: 150 },
+			]);
+
+			expect(db.claimIconOrderCaptchaSubmission).toHaveBeenCalledTimes(1);
+		});
+
+		it("returns false when the challenge is unknown", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				null,
+			);
+			await expect(submit([{ x: 60, y: 50 }])).resolves.toEqual({
+				verified: false,
+			});
+		});
+
+		it("disapproves a submission that arrives outside the window", async () => {
+			vi.mocked(verifyRecency).mockReturnValue(false);
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord(),
+			);
+
+			await expect(
+				submit([
+					{ x: 60, y: 50 },
+					{ x: 180, y: 90 },
+					{ x: 240, y: 150 },
+				]),
+			).resolves.toEqual({ verified: false });
+			expect(db.updateIconOrderCaptchaRecordResult).toHaveBeenCalledWith({
+				challenge,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
+				},
+				serverChecked: false,
+				userSubmitted: true,
+				userSignature: "0xuser",
+			});
+		});
+
+		it("persists the clicks and pointer trail even on a failed solve", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord(),
+			);
+			const clicks = [
+				{ x: 5, y: 5 },
+				{ x: 10, y: 10 },
+				{ x: 15, y: 15 },
+			];
+			const trail = [{ x: 5, y: 5, t: 12 }];
+
+			await manager.verifyIconOrderCaptchaSolution({
+				challenge,
+				providerChallengeSignature: "0xprovider",
+				clicks,
+				iconOrderEvents: trail,
+				timeout: 60000,
+				userTimestampSignature: "0xuser",
+				ipAddress: ip,
+			});
+
+			expect(db.updateIconOrderCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				clicks,
+				iconOrderEvents: trail,
+			});
+		});
+
+		it("checks both signatures before touching the database", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				null,
+			);
+			await submit([{ x: 60, y: 50 }]);
+
+			expect(checkPowSignature).toHaveBeenCalledTimes(2);
+			const order = vi
+				.mocked(checkPowSignature)
+				.mock.invocationCallOrder.at(-1);
+			const dbOrder = vi
+				.mocked(db.getIconOrderCaptchaRecordByChallenge)
+				.mock.invocationCallOrder.at(0);
+			expect(order).toBeLessThan(dbOrder ?? Number.POSITIVE_INFINITY);
+		});
+	});
+});

@@ -37,6 +37,7 @@ import type {
 	AccessRuleEntry,
 	AccessRulesFilter,
 	AccessRulesReader,
+	FindRulesOptions,
 } from "#policy/rulesStorage.js";
 import {
 	aggregateRedisKeys,
@@ -123,11 +124,13 @@ const RULE_LOAD_FIELDS = [
 	"@captchaType",
 	"@description",
 	"@solvedImagesCount",
+	"@severity",
 	"@imageThreshold",
 	"@powDifficulty",
 	"@unsolvedImagesCount",
 	"@frictionlessScore",
 	"@deferToVerify",
+	"@messageKey",
 	"@clientId",
 	"@groupId",
 	"@userId",
@@ -218,8 +221,10 @@ export class RedisRulesReader implements AccessRulesReader {
 
 	async findRules(
 		filter: AccessRulesFilter,
-		matchingFieldsOnly = false,
-		skipEmptyUserScopes = true,
+		{
+			matchingFieldsOnly = false,
+			skipEmptyUserScopes = true,
+		}: FindRulesOptions = {},
 	): Promise<AccessRule[]> {
 		const query = getRulesRedisQuery(filter, matchingFieldsOnly);
 
@@ -523,13 +528,12 @@ export class RedisRulesReader implements AccessRulesReader {
 		query: string,
 	): Promise<AccessRule[]> {
 		try {
-			const ruleKeys = await aggregateRedisKeys(
-				this.client,
+			const ruleKeys = await aggregateRedisKeys({
+				client: this.client,
 				query,
-				this.logger,
-				undefined,
-				GREEDY_MAX_CANDIDATES,
-			);
+				logger: this.logger,
+				maxKeys: GREEDY_MAX_CANDIDATES,
+			});
 
 			if (ruleKeys.length === 0) {
 				return [];
@@ -583,11 +587,11 @@ export class RedisRulesReader implements AccessRulesReader {
 
 		try {
 			// aggregation is used instead ft.search to overcome the limitation on search results number
-			const ruleKeys = await aggregateRedisKeys(
-				this.client,
+			const ruleKeys = await aggregateRedisKeys({
+				client: this.client,
 				query,
-				this.logger,
-			);
+				logger: this.logger,
+			});
 
 			ruleIds = ruleKeys.map((ruleKey) =>
 				ruleKey.slice(ACCESS_RULE_REDIS_KEY_PREFIX.length),
@@ -609,7 +613,9 @@ export class RedisRulesReader implements AccessRulesReader {
 				msg: "Failed to execute search query for rule IDs",
 			}));
 
-			return [];
+			// Callers delete whatever ids come back, so an empty list here would
+			// report a failed delete as a successful one.
+			throw e;
 		}
 
 		this.logger.debug(() => ({
@@ -635,7 +641,12 @@ export class RedisRulesReader implements AccessRulesReader {
 			await batchHandler(ids);
 		};
 
-		await aggregateRedisKeys(this.client, "*", this.logger, keysBatchHandler);
+		await aggregateRedisKeys({
+			client: this.client,
+			query: "*",
+			logger: this.logger,
+			batchHandler: keysBatchHandler,
+		});
 	}
 
 	protected async fetchRuleEntries(keys: string[]): Promise<AccessRuleEntry[]> {
@@ -700,8 +711,10 @@ export class DummyRedisRulesReader implements AccessRulesReader {
 
 	async findRules(
 		filter: AccessRulesFilter,
-		matchingFieldsOnly = false,
-		skipEmptyUserScopes = true,
+		{
+			matchingFieldsOnly = false,
+			skipEmptyUserScopes = true,
+		}: FindRulesOptions = {},
 	): Promise<AccessRule[]> {
 		this.logger.info(() => ({
 			msg: "Dummy findRules() has no effect (redis is not ready)",

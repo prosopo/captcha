@@ -15,6 +15,7 @@
 import type {
 	AccessPolicy,
 	PolicyScope,
+	PolicyScopeExclusions,
 	UserAttributes,
 } from "#policy/rule.js";
 
@@ -38,6 +39,7 @@ export const userAttributesRecordFields = [
 	"headerValue",
 	"headerOperator",
 	"webBotAuthAgent",
+	"bypassKeyHash",
 ] as const satisfies (keyof UserAttributesRecord)[];
 
 export type UserIpRecord = {
@@ -63,6 +65,7 @@ export type UserScopeRecordField = (typeof userScopeRecordFields)[number];
 
 export type AccessRuleRecord = AccessPolicy &
 	PolicyScope &
+	PolicyScopeExclusions &
 	UserScopeRecord & {
 		ruleGroupId?: string;
 	};

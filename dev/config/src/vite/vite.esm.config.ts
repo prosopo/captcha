@@ -20,6 +20,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { getExternalsFromReferences } from "../dependencies.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import VitePluginCopy from "./vite-plugin-copy.js";
+import VitePluginDropBareNodeModuleImport from "./vite-plugin-drop-bare-node-module-import.js";
 import VitePluginExternalizeObfuscatorDeadCode from "./vite-plugin-externalize-obfuscator-deadcode.js";
 
 export default async function (
@@ -58,17 +59,18 @@ export default async function (
 			}),
 			VitePluginCopy({
 				srcDir: "src",
-				destDir: "dist",
+				destDir: "dist/esm",
 				include: ["**/*.json"],
 			}),
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
 			VitePluginCloseAndCopy(),
+			VitePluginDropBareNodeModuleImport(),
 		],
 		build: {
 			emptyOutDir: false,
 			ssr: true,
 			target: "node24",
-			outDir: "dist",
+			outDir: "dist/esm",
 			lib: {
 				name,
 				formats: ["es"],

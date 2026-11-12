@@ -12,19 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getBlockPoolClause } from "#policy/redis/reader/redisRulesQuery.js";
+import {
+	escapeTagValue,
+	getBlockPoolClause,
+} from "#policy/redis/reader/redisRulesQuery.js";
 import { GLOBAL_CLIENT_SCOPE_SENTINEL, type UserScope } from "#policy/rule.js";
-
-// Escapes special characters in Redis TAG queries. Mirrors the escape
-// function in redisRulesQuery.ts — kept local to avoid coupling the two
-// query builders since they'll diverge in shape.
-const escapeTagValue = (value: string): string =>
-	value.replace(/([,.<>{}\[\]"':;!@#$%^&*()\-+=~|/\\])/g, "\\$1");
-
-// Fields where TAG queries need escaping (they may hold JSON etc.).
-const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
-	"coords",
-]);
 
 // Fields indexed as NUMERIC — require range syntax `@x:[N N]` not TAG.
 const NUMERIC_FIELDS: ReadonlySet<keyof UserScope> = new Set(["asn"]);
@@ -59,11 +51,15 @@ const ALL_USER_SCOPE_FIELDS: ReadonlyArray<keyof UserScope> = [
 // the full rule set the way the old single-query path did.
 const GLOBAL_SCOPE_INNER = `@clientId:{${GLOBAL_CLIENT_SCOPE_SENTINEL}} | ismissing(@clientId)`;
 
+// Global rules that exclude the requesting client are still fetched here and
+// dropped by `rankCandidateRules`. Negating `@excludedClientIds` inside this
+// union is unreliable on RediSearch 2.8 (redis-stack 7.4): when the client's
+// own rule matches, it can also drop unrelated global rules.
 const buildScopeClause = (clientId: string | undefined): string => {
 	if (clientId === undefined) {
 		return `( ${GLOBAL_SCOPE_INNER} )`;
 	}
-	return `( @clientId:{${clientId}} | ${GLOBAL_SCOPE_INNER} )`;
+	return `( @clientId:{${escapeTagValue(clientId)}} | ${GLOBAL_SCOPE_INNER} )`;
 };
 
 const buildFieldClause = (
@@ -77,10 +73,7 @@ const buildFieldClause = (
 	if (NUMERIC_FIELDS.has(field)) {
 		return `@${field}:[${stringValue} ${stringValue}]`;
 	}
-	const queryValue = FIELDS_REQUIRING_ESCAPE.has(field)
-		? escapeTagValue(stringValue)
-		: stringValue;
-	return `@${field}:{${queryValue}}`;
+	return `@${field}:{${escapeTagValue(stringValue)}}`;
 };
 
 type SubQuery = {

@@ -15,6 +15,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { TcpProbeRecord } from "@prosopo/types";
 import { ModeEnum } from "@prosopo/types";
 import type { Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -72,7 +73,7 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 	};
 
 	it("serves a PoW captcha when the pool is empty", async () => {
-		initDetectorBundlePool(dir); // empty dir ⇒ size 0
+		initDetectorBundlePool({ dir }); // empty dir ⇒ size 0
 		const sendPowCaptcha = vi.fn(async () => ({ captchaType: "pow" }));
 		const { res, json } = makeRes();
 
@@ -87,7 +88,7 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 	});
 
 	it("synthesises a non-empty session token when the client sent an empty token", async () => {
-		initDetectorBundlePool(dir); // empty ⇒ pow fallback
+		initDetectorBundlePool({ dir }); // empty ⇒ pow fallback
 		let captured: { token?: string } | undefined;
 		const sendPowCaptcha = vi.fn(async (params: unknown) => {
 			captured = params as { token?: string };
@@ -106,7 +107,7 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 
 	it("returns null when the pool has bundles, whatever the client sent", async () => {
 		addBundle(dir);
-		initDetectorBundlePool(dir); // size 1
+		initDetectorBundlePool({ dir }); // size 1
 		const sendPowCaptcha = vi.fn(async () => ({ captchaType: "pow" }));
 		const { res } = makeRes();
 
@@ -122,5 +123,39 @@ describe("runEmptyDetectorPoolPowFallback", () => {
 		}
 
 		expect(sendPowCaptcha).not.toHaveBeenCalled();
+	});
+
+	it("keeps the tcp-probe record on the bypass session", async () => {
+		initDetectorBundlePool({ dir });
+		const sendPowCaptcha = vi.fn(async (_params: unknown) => ({
+			captchaType: "pow",
+		}));
+		const tcpProbe: TcpProbeRecord = { v: 2, hit: false, reason: "no_record" };
+		const { res } = makeRes();
+
+		await runEmptyDetectorPoolPowFallback(
+			{ ...makeInput(sendPowCaptcha), tcpProbe },
+			res,
+		);
+
+		expect(JSON.stringify(sendPowCaptcha.mock.calls[0])).toContain("no_record");
+	});
+
+	it("keeps the TCP stack signals on the bypass session", async () => {
+		initDetectorBundlePool({ dir });
+		const sendPowCaptcha = vi.fn(async (_params: unknown) => ({
+			captchaType: "pow",
+		}));
+		const { res } = makeRes();
+
+		await runEmptyDetectorPoolPowFallback(
+			{ ...makeInput(sendPowCaptcha), tcpMss: 1460, observedTtl: 52 },
+			res,
+		);
+
+		expect(sendPowCaptcha.mock.calls[0]?.[0]).toMatchObject({
+			tcpMss: 1460,
+			observedTtl: 52,
+		});
 	});
 });

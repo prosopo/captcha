@@ -18,6 +18,7 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { LogLevel, getLogger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import type { AwaitedProcessedArgs } from "./argv.js";
+import { waitForEnvironment } from "./retryWithBackoff.js";
 import { start } from "./start.js";
 
 const log = getLogger(LogLevel.enum.info, "cli");
@@ -67,9 +68,12 @@ export default class ReloadingAPI {
 				this._authAccount,
 			);
 		}
-		await this.env.isReady();
+		await waitForEnvironment(this.env);
 
-		this.api = await start(this.env, !!this._processedArgs.adminApi);
+		this.api = await start({
+			env: this.env,
+			admin: !!this._processedArgs.adminApi,
+		});
 		if (process.env.NODE_ENV === "development") {
 			this._envWatcher = await this._watchEnv();
 		}

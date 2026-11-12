@@ -13,22 +13,24 @@
 // limitations under the License.
 
 import { HttpError, ProviderApi } from "@prosopo/api";
-import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
-import { loadBalancer } from "@prosopo/load-balancer";
+import { findProvider } from "@prosopo/load-balancer";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
 	type CaptchaTimeoutOutput,
 	CaptchaType,
+	type ChallengeCaptchaType,
 	ProcaptchaOutputSchema,
 	type ProcaptchaToken,
 	type ProsopoServerConfigOutput,
 	type VerificationResponse,
 	decodeProcaptchaOutput,
+	isChallengeCaptchaType,
 } from "@prosopo/types";
-import { u8aToHex } from "@prosopo/util";
-import i18n from "i18next";
+import { parseInteger, u8aToHex } from "@prosopo/util";
+import { translate } from "./translate.js";
 
 // Detect which section of the provider list the token's `providerUrl`
 // was minted from.
@@ -62,7 +64,15 @@ export const detectIpMode = (
 	return undefined;
 };
 
+// AbortSignal.timeout rejects fetch with a DOMException named TimeoutError.
+const isTimeoutError = (err: unknown): boolean =>
+	err instanceof Error && err.name === "TimeoutError";
+
 export class ProsopoServer {
+	// Tolerance for honest clock drift between the issuing provider and this
+	// verifier when checking a token timestamp against "now".
+	private static readonly MAX_CLOCK_SKEW_MS = 30_000;
+
 	config: ProsopoServerConfigOutput;
 	dappAccount: string | undefined;
 	defaultEnvironment: string;
@@ -85,13 +95,19 @@ export class ProsopoServer {
 	}
 
 	getProviderApi(providerUrl: string): ProviderApi {
-		return new ProviderApi(providerUrl, this.dappAccount || "");
+		return new ProviderApi(
+			providerUrl,
+			this.dappAccount || "",
+			this.config.providerRequestTimeoutMs,
+		);
 	}
 
 	/**
 	 * Verify a token with the issuing provider. Dispatches to the correct
 	 * verify endpoint by inspecting the token's declared captchaType:
 	 *  - puzzle        → submitPuzzleCaptchaVerify
+	 *  - audio         → submitAudioCaptchaVerify
+	 *  - iconOrder     → submitIconOrderCaptchaVerify
 	 *  - pow           → submitPowCaptchaVerify
 	 *  - image         → verifyDappUser
 	 *  - authenticated → submitAuthenticatedCaptchaVerify (Web Bot Auth fast-path)
@@ -130,41 +146,89 @@ export class ProsopoServer {
 		}));
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
-			throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
+			throw new ProsopoError({
+				code: "INVALID_TIMESTAMP",
+				errorSite: "SRVR-1",
 				context: { error: "Timestamp not found" },
 			});
 		}
 		const signatureHex = u8aToHex(dappUserSignature);
 		const providerApi = this.getProviderApi(providerUrl);
 
-		if (captchaType === CaptchaType.puzzle) {
-			const puzzleTimeout = this.config.timeouts.puzzle.cachedTimeout;
-			if (!this.isRecent(timestamp, puzzleTimeout, "Puzzle")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.submitPuzzleCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-				clientSessionId,
-			);
-		}
+		const verifiers: Record<
+			ChallengeCaptchaType,
+			{ label: string; verify: () => Promise<VerificationResponse> }
+		> = {
+			[CaptchaType.image]: {
+				label: "Image",
+				verify: () =>
+					providerApi.verifyDappUser(
+						token,
+						signatureHex,
+						user,
+						timeouts.image.cachedTimeout,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.pow]: {
+				label: "PoW",
+				verify: () =>
+					providerApi.submitPowCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.puzzle]: {
+				label: "Puzzle",
+				verify: () =>
+					providerApi.submitPuzzleCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.iconOrder]: {
+				label: "IconOrder",
+				verify: () =>
+					providerApi.submitIconOrderCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+			[CaptchaType.audio]: {
+				label: "Audio",
+				verify: () =>
+					providerApi.submitAudioCaptchaVerify(
+						token,
+						signatureHex,
+						user,
+						ip,
+						email,
+						clientSessionId,
+					),
+			},
+		};
 
-		if (captchaType === CaptchaType.pow) {
-			const powTimeout = this.config.timeouts.pow.cachedTimeout;
-			if (!this.isRecent(timestamp, powTimeout, "PoW")) {
+		if (isChallengeCaptchaType(captchaType)) {
+			const { label, verify } = verifiers[captchaType];
+			const timeout = this.config.timeouts[captchaType].cachedTimeout;
+			if (!this.isRecent(timestamp, timeout, label)) {
 				return this.notRecentResponse();
 			}
-			return await providerApi.submitPowCaptchaVerify(
-				token,
-				signatureHex,
-				user,
-				ip,
-				email,
-				clientSessionId,
-			);
+			return await verify();
 		}
 
 		if (captchaType === CaptchaType.authenticated) {
@@ -184,22 +248,6 @@ export class ProsopoServer {
 				token,
 				signatureHex,
 				user,
-				ip,
-				email,
-				clientSessionId,
-			);
-		}
-
-		if (captchaType === CaptchaType.image) {
-			const imageTimeout = this.config.timeouts.image.cachedTimeout;
-			if (!this.isRecent(timestamp, imageTimeout, "Image")) {
-				return this.notRecentResponse();
-			}
-			return await providerApi.verifyDappUser(
-				token,
-				signatureHex,
-				user,
-				timeouts.image.cachedTimeout,
 				ip,
 				email,
 				clientSessionId,
@@ -252,7 +300,20 @@ export class ProsopoServer {
 		label: string,
 	): boolean {
 		if (!timestamp) return false;
-		const recent = Date.now() - timestamp < timeoutMs;
+		const age = Date.now() - timestamp;
+		// A token stamped in the future is not fresh, it is forged or the clock
+		// is skewed: `age < timeoutMs` alone treated any future timestamp as
+		// recent, so a token dated hours ahead sailed through this local
+		// pre-check. Allow a small skew for honest clock drift between the
+		// issuing provider and this verifier, and reject anything beyond it.
+		if (age < -ProsopoServer.MAX_CLOCK_SKEW_MS) {
+			this.logger.error(() => ({
+				data: { timestamp, timeoutMs },
+				msg: `${label} captcha timestamp is in the future`,
+			}));
+			return false;
+		}
+		const recent = age < timeoutMs;
 		if (!recent) {
 			this.logger.error(() => ({
 				data: { timestamp, timeoutMs },
@@ -265,7 +326,7 @@ export class ProsopoServer {
 	private notRecentResponse(): VerificationResponse {
 		return {
 			verified: false,
-			status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+			status: translate("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
 		};
 	}
 
@@ -294,13 +355,11 @@ export class ProsopoServer {
 			// `find` against the dual-stack default would miss and the
 			// lambda would emit `Provider not found`. See `detectIpMode`.
 			const ipMode = detectIpMode(providerUrl);
-			const providers = await loadBalancer(
+			const provider = await findProvider(
 				this.config.defaultEnvironment,
+				providerUrl,
 				ipMode,
 			);
-
-			// find the provider by URL in providers
-			const provider = providers.find((p) => p.url === providerUrl);
 
 			// if the provider is not found, return an error
 			if (!provider) {
@@ -310,14 +369,24 @@ export class ProsopoServer {
 				}));
 				return {
 					verified: false,
-					status: i18n.t("API.USER_NOT_VERIFIED"),
+					status: translate("API.USER_NOT_VERIFIED"),
 				};
+			}
+			// Number() would sign "" as 0 and "abc" as NaN; a token whose
+			// timestamp isn't an integer is malformed.
+			const parsedTimestamp = parseInteger(timestamp, { min: 0 });
+			if (!parsedTimestamp.ok) {
+				throw new ProsopoError({
+					code: "INVALID_TIMESTAMP",
+					errorSite: "SRVR-2",
+					cause: parsedTimestamp.error,
+				});
 			}
 			const verificationResponse = await this.verifyProvider(
 				token,
 				this.config.timeouts,
 				provider.url,
-				Number(timestamp),
+				parsedTimestamp.value,
 				user,
 				challenge,
 				ip,
@@ -339,11 +408,17 @@ export class ProsopoServer {
 
 			return verificationResponse;
 		} catch (err) {
-			this.logger.error(() => ({ err, data: { token } }));
-			const code = err instanceof HttpError ? err.status : 500;
-			throw new ProsopoApiError("API.BAD_REQUEST", {
-				context: { code, token },
-			});
+			// Any failure (malformed token, provider list or provider
+			// unreachable, signer error) answers "not verified" rather than
+			// throwing: callers that don't catch would otherwise turn a bad
+			// token or a provider outage into a 500 from their own endpoint.
+			const code =
+				err instanceof HttpError ? err.status : isTimeoutError(err) ? 504 : 500;
+			this.logger.error(() => ({ err, data: { token, code } }));
+			return {
+				verified: false,
+				status: translate("API.USER_NOT_VERIFIED"),
+			};
 		}
 	}
 }

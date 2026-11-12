@@ -1,0 +1,43 @@
+# Overlay: OpenObserve instance 2 on docker-compose.oo.yml. Use with:
+#   docker compose -f docker-compose.oo.yml -f docker-compose.oo2.yml \
+#     -f docker-compose.oo.<production|staging>.yml up -d
+services:
+    caddy:
+        ports:
+            - '80:80'
+            - '443:443'
+        volumes:
+            - ./oo2.Caddyfile:/etc/caddy/Caddyfile
+    oo:
+        environment:
+            # Dashboard panels query with no row limit, so OpenObserve caps them at this and
+            # silently drops time ranges past it (default 1000). Kept finite because it is also
+            # the only cap on raw-row queries with no LIMIT.
+            ZO_QUERY_DEFAULT_LIMIT: 20000
+            # The compactor deletes data older than this (default 3650). Per-stream retention set in the UI overrides it.
+            ZO_COMPACT_DATA_RETENTION_DAYS: 90
+        volumes:
+            - ./oo_data:/data
+        networks:
+            - external
+        healthcheck:
+            # the image has no shell or curl; this cli command queries the running server's /node/status
+            test: [ "CMD", "/openobserve", "node", "status" ]
+            interval: 1m
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+networks:
+    internal:
+        internal: true
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.18.0.0/16
+                  gateway: 172.18.0.1
+    external:
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 172.19.0.0/16
+                  gateway: 172.19.0.1

@@ -1,0 +1,1093 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import { stringToHex, u8aToHex } from "@polkadot/util";
+import { ProsopoError } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
+import {
+	ApiParams,
+	type BehavioralDataPacked,
+	type CaptchaResult,
+	type CaptchaSolutionEscalation,
+	CaptchaStatus,
+	type ClientMetaData,
+	type DecisionMachineCaptchaType,
+	DecisionMachineDecision,
+	type DecisionMachineInput,
+	type IPAddress,
+	type InteractiveCaptchaStored,
+	POW_SEPARATOR,
+	type PoWChallengeId,
+	ResultReason,
+	type Session,
+	SimdReadingsStage,
+	isBlockingCaptchaResult,
+	isInteractiveCaptchaType,
+} from "@prosopo/types";
+import type { ProviderEnvironment } from "@prosopo/types-env";
+import { describeMatchedRule } from "@prosopo/user-access-policy";
+import {
+	assertCoordsSafe,
+	at,
+	extractData,
+	parseInteger,
+	verifyRecency,
+} from "@prosopo/util";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
+import {
+	getCompositeIpAddress,
+	getIpAddressFromComposite,
+} from "../../compositeIpAddress.js";
+import { deepValidateIpAddress } from "../../util.js";
+import {
+	type CounterIncrement,
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
+import {
+	deriveDevice,
+	deriveTrafficPolicies,
+	solveDeviceSignals,
+} from "../../utils/devicePlatform.js";
+import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
+import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
+import {
+	computeDnsAsymmetry,
+	enrichDnsEvent,
+	getIpInfoAsn,
+} from "../dnsEvent/enrichDnsEvent.js";
+import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { applyRouter } from "../frictionless/routingMachine.js";
+import {
+	type PostSolveRouting,
+	sessionRoutingSignals,
+} from "../postSolveRouting.js";
+import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
+import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
+import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
+
+/** Fields the shared pipeline writes back onto a captcha record. */
+export type InteractiveCaptchaRecordUpdate = Partial<
+	Pick<
+		InteractiveCaptchaStored,
+		| "result"
+		| "blocked"
+		| "serverChecked"
+		| "lastUpdatedTimestamp"
+		| "providedIp"
+		| "metadata"
+		| "behavioralDataPacked"
+		| "deviceCapability"
+		| "clientMetaData"
+	>
+>;
+
+export interface MintedChallenge {
+	challenge: PoWChallengeId;
+	providerSignature: string;
+	requestedAtTimestamp: number;
+}
+
+/** A user's submission, plus the two steps that differ by captcha type. */
+/** What every interactive captcha submission carries, whatever its answer. */
+export interface InteractiveSolutionSubmission {
+	challenge: PoWChallengeId;
+	providerChallengeSignature: string;
+	/** Milliseconds allowed between issuing the challenge and this submission. */
+	timeout: number;
+	userTimestampSignature: string;
+	ipAddress: IPAddress;
+	behavioralData?: string;
+	salt?: string;
+	simdReadings?: string;
+	clientMetaData?: ClientMetaData;
+}
+
+export interface InteractiveSubmission<TRecord>
+	extends InteractiveSolutionSubmission {
+	isCorrect: (record: TRecord) => boolean;
+	/**
+	 * Whether a wrong answer landed nowhere near the right one. Types that
+	 * cannot tell leave it out, and their misses are not counted.
+	 */
+	isFarMiss?: (record: TRecord) => boolean;
+	/** Persists the raw interaction trail, whatever the verdict. */
+	persistInteraction: (record: TRecord) => Promise<void>;
+	/** Set for a type whose correct solves the routing machine judges again. */
+	postSolve?: PostSolveRouting;
+}
+
+/** `verified` is false on an escalation: the follow-up must be cleared first. */
+export interface InteractiveSubmissionOutcome {
+	verified: boolean;
+	escalation?: CaptchaSolutionEscalation;
+}
+
+// Recorded on a correct solve the routing machine escalated, so its token can
+// never verify. The user's outcome lives on the escalated session.
+const ESCALATED_RESULT: CaptchaResult = {
+	status: CaptchaStatus.disapproved,
+	reason: ResultReason.CAPTCHA_DECISION_MACHINE_DENIED,
+};
+
+/**
+ * Shared pipeline for the captcha types a human solves on screen (puzzle,
+ * icon-order). Subclasses supply the record accessors and grading; minting,
+ * submission bookkeeping and server verification live here.
+ */
+export abstract class InteractiveCaptchaManager<
+	TRecord extends InteractiveCaptchaStored,
+> extends CaptchaManager {
+	POW_SEPARATOR: string;
+	protected decisionMachineRunner: DecisionMachineRunner;
+	protected readonly usageCounters: UsageCounters | null;
+
+	constructor({
+		usageCounters,
+		...deps
+	}: CaptchaManagerDeps & {
+		usageCounters?: UsageCounters | null;
+	}) {
+		super(deps);
+		const { db } = deps;
+		this.POW_SEPARATOR = POW_SEPARATOR;
+		this.decisionMachineRunner = new DecisionMachineRunner(db);
+		this.usageCounters = usageCounters ?? null;
+	}
+
+	protected abstract readonly captchaType: DecisionMachineCaptchaType;
+
+	/** Type name used in log messages. */
+	protected abstract readonly logLabel: string;
+
+	protected abstract getRecordByChallenge(
+		challenge: string,
+	): Promise<TRecord | null>;
+
+	protected abstract updateRecord(
+		challenge: PoWChallengeId,
+		updates: InteractiveCaptchaRecordUpdate,
+	): Promise<void>;
+
+	/** Records the verdict of a user's submission. */
+	protected abstract updateSubmissionResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		userSignature: string,
+		coords: [number, number][][] | undefined,
+	): Promise<void>;
+
+	/** Takes the single submission a challenge allows; false if already taken. */
+	protected abstract claimSubmission(record: TRecord): Promise<boolean>;
+
+	/**
+	 * Mark the record server-checked only if it isn't already, returning
+	 * whether this caller made that transition.
+	 */
+	protected abstract markRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean>;
+
+	/** The per-type interaction trail handed to the decision machine. */
+	protected abstract decisionMachineEventFields(
+		record: TRecord,
+	): Partial<DecisionMachineInput>;
+
+	protected mintChallenge(
+		userAccount: string,
+		dappAccount: string,
+	): MintedChallenge {
+		const requestedAtTimestamp = Date.now();
+		const nonce = Math.floor(Math.random() * 1000000);
+		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
+		const providerSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
+		return { challenge, providerSignature, requestedAtTimestamp };
+	}
+
+	/**
+	 * Grades a user's submission and records the outcome on the captcha and
+	 * session records.
+	 */
+	protected async submitInteractiveCaptchaSolution(
+		submission: InteractiveSubmission<TRecord>,
+	): Promise<InteractiveSubmissionOutcome> {
+		const { challenge, userTimestampSignature, behavioralData, simdReadings } =
+			submission;
+		// Check signatures before doing DB reads to avoid unnecessary network connections
+		checkPowSignature(
+			challenge,
+			submission.providerChallengeSignature,
+			this.pair.address,
+			ApiParams.challenge,
+		);
+
+		const challengeSplit = challenge.split(this.POW_SEPARATOR);
+		// The challenge is provider-signed, so this only fails if the format
+		// changes; parseInt would turn that into NaN and a confusing signature
+		// error instead.
+		const timestampResult = parseInteger(at(challengeSplit, 0), { min: 0 });
+		if (!timestampResult.ok) {
+			throw new ProsopoError({
+				code: "INVALID_TIMESTAMP",
+				errorSite: "PROV-97",
+				cause: timestampResult.error,
+				context: {
+					failedFuncName: this.submitInteractiveCaptchaSolution.name,
+					challenge,
+				},
+			});
+		}
+		const timestamp = timestampResult.value;
+		const userAccount = at(challengeSplit, 1);
+
+		checkPowSignature(
+			timestamp.toString(),
+			userTimestampSignature,
+			userAccount,
+			ApiParams.timestamp,
+		);
+
+		const challengeRecord = await this.getRecordByChallenge(challenge);
+
+		if (!challengeRecord) {
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
+			return { verified: false };
+		}
+
+		const { coords, saltDecodeError } = this.decodeSaltCoords(submission.salt);
+
+		// Single-use: the answer space is small enough to brute-force if a
+		// challenge accepted repeated guesses.
+		if (!(await this.claimSubmission(challengeRecord))) {
+			this.logger.debug(() => ({
+				msg: `Challenge already submitted: ${challenge}`,
+			}));
+			return { verified: false };
+		}
+
+		if (saltDecodeError) {
+			await this.recordSubmissionResult({
+				challengeRecord,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SALT,
+				},
+				userSignature: userTimestampSignature,
+			});
+			return { verified: false };
+		}
+
+		if (!verifyRecency(challenge, submission.timeout)) {
+			await this.recordSubmissionResult({
+				challengeRecord,
+				result: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
+				},
+				userSignature: userTimestampSignature,
+				coords,
+			});
+			return { verified: false };
+		}
+
+		const dappAccount = at(challengeSplit, 2);
+		const correct = submission.isCorrect(challengeRecord);
+		const result: CaptchaResult = correct
+			? { status: CaptchaStatus.approved }
+			: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+				};
+
+		// Counter writes: fire-and-forget. Runs before any decision-machine
+		// veto.
+		if (this.usageCounters) {
+			const kind = correct
+				? "solved"
+				: submission.isFarMiss?.(challengeRecord)
+					? "farMiss"
+					: undefined;
+			if (kind) {
+				this.usageCounters.incrManyAsync(
+					dappAccount,
+					buildAllWindowIncrements({
+						kind,
+						captchaType: this.captchaType,
+						ip: submission.ipAddress.address,
+						userAccount,
+					}),
+				);
+			}
+		}
+
+		// Unconditional, so the trail survives when the behavioural payload is
+		// missing or fails to decrypt; the decision machine reads it either way.
+		await submission.persistInteraction(challengeRecord);
+
+		const decodedPayloads = await this.decodeSubmissionPayloads(
+			challengeRecord.sessionId,
+			{ behavioural: behavioralData, simd: simdReadings },
+		);
+
+		let behavioralDataPacked: BehavioralDataPacked | undefined;
+		if (behavioralData) {
+			try {
+				const decryptedData = decodedPayloads.behavioural;
+
+				if (decryptedData) {
+					this.logger?.info(() => ({
+						msg: "Behavioral analysis completed",
+						data: {
+							userAccount,
+							dappAccount,
+							challenge,
+							mouseEventsCount: decryptedData.collector1?.length || 0,
+							touchEventsCount: decryptedData.collector2?.length || 0,
+							clickEventsCount: decryptedData.collector3?.length || 0,
+							scrollEventsCount: decryptedData.collector4?.length || 0,
+							deviceCapability: decryptedData.deviceCapability,
+							captchaResult: correct ? "passed" : "failed",
+						},
+					}));
+
+					behavioralDataPacked = {
+						c1: decryptedData.collector1 || [],
+						c2: decryptedData.collector2 || [],
+						c3: decryptedData.collector3 || [],
+						c4: decryptedData.collector4 || [],
+						d: decryptedData.deviceCapability,
+					};
+
+					await this.updateRecord(challenge, {
+						behavioralDataPacked,
+						deviceCapability: decryptedData.deviceCapability,
+					});
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process behavioral data",
+					err: error,
+				}));
+				// Don't fail the captcha if behavioral analysis fails
+			}
+		}
+
+		const storedClientMetaData = toStoredClientMetaData(
+			submission.clientMetaData,
+		);
+		if (storedClientMetaData) {
+			await this.updateRecord(challenge, {
+				clientMetaData: storedClientMetaData,
+			});
+		}
+
+		const escalation =
+			correct && submission.postSolve
+				? await this.escalateSolve(
+						challengeRecord,
+						submission.postSolve,
+						behavioralDataPacked,
+					)
+				: undefined;
+
+		await this.recordSubmissionResult({
+			challengeRecord,
+			result: escalation ? ESCALATED_RESULT : result,
+			userSignature: userTimestampSignature,
+			coords,
+			clientMetaData: storedClientMetaData,
+			escalated: escalation !== undefined,
+		});
+
+		if (challengeRecord.sessionId && decodedPayloads.simd) {
+			await this.recordSessionSimdReadingsIfAbsentWithCache(
+				challengeRecord.sessionId,
+				decodedPayloads.simd,
+				SimdReadingsStage.submit,
+			);
+		}
+
+		return escalation ? { verified: false, escalation } : { verified: correct };
+	}
+
+	/**
+	 * Runs the post-solve routing pass over a correct solve and mints the
+	 * follow-up session when the machine escalates it. Any failure leaves the
+	 * solve standing, as if no machine had fired.
+	 */
+	private async escalateSolve(
+		challengeRecord: TRecord,
+		postSolve: PostSolveRouting,
+		behavioralDataPacked: BehavioralDataPacked | undefined,
+	): Promise<CaptchaSolutionEscalation | undefined> {
+		if (!challengeRecord.sessionId) return undefined;
+		try {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			if (!sessionRecord) return undefined;
+			const { context } = postSolve;
+			const device = deriveDevice({
+				...context.device,
+				webView: sessionRecord.webView,
+				solve: solveDeviceSignals(behavioralDataPacked),
+			});
+			const routingOutput = await applyRouter({
+				runner: this.decisionMachineRunner,
+				counters: this.usageCounters,
+				baseline: postSolve.baseline,
+				ctx: {
+					dappAccount: challengeRecord.dappAccount,
+					userAccount: challengeRecord.userAccount,
+					...(context.tier !== undefined && { tier: context.tier }),
+					ip: context.ip,
+					countryCode: context.countryCode,
+					score: computeFrictionlessScore(sessionRecord.scoreComponents),
+					platform: device.platform,
+					...(sessionRecord.d !== undefined && { d: sessionRecord.d }),
+					raw: {
+						...context.raw,
+						...sessionRoutingSignals(sessionRecord),
+						...postSolve.raw,
+						...(behavioralDataPacked && { behavioralDataPacked }),
+						...(behavioralDataPacked?.d && {
+							deviceCapability: behavioralDataPacked.d,
+						}),
+					},
+				},
+				logger: this.logger,
+				phase: postSolve.phase,
+			});
+			if (
+				!isInteractiveCaptchaType(routingOutput.captchaType) ||
+				routingOutput.captchaType === postSolve.baseline.captchaType
+			) {
+				return undefined;
+			}
+			this.logger.info(() => ({
+				msg: `Routing machine escalated a ${this.logLabel} solve`,
+				data: {
+					challenge: challengeRecord.challenge,
+					routedCaptchaType: routingOutput.captchaType,
+					routingReason: routingOutput.reason,
+				},
+			}));
+			return await postSolve.escalate({
+				routingOutput,
+				device,
+				origin: {
+					sessionId: challengeRecord.sessionId,
+					dappAccount: challengeRecord.dappAccount,
+					captchaType: postSolve.baseline.captchaType,
+					behavioralDataPacked,
+				},
+			});
+		} catch (error) {
+			this.logger.error(() => ({
+				msg: `Post-solve routing failed for a ${this.logLabel} solve`,
+				err: error,
+				data: { challenge: challengeRecord.challenge },
+			}));
+			return undefined;
+		}
+	}
+
+	/**
+	 * The counters and account sighting the site's decision machine asked
+	 * for. Each is left out when it cannot be read, so a machine never mistakes
+	 * a Redis or reputation DB failure for a zero count or an unknown account.
+	 */
+	private async readDecisionMachineRequirements(
+		challengeRecord: TRecord,
+		env: ProviderEnvironment,
+		logger: Logger,
+	): Promise<Pick<DecisionMachineInput, "counters" | "accountSighting">> {
+		const { dappAccount, userAccount } = challengeRecord;
+		const requirements =
+			await this.decisionMachineRunner.getDecisionRequirements(
+				{ dappAccount, userAccount, captchaType: this.captchaType },
+				logger,
+			);
+		const out: Pick<DecisionMachineInput, "counters" | "accountSighting"> = {};
+		if (requirements.counters.length > 0 && this.usageCounters) {
+			const ip = getIpAddressFromComposite(challengeRecord.ipAddress).address;
+			const reads: CounterIncrement[] = [];
+			for (const spec of requirements.counters) {
+				// Only the dimensions this record can answer for.
+				if (spec.dimension === "ip") reads.push({ spec, value: ip });
+				if (spec.dimension === "userAccount") {
+					reads.push({ spec, value: userAccount });
+				}
+			}
+			const counters = await this.usageCounters.batchGet(dappAccount, reads);
+			if (counters) {
+				out.counters = counters;
+			}
+		}
+		if (requirements.accountSighting) {
+			const sighting = await env.ipInfoService.accountSighting(
+				dappAccount,
+				userAccount,
+			);
+			if (sighting) {
+				out.accountSighting = sighting;
+			}
+		}
+		return out;
+	}
+
+	/** Invalid salt disapproves the submission rather than being ignored. */
+	private decodeSaltCoords(salt: string | undefined): {
+		coords?: [number, number][][];
+		saltDecodeError?: unknown;
+	} {
+		if (!salt) {
+			return {};
+		}
+		try {
+			const extractedData = extractData(salt);
+			if (extractedData.length < 2) {
+				return {};
+			}
+			const coords: [number, number][][] = [
+				[[extractedData[0], extractedData[1]] as [number, number]],
+			];
+			assertCoordsSafe(coords, "coords");
+			return { coords };
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to extract coordinates from salt",
+				error,
+				salt,
+			}));
+			return { saltDecodeError: error };
+		}
+	}
+
+	private async recordSubmissionResult({
+		challengeRecord,
+		result,
+		userSignature,
+		coords,
+		clientMetaData,
+		escalated = false,
+	}: {
+		challengeRecord: TRecord;
+		result: CaptchaResult;
+		userSignature: string;
+		coords?: [number, number][][];
+		clientMetaData?: ClientMetaData;
+		// An escalation is not a block: the user is still being challenged.
+		escalated?: boolean;
+	}): Promise<void> {
+		await this.updateSubmissionResult(
+			challengeRecord.challenge,
+			result,
+			userSignature,
+			coords,
+		);
+		if (challengeRecord.sessionId) {
+			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+				userSubmitted: true,
+				result,
+				...(!escalated &&
+					isBlockingCaptchaResult(this.captchaType, result) && {
+						blocked: true,
+					}),
+				// Mirrored so the session carries the clientSessionId that the
+				// verify call correlates against.
+				...(clientMetaData && { clientMetaData }),
+			});
+		}
+	}
+
+	/**
+	 * The post-solve gate the site's server calls: decides whether the token
+	 * the widget was given is honoured.
+	 */
+	async serverVerifyInteractiveCaptchaSolution({
+		dappAccount,
+		challenge,
+		env,
+		settings: {
+			verifiedTimeout: timeout,
+			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
+			spamFilter,
+			trafficFilter,
+			storeMetadata = false,
+		},
+		ip,
+		email,
+		clientSessionId,
+		userAccessRulesStorage,
+	}: ServerVerifyCaptchaSolutionArgs): Promise<{
+		verified: boolean;
+		score?: number;
+		sessionId?: string;
+	}> {
+		// Shared by every not-verified exit; sessionId is stamped on below
+		// once the record is loaded, so each exit needn't repeat it.
+		const notVerifiedResponse: {
+			verified: false;
+			sessionId?: string;
+		} = { verified: false };
+
+		// Bind the challenge/dappAccount context once so every log line in this
+		// method carries it without repeating the fields in each `data` block.
+		const logger = this.logger.with({ challenge, dappAccount });
+
+		const challengeRecord = await this.getRecordByChallenge(challenge);
+
+		if (!challengeRecord) {
+			logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
+
+			return notVerifiedResponse;
+		}
+
+		notVerifiedResponse.sessionId = challengeRecord.sessionId;
+
+		if (
+			challengeRecord.result.status !== CaptchaStatus.approved ||
+			challengeRecord.serverChecked
+		)
+			return notVerifiedResponse;
+
+		const challengeDappAccount = challengeRecord.dappAccount;
+
+		if (dappAccount !== challengeDappAccount) {
+			throw new ProsopoError({
+				code: "SOLUTION_NOT_FOUND",
+				errorSite: "PROV-72",
+				message: "Dapp user solution not found",
+				context: {
+					failedFuncName: this.serverVerifyInteractiveCaptchaSolution.name,
+					dappAccount,
+					challengeDappAccount,
+				},
+			});
+		}
+
+		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
+		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
+		// solution has already been checked by the server. Moving this code around could result in solutions being
+		// re-usable.
+		// The claim is conditional on the record not being checked yet, so of
+		// several concurrent verifies of one token only one gets past here.
+		const claimed = await this.markRecordChecked(challengeRecord.challenge);
+		if (!claimed) return notVerifiedResponse;
+		// -- END WARNING --
+
+		const submittedAt = challengeRecord.submittedAtTimestamp;
+		const submitToVerifyMs =
+			submittedAt instanceof Date
+				? Date.now() - submittedAt.getTime()
+				: Number.POSITIVE_INFINITY;
+		if (submitToVerifyMs > timeout) {
+			await this.disapproveVerification(
+				challengeRecord,
+				ResultReason.TIMESTAMP_TOO_OLD,
+			);
+			return notVerifiedResponse;
+		}
+
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				challengeRecord.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: `Client session mismatch in server ${this.logLabel} verification`,
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						challengeRecord.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			await this.disapproveVerification(
+				challengeRecord,
+				ResultReason.CLIENT_SESSION_MISMATCH,
+			);
+			return notVerifiedResponse;
+		}
+
+		// Read before the hard-block check, which needs its head hash.
+		const sessionRecord = challengeRecord.sessionId
+			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
+			: undefined;
+
+		// Check user access policies for hard blocks
+		if (userAccessRulesStorage) {
+			try {
+				const blockPolicy = await this.checkForHardBlock({
+					userAccessRulesStorage,
+					challengeRecord,
+					userAccount: challengeRecord.userAccount,
+					headers: challengeRecord.headers,
+					headHash: sessionRecord?.decryptedHeadHash,
+					coords: challengeRecord.coords,
+					countryCode: challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.countryCode
+						: undefined,
+					asn: challengeRecord.ipInfo?.isValid
+						? challengeRecord.ipInfo.asnNumber
+						: undefined,
+				});
+
+				if (blockPolicy) {
+					logger.info(() => ({
+						msg: `User blocked by access policy in server ${this.logLabel} verification`,
+						data: {
+							userAccount: challengeRecord.userAccount,
+							policy: blockPolicy,
+						},
+					}));
+					await this.disapproveVerification(
+						challengeRecord,
+						ResultReason.ACCESS_POLICY_BLOCK,
+						{
+							// Name the rule behind the ACCESS_POLICY_BLOCK on the
+							// audit row. This path is where `deferToVerify` rules
+							// land, which is precisely where "why was I rejected?"
+							// is least obvious.
+							matchedRule: describeMatchedRule(blockPolicy),
+						},
+					);
+					return notVerifiedResponse;
+				}
+			} catch (error) {
+				logger.warn(() => ({
+					msg: `Failed to check user access policies in server ${this.logLabel} verification`,
+					error,
+				}));
+			}
+		}
+
+		// Check email domain against spam list if email is provided
+		if (email && spamEmailDomainCheckingEnabled) {
+			try {
+				const isSpam = await this.checkSpamEmail(email);
+				if (isSpam) {
+					const emailDomain = email.split("@")[1] || "unknown";
+					logger.info(() => ({
+						msg: `Spam email domain detected in server ${this.logLabel} verification`,
+						data: { emailDomain },
+					}));
+					await this.disapproveVerification(
+						challengeRecord,
+						ResultReason.SPAM_EMAIL_DOMAIN,
+						null,
+					);
+					return notVerifiedResponse;
+				}
+			} catch (error) {
+				logger.warn(() => ({
+					msg: `Failed to check spam email domain in server ${this.logLabel} verification`,
+					error,
+				}));
+			}
+		}
+
+		// Per-email submission-count check — see `imgCaptchaTasks` for the
+		// full rationale. Runs before the metadata write below so the
+		// count reflects PRIOR verified submissions only.
+		const maxEmailSubmissionCount =
+			spamFilter?.enabled && spamFilter.emailRules?.enabled
+				? spamFilter.emailRules.maxEmailSubmissionCount
+				: undefined;
+		let emailNormalised: string | undefined;
+		if (maxEmailSubmissionCount !== undefined && email && storeMetadata) {
+			emailNormalised = normaliseEmailForMatching(email);
+			if (emailNormalised) {
+				try {
+					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
+						dappAccount,
+						emailNormalised,
+					);
+					if (priorCount >= maxEmailSubmissionCount) {
+						logger.info(() => ({
+							msg: `Email submission count exceeded in server ${this.logLabel} verification`,
+							data: { priorCount, maxEmailSubmissionCount },
+						}));
+						await this.disapproveVerification(
+							challengeRecord,
+							ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+							null,
+						);
+						return notVerifiedResponse;
+					}
+				} catch (error) {
+					logger.warn(() => ({
+						msg: `Failed to check email submission count in server ${this.logLabel} verification`,
+						error,
+					}));
+				}
+			}
+		}
+
+		const enrichedDnsEvent = await enrichDnsEvent(
+			sessionRecord?.dnsEvent,
+			env.ipInfoService,
+			ip ?? challengeRecord.ipInfo?.ip,
+		);
+
+		{
+			const check = await this.resolveTrafficFilterCheck({
+				recordIpInfo: challengeRecord.ipInfo,
+				trafficFilter,
+				currentIpInfo: ip ? await env.ipInfoService.lookup(ip) : undefined,
+				enrichedDnsEvent,
+			});
+			if (check.isBlocked) {
+				logger.info(() => ({
+					msg: `Traffic filter rejected request in ${this.logLabel} verification`,
+					data: {
+						ip,
+						reason: check.reason,
+						dnsPeerIp: enrichedDnsEvent?.peerIp,
+						dnsResolverIp: enrichedDnsEvent?.resolverIp,
+						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+						dnsPathValid: enrichedDnsEvent?.pathValid,
+					},
+				}));
+				await this.disapproveVerification(challengeRecord, check.reason);
+				return notVerifiedResponse;
+			}
+		}
+
+		// Persist dapp-server-provided metadata when the site opts in.
+		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks on
+		// the same write so the per-email submission-count check has an
+		// indexed field to query against.
+		if (storeMetadata && email) {
+			await this.updateRecord(challengeRecord.challenge, {
+				metadata: {
+					email,
+					emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
+				},
+			});
+		}
+
+		if (ip) {
+			const challengeIpAddress = getIpAddressFromComposite(
+				challengeRecord.ipAddress,
+			);
+
+			// Get client settings for IP validation rules
+			const clientRecord = await this.db.getClientRecord(dappAccount);
+			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
+
+			await this.updateRecord(challengeRecord.challenge, {
+				providedIp: getCompositeIpAddress(ip),
+			});
+
+			if (ipValidationRules?.enabled === true) {
+				const ipValidation = await deepValidateIpAddress({
+					ip,
+					challengeIpAddress,
+					logger,
+					ipInfoService: env.ipInfoService,
+					ipValidationRules,
+					dnsPeerIp: enrichedDnsEvent?.peerIp,
+				});
+
+				if (!ipValidation.isValid) {
+					logger.error(() => ({
+						msg: `IP validation failed for ${this.logLabel} captcha`,
+						data: {
+							ip,
+							challengeIp: challengeIpAddress.address,
+							error: ipValidation.errorMessage,
+							distanceKm: ipValidation.distanceKm,
+						},
+					}));
+					await this.disapproveVerification(
+						challengeRecord,
+						ResultReason.FAILED_IP_VALIDATION,
+					);
+					return notVerifiedResponse;
+				}
+			}
+		}
+
+		let score: number | undefined;
+		if (sessionRecord) {
+			const dnsAsymmetry = computeDnsAsymmetry(
+				enrichedDnsEvent,
+				challengeRecord.ipInfo,
+				trafficFilter,
+			);
+			if (dnsAsymmetry > 0) {
+				sessionRecord.scoreComponents = {
+					...sessionRecord.scoreComponents,
+					dnsAsymmetry,
+				};
+			}
+			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
+			logger.info(() => ({
+				data: {
+					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
+					score,
+					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
+					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
+				},
+			}));
+		}
+
+		// We know solution is correct by this point. Run decision machine evaluation to process additional checks.
+		try {
+			const decisionInput: DecisionMachineInput = {
+				userAccount: challengeRecord.userAccount,
+				dappAccount: challengeRecord.dappAccount,
+				captchaResult: "passed",
+				headers: challengeRecord.headers,
+				captchaType: this.captchaType,
+				behavioralDataPacked: challengeRecord.behavioralDataPacked,
+				deviceCapability: challengeRecord.deviceCapability,
+				countryCode: challengeRecord.ipInfo?.isValid
+					? challengeRecord.ipInfo.countryCode
+					: undefined,
+				ipInfo: challengeRecord.ipInfo,
+				dnsEvent: enrichedDnsEvent,
+				score,
+				threshold: sessionRecord?.threshold,
+				scoreComponents: sessionRecord?.scoreComponents,
+				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
+				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
+				simdReadings: sessionRecord?.simdReadings,
+				// Everything the detector reported for this session.
+				d: sessionRecord?.d,
+				frictionlessReason: sessionRecord?.reason,
+				ruleType: sessionRecord?.ruleType,
+				webView: sessionRecord?.webView,
+				iFrame: sessionRecord?.iFrame,
+				currentUrl: sessionRecord?.currentUrl,
+				iframeUrl: sessionRecord?.iframeUrl,
+				coords: challengeRecord.coords,
+				...this.decisionMachineEventFields(challengeRecord),
+				// tcp-probe fields — see powTasks.ts for the reasoning.
+				...rawTlsSignalsFromRecord(sessionRecord),
+				// Which egress categories this site blocks. Gates the
+				// egress-sensitive TCP-stack deny rules — a VPN
+				// concentrator legitimately terminates the handshake, so
+				// on a site that accepts VPN users the observed stack
+				// says nothing about the client.
+				trafficPolicies: deriveTrafficPolicies(trafficFilter),
+			};
+
+			const decision = await this.decisionMachineRunner.decide(
+				{
+					...decisionInput,
+					...(await this.readDecisionMachineRequirements(
+						challengeRecord,
+						env,
+						logger,
+					)),
+				},
+				logger,
+			);
+
+			if (decision.decision === DecisionMachineDecision.Deny) {
+				logger.info(() => ({
+					msg: `Decision machine denied ${this.logLabel} captcha in server verification`,
+					data: {
+						userAccount: challengeRecord.userAccount,
+						reason: decision.reason,
+						score: decision.score,
+						tags: decision.tags,
+					},
+				}));
+
+				// Decision machines are operator-authored JS — their `reason`
+				// is just `string | undefined`. Cast to `ResultReason` at the
+				// boundary so the strict types on `CaptchaResult` hold.
+				await this.disapproveVerification(
+					challengeRecord,
+					(decision.reason ||
+						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason,
+				);
+				return notVerifiedResponse;
+			}
+
+			logger.debug(() => ({
+				msg: `Decision machine allowed ${this.logLabel} captcha`,
+				data: {
+					reason: decision.reason,
+					score: decision.score,
+					tags: decision.tags,
+				},
+			}));
+		} catch (error) {
+			logger.error(() => ({
+				msg: `Failed to run decision machine in server ${this.logLabel} verification`,
+				err: error,
+			}));
+			// Don't fail the captcha if decision machine fails - default to allow
+		}
+
+		// Server verification passed — update session as approved and serverChecked
+		if (challengeRecord.sessionId) {
+			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+				serverChecked: true,
+				result: { status: CaptchaStatus.approved },
+			});
+		}
+
+		return {
+			verified: true,
+			...(Number.isFinite(score) && { score }),
+			...(challengeRecord.sessionId && {
+				sessionId: challengeRecord.sessionId,
+			}),
+		};
+	}
+
+	/**
+	 * Records a server-verification rejection on the captcha record and, unless
+	 * `session` is null, on the linked session.
+	 */
+	private async disapproveVerification(
+		challengeRecord: TRecord,
+		reason: ResultReason,
+		session: Pick<Session, "matchedRule"> | null = {},
+	): Promise<void> {
+		const result: CaptchaResult = { status: CaptchaStatus.disapproved, reason };
+		const isBlocked = isBlockingCaptchaResult(this.captchaType, result);
+		await this.updateRecord(challengeRecord.challenge, {
+			result,
+			...(isBlocked && { blocked: true }),
+		});
+		if (session && challengeRecord.sessionId) {
+			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+				serverChecked: true,
+				result,
+				...(isBlocked && { blocked: true }),
+				...session,
+			});
+		}
+	}
+}

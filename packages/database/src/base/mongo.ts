@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { fileURLToPath } from "node:url";
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { IDatabase } from "@prosopo/types-database";
 import mongoose, { type Connection } from "mongoose";
@@ -22,6 +22,11 @@ mongoose.set("strictQuery", false);
 
 // mongodb://username:password@127.0.0.1:27017
 const DEFAULT_ENDPOINT = "mongodb://127.0.0.1:27017";
+
+const redactCredentials = (url: URL): string => {
+	const credentials = url.username || url.password ? "<Credentials>@" : "";
+	return `${url.protocol}//${credentials}${url.host}${url.pathname}${url.search}`;
+};
 
 /**
  * Per-connection timeout overrides for databases that are not local to the
@@ -67,7 +72,7 @@ export class MongoDatabase implements IDatabase {
 			parsedUrl.searchParams.set("authSource", authSource);
 		}
 		this._url = parsedUrl.toString();
-		this.safeURL = this.url.replace(/\w+:\w+/, "<Credentials>");
+		this.safeURL = redactCredentials(parsedUrl);
 		this.dbname = dbname || parsedUrl.pathname.replace("/", "");
 		this.logger = (logger || getLogger("info", "database:mongo")).with({
 			mongoUrl: this.safeURL,
@@ -80,9 +85,11 @@ export class MongoDatabase implements IDatabase {
 
 	getConnection(): mongoose.Connection {
 		if (!this.connection) {
-			throw new ProsopoDBError("DATABASE.CONNECTION_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-1",
+				message: "Connection undefined",
 				context: { failedFuncName: this.getConnection.name },
-				logger: this.logger,
 			});
 		}
 		return this.connection;

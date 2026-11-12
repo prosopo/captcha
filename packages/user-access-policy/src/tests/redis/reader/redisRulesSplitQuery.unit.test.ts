@@ -67,9 +67,19 @@ describe("buildScopedBlockSubQueries", () => {
 			// probe. `@clientId:{client-A}` matches client-scoped rules;
 			// `@clientId:{global}` matches new-format global rules;
 			// `ismissing(@clientId)` matches legacy pre-sentinel rules.
-			expect(sub.query).toMatch(/@clientId:\{client-A\}/);
+			expect(sub.query).toMatch(/@clientId:\{client\\-A\}/);
 			expect(sub.query).toMatch(/@clientId:\{global\}/);
 			expect(sub.query).toMatch(/ismissing\(@clientId\)/);
+		}
+	});
+
+	it("leaves client exclusions to the ranker instead of negating them in the query", () => {
+		// RediSearch 2.8 mis-evaluates a NOT inside this union and drops
+		// unrelated global rules, so the exclusion must not move back here.
+		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, "client-A");
+
+		for (const sub of subs) {
+			expect(sub.query).not.toContain("excludedClientIds");
 		}
 	});
 
@@ -148,6 +158,18 @@ describe("buildScopedBlockSubQueries", () => {
 		// Coords hold JSON with brackets and commas — every one must be
 		// backslash-escaped or the TAG query silently returns no matches.
 		expect(coordsSub?.query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
+	});
+
+	it("escapes tag values in field probes", () => {
+		const subs = buildScopedBlockSubQueries(
+			{ headersHash: "h-1", browser: "Mobile.Safari" },
+			"client-A",
+		);
+
+		const headers = subs.find((s) => s.kind === "field:headersHash");
+		const browser = subs.find((s) => s.kind === "field:browser");
+		expect(headers?.query).toContain("@headersHash:{h\\-1}");
+		expect(browser?.query).toContain("@browser:{Mobile\\.Safari}");
 	});
 });
 

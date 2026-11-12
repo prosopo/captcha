@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Не ўдалося закадаваць несапраўдны адрас",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Абавязацельства рашэння captcha не існуе",
+		"SIGNER_UNDEFINED": "Падпісант не вызначаны",
+		"CANNOT_FIND_KEYPAIR": "Не ўдаецца знайсці пару ключоў",
+		"INVALID_DATA_FORMAT": "Несапраўдны фармат даных"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Запытана невядомае асяроддзе",
+		"INVALID_CAPTCHA_NUMBER": "Правільна наладзьце канфігурацыі captcha",
+		"INVALID_LOG_LEVEL": "Несапраўдны ўзровень журнала",
+		"INVALID_PACKAGE_DIR": "Несапраўдны каталог пакета"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Памылка разбору набору даных",
+		"SOLUTION_PARSE_ERROR": "Памылка разбору набору даных",
+		"HASH_ERROR": "Памылка хэшавання набору даных",
+		"DATASET_ID_UNDEFINED": "ID набору даных не вызначаны",
+		"NOT_ENOUGH_LABELS": "Недастаткова метак",
+		"NOT_ENOUGH_IMAGES": "Недастаткова выяў",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Колькасць captcha у наборы даных меншая за наладжаную",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Колькасць рашэнняў у наборы даных меншая за наладжаную",
+		"DUPLICATE_IMAGE": "выяўлена паўторная выява",
+		"MERKLE_ERROR": "Памылка стварэння дрэва Меркла"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Не ўдалося імпартаваць рухавік базы даных",
+		"DATABASE_UNDEFINED": "Кліент базы даных не падключаны",
+		"DATABASE_HOST_UNDEFINED": "Адрас хоста базы даных не вызначаны",
+		"DATASET_LOAD_FAILED": "Не ўдалося загрузіць набор даных",
+		"DATASET_GET_FAILED": "Не ўдалося атрымаць набор даных",
+		"CAPTCHA_GET_FAILED": "Не ўдалося атрымаць captcha",
+		"CAPTCHA_UPDATE_FAILED": "Не ўдалося абнавіць captcha",
+		"IMAGE_GET_FAILED": "Не ўдалося атрымаць выяву",
+		"PENDING_RECORD_NOT_FOUND": "Чаканы запіс не знойдзены",
+		"INVALID_HASH": "Несапраўдны хэш",
+		"SOLUTION_GET_FAILED": "Не ўдалося атрымаць рашэнне",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Не знойдзены наборы даных з патрэбнай колькасцю рашэнняў",
+		"SOLUTION_APPROVE_FAILED": "Не ўдалося зацвердзіць рашэнне",
+		"SOLUTION_FLAG_FAILED": "Не ўдалося пазначыць рашэнне як апрацаванае",
+		"TABLES_UNDEFINED": "Табліцы не вызначаны",
+		"CONNECTION_UNDEFINED": "Злучэнне не вызначана",
+		"COMMITMENT_FLAG_FAILED": "Не ўдалося пазначыць абавязацельства як апрацаванае",
+		"UNKNOWN": "Невядомая памылка базы даных",
+		"QUERY_ERROR": "Запыт да базы даных не ўдаўся",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Злучэнне правіл доступу Redis не вызначана",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Сховішча правіл доступу карыстальнікаў не вызначана",
+		"SESSION_STORE_FAILED": "Не ўдалося захаваць сеанс",
+		"SESSION_CHECK_REMOVE_FAILED": "Не ўдалося праверыць і выдаліць сеанс",
+		"SESSION_GET_FAILED": "Не ўдалося атрымаць сеанс"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Нельга змяніць карыстальніка-ўладальніка",
+		"CANNOT_DELETE_OWN_USER": "Нельга выдаліць уласны ўліковы запіс",
+		"CANNOT_DELETE_LAST_USER": "Нельга выдаліць апошняга карыстальніка",
+		"USER_ALREADY_EXISTS": "Карыстальнік ужо існуе",
+		"NO_SUGGESTIONS_FOUND": "Прапановы не знойдзены",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Нельга дэактываваць апошні актыўны сайт",
+		"DUPLICATE_SITE_NAME": "Сайт з такой назвай ужо існуе",
+		"INVALID_SITE_NAME": "Назва сайта можа ўтрымліваць толькі літары, лічбы, злучкі і падкрэсліванні"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Несапраўдны параметр"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Файл не знойдзены",
+		"FILE_ALREADY_EXISTS": "Файл ужо існуе",
+		"INVALID_DIR_FORMAT": "Несапраўдны фармат каталога"
+	}
+}

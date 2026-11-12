@@ -17,7 +17,7 @@ import type { Keyring } from "@prosopo/keyring";
 import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import type { IIpInfoService, ProviderEnvironment } from "@prosopo/types-env";
-import { vi } from "vitest";
+import { type Mock, vi } from "vitest";
 
 /**
  * Creates a comprehensive mock for the ProviderEnvironment
@@ -130,6 +130,9 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 	// Mock IP info service
 	const mockIpInfoService: IIpInfoService = {
 		initialize: vi.fn().mockResolvedValue(undefined),
+		accountSighting: vi
+			.fn<IIpInfoService["accountSighting"]>()
+			.mockResolvedValue(undefined),
 		lookup: vi.fn().mockResolvedValue({
 			ip: "127.0.0.1",
 			isValid: true,
@@ -165,10 +168,34 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 	return mockEnv;
 }
 
+interface MockExpressObjects {
+	mockReq: {
+		headers: Record<string, string>;
+		body: Record<string, unknown>;
+		query: Record<string, string>;
+		params: Record<string, string>;
+		ip: string;
+		originalUrl: string;
+		method: string;
+		url: string;
+		path: string;
+	};
+	mockRes: {
+		status: Mock;
+		json: Mock;
+		send: Mock;
+		setHeader: Mock;
+		getHeader: Mock;
+		end: Mock;
+		locals: Record<string, unknown>;
+	};
+	mockNext: Mock;
+}
+
 /**
  * Creates mock Express request/response objects for middleware testing
  */
-export function createMockExpressObjects() {
+export function createMockExpressObjects(): MockExpressObjects {
 	const mockReq = {
 		headers: {},
 		body: {},

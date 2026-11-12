@@ -11,31 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { string } from "zod";
-
-/**
- * Centralised input length limits for request payloads. Generous enough not to
- * reject legitimate input, but bounded so an oversized field cannot bloat
- * storage, logs, downstream API calls, or act as a cheap DoS vector. The
- * express body-size cap (provider startProviderApi.ts) is the coarse backstop;
- * these are the per-field limits.
- */
-export const INPUT_LIMITS = {
-	/** Identifiers, keys, slugs (accounts, site keys, dataset ids, …). */
-	ID: 256,
-	/** Names, labels, titles. */
-	NAME: 256,
-	/** Email addresses (treated as opaque strings — no format validation). */
-	EMAIL: 320,
-	/** URLs. */
-	URL: 2048,
-	/** General short freetext. Default for `boundedString` / `safeText`. */
-	TEXT: 16384,
-	/** Longer freetext: messages, descriptions, decision-machine source. */
-	LONG_TEXT: 65536,
-	/** Tokens, signatures, base64 payloads, behavioural/simd readings. */
-	TOKEN: 131072,
-} as const;
+import { type ZodTypeAny, array, custom, type input, string } from "zod";
+import { INPUT_LIMITS } from "./inputLimits.js";
 
 // Anchored negated character classes: a string is valid only if it contains
 // NONE of these. Implemented as a `.regex()` (rather than `.refine()`) so the
@@ -80,3 +57,14 @@ export const safeLine = (max: number = INPUT_LIMITS.NAME) =>
 			NO_CONTROL_OR_NEWLINE,
 			"must not contain control characters or line breaks",
 		);
+
+/**
+ * An array capped at `max` elements. The length is checked before any element
+ * is parsed: `array().max()` alone still validates every element, so a huge
+ * array of invalid items produces one issue per item before the cap rejects it.
+ */
+export const boundedArray = <T extends ZodTypeAny>(item: T, max: number) =>
+	custom<input<T>[]>(
+		(value: unknown) => !Array.isArray(value) || value.length <= max,
+		{ message: `Array must contain at most ${max} element(s)` },
+	).pipe(array(item).max(max));

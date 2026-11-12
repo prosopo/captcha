@@ -1,0 +1,23 @@
+{
+	"name": "@prosopo/provider-compose",
+	"version": "1.1.0",
+	"description": "Compose stack and Caddyfiles that run a Prosopo provider host",
+	"engines": {
+		"node": "^24"
+	},
+	"type": "module",
+	"scripts": {
+		"lint:docker": "node ../lint-bundle.mjs"
+	},
+	"prosopo": {
+		"publish": [
+			"gh-release:docker-compose.provider.production.yml,docker-compose.provider.staging.yml,docker-compose.provider.tcp-probe.yml,docker-compose.provider.yml,provider.Caddyfile,provider.cert-getter.Caddyfile"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "docker/provider"
+	},
+	"private": true
+}

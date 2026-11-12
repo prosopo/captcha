@@ -1,36 +1,20 @@
 {
 	"extends": ["//"],
 	"tasks": {
-		"build": {
-			"dependsOn": ["^build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
-		},
-		"build:tsc": {
-			"dependsOn": ["^build:tsc"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+		"build:esm": {
+			"dependsOn": ["^build:esm"],
+			"outputs": ["dist/esm/**"]
 		},
 		"build:cjs": {
 			"dependsOn": ["^build:cjs"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/cjs/**"]
 		},
 		"bundle": {
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/bundle/**"]
 		},
 		"bundle:webpack": {
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/bundle-webpack/**"]
 		},
-		"typecheck": {
-			"dependsOn": ["^typecheck"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
-		},
-		"test": {},
-		"lint": { "dependsOn": ["^lint"] },
-		"clean": {
-			"cache": false
-		},
-		"clean:deps": {
-			"dependsOn": ["clean", "^clean"],
-			"cache": false
-		}
+		"test": {}
 	}
 }

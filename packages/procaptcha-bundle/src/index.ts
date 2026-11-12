@@ -12,7 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getWindowCallback } from "@prosopo/procaptcha-common";
+import type { Language } from "@prosopo/locale";
+import {
+	getWindowCallback,
+	startPageBehaviourCapture,
+} from "@prosopo/procaptcha-common";
+
+// The framed checkbox's page imports this from the bundle it sits beside.
+export { runCheckboxFrame } from "@prosopo/procaptcha-common";
 import {
 	type EnvironmentTypes,
 	PROCAPTCHA_START_EVENT,
@@ -21,27 +28,31 @@ import {
 	StartModeEnum,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import type { Root } from "react-dom/client";
-import { extractParams, getProcaptchaScript } from "./util/config.js";
+import type { BundleCaptchaHandle } from "./util/captcha/components/bundleCaptcha.js";
+import { extractParams } from "./util/config.js";
+import { siteIntegration } from "./util/integration.js";
+import { siteLanguage } from "./util/language.js";
 import { resolveStartMode } from "./util/startMode.js";
 import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
 const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
 
+startPageBehaviourCapture();
+
 /**
  * Everything needed to rebuild a widget in place.
  *
- * Previously only the React `Root` was retained, which made `reset()` a
- * one-way operation: unmounting tore out the React tree but the widget
- * skeleton (created imperatively by `createWidgetSkeleton`, not by React)
- * stayed in the DOM, leaving a container with a logo and no checkbox. There
- * was no record of which element or render options produced it, so nothing
- * could put it back. Keeping the descriptor alongside the root is what lets
- * `reset()` remount rather than just destroy.
+ * Previously only the widget handle was retained, which made `reset()` a
+ * one-way operation: destroying tore out the captcha but the widget skeleton
+ * (created imperatively by `createWidgetSkeleton`) stayed in the DOM, leaving
+ * a container with a logo and no checkbox. There was no record of which
+ * element or render options produced it, so nothing could put it back. Keeping
+ * the descriptor alongside the handle is what lets `reset()` remount rather
+ * than just destroy.
  */
 interface WidgetEntry {
-	root: Root;
+	handle: BundleCaptchaHandle;
 	element: Element;
 	/** The element the widget listens on; a targeted execute() is dispatched here. */
 	target: HTMLElement;
@@ -52,6 +63,7 @@ interface WidgetEntry {
 }
 
 const procaptchaWidgets = new Map<string, WidgetEntry>();
+const resetsInFlight = new Map<string, Promise<void>>();
 
 let widgetIdCounter = 0;
 const nextWidgetId = (): string => `procaptcha-widget-${widgetIdCounter++}`;
@@ -63,10 +75,10 @@ const registerWidgets = (
 	isWeb2: boolean,
 	invisible: boolean,
 ): string[] =>
-	widgets.map(({ root, container }, index) => {
+	widgets.map(({ handle, container }, index) => {
 		const id = nextWidgetId();
 		procaptchaWidgets.set(id, {
-			root,
+			handle,
 			element: at(elements, index),
 			target: container,
 			renderOptions,
@@ -92,6 +104,8 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 const startDetectorPrefetch = (
 	siteKey: string | null,
 	flags: { ipv4?: boolean; ipv6?: boolean; startMode?: StartModeEnum },
+	language: Language | undefined,
+	integration: string | undefined,
 ): void => {
 	if (!siteKey) return;
 	if (flags.startMode === StartModeEnum.manual) return;
@@ -104,6 +118,8 @@ const startDetectorPrefetch = (
 				process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes,
 				common.pickIpMode(flags),
 				siteKey,
+				language,
+				integration,
 			);
 		})
 		.catch(() => undefined);
@@ -115,12 +131,27 @@ const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 // Define a custom event name for procaptcha ready
 const PROCAPTCHA_READY_EVENT = "procaptcha:ready";
 
+const IMPLICIT_RENDER_MARK = "data-procaptcha-rendered";
+
+// The mark lives on the element rather than in this module so that a second
+// copy of the bundle loaded on the same page skips the element too.
+const claimImplicitElements = (): Element[] => {
+	const unclaimed = Array.from(
+		document.getElementsByClassName("procaptcha"),
+	).filter((element) => !element.hasAttribute(IMPLICIT_RENDER_MARK));
+	for (const element of unclaimed) {
+		element.setAttribute(IMPLICIT_RENDER_MARK, "");
+	}
+	return unclaimed;
+};
+
+const isButton = (element: Element): boolean =>
+	element.tagName.toLowerCase() === "button";
+
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = async () => {
-	// Get elements with class 'procaptcha', not including buttons
-	const elements: Element[] = Array.from(
-		document.getElementsByClassName("procaptcha"),
-	).filter((element) => element.tagName.toLowerCase() !== "button");
+	const claimed = claimImplicitElements();
+	const elements = claimed.filter((element) => !isButton(element));
 
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
@@ -140,7 +171,12 @@ const implicitRender = async () => {
 		// constant. Start it now so the round-trip overlaps the widget's own
 		// dynamic-import chain instead of queueing behind it —
 		// `customDetectBot` claims the in-flight promise when it eventually runs.
-		startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
+		startDetectorPrefetch(
+			siteKey,
+			{ ipv4, ipv6, startMode },
+			siteLanguage(undefined, firstElement),
+			siteIntegration(undefined, firstElement),
+		);
 
 		const implicitRenderOptions: ProcaptchaRenderOptions = {
 			siteKey: siteKey,
@@ -172,9 +208,7 @@ const implicitRender = async () => {
 	}
 
 	// Check for invisible mode indicators (procaptcha class on buttons)
-	const invisibleButtons = Array.from(
-		document.getElementsByClassName("procaptcha"),
-	).filter((button) => button.tagName.toLowerCase() === "button");
+	const invisibleButtons = claimed.filter(isButton);
 
 	if (invisibleButtons.length) {
 		for (const button of invisibleButtons) {
@@ -184,7 +218,12 @@ const implicitRender = async () => {
 			const ipv6 = button.getAttribute("data-ipv6") === "true";
 			const startMode = resolveStartMode(undefined, button);
 
-			startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
+			startDetectorPrefetch(
+				siteKey,
+				{ ipv4, ipv6, startMode },
+				siteLanguage(undefined, button),
+				siteIntegration(undefined, button),
+			);
 
 			const buttonRenderOptions: ProcaptchaRenderOptions = {
 				siteKey: siteKey,
@@ -232,10 +271,15 @@ export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ): Promise<string | undefined> => {
-	startDetectorPrefetch(renderOptions.siteKey, {
-		...renderOptions,
-		startMode: resolveStartMode(renderOptions, element),
-	});
+	startDetectorPrefetch(
+		renderOptions.siteKey,
+		{
+			...renderOptions,
+			startMode: resolveStartMode(renderOptions, element),
+		},
+		siteLanguage(renderOptions, element),
+		siteIntegration(renderOptions, element),
+	);
 
 	const hasInvisibleSize =
 		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&
@@ -261,7 +305,7 @@ export const render = async (
 	);
 
 	// Deliberately not `at()`: it throws on an empty array before it consults
-	// `optional`, and zero roots is a legitimate outcome here.
+	// `optional`, and zero handles is a legitimate outcome here.
 	const id = ids[0];
 	if (id && renderOptions.bind) bindTrigger(id, renderOptions.bind);
 
@@ -274,11 +318,15 @@ export default function ready(fn: () => void) {
 		fn();
 	} else {
 		console.log("DOMContentLoaded listener!");
-		document.addEventListener("DOMContentLoaded", () => {
-			console.log("DOMContentLoaded fired");
-			console.log(window);
-			fn();
-		});
+		document.addEventListener(
+			"DOMContentLoaded",
+			() => {
+				console.log("DOMContentLoaded fired");
+				console.log(window);
+				fn();
+			},
+			{ once: true },
+		);
 	}
 }
 
@@ -303,7 +351,8 @@ export const execute = (widgetId?: string) => {
 		return;
 	}
 
-	// Dispatch a custom event to notify React components to show the modal or perform silent verification
+	// Dispatch a custom event to tell the mounted widgets to show the modal or
+	// perform silent verification
 	const executeEvent = new CustomEvent(PROCAPTCHA_EXECUTE_EVENT, {
 		detail: {
 			containerId: containers[0]?.id || "procaptcha-container",
@@ -426,36 +475,31 @@ declare global {
 	}
 }
 
+// Boots straight away rather than on the script's `load` event: that event
+// fires immediately after this script has run, however the script was added.
 const boot = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
 	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAMES);
-	let readyCalled = false;
-
-	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
 	if (renderExplicit !== "explicit") {
-		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
-			ready(implicitRender);
-			readyCalled = true;
-		});
-		// or if the document has already loaded, call the implicit render function
-		if (document.readyState === "complete" && !readyCalled) {
-			ready(implicitRender);
-		}
+		ready(implicitRender);
 	}
-
 	if (onloadUrlCallback) {
-		// Add event listener to the script tag to call the callback function when the script is loaded
-		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
-			const onloadCallback = getWindowCallback(onloadUrlCallback);
-			ready(onloadCallback);
-		});
+		ready(getWindowCallback(onloadUrlCallback));
+	}
+};
 
-		// or if the document has already loaded, call the callback function
-		if (document.readyState === "complete" && !readyCalled) {
-			const onloadCallback = getWindowCallback(onloadUrlCallback);
-			ready(onloadCallback);
-		}
+/**
+ * The skeleton is plain DOM the handle doesn't own, so destroying the widget
+ * alone would leave it behind. A skeleton owns its whole host element, but an
+ * invisible widget only appends its own node to the site's element (usually
+ * the submit button), whose label must survive.
+ */
+const clearHost = (entry: WidgetEntry): void => {
+	if (entry.invisible) {
+		entry.target.remove();
+	} else {
+		entry.element.innerHTML = "";
 	}
 };
 
@@ -463,45 +507,60 @@ const boot = () => {
  * Returns a widget to its unsolved state, ready to be solved again. Pass a
  * widget id to reset one widget, or omit it to reset every widget on the page.
  *
- * This remounts rather than merely unmounting. The previous implementation
- * unmounted every root and then called `boot()`, which only re-renders when
+ * This remounts rather than merely destroying. The previous implementation
+ * tore every widget down and then called `boot()`, which only re-renders when
  * the page uses implicit rendering — and even then only via the
  * `document.readyState` fallback, because the script's `load` event has long
  * since fired. On an explicitly-rendered page nothing came back at all: the
- * skeleton stayed in the DOM with no checkbox inside it, and no fresh captcha
+ * skeleton stayed in the DOM with no checkbox inside it and no fresh captcha
  * request was ever made. Rebuilding from the stored descriptor makes reset
  * behave the same way on both paths.
- *
- * `boot()` is deliberately not called here any more. It re-renders implicit
- * widgets, which would double up with the remount below, and it attaches
- * another `load` listener to the script tag on every call.
  */
 export const reset = async (widgetId?: string): Promise<void> => {
 	const ids: string[] =
 		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
 
 	for (const id of ids) {
-		const current = procaptchaWidgets.get(id);
-		if (!current) continue;
-
-		current.root.unmount();
-
-		const [widget] = await widgetFactory.createWidgets(
-			[current.element],
-			current.renderOptions,
-			current.isWeb2,
-			current.invisible,
-		);
-
-		if (widget) {
-			procaptchaWidgets.set(id, {
-				...current,
-				root: widget.root,
-				target: widget.container,
-			});
-		} else {
-			procaptchaWidgets.delete(id);
+		// A second reset while one is still building joins it: running both would
+		// leave the first replacement live but no longer tracked by the map.
+		let pending = resetsInFlight.get(id);
+		if (!pending) {
+			pending = remount(id).finally(() => resetsInFlight.delete(id));
+			resetsInFlight.set(id, pending);
 		}
+		await pending;
+	}
+};
+
+const remount = async (id: string): Promise<void> => {
+	const current = procaptchaWidgets.get(id);
+	if (!current) return;
+
+	current.handle.destroy();
+	clearHost(current);
+
+	const [widget] = await widgetFactory.createWidgets(
+		[current.element],
+		current.renderOptions,
+		current.isWeb2,
+		current.invisible,
+	);
+
+	if (procaptchaWidgets.get(id) !== current) {
+		// remove() ran while the replacement was being built.
+		widget?.handle.destroy();
+		widget?.container.remove();
+		return;
+	}
+
+	if (widget) {
+		procaptchaWidgets.set(id, {
+			...current,
+			handle: widget.handle,
+			target: widget.container,
+		});
+	} else {
+		procaptchaWidgets.delete(id);
 	}
 };
 
@@ -519,14 +578,21 @@ export const remove = (widgetId?: string): void => {
 		const entry = procaptchaWidgets.get(id);
 		if (!entry) continue;
 		entry.unbindTrigger?.();
-		entry.root.unmount();
-		entry.element.innerHTML = "";
+		entry.handle.destroy();
+		clearHost(entry);
+		entry.element.removeAttribute(IMPLICIT_RENDER_MARK);
 		procaptchaWidgets.delete(id);
 	}
 };
 
-// set the procaptcha attribute on the window
-window.procaptcha = { ready, render, reset, remove, execute, start };
+// A second copy of the bundle leaves the first copy's API in place: only the
+// first copy tracks the widgets it has already rendered, so reset() and
+// remove() must keep reaching it.
+const BUNDLE_LOADED = Symbol.for("@prosopo/procaptcha-bundle/loaded");
+if (!Reflect.has(window, BUNDLE_LOADED)) {
+	Reflect.set(window, BUNDLE_LOADED, true);
+	window.procaptcha = { ready, render, reset, remove, execute, start };
+}
 
 // Dispatch a custom event to notify that window.procaptcha is ready
 const procaptchaReadyEvent = new CustomEvent(PROCAPTCHA_READY_EVENT, {

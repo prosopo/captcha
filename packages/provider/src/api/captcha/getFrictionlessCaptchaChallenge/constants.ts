@@ -13,8 +13,14 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	type IFrictionlessThreshold,
+	type IFrictionlessTypes,
+	type IUserSettings,
+	type Tier,
 	frictionlessPuzzleThresholdDefault,
+	isWidgetFeatureEnabled,
+	resolveAllowedCaptchaTypes,
 	resolveFrictionlessThreshold,
 } from "@prosopo/types";
 
@@ -35,6 +41,56 @@ export const resolveScoreLadder = (
 		botImageThreshold: ladder.frictionlessImageThreshold,
 	};
 };
+
+/**
+ * The types any session minted by /frictionless may be. The owner's
+ * `frictionlessTypes` only governs the frictionless flow, so a site pinned to
+ * a concrete `captchaType` is held to the feature flags alone.
+ */
+export const resolveSiteAllowedCaptchaTypes = (
+	settings: Pick<
+		Partial<IUserSettings>,
+		"captchaType" | "frictionlessTypes" | "captchaTypeFeatureFlags"
+	>,
+	tier?: Tier,
+): IFrictionlessTypes =>
+	resolveAllowedCaptchaTypes(
+		{
+			captchaTypeFeatureFlags: settings.captchaTypeFeatureFlags,
+			...((!settings.captchaType ||
+				settings.captchaType === CaptchaType.frictionless) && {
+				frictionlessTypes: settings.frictionlessTypes,
+			}),
+		},
+		tier,
+	);
+
+/**
+ * Whether a user on this site may swap a puzzle for an image challenge: the
+ * switch is on and the site may be served image challenges at all.
+ */
+export const isPuzzleImageSwitchAvailable = (
+	settings: Pick<
+		Partial<IUserSettings>,
+		| "captchaType"
+		| "frictionlessTypes"
+		| "captchaTypeFeatureFlags"
+		| "widgetFeatureFlags"
+	>,
+): boolean =>
+	isWidgetFeatureEnabled("puzzleImageSwitch", settings.widgetFeatureFlags) &&
+	resolveSiteAllowedCaptchaTypes(settings).image;
+
+/**
+ * Whether the refresh limit may turn a puzzle into an image challenge. A site
+ * pinned to puzzle chose it deliberately, so there it takes the same switch
+ * that lets users swap the puzzle for an image themselves.
+ */
+export const isRefreshLimitSwitchEnabled = (
+	settings: Parameters<typeof isPuzzleImageSwitchAvailable>[0],
+): boolean =>
+	CaptchaType.puzzle !== settings.captchaType ||
+	isPuzzleImageSwitchAvailable(settings);
 
 /**
  * Image rounds served when the detector payload could not be decrypted.

@@ -1,5 +1,290 @@
 # @prosopo/detector
 
+## 3.5.82
+### Patch Changes
+
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+
+## 3.5.81
+### Patch Changes
+
+- Updated dependencies [a7a60f4]
+- Updated dependencies [b877bd4]
+  - @prosopo/types@5.30.0
+
+## 3.5.80
+### Patch Changes
+
+- Updated dependencies [93620d4]
+  - @prosopo/types@5.29.1
+
+## 3.5.79
+### Patch Changes
+
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/types@5.29.0
+
+## 3.5.78
+### Patch Changes
+
+- Updated dependencies [624db1a]
+  - @prosopo/types@5.28.2
+
+## 3.5.77
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+
+## 3.5.76
+### Patch Changes
+
+- Updated dependencies [fc89f02]
+  - @prosopo/types@5.28.0
+
+## 3.5.75
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+  - @prosopo/types@5.27.0
+
+## 3.5.74
+### Patch Changes
+
+- Updated dependencies [d9520ea]
+  - @prosopo/types@5.26.0
+
+## 3.5.73
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+
+## 3.5.72
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+
+## 3.5.71
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+
+## 3.5.70
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+
+## 3.5.69
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+
+## 3.5.68
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+
+## 3.5.67
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+
+## 3.5.66
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+
+## 3.5.65
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/types@5.20.0
+
+## 3.5.64
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/types@5.19.0
+
+## 3.5.63
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+
+## 3.5.62
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+
+## 3.5.61
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/types@5.17.0
+
+## 3.5.60
+### Patch Changes
+
+  - @prosopo/types@5.16.3
+
+## 3.5.59
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+
+## 3.5.58
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+
+## 3.5.57
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+
+## 3.5.56
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+
+## 3.5.55
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+
+## 3.5.54
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+
+## 3.5.53
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+
+## 3.5.52
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+  - @prosopo/types@5.12.0
+
+## 3.5.51
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 3.5.50
+### Patch Changes
+
+- Updated dependencies [59b7e87]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+
+## 3.5.49
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+
+## 3.5.48
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+
+## 3.5.47
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+  - @prosopo/types@5.10.0
+
+## 3.5.46
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+
+## 3.5.45
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+
+## 3.5.44
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+
 ## 3.5.43
 ### Patch Changes
 

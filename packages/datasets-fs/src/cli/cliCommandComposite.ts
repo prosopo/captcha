@@ -33,7 +33,7 @@ export abstract class CliCommandComposite<
 	public override getOptions(): { [key: string]: Options } {
 		// merge options in turn from each command. Command order matters, latter commands will overwrite earlier ones
 		return this.#commands.reduce((prev, command) => {
-			// biome-ignore lint/performance/noAccumulatingSpread: TODO fix
+			// biome-ignore lint/performance/noAccumulatingSpread: legacy code, see https://github.com/prosopo/captcha/issues/3720
 			return { ...prev, ...command.getOptions() };
 		}, {});
 	}

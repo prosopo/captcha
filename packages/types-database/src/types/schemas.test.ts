@@ -14,6 +14,7 @@
 
 import {
 	CaptchaType,
+	MAX_PAD_BYTES,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	Tier,
@@ -27,6 +28,8 @@ import mongoose, { type IndexDefinition, type Schema } from "mongoose";
 import { describe, expect, it } from "vitest";
 import { BannedDomainRecordSchema } from "./bannedDomain.js";
 import {
+	StoredAudioCaptchaRecordSchema,
+	StoredIconOrderCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	StoredSessionRecordSchema,
@@ -34,13 +37,17 @@ import {
 } from "./captcha.js";
 import { UserDataSchema, UserSettingsSchema } from "./client.js";
 import {
+	AudioCaptchaRecordSchema,
 	CaptchaRecordSchema,
 	ClientRecordSchema,
 	CompositeIpAddressRecordSchemaObj,
+	IconOrderCaptchaRecordSchema,
 	PoWCaptchaRecordSchema,
+	PuzzleCaptchaRecordSchema,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
 	SessionRecordSchema,
+	UserCommitmentRecordSchema,
 	UserSolutionRecordSchema,
 } from "./provider.js";
 import { SpamEmailDomainRecordSchema } from "./spamEmailDomain.js";
@@ -392,6 +399,57 @@ describe("PoWCaptchaRecordSchema", () => {
 			partialFilterExpression: { pendingStage: true },
 		});
 	});
+
+	// `strict: true` drops undeclared paths without complaining, so a field
+	// missing from the schema is written by the provider and never stored.
+	// These assert the whole fingerprint summary survives the schema.
+	it("keeps every field of a fingerprint summary", () => {
+		const summary = {
+			root: "0xroot",
+			groupHash: "0xgroup",
+			bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+			colorDepth: 24,
+			hardwareConcurrency: 8,
+			disclosed: {
+				timezone: "Europe/London",
+				languages: '[["en-GB"]]',
+				architecture: 127,
+				cookiesEnabled: true,
+				sessionStorage: true,
+				localStorage: false,
+			},
+		};
+
+		const doc = validate(PoWCaptchaRecordSchema, {
+			challenge: "0x1___100000___5Gx___5Gy",
+			dappAccount: "5Gx",
+			userAccount: "5Gy",
+			fingerprintSummary: summary,
+		});
+
+		expect(doc.validateSync()?.errors.fingerprintSummary).toBeUndefined();
+		expect(doc.toObject().fingerprintSummary).toStrictEqual(summary);
+	});
+
+	it("stores a summary that disclosed no bucket", () => {
+		const doc = validate(PoWCaptchaRecordSchema, {
+			challenge: "0x1___100000___5Gx___5Gy",
+			dappAccount: "5Gx",
+			userAccount: "5Gy",
+			fingerprintSummary: { root: "0xroot", groupHash: "0xgroup" },
+		});
+
+		expect(doc.toObject().fingerprintSummary).toStrictEqual({
+			root: "0xroot",
+			groupHash: "0xgroup",
+		});
+	});
+
+	it("leaves the fingerprint summary optional, since not every client proves one", () => {
+		expect(
+			PoWCaptchaRecordSchema.path("fingerprintSummary").isRequired,
+		).toBeFalsy();
+	});
 });
 
 describe("SessionRecordSchema", () => {
@@ -555,16 +613,54 @@ describe("UserSettingsSchema", () => {
 				decoyBodyBrightness: -6,
 				decoyHoleDarken: 0.8,
 				holeDarken: 0.4,
+				lookalikeDecoys: 2,
 				pieceScale: { min: 0.2, max: 0.35 },
 			},
 		});
 		expect(doc.puzzle.decoyCount).toBe(12);
+		expect(doc.puzzle.lookalikeDecoys).toBe(2);
 		expect(doc.puzzle.decoyEdgeDarkness).toBe(30);
 		expect(doc.puzzle.decoyBodyBrightness).toBe(-6);
 		expect(doc.puzzle.decoyHoleDarken).toBe(0.8);
 		expect(doc.puzzle.holeDarken).toBe(0.4);
 		expect(doc.puzzle.pieceScale.min).toBe(0.2);
 		expect(doc.puzzle.pieceScale.max).toBe(0.35);
+	});
+
+	it("persists the captcha type feature flags", () => {
+		const flags = settings({
+			captchaTypeFeatureFlags: { puzzle: false, iconOrder: true, audio: true },
+		}).captchaTypeFeatureFlags;
+		expect(flags.puzzle).toBe(false);
+		expect(flags.iconOrder).toBe(true);
+		expect(flags.audio).toBe(true);
+	});
+
+	it("leaves the captcha type feature flags unset unless configured", () => {
+		// Absent means "use captchaTypeFeatureFlagDefaults"; a stored default
+		// would pin today's default into every site.
+		expect(settings().captchaTypeFeatureFlags).toBeUndefined();
+		expect(
+			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags.puzzle,
+		).toBeUndefined();
+		expect(
+			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags
+				.iconOrder,
+		).toBeUndefined();
+	});
+
+	it("persists the widget feature flags", () => {
+		expect(
+			settings({ widgetFeatureFlags: { puzzleImageSwitch: true } })
+				.widgetFeatureFlags.puzzleImageSwitch,
+		).toBe(true);
+	});
+
+	it("leaves the widget feature flags unset unless configured", () => {
+		expect(settings().widgetFeatureFlags).toBeUndefined();
+		expect(
+			settings({ widgetFeatureFlags: {} }).widgetFeatureFlags.puzzleImageSwitch,
+		).toBeUndefined();
 	});
 
 	it("leaves the puzzle overrides unset unless configured", () => {
@@ -598,6 +694,155 @@ describe("UserSettingsSchema", () => {
 		expect(doc.trafficFilter.vpn.puzzle.decoyCount).toBe(40);
 		expect(doc.trafficFilter.vpn.puzzle.pieceScale.max).toBe(0.2);
 	});
+
+	it.each([
+		"vpn",
+		"proxy",
+		"tor",
+		"abuser",
+		"datacenter",
+		"mobile",
+		"satellite",
+		"crawler",
+	])("persists the name lists on the %s category", (category: string) => {
+		const doc = settings({
+			trafficFilter: {
+				[category]: {
+					action: TrafficFilterAction.Block,
+					nameAllowlist: ["VPN by Google"],
+					nameDenylist: ["Proxy Lease Ltd"],
+				},
+			},
+		});
+		expect([...doc.trafficFilter[category].nameAllowlist]).toEqual([
+			"VPN by Google",
+		]);
+		expect([...doc.trafficFilter[category].nameDenylist]).toEqual([
+			"Proxy Lease Ltd",
+		]);
+	});
+
+	it("leaves the name lists absent when a category sets none", () => {
+		const doc = settings({
+			trafficFilter: { vpn: { action: TrafficFilterAction.Block } },
+		});
+		expect(doc.trafficFilter.vpn.nameAllowlist).toBeUndefined();
+		expect(doc.trafficFilter.vpn.nameDenylist).toBeUndefined();
+	});
+
+	it("persists exceptions on a traffic filter category", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					exceptions: [
+						{
+							countries: ["GB"],
+							minAbuserScore: 0.5,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+			},
+		});
+		const [exception] = doc.trafficFilter.proxy.exceptions;
+		expect([...exception.countries]).toEqual(["GB"]);
+		expect(exception.minAbuserScore).toBe(0.5);
+		expect(exception.action).toBe(TrafficFilterAction.Block);
+	});
+
+	it("persists an exception's mobile condition", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [
+						{
+							inMarket: true,
+							minAbuserScore: 0.1,
+							mobile: false,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+			},
+		});
+		expect(doc.trafficFilter.proxy.exceptions[0].mobile).toBe(false);
+	});
+
+	it("leaves exceptions absent when none are configured", () => {
+		const doc = settings({
+			trafficFilter: { proxy: { action: TrafficFilterAction.Block } },
+		});
+		expect(doc.trafficFilter.proxy.exceptions).toBeUndefined();
+	});
+
+	it("rejects an exception abuser score outside the unit interval", () => {
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: {
+							action: TrafficFilterAction.Challenge,
+							exceptions: [
+								{ minAbuserScore: 2, action: TrafficFilterAction.Block },
+							],
+						},
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.exceptions.0.minAbuserScore"]);
+	});
+
+	it("persists the tarpit padBytes on a challenge category", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.pow,
+					powDifficulty: 9,
+					padBytes: 2048,
+				},
+			},
+		});
+		expect(doc.trafficFilter.proxy.padBytes).toBe(2048);
+	});
+
+	it("persists the tarpit padBytes on a blocked category", () => {
+		// A blocked category still hands out a deferred challenge at request
+		// time, so it carries padding too — and `policyToApi` in the portal
+		// sends `padBytes` alongside `action: block` with nothing else.
+		const doc = settings({
+			trafficFilter: {
+				proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+			},
+		});
+		expect(doc.trafficFilter.proxy.padBytes).toBe(1_048_576);
+	});
+
+	it("rejects a padBytes above the 5 MiB cap", () => {
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: {
+							action: TrafficFilterAction.Block,
+							padBytes: MAX_PAD_BYTES + 1,
+						},
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.padBytes"]);
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: { action: TrafficFilterAction.Block, padBytes: -1 },
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.padBytes"]);
+	});
 });
 
 describe("UserDataSchema", () => {
@@ -626,10 +871,118 @@ describe("the stored-event schemas", () => {
 		}
 	});
 
+	const storedAtExpiry = (schema: Schema): unknown =>
+		schema.path("storedAtTimestamp").options.expires;
+
+	it.each<[string, Schema]>([
+		["StoredUserCommitmentRecordSchema", StoredUserCommitmentRecordSchema],
+		["StoredPoWCaptchaRecordSchema", StoredPoWCaptchaRecordSchema],
+		["StoredPuzzleCaptchaRecordSchema", StoredPuzzleCaptchaRecordSchema],
+		["StoredAudioCaptchaRecordSchema", StoredAudioCaptchaRecordSchema],
+		["StoredIconOrderCaptchaRecordSchema", StoredIconOrderCaptchaRecordSchema],
+	])("%s expires storedAtTimestamp after a year", (_name, schema) => {
+		expect(storedAtExpiry(schema)).toBe(60 * 60 * 24 * 365);
+	});
+
+	it.each<[string, Schema]>([
+		["UserCommitmentRecordSchema", UserCommitmentRecordSchema],
+		["PoWCaptchaRecordSchema", PoWCaptchaRecordSchema],
+		["PuzzleCaptchaRecordSchema", PuzzleCaptchaRecordSchema],
+		["AudioCaptchaRecordSchema", AudioCaptchaRecordSchema],
+		["IconOrderCaptchaRecordSchema", IconOrderCaptchaRecordSchema],
+	])("%s still expires storedAtTimestamp after four weeks", (_name, schema) => {
+		expect(storedAtExpiry(schema)).toBe(60 * 60 * 24 * 7 * 4);
+	});
+
 	it("are copies, so indexing them does not touch the provider schemas", () => {
 		// The provider and the event store are separate databases; adding a
 		// sessionId index to one must not add it to the other.
 		expect(StoredPoWCaptchaRecordSchema).not.toBe(PoWCaptchaRecordSchema);
 		expect(hasIndexOn(PoWCaptchaRecordSchema, "sessionId")).toBe(false);
+	});
+});
+
+describe("the puzzle render record", () => {
+	const render = {
+		level: 2,
+		pieceSize: 47,
+		geometry: { width: 300, height: 200, notchSize: 44 },
+		settings: {
+			decoyCount: 7,
+			decoyEdgeDarkness: 31,
+			decoyBodyBrightness: 4,
+			holeDarken: 0.55,
+			decoyHoleDarken: 0.71,
+		},
+		backgroundSeed: "00112233445566778899aabbccddeeff",
+		renderSeed: "ffeeddccbbaa99887766554433221100",
+	};
+
+	// Schemas are strict, so a field the schema does not declare is dropped on
+	// write without an error. Asserting each value survives is the only way to
+	// catch a sub-field that was added to the type but not to the schema —
+	// which would silently store nothing and make a replay impossible.
+	it("survives a strict-mode write on both the provider and stored schemas", () => {
+		for (const schema of [
+			PuzzleCaptchaRecordSchema,
+			StoredPuzzleCaptchaRecordSchema,
+		]) {
+			const doc = validate(schema, { render });
+			expect(doc.render.level).toBe(render.level);
+			expect(doc.render.pieceSize).toBe(render.pieceSize);
+			expect(doc.render.geometry.width).toBe(render.geometry.width);
+			expect(doc.render.geometry.height).toBe(render.geometry.height);
+			expect(doc.render.geometry.notchSize).toBe(render.geometry.notchSize);
+			for (const key of Object.keys(render.settings)) {
+				expect(doc.render.settings[key]).toBe(
+					render.settings[key as keyof typeof render.settings],
+				);
+			}
+			expect(doc.render.backgroundSeed).toBe(render.backgroundSeed);
+			expect(doc.render.renderSeed).toBe(render.renderSeed);
+		}
+	});
+
+	it("is optional, so records written before it existed still validate", () => {
+		const doc = validate(PuzzleCaptchaRecordSchema, {});
+		expect(doc.render).toBeUndefined();
+		expect(errorPaths(doc.validateSync() ?? null)).not.toContain("render");
+	});
+
+	// The ladder sets these together; a projection that drops the level leaves
+	// the challenge record unable to report which band it came from.
+	it("keeps puzzleLevel on the session schema and its projection", () => {
+		const session = validate(SessionRecordSchema, { puzzleLevel: 3 });
+		expect(session.puzzleLevel).toBe(3);
+	});
+});
+
+// The summary used to be declared on the PoW schema alone, so a session, an
+// image commitment or a puzzle that carried one had it dropped on write. Every
+// schema a summary is copied onto, and its central-store twin, has to keep it.
+describe("fingerprint summary on every record that carries one", () => {
+	const summary = {
+		root: "0xroot",
+		groupHash: "0xgroup",
+		bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+		colorDepth: 24,
+		hardwareConcurrency: 8,
+		disclosed: { timezone: "Europe/London", cookiesEnabled: true },
+	};
+	const schemas: [string, Schema][] = [
+		["SessionRecordSchema", SessionRecordSchema],
+		["StoredSessionRecordSchema", StoredSessionRecordSchema],
+		["UserCommitmentRecordSchema", UserCommitmentRecordSchema],
+		["StoredUserCommitmentRecordSchema", StoredUserCommitmentRecordSchema],
+		["PuzzleCaptchaRecordSchema", PuzzleCaptchaRecordSchema],
+		["StoredPuzzleCaptchaRecordSchema", StoredPuzzleCaptchaRecordSchema],
+		["PoWCaptchaRecordSchema", PoWCaptchaRecordSchema],
+		["StoredPoWCaptchaRecordSchema", StoredPoWCaptchaRecordSchema],
+	];
+
+	it.each(schemas)("%s keeps it", (_name, schema) => {
+		const doc = validate(schema, { fingerprintSummary: summary });
+
+		expect(doc.toObject().fingerprintSummary).toStrictEqual(summary);
 	});
 });

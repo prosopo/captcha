@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
@@ -19,6 +21,7 @@ import {
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
+	isConcreteCaptchaType,
 	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -111,7 +114,7 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
+		await tasks.frictionlessManager.registerBlockedSession(CaptchaType.image, {
 			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
@@ -122,7 +125,14 @@ export const handleAccessPolicy = async (
 
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({
+					code: "ACCESS_POLICY_BLOCK",
+					errorSite: "PROV-89",
+					status: 401,
+				}),
+			),
 		};
 	}
 
@@ -142,17 +152,25 @@ export const handleAccessPolicy = async (
 				captchaType: userAccessPolicy.captchaType,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
-			userSitekeyIpHash: input.userSitekeyIpHash,
-			reason: FrictionlessReason.AUTO_BAN_SCORE,
-			siteKey: input.dapp,
-			ipInfo: input.ipInfo,
-			headers: input.flatHeaders,
-		});
+		await tasks.frictionlessManager.registerBlockedSession(
+			isConcreteCaptchaType(userAccessPolicy.captchaType)
+				? userAccessPolicy.captchaType
+				: CaptchaType.image,
+			{
+				solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
+				userSitekeyIpHash: input.userSitekeyIpHash,
+				reason: FrictionlessReason.AUTO_BAN_SCORE,
+				siteKey: input.dapp,
+				ipInfo: input.ipInfo,
+				headers: input.flatHeaders,
+			},
+		);
 		return {
 			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
+			response: sendProsopoError(
+				res,
+				new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-90" }),
+			),
 		};
 	}
 
@@ -164,72 +182,39 @@ export const handleAccessPolicy = async (
 		headers: input.flatHeaders,
 	};
 
-	if (userAccessPolicy.captchaType === CaptchaType.image) {
+	// Image clamps the rule's round count to the sitekey's bounds. Puzzle takes
+	// the rule's severity, falling back to `solvedImagesCount` for rules written
+	// before `severity` existed. Pow and icon-order take none.
+	if (isConcreteCaptchaType(userAccessPolicy.captchaType)) {
 		logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
 				decision: "user_access_policy",
-				captchaType: CaptchaType.image,
+				captchaType: userAccessPolicy.captchaType,
 			},
 		}));
 		attachHoneypot(res, clientRecord);
+		const solvedImagesCount =
+			userAccessPolicy.captchaType === CaptchaType.image
+				? userAccessPolicy.solvedImagesCount
+					? clampImageRounds(
+							userAccessPolicy.solvedImagesCount,
+							clientRecord.settings,
+						)
+					: resolveImageRoundsBounds(clientRecord.settings).max
+				: userAccessPolicy.captchaType === CaptchaType.puzzle
+					? (userAccessPolicy.severity ?? userAccessPolicy.solvedImagesCount)
+					: undefined;
 		return {
 			handled: true,
 			response: res.json(
-				await tasks.frictionlessManager.sendImageCaptcha({
-					...captchaTypeBaseParams,
-					solvedImagesCount: userAccessPolicy.solvedImagesCount
-						? clampImageRounds(
-								userAccessPolicy.solvedImagesCount,
-								clientRecord.settings,
-							)
-						: resolveImageRoundsBounds(clientRecord.settings).max,
-				}),
-			),
-		};
-	}
-
-	if (userAccessPolicy.captchaType === CaptchaType.pow) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.pow,
-			},
-		}));
-		attachHoneypot(res, clientRecord);
-		return {
-			handled: true,
-			response: res.json(
-				await tasks.frictionlessManager.sendPowCaptcha(captchaTypeBaseParams),
-			),
-		};
-	}
-
-	if (userAccessPolicy.captchaType === CaptchaType.puzzle) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.puzzle,
-			},
-		}));
-		attachHoneypot(res, clientRecord);
-		return {
-			handled: true,
-			response: res.json(
-				await tasks.frictionlessManager.sendPuzzleCaptcha({
-					...captchaTypeBaseParams,
-					// Carried so the rule's severity reaches the puzzle difficulty
-					// ladder. A puzzle has no rounds, and `sendCaptcha` drops the
-					// count from a puzzle session — it reads it only to decide how
-					// hard the puzzle should be. Without this a rule that asked for
-					// 8 rounds and one that asked for 2 would produce identical
-					// puzzles.
-					...(userAccessPolicy.solvedImagesCount !== undefined && {
-						solvedImagesCount: userAccessPolicy.solvedImagesCount,
-					}),
-				}),
+				await tasks.frictionlessManager.sendAccessRuleCaptcha(
+					userAccessPolicy.captchaType,
+					{
+						...captchaTypeBaseParams,
+						...(solvedImagesCount !== undefined && { solvedImagesCount }),
+					},
+				),
 			),
 		};
 	}

@@ -13,10 +13,6 @@
 // limitations under the License.
 import { fileURLToPath } from "node:url";
 import { getMongoConnectionOptions } from "@prosopo/database";
-import {
-	AutoIncrementID,
-	type AutoIncrementIDOptions,
-} from "@typegoose/auto-increment";
 import mongoose, { type Connection } from "mongoose";
 import UserSchema from "../models/user.js";
 
@@ -30,10 +26,7 @@ function connectionFactory(uri: string): Connection {
 			appName,
 		}),
 	);
-	if (!conn.models.user) {
-		UserSchema.plugin(AutoIncrementID, {
-			field: "id",
-		} as AutoIncrementIDOptions);
+	if (!conn.models.User) {
 		conn.model("User", UserSchema);
 	}
 	return conn;

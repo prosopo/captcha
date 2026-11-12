@@ -1,0 +1,21 @@
+{
+	"name": "@prosopo/mongo-compose",
+	"version": "1.1.0",
+	"description": "Compose file for a local MongoDB",
+	"engines": {
+		"node": "^24"
+	},
+	"type": "module",
+	"scripts": {
+		"lint:docker": "node ../lint-bundle.mjs"
+	},
+	"prosopo": {
+		"publish": ["gh-release:docker-compose.mongo.yml"]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "docker/mongo"
+	},
+	"private": true
+}

@@ -422,6 +422,33 @@ describe("signup: verifying through the API endpoint", () => {
 		expect(mocks.isVerified).not.toHaveBeenCalled();
 	});
 
+	test("does not log the site secret, but still posts it", async () => {
+		const infoSpy = vi
+			.spyOn(console, "info")
+			.mockImplementation(() => undefined);
+		const { connection } = connectionWith(userModel({}));
+		await signup(
+			connection,
+			serverConfig(),
+			VERIFY_ENDPOINT,
+			"api",
+			request({
+				body: signupBody(),
+				headers: { "x-client-ip": "203.0.113.9" },
+			}),
+			responseStub().response,
+			next,
+		);
+		const logged = infoSpy.mock.calls
+			.map((call) => call.map((arg) => String(arg)).join(" "))
+			.join("\n");
+		expect(logged).not.toContain(SECRET);
+		const postedBody: Record<string, string> = JSON.parse(
+			String(fetchMock.mock.calls[0]?.[1]?.body),
+		);
+		expect(postedBody.secret).toBe(SECRET);
+	});
+
 	test("withholds the IP in development", async () => {
 		process.env.NODE_ENV = "development";
 		const { connection } = connectionWith(userModel({}));
@@ -616,6 +643,25 @@ describe("login", () => {
 		expect(res.bodies).toEqual([
 			{ message: "user has not completed a captcha", verified: false },
 		]);
+	});
+
+	test("treats a non-boolean login verification result as a failure", async () => {
+		// Same rule as signup: only a boolean `true` from the verifier counts.
+		const user = await storedUser();
+		for (const verdict of ["yes", "false", 1]) {
+			mocks.isVerified.mockResolvedValue({ verified: verdict });
+			const { connection } = connectionWith(userModel({ found: user }));
+			const res = responseStub();
+			await login(
+				connection,
+				serverConfig(),
+				VERIFY_ENDPOINT,
+				"local",
+				request({ body: signupBody() }),
+				res.response,
+			);
+			expect(res.statuses).toEqual([401]);
+		}
 	});
 
 	test("does not send the email to the verifier", async () => {

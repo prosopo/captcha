@@ -50,7 +50,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@userId) ismissing(@headersHash) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) ismissing(@bypassKeyHash) )",
 		);
 	});
 
@@ -126,7 +126,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) )",
+			"( ( @numericIp:[100 100] | ( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[100 +inf] ) ) @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) ismissing(@bypassKeyHash) )",
 		);
 	});
 
@@ -146,7 +146,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, true);
 
 		expect(query).toBe(
-			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) )",
+			"( @numericIpMaskMin:[-inf 100] @numericIpMaskMax:[200 +inf] @ja4Hash:{ja4Hash} ismissing(@userAgentHash) ismissing(@headersHash) ismissing(@userId) ismissing(@headHash) ismissing(@coords) ismissing(@countryCode) ismissing(@asn) ismissing(@os) ismissing(@browser) ismissing(@headerMatch) ismissing(@headerName) ismissing(@headerValue) ismissing(@headerOperator) ismissing(@webBotAuthAgent) ismissing(@bypassKeyHash) )",
 		);
 	});
 
@@ -250,6 +250,19 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
 	});
 
+	it("escapes the signer URL in a webBotAuthAgent query", () => {
+		const filter = {
+			userScope: {
+				webBotAuthAgent: "https://chatgpt.com",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("( @webBotAuthAgent:{https\\:\\/\\/chatgpt\\.com} )");
+	});
+
 	it("includes both headHash and coords when both provided", () => {
 		const filter = {
 			userScope: {
@@ -343,7 +356,45 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, false);
 
 		expect(query).toContain("@type:{block}");
-		expect(query).toContain("@clientId:{site-A}");
+		expect(query).toContain("@clientId:{site\\-A}");
 		expect(query).toContain("@ja4Hash:{ja4Hash}");
+	});
+
+	it("escapes the group id, whose hyphens are otherwise a syntax error", () => {
+		const filter: AccessRulesFilter = {
+			groupId: "example-rule-group",
+		};
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("@groupId:{example\\-rule\\-group}");
+	});
+
+	it("escapes a client id in the policy scope", () => {
+		const filter: AccessRulesFilter = {
+			policyScope: { clientId: "client-a" },
+			policyScopeMatch: FilterScopeMatch.Exact,
+		};
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("@clientId:{client\\-a}");
+	});
+
+	it("escapes every tag field in the user scope", () => {
+		const filter: AccessRulesFilter = {
+			userScope: {
+				userId: "user.one",
+				headersHash: "h:1",
+				os: "Mac/OS",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		};
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toContain("@userId:{user\\.one}");
+		expect(query).toContain("@headersHash:{h\\:1}");
+		expect(query).toContain("@os:{Mac\\/OS}");
 	});
 });

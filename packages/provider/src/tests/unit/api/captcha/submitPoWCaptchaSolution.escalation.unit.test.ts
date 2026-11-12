@@ -12,10 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType, type Session } from "@prosopo/types";
+import { resolveMaxEscalationLevel } from "@prosopo/captcha-severity";
+import {
+	CaptchaType,
+	type DetectorData,
+	type FingerprintSummaryStored,
+	type Session,
+	resolveAllowedCaptchaTypes,
+} from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEscalation } from "../../../../api/captcha/submitPoWCaptchaSolution.js";
 import type { CreateSessionInput } from "../../../../tasks/frictionless/frictionlessTasks.js";
+import {
+	type DeviceVerdict,
+	deriveDevice,
+} from "../../../../utils/devicePlatform.js";
+
+vi.mock("@prosopo/captcha-severity", async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import("@prosopo/captcha-severity")>();
+	return {
+		...actual,
+		resolveMaxEscalationLevel: vi.fn(actual.resolveMaxEscalationLevel),
+	};
+});
 
 // Minimal Tasks-shape required by `buildEscalation`. The function only
 // reaches for: tasks.db.getPowCaptchaRecordByChallenge,
@@ -48,7 +68,7 @@ const makeTasks = () => {
 		config: {
 			captchas: { solved: { count: 2 }, unsolved: { count: 0 } },
 		},
-	} as unknown as Parameters<typeof buildEscalation>[0];
+	} as unknown as Parameters<typeof buildEscalation>[0]["tasks"];
 
 	return {
 		tasks,
@@ -88,36 +108,83 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		env = makeTasks();
 	});
 
+	describe("fingerprint summary", () => {
+		const submitted: FingerprintSummaryStored = {
+			root: "0xsubmitted",
+			groupHash: "0xgroup",
+			bucketId: "a".repeat(32),
+		};
+		const atFrictionless: FingerprintSummaryStored = {
+			root: "0xfrictionless",
+			groupHash: "0xgroup",
+			bucketId: "b".repeat(32),
+		};
+
+		const escalate = async (powSummary?: FingerprintSummaryStored) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+				...(powSummary && { fingerprintSummary: powSummary }),
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue({
+				...makeOriginSession(),
+				fingerprintSummary: atFrictionless,
+			});
+			await buildEscalation({
+				tasks: env.tasks,
+				result: {
+					verified: true,
+					routingOutput: { captchaType: CaptchaType.puzzle },
+				},
+				challenge: "challenge",
+			});
+			const input: CreateSessionInput =
+				env.spies.createSession.mock.calls[0]?.[0];
+			return input.fingerprintSummary;
+		};
+
+		it("carries the summary from the proof submitted with the PoW", async () => {
+			expect(await escalate(submitted)).toStrictEqual(submitted);
+		});
+
+		it("falls back to the summary recorded at frictionless time", async () => {
+			expect(await escalate()).toStrictEqual(atFrictionless);
+		});
+	});
+
 	it("returns undefined when no routing output was supplied (no escalation)", async () => {
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: undefined },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: { verified: true, routingOutput: undefined },
+			challenge: "challenge",
+		});
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
 		expect(env.spies.createSession).not.toHaveBeenCalled();
 	});
 
 	it("returns undefined when PoW didn't verify (route() shouldn't fire if PoW failed)", async () => {
-		const out = await buildEscalation(
-			env.tasks,
-			{
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
 				verified: false,
 				routingOutput: { captchaType: CaptchaType.image },
 			},
-			"challenge",
-		);
+			challenge: "challenge",
+		});
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
 	});
 
 	it("returns undefined when the router kept the user on PoW (no escalation needed)", async () => {
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.pow } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.pow },
+			},
+			challenge: "challenge",
+		});
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
 	});
@@ -131,11 +198,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toEqual({
 			captchaType: CaptchaType.image,
@@ -159,11 +229,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(env.spies.cacheSessionEscalation).toHaveBeenCalledWith(
 			"origin-id",
@@ -185,11 +258,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		);
 		(env.tasks as unknown as { writeQueue: unknown }).writeQueue = null;
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toEqual({
 			captchaType: CaptchaType.image,
@@ -203,11 +279,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 	it("does not write a mapping when the PoW record lookup fails (no origin to map from)", async () => {
 		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue(null);
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
@@ -221,11 +300,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(undefined);
 
-		const out = await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(out).toBeUndefined();
 		expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
@@ -249,11 +331,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
 		const input = createSessionInput();
@@ -273,16 +358,145 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			makeOriginSession(),
 		);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(env.spies.createSession).toHaveBeenCalledTimes(1);
 		const input = createSessionInput();
 		expect(input.captchaType).toBe(CaptchaType.puzzle);
 		expect(input.originSessionId).toBe("origin-id");
+	});
+
+	it("records the difficulty level of a raised puzzle alongside its tolerance", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue({
+			...makeOriginSession(),
+			solvedImagesCount: 9,
+		});
+
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
+
+		const input = createSessionInput();
+		expect(input.puzzleTolerance).toBeDefined();
+		expect(input.puzzleLevel).toBeGreaterThan(0);
+	});
+
+	it("leaves the puzzle level unset when the puzzle is not raised", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(
+			makeOriginSession(),
+		);
+
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
+
+		const input = createSessionInput();
+		expect(input.puzzleTolerance).toBeUndefined();
+		expect(input.puzzleLevel).toBeUndefined();
+	});
+
+	it("escalates to image instead of puzzle when the site has puzzle switched off", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(
+			makeOriginSession(),
+		);
+
+		const out = await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+			siteConstraints: {
+				allowedCaptchaTypes: resolveAllowedCaptchaTypes({
+					captchaTypeFeatureFlags: { puzzle: false },
+				}),
+			},
+		});
+
+		expect(out?.captchaType).toBe(CaptchaType.image);
+		expect(createSessionInput().captchaType).toBe(CaptchaType.image);
+	});
+
+	describe("icon-order", () => {
+		const escalateToIconOrder = async (
+			allowedCaptchaTypes?: ReturnType<typeof resolveAllowedCaptchaTypes>,
+		) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue(
+				makeOriginSession(),
+			);
+			return buildEscalation({
+				tasks: env.tasks,
+				result: {
+					verified: true,
+					routingOutput: { captchaType: CaptchaType.iconOrder },
+				},
+				challenge: "challenge",
+				siteConstraints: allowedCaptchaTypes && { allowedCaptchaTypes },
+			});
+		};
+
+		it("escalates to icon-order when the site has it switched on", async () => {
+			const out = await escalateToIconOrder(
+				resolveAllowedCaptchaTypes({
+					captchaTypeFeatureFlags: { iconOrder: true },
+				}),
+			);
+
+			expect(out).toEqual({
+				captchaType: CaptchaType.iconOrder,
+				sessionId: "escalation-id",
+			});
+			const input = createSessionInput();
+			expect(input.captchaType).toBe(CaptchaType.iconOrder);
+			expect(input.originSessionId).toBe("origin-id");
+			expect(input.solvedImagesCount).toBeUndefined();
+			expect(input.puzzle).toBeUndefined();
+			expect(env.spies.cacheSessionEscalation).toHaveBeenCalledWith(
+				"origin-id",
+				"escalation-id",
+			);
+		});
+
+		it("escalates to puzzle instead when the site's icon-order flag is off", async () => {
+			const out = await escalateToIconOrder();
+
+			expect(out?.captchaType).toBe(CaptchaType.puzzle);
+			expect(createSessionInput().captchaType).toBe(CaptchaType.puzzle);
+		});
 	});
 
 	it("carries the origin's simdReadings onto the image escalation at creation time (so the DM verify path doesn't have to lean on chain fallback for the common case)", async () => {
@@ -313,11 +527,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().simdReadings).toBe(originSimd);
 	});
@@ -350,11 +567,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().simdReadings).toBe(originSimd);
 	});
@@ -370,11 +590,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().bundleId).toBe("bundle-42");
 	});
@@ -390,59 +613,48 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.puzzle },
+			},
+			challenge: "challenge",
+		});
 
 		expect(createSessionInput().bundleId).toBe("bundle-17");
 	});
 
-	it("carries the origin's b onto the escalation", async () => {
-		// `b` travels with g / i / sw / md / bn / fs rather than being
-		// re-collected: the escalation is the same client and never re-runs
-		// the collection step.
-		const originB: Record<string, string[]> = { k1: ["v1", "v2"] };
+	it("carries the origin's detector bag onto the escalation", async () => {
+		// The bag travels rather than being re-collected: the escalation is
+		// the same client and never re-runs the collection step. Copied whole,
+		// so a signal cannot be left behind by having been forgotten in a list
+		// — which is how several of them used to disappear on escalation.
+		const originData: DetectorData = {
+			k1: { k2: ["v1", "v2"] },
+			k3: 42,
+			k4: 7,
+			aKeyThisRepoDoesNotKnow: true,
+		};
 		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
 			sessionId: "origin-id",
 			dappAccount: "dapp",
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue({
 			...makeOriginSession(),
-			b: originB,
+			d: originData,
 		});
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
-
-		expect(createSessionInput().b).toBe(originB);
-	});
-
-	it("carries the origin's cv and sq onto the escalation", async () => {
-		// Same client, same collection step as `b` above.
-		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
-			sessionId: "origin-id",
-			dappAccount: "dapp",
-		});
-		env.spies.getSessionRecordBySessionId.mockResolvedValue({
-			...makeOriginSession(),
-			cv: 42,
-			sq: 7,
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
 		});
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
-
-		const input = createSessionInput();
-		expect(input.cv).toBe(42);
-		expect(input.sq).toBe(7);
+		expect(createSessionInput().d).toBe(originData);
 	});
 
 	// Behavioural data (the decrypted BDP struct produced from the pow-solve
@@ -467,11 +679,14 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue(origin);
 
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
+		await buildEscalation({
+			tasks: env.tasks,
+			result: {
+				verified: true,
+				routingOutput: { captchaType: CaptchaType.image },
+			},
+			challenge: "challenge",
+		});
 
 		// No field of the createSession input holds the origin's BDP —
 		// nothing was copied. `buildEscalation` enumerates what it inherits
@@ -483,5 +698,59 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 				.behavioralDataPacked,
 		);
 		expect(input).not.toHaveProperty("behavioralDataPacked");
+	});
+
+	describe("device", () => {
+		const IPHONE_UA =
+			"Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1";
+
+		const escalateToPuzzle = async (device?: DeviceVerdict) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+				behavioralDataPacked: {
+					c1: [],
+					c2: [{}, {}],
+					c3: [],
+					d: "mobile",
+				},
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue({
+				...makeOriginSession(),
+				headers: { "user-agent": IPHONE_UA },
+			});
+			await buildEscalation({
+				tasks: env.tasks,
+				result: {
+					verified: true,
+					routingOutput: { captchaType: CaptchaType.puzzle },
+					...(device && { device }),
+				},
+				challenge: "challenge",
+			});
+			const input: CreateSessionInput =
+				env.spies.createSession.mock.calls[0]?.[0];
+			return input;
+		};
+
+		it("records what the solve said about the input device", async () => {
+			expect((await escalateToPuzzle()).solveDevice).toStrictEqual({
+				deviceCapability: "mobile",
+				touchEventCount: 2,
+			});
+		});
+
+		it("sizes the escalation on the verdict routing ran on", async () => {
+			vi.mocked(resolveMaxEscalationLevel).mockClear();
+			const desktop = deriveDevice({ userAgent: "" });
+			await escalateToPuzzle(desktop);
+			expect(resolveMaxEscalationLevel).toHaveBeenCalledWith(undefined, false);
+		});
+
+		it("judges the device itself only when routing never ran", async () => {
+			vi.mocked(resolveMaxEscalationLevel).mockClear();
+			await escalateToPuzzle();
+			expect(resolveMaxEscalationLevel).toHaveBeenCalledWith(undefined, true);
+		});
 	});
 });

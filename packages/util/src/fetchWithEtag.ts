@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { parseInteger } from "./parse.js";
+
 export const fetchWithETag = async (
 	url: string,
 	etag: string | null,
@@ -42,12 +44,9 @@ export const fetchWithETag = async (
 
 		const responseETag = response.headers.get("etag") || null;
 		const contentLengthHeader = response.headers.get("content-length");
-		const contentLength = contentLengthHeader
-			? (() => {
-					const parsed = Number.parseInt(contentLengthHeader, 10);
-					return Number.isFinite(parsed) ? parsed : undefined;
-				})()
-			: undefined;
+		// parseInt would take "12abc" as 12 and "-1" as -1.
+		const parsedLength = parseInteger(contentLengthHeader, { min: 0 });
+		const contentLength = parsedLength.ok ? parsedLength.value : undefined;
 
 		return {
 			stream: response.body,

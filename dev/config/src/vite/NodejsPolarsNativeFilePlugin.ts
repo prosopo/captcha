@@ -20,8 +20,7 @@ import type { Rollup } from "vite";
  * Each entry is either a plain path (copied under its original basename) or
  * `{ src, dest }` where `dest` is the basename to write into `outDir`.
  * Explicit `dest` lets consumers avoid collisions when they copy multiple
- * .node files that napi-rs happens to name the same thing (each package it
- * generates puts its binary at `index.<triple>.node`).
+ * .node files that share a basename.
  */
 export type NativeFileEntry = string | { src: string; dest: string };
 

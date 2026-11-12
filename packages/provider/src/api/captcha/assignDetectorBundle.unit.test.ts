@@ -82,12 +82,17 @@ const assignOnce = async (ip?: string): Promise<void> => {
 	await assignOnceWith(ip);
 };
 
-const makeRes = (): { res: Response; json: ReturnType<typeof vi.fn> } => {
+const makeRes = (): {
+	res: Response;
+	json: ReturnType<typeof vi.fn>;
+	setHeader: ReturnType<typeof vi.fn>;
+} => {
 	const json = vi.fn((body: unknown) => body);
-	return { res: { json } as unknown as Response, json };
+	const setHeader = vi.fn((_name: string, _value: string) => undefined);
+	return { res: { json, setHeader } as unknown as Response, json, setHeader };
 };
 
-const env = {} as unknown as ProviderEnvironment;
+const env = { config: {} } as unknown as ProviderEnvironment;
 const next: NextFunction = vi.fn();
 
 describe("assignDetectorBundle", () => {
@@ -104,8 +109,17 @@ describe("assignDetectorBundle", () => {
 		vi.clearAllMocks();
 	});
 
+	it("lets the page read the response's timings, bundle or not", async () => {
+		initDetectorBundlePool({ dir });
+		const { res, setHeader } = makeRes();
+
+		await assignDetectorBundle(env)(makeReq(), res, next);
+
+		expect(setHeader).toHaveBeenCalledWith("Timing-Allow-Origin", "*");
+	});
+
 	it("returns useProviderBundle:false when the pool is empty", async () => {
-		initDetectorBundlePool(dir); // empty
+		initDetectorBundlePool({ dir }); // empty
 		const { res, json } = makeRes();
 
 		await assignDetectorBundle(env)(makeReq(), res, next);
@@ -117,13 +131,34 @@ describe("assignDetectorBundle", () => {
 		expect(cacheDetectorBundle).not.toHaveBeenCalled();
 	});
 
+	it("advertises the STUN url when this provider runs a stun-probe", async () => {
+		initDetectorBundlePool({ dir });
+		const { res, json } = makeRes();
+		const withStun = {
+			config: {
+				stunProbe: {
+					socketPath: "/var/run/stun-probe/lookup.sock",
+					url: "stun:pronode1.prosopo.io:3478",
+				},
+			},
+		} as unknown as ProviderEnvironment;
+
+		await assignDetectorBundle(withStun)(makeReq(), res, next);
+
+		expect(json).toHaveBeenCalledWith({
+			useProviderBundle: false,
+			stunUrl: "stun:pronode1.prosopo.io:3478",
+			status: "ok",
+		});
+	});
+
 	it("assigns a bundle, stores the binding, and returns the script", async () => {
 		writeFileSync(join(dir, "bundle-0.js"), "export default 1;");
 		writeFileSync(
 			join(dir, "bundle-0.json"),
 			JSON.stringify({ privateKey: "PK", innerConfig: "C" }),
 		);
-		initDetectorBundlePool(dir); // size 1
+		initDetectorBundlePool({ dir }); // size 1
 		const { res, json } = makeRes();
 
 		await assignDetectorBundle(env)(makeReq(), res, next);
@@ -151,7 +186,7 @@ describe("assignDetectorBundle", () => {
 			join(dir, "bundle-0.json"),
 			JSON.stringify({ privateKey: "PK", innerConfig: "C" }),
 		);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 		cacheDetectorBundle.mockResolvedValueOnce(false);
 		const { res, json } = makeRes();
 
@@ -163,9 +198,48 @@ describe("assignDetectorBundle", () => {
 		});
 	});
 
+	it("logs which bundle and release it handed out", async () => {
+		writeFileSync(join(dir, "bundle-0.js"), "JS");
+		writeFileSync(
+			join(dir, "bundle-0.json"),
+			JSON.stringify({ privateKey: "PK", innerConfig: "C", release: "3.9.1" }),
+		);
+		initDetectorBundlePool({ dir });
+		const req = makeReq();
+		const { res, json } = makeRes();
+
+		await assignDetectorBundle(env)(req, res, next);
+
+		const info = req.logger.info as ReturnType<typeof vi.fn>;
+		const logged = info.mock.calls
+			.map(([thunk]) => (thunk as () => { msg: string; data: unknown })())
+			.find((entry) => entry.msg === "Detector bundle assigned");
+		const body = json.mock.calls[0]?.[0] as { detectorSessionId: string };
+		expect(logged?.data).toEqual({
+			bundleId: "bundle-0",
+			release: "3.9.1",
+			detectorSessionId: body.detectorSessionId,
+		});
+	});
+
+	it("does not log an assignment when the binding cannot be stored", async () => {
+		writePool(dir, 1);
+		initDetectorBundlePool({ dir });
+		cacheDetectorBundle.mockResolvedValueOnce(false);
+		const req = makeReq();
+
+		await assignDetectorBundle(env)(req, makeRes().res, next);
+
+		const info = req.logger.info as ReturnType<typeof vi.fn>;
+		const messages = info.mock.calls.map(
+			([thunk]) => (thunk as () => { msg: string })().msg,
+		);
+		expect(messages).not.toContain("Detector bundle assigned");
+	});
+
 	it("serves one caller the same bundle across many assigns", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const served = new Set<string>();
 		for (let i = 0; i < 200; i++) {
@@ -178,7 +252,7 @@ describe("assignDetectorBundle", () => {
 
 	it("keeps serving that bundle after the secret is re-read from disk", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		await assignOnce();
 		const first = assignedBundleId();
@@ -192,7 +266,7 @@ describe("assignDetectorBundle", () => {
 
 	it("returns the bundle body matching the id it recorded", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const { json } = await assignOnceWith();
 		const body = json.mock.calls[0]?.[0] as { detectorScript: string };
@@ -203,7 +277,7 @@ describe("assignDetectorBundle", () => {
 
 	it("spreads distinct callers across the pool", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const served = new Set<string>();
 		for (let i = 0; i < 60; i++) {
@@ -217,7 +291,7 @@ describe("assignDetectorBundle", () => {
 	it("still assigns when Redis holds no client state", async () => {
 		// The mapping is derived, so there is no lookup to miss.
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const { json } = await assignOnceWith();
 		const body = json.mock.calls[0]?.[0] as { useProviderBundle: boolean };
@@ -227,7 +301,7 @@ describe("assignDetectorBundle", () => {
 
 	it("writes the secret 0600 and leaves it alone on reload", async () => {
 		writePool(dir, 50);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		await assignOnce();
 		const secretPath = join(dir, ".assign-secret");

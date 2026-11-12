@@ -13,27 +13,29 @@
 // limitations under the License.
 
 import { createPrivateKey } from "node:crypto";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
+	CaptchaType,
 	type DecisionMachineCaptchaType,
 	type DecisionMachineKind,
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	DecisionMachineScope,
 	type IUserSettings,
-	type PoWCaptchaStored,
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	type Tier,
-	type UserCommitment,
 } from "@prosopo/types";
 import type {
+	AudioCaptchaRecord,
 	ClientRecord,
+	DecisionMachineTarget,
 	IProviderDatabase,
-	SessionRecord,
+	IconOrderCaptchaRecord,
+	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import { parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
@@ -41,6 +43,13 @@ import {
 	invalidateAllDecisionMachineArtifactCaches,
 	invalidateDecisionMachineScriptCache,
 } from "../decisionMachine/decisionMachineRunner.js";
+
+/**
+ * How far back the sweep looks for interactive captcha records the streamer
+ * failed to land. Older pending records were streamed at least once and age
+ * out of the provider DB on their own.
+ */
+const INTERACTIVE_RESYNC_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
@@ -54,6 +63,52 @@ const isValidPrivateKey = (privateKeyString: string) => {
 	} catch (error) {
 		return false;
 	}
+};
+
+/**
+ * Matches `text` against a pattern where `*` matches any run of characters.
+ * Greedy two-pointer match, retrying from the last `*` on mismatch, so time
+ * is bounded by pattern length times text length.
+ */
+export const matchesGlob = (pattern: string, text: string): boolean => {
+	let p = 0;
+	let t = 0;
+	let starP = -1;
+	let starT = 0;
+	while (t < text.length) {
+		if (p < pattern.length && pattern[p] === "*") {
+			starP = p++;
+			starT = t;
+		} else if (p < pattern.length && pattern[p] === text[t]) {
+			p++;
+			t++;
+		} else if (starP !== -1) {
+			p = starP + 1;
+			t = ++starT;
+		} else {
+			return false;
+		}
+	}
+	while (p < pattern.length && pattern[p] === "*") p++;
+	return p === pattern.length;
+};
+
+export const toDecisionMachineTarget = (
+	scope: DecisionMachineScope,
+	dappAccount?: string,
+): DecisionMachineTarget => {
+	if (scope === DecisionMachineScope.Global) {
+		return { scope, dappAccount };
+	}
+	if (!dappAccount) {
+		throw new ProsopoError({
+			code: "INVALID_REQUEST",
+			errorSite: "PROV-52",
+			message: "BadRequest",
+			context: { scope, dappAccount },
+		});
+	}
+	return { scope, dappAccount };
 };
 
 export class ClientTaskManager {
@@ -123,10 +178,10 @@ export class ClientTaskManager {
 
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
-					await this.providerDB.getUnstoredDappUserCommitments(
-						BATCH_SIZE,
+					await this.providerDB.getUnstoredDappUserCommitments({
+						limit: BATCH_SIZE,
 						afterId,
-					),
+					}),
 				async (batch) => {
 					const filteredBatch = (
 						lastTask?.updated
@@ -143,7 +198,7 @@ export class ClientTaskManager {
 					// empty-id document on the node (~100K rows).
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], filteredBatch, []);
+						await captchaDB.saveCaptchas({ imageCaptchaEvents: filteredBatch });
 						await this.providerDB.markDappUserCommitmentsStored(
 							filteredBatch.map((commitment) => commitment.id),
 							sweepStartedAt,
@@ -152,23 +207,24 @@ export class ClientTaskManager {
 					processedCommitments += filteredBatch.length;
 				},
 				(row) => (row as { _id?: unknown })._id,
+				BATCH_SIZE,
 			);
 
 			// Process PoW records with cursor
 			let processedPowRecords = 0;
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
-					await this.providerDB.getUnstoredDappUserPoWCommitments(
-						BATCH_SIZE,
+					await this.providerDB.getUnstoredDappUserPoWCommitments({
+						limit: BATCH_SIZE,
 						afterId,
-					),
+					}),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas([], [], filteredBatch);
+						await captchaDB.saveCaptchas({ powCaptchaEvents: filteredBatch });
 						await this.providerDB.markDappUserPoWCommitmentsStored(
 							filteredBatch.map((record) => record.challenge),
 							sweepStartedAt,
@@ -177,20 +233,24 @@ export class ClientTaskManager {
 					processedPowRecords += filteredBatch.length;
 				},
 				(row) => (row as { _id?: unknown })._id,
+				BATCH_SIZE,
 			);
 
 			// process session records with cursor
 			let processedSessionRecords = 0;
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
-					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, afterId),
+					await this.providerDB.getUnstoredSessionRecords({
+						limit: BATCH_SIZE,
+						afterId,
+					}),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
 						: batch;
 
 					if (filteredBatch.length > 0) {
-						await captchaDB.saveCaptchas(filteredBatch, [], []);
+						await captchaDB.saveCaptchas({ sessionEvents: filteredBatch });
 						await this.providerDB.markSessionRecordsStored(
 							filteredBatch.map((record) => record.sessionId),
 							sweepStartedAt,
@@ -199,7 +259,53 @@ export class ClientTaskManager {
 					processedSessionRecords += filteredBatch.length;
 				},
 				(row) => (row as { _id?: unknown })._id,
+				BATCH_SIZE,
 			);
+
+			const interactiveSince = new Date(
+				sweepStartedAt.getTime() - INTERACTIVE_RESYNC_WINDOW_MS,
+			);
+			const onlyUpdated = Boolean(lastTask?.updated);
+			const processedPuzzleRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.puzzle,
+				fetchBatch: (afterId) =>
+					this.providerDB.getUnstoredPuzzleCaptchaRecords({
+						limit: BATCH_SIZE,
+						afterId,
+						since: interactiveSince,
+					}),
+				save: (batch) => captchaDB.saveCaptchas({ puzzleCaptchaEvents: batch }),
+				sweepStartedAt,
+				onlyUpdated,
+				batchSize: BATCH_SIZE,
+			});
+			const processedIconOrderRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.iconOrder,
+				fetchBatch: (afterId) =>
+					this.providerDB.getUnstoredIconOrderCaptchaRecords({
+						limit: BATCH_SIZE,
+						afterId,
+						since: interactiveSince,
+					}),
+				save: (batch) =>
+					captchaDB.saveCaptchas({ iconOrderCaptchaEvents: batch }),
+				sweepStartedAt,
+				onlyUpdated,
+				batchSize: BATCH_SIZE,
+			});
+			const processedAudioRecords = await this.resyncInteractiveRecords({
+				captchaType: CaptchaType.audio,
+				fetchBatch: (afterId) =>
+					this.providerDB.getUnstoredAudioCaptchaRecords({
+						limit: BATCH_SIZE,
+						afterId,
+						since: interactiveSince,
+					}),
+				save: (batch) => captchaDB.saveCaptchas({ audioCaptchaEvents: batch }),
+				sweepStartedAt,
+				onlyUpdated,
+				batchSize: BATCH_SIZE,
+			});
 
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
@@ -209,6 +315,9 @@ export class ClientTaskManager {
 						processedSessionRecords,
 						processedCommitments,
 						processedPowRecords,
+						processedPuzzleRecords,
+						processedIconOrderRecords,
+						processedAudioRecords,
 					},
 				},
 			);
@@ -279,19 +388,25 @@ export class ClientTaskManager {
 				await this.providerDB.updateClientRecords(newClientRecords);
 			}
 
+			const revokedSiteKeys = await clientDB.getRevokedSiteKeys();
+			await this.providerDB.removeClientRecords(revokedSiteKeys);
+
 			await this.providerDB.updateScheduledTaskStatus(
 				taskID,
 				ScheduledTaskStatus.Completed,
 				{
 					data: {
 						clientRecords: newClientRecords.length,
+						revokedClientRecords: revokedSiteKeys.length,
 					},
 				},
 			);
 		} catch (e: unknown) {
-			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
-				context: { error: e },
-				logger: this.logger,
+			const getClientListError = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "PROV-51",
+				message: "Unknown database error",
+				cause: e,
 			});
 			this.logger.error(() => ({
 				err: getClientListError,
@@ -349,29 +464,30 @@ export class ClientTaskManager {
 		await this.providerDB.removeClientRecords(accounts);
 	}
 
-	async updateDecisionMachine(
-		scope: DecisionMachineScope,
-		runtime: DecisionMachineRuntime,
-		source: string,
-		dappAccount?: string,
-		language?: DecisionMachineLanguage,
-		name?: string,
-		version?: string,
-		captchaType?: DecisionMachineCaptchaType,
-		kind?: DecisionMachineKind,
-	): Promise<{
+	async updateDecisionMachine({
+		scope,
+		dappAccount,
+		runtime,
+		source,
+		language,
+		name,
+		version,
+		captchaType,
+		kind,
+	}: DecisionMachineTarget & {
+		runtime: DecisionMachineRuntime;
+		source: string;
+		language?: DecisionMachineLanguage;
+		name?: string;
+		version?: string;
+		captchaType?: DecisionMachineCaptchaType;
+		kind?: DecisionMachineKind;
+	}): Promise<{
 		scope: DecisionMachineScope;
 		dappAccount?: string;
 		kind?: DecisionMachineKind;
 		updatedAt: string;
 	}> {
-		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
-				context: { scope, dappAccount },
-				logger: this.logger,
-			});
-		}
-
 		const now = new Date();
 		await this.providerDB.upsertDecisionMachineArtifact({
 			scope,
@@ -453,9 +569,11 @@ export class ClientTaskManager {
 	}> {
 		const artifact = await this.providerDB.getDecisionMachineArtifactById(id);
 		if (!artifact) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-53",
+				message: "BadRequest",
 				context: { id },
-				logger: this.logger,
 			});
 		}
 		return {
@@ -480,11 +598,15 @@ export class ClientTaskManager {
 	}> {
 		const success = await this.providerDB.removeDecisionMachineArtifact(id);
 		if (!success) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-54",
+				message: "BadRequest",
 				context: { id, message: "Decision machine not found" },
-				logger: this.logger,
 			});
 		}
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success,
 			deletedId: id,
@@ -497,6 +619,8 @@ export class ClientTaskManager {
 	}> {
 		const deletedCount =
 			await this.providerDB.removeAllDecisionMachineArtifacts();
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success: true,
 			deletedCount,
@@ -530,13 +654,10 @@ export class ClientTaskManager {
 				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
 			}
 
-			// General glob pattern: convert * to .*
+			// General glob pattern. Matched without a regex: patterns are
+			// customer-controlled and `.*` runs backtrack exponentially.
 			if (pattern.includes("*")) {
-				const escaped = pattern
-					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
-					.replace(/\*/g, ".*");
-				const regex = new RegExp(`^${escaped}$`, "i");
-				return regex.test(referrerHost);
+				return matchesGlob(pattern, referrerHost.toLowerCase());
 			}
 
 			// Exact or subdomain match for plain domains
@@ -553,9 +674,55 @@ export class ClientTaskManager {
 		}
 	}
 
-	private isRecordUpdated(
-		record: UserCommitment | PoWCaptchaStored | SessionRecord,
-	): boolean {
+	/**
+	 * Re-send pending interactive captcha records to the central DB. These
+	 * phases run last: they only catch what the streamer missed, so they must
+	 * not starve the phases above.
+	 */
+	private async resyncInteractiveRecords<
+		T extends PuzzleCaptchaRecord | IconOrderCaptchaRecord | AudioCaptchaRecord,
+	>({
+		captchaType,
+		fetchBatch,
+		save,
+		sweepStartedAt,
+		onlyUpdated,
+		batchSize,
+	}: {
+		captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio;
+		fetchBatch: (afterId?: unknown) => Promise<T[]>;
+		save: (batch: T[]) => Promise<void>;
+		sweepStartedAt: Date;
+		onlyUpdated: boolean;
+		batchSize: number;
+	}): Promise<number> {
+		let processed = 0;
+		await this.processBatchesWithCursor(
+			fetchBatch,
+			async (batch) => {
+				const filteredBatch = onlyUpdated
+					? batch.filter((record) => this.isRecordUpdated(record))
+					: batch;
+				if (filteredBatch.length > 0) {
+					await save(filteredBatch);
+					await this.providerDB.markInteractiveCaptchaRecordsStored(
+						captchaType,
+						filteredBatch.map((record) => record.challenge),
+						sweepStartedAt,
+					);
+				}
+				processed += filteredBatch.length;
+			},
+			(row) => (row as { _id?: unknown })._id,
+			batchSize,
+		);
+		return processed;
+	}
+
+	private isRecordUpdated(record: {
+		lastUpdatedTimestamp?: Date;
+		storedAtTimestamp?: Date;
+	}): boolean {
 		const { lastUpdatedTimestamp, storedAtTimestamp } = record;
 		return (
 			!lastUpdatedTimestamp ||
@@ -572,11 +739,19 @@ export class ClientTaskManager {
 	 * a batch row; both `PoWCaptchaRecord` and `UserCommitmentRecord` are
 	 * `mongoose.Document` subtypes so `_id` is always present at runtime
 	 * even though our stored types don't spell it out.
+	 *
+	 * A short page means the sweep has reached the tail, so it stops there.
+	 * Rows keep joining the tail while the sweep runs (new records, and
+	 * records re-flagged by an update a second after they were streamed).
+	 * Chasing them one tiny batch at a time, each paying a full round trip
+	 * to the central DB, can keep one phase running for over an hour on a
+	 * busy node and starve the phases after it. The next sweep picks them up.
 	 */
 	private async processBatchesWithCursor<T>(
 		fetchBatch: (afterId?: unknown) => Promise<T[]>,
 		processBatch: (batch: T[]) => Promise<void>,
 		getLastId: (row: T) => unknown,
+		batchSize: number,
 	): Promise<void> {
 		let afterId: unknown | undefined;
 		while (true) {
@@ -584,6 +759,7 @@ export class ClientTaskManager {
 			if (!batch.length) break;
 
 			await processBatch(batch);
+			if (batch.length < batchSize) break;
 			const last = batch[batch.length - 1];
 			if (last === undefined) break;
 			const nextId = getLastId(last);

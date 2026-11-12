@@ -23,6 +23,7 @@ import {
 	type ProsopoConfigOutput,
 	ProsopoConfigSchema,
 } from "@prosopo/types";
+import { type NumberBounds, parseInteger } from "@prosopo/util";
 import { getRateLimitConfig } from "./RateLimiter.js";
 import { getAddress, getPassword, getSecret } from "./process.env.js";
 
@@ -82,17 +83,40 @@ const getSpamEmailDomainsUrls = (): string[] | undefined => {
 	}
 };
 
+/**
+ * An integer setting from the environment, or `fallback` when unset. A set
+ * but malformed value throws: parseInt would read "80a" as 80 and "abc" as
+ * NaN, and a provider listening on the wrong port or trusting the wrong
+ * number of proxies is worse than one that refuses to start.
+ */
+export const integerFromEnv = (
+	name: string,
+	fallback: number,
+	bounds: NumberBounds = {},
+): number => {
+	const raw = process.env[name];
+	if (raw === undefined || raw === "") {
+		return fallback;
+	}
+	return parseInteger(raw, bounds).expect(`environment variable ${name}`);
+};
+
 const getHost = (): string | undefined => {
 	const importMeta = import.meta as { env?: { VITE_CADDY_DOMAIN: string } };
 	return process.env.CADDY_DOMAIN || importMeta.env?.VITE_CADDY_DOMAIN;
 };
 
-export default function getConfig(
-	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema,
-	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput,
+export default function getConfig({
+	captchaSolutionsConfig,
+	captchaServeConfig,
 	who = "PROVIDER",
 	admin = "ADMIN",
-): ProsopoConfigOutput {
+}: {
+	captchaSolutionsConfig?: typeof ProsopoCaptchaSolutionConfigSchema;
+	captchaServeConfig?: ProsopoCaptchaCountConfigSchemaInput;
+	who?: string;
+	admin?: string;
+} = {}): ProsopoConfigOutput {
 	return ProsopoConfigSchema.parse({
 		logLevel: parseLogLevel(process.env.PROSOPO_LOG_LEVEL, "info"),
 		host: getHost(),
@@ -126,9 +150,7 @@ export default function getConfig(
 		},
 		server: {
 			baseURL: process.env.PROSOPO_API_BASE_URL || "http://localhost",
-			port: process.env.PROSOPO_API_PORT
-				? Number.parseInt(process.env.PROSOPO_API_PORT)
-				: 9229,
+			port: integerFromEnv("PROSOPO_API_PORT", 9229, { min: 0, max: 65535 }),
 		},
 		captchaSolutions: captchaSolutionsConfig,
 		captchas: captchaServeConfig,
@@ -145,9 +167,7 @@ export default function getConfig(
 			password: process.env.REDIS_CONNECTION_PASSWORD || "",
 		},
 		rateLimits: getRateLimitConfig(),
-		proxyCount: process.env.PROSOPO_PROXY_COUNT
-			? Number.parseInt(process.env.PROSOPO_PROXY_COUNT)
-			: 0,
+		proxyCount: integerFromEnv("PROSOPO_PROXY_COUNT", 0, { min: 0 }),
 		scheduledTasks: {
 			captchaScheduler: {
 				schedule: process.env.CAPTCHA_STORAGE_SCHEDULE,
@@ -180,5 +200,12 @@ export default function getConfig(
 		// a provider.
 		maxmindAsnDbPath: process.env.MAXMIND_ASN_DB_PATH,
 		dnsServers: getDnsServers(),
+		...(process.env.PROSOPO_STUN_PROBE_SOCKET &&
+			process.env.PROSOPO_STUN_URL && {
+				stunProbe: {
+					socketPath: process.env.PROSOPO_STUN_PROBE_SOCKET,
+					url: process.env.PROSOPO_STUN_URL,
+				},
+			}),
 	} as ProsopoConfigInput);
 }

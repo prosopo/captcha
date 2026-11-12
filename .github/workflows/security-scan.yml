@@ -1,4 +1,4 @@
-# Secret scanning (gitleaks), SAST (semgrep) and dependency audit (npm, cargo).
+# Secret scanning (gitleaks), SAST (semgrep) and dependency audit (pnpm, cargo).
 #
 # Until now this repository had none of it -- dependabot opens PRs for
 # known-vulnerable versions, which is useful but is not a scan and gates
@@ -29,29 +29,53 @@ on:
     # without this nothing ever re-examines what is already on main.
     - cron: "0 4 * * 1"
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ inputs.runner }}
   cancel-in-progress: true
 
 defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: security-scan
+      runner: ${{ inputs.runner || 'auto' }}
+
   secrets:
     name: gitleaks
-    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # private repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs.
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: ${{ (github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 30
         with:
           # gitleaks walks git history, so the default depth-1 checkout would
           # give it nothing to walk.
@@ -63,12 +87,13 @@ jobs:
           submodules: false
 
       - name: Install gitleaks
+        timeout-minutes: 30
+        # From the Docker Hub image, not the GitHub release: github.com release
+        # downloads 504'd for hours on 2026-11-08 and failed every PR.
         run: |
-          version=8.28.0
-          curl -sSfL -o /tmp/gitleaks.tar.gz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
-          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
-          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          id=$(timeout 5m docker create zricethezav/gitleaks:v8.28.0@sha256:cdbb7c955abce02001a9f6c9f602fb195b7fadc1e812065883f695d1eeaba854)
+          sudo timeout 2m docker cp "$id:/usr/bin/gitleaks" /usr/local/bin/gitleaks
+          timeout 1m docker rm "$id"
           gitleaks version
 
       # On a PR, scan only the commits the PR adds. Scanning all of history on
@@ -77,6 +102,7 @@ jobs:
       # one, and it only ever sees commits the PR adds, so it stays clean
       # without needing any exception list.
       - name: Scan pull request commits
+        timeout-minutes: 30
         if: github.event_name == 'pull_request'
         run: |
           gitleaks git \
@@ -102,18 +128,22 @@ jobs:
       # Once those credentials are rotated there is nothing left to except, and
       # this should become gating: drop continue-on-error.
       - name: Scan full history (report only)
+        timeout-minutes: 30
         if: github.event_name != 'pull_request'
         continue-on-error: true
         run: gitleaks git --redact --verbose
 
   sast:
     name: semgrep
-    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: ${{ (github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     container:
       image: semgrep/semgrep:1.145.0
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 30
         with:
           # `--baseline-commit` below diffs against the PR base, so that commit
           # has to be in the clone. The default depth-1 checkout does not have
@@ -122,6 +152,7 @@ jobs:
           submodules: false
 
       - name: Trust the workspace
+        timeout-minutes: 5
         run: git config --global --add safe.directory "$PWD"
 
       # p/default is semgrep's curated free ruleset; p/secrets and the language
@@ -136,6 +167,7 @@ jobs:
       # measured by the weekly full scan below and burned down against the
       # register.
       - name: Semgrep (findings introduced by this PR)
+        timeout-minutes: 30
         if: github.event_name == 'pull_request'
         run: |
           semgrep scan \
@@ -155,6 +187,7 @@ jobs:
       # Informational: measures the whole backlog so the trend is visible.
       # Does not gate -- see above.
       - name: Semgrep (full tree, report only)
+        timeout-minutes: 30
         if: github.event_name != 'pull_request'
         continue-on-error: true
         run: |
@@ -171,55 +204,72 @@ jobs:
             --metrics=off
 
   dependencies:
-    name: npm audit
-    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
-    runs-on: ubuntu-latest
+    name: pnpm audit
+    timeout-minutes: 60
+    if: ${{ (github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           submodules: false
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Setup node and pnpm
+        timeout-minutes: 30
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: "24"
+          node-version-file: .nvmrc
+          restore-store-cache: 'false'
+          store-path: ''
+          run-install: 'false'
 
       # Gates at `critical` and reports `high` separately without failing, for
       # the same reason semgrep uses a baseline: this tree has never been
       # audited in CI, so an unknown backlog gated at `high` would block every
       # PR on day one. Ratchet to `high` once it is clear.
       #
-      # `npm audit` needs no install step -- it resolves the lockfile against
+      # `pnpm audit` needs no install step -- it resolves the lockfile against
       # the advisory database over the network.
-      - name: npm audit (critical - gating)
-        run: npm audit --audit-level=critical
+      - name: pnpm audit (critical - gating)
+        timeout-minutes: 30
+        run: timeout 29m pnpm audit --audit-level=critical
 
-      - name: npm audit (high - report only)
+      - name: pnpm audit (high - report only)
+        timeout-minutes: 30
         continue-on-error: true
-        run: npm audit --audit-level=high
+        run: timeout 29m pnpm audit --audit-level=high
 
   cargo:
     name: cargo audit
-    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: ${{ (github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
     strategy:
       fail-fast: false
       matrix:
-        # Two independent crates, each with its own lockfile -- there is no
-        # workspace here to audit in one pass.
-        crate: [packages/native-ja4, packages/native-merkle]
+        # Independent crates, each with its own lockfile -- there is no
+        # workspace here to audit in one pass. A new packages/native-* crate
+        # is not audited until it is listed here.
+        crate:
+          [packages/native-ja4, packages/native-merkle, packages/native-puzzle]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           submodules: false
 
-      - uses: taiki-e/install-action@26e9283f268b880168bdbd2c545dfcd60ec2c6ab # v2.87.13
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
+        timeout-minutes: 30
         with:
           tool: cargo-audit
 
       # This is what caught RUSTSEC-2026-0285 in Protect -- an advisory that
-      # appeared with no change to the tree at all. Gating, unlike npm audit:
+      # appeared with no change to the tree at all. Gating, unlike pnpm audit:
       # these two crates have a handful of dependencies between them, so there
       # is no backlog to grandfather in.
       - name: cargo audit
+        timeout-minutes: 30
         working-directory: ${{ matrix.crate }}
-        run: cargo audit
+        run: timeout 29m cargo audit

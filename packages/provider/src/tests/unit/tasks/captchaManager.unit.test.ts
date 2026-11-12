@@ -14,13 +14,21 @@
 
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { IpAddressType, type KeyringPair, type Session } from "@prosopo/types";
+import {
+	type FingerprintSummaryStored,
+	IpAddressType,
+	type KeyringPair,
+	type Session,
+	iconOrderToleranceDefault,
+} from "@prosopo/types";
 import {
 	CaptchaType,
+	type ICaptchaTypeFeatureFlags,
 	type IUserSettings,
 	ResultReason,
 	Tier,
 	TrafficFilterAction,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
@@ -34,8 +42,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
 
-vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
-	default: vi.fn(),
+vi.mock("../../../tasks/detection/decoderPool.js", () => ({
+	decode: vi.fn(),
 }));
 
 const loggerOuter = getLogger("info", "test:captcha-manager");
@@ -45,9 +53,10 @@ const defaultUserSettings: IUserSettings = {
 		frictionlessPuzzleThreshold: 0.8,
 		frictionlessImageThreshold: 1,
 	},
-	frictionlessTypes: { image: true, puzzle: true },
+	frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
+	audioAccessibilityEnabled: false,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,
@@ -55,7 +64,9 @@ const defaultUserSettings: IUserSettings = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
+	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+	ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
 	disallowWebView: false,
 };
 
@@ -71,6 +82,7 @@ describe("CaptchaManager", () => {
 		db = {
 			checkAndRemoveSession: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
+			mergeSessionSubmitDetectorData: vi.fn().mockResolvedValue(true),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -108,13 +120,13 @@ describe("CaptchaManager", () => {
 			getDetectorBundle: vi.fn().mockResolvedValue(null),
 		} as unknown as RedisWriteQueue;
 
-		captchaManager = new CaptchaManager(
+		captchaManager = new CaptchaManager({
 			db,
 			pair,
-			mockEnv.config,
+			config: mockEnv.config,
 			logger,
-			mockWriteQueue,
-		);
+			writeQueue: mockWriteQueue,
+		});
 
 		vi.clearAllMocks();
 	});
@@ -125,6 +137,17 @@ describe("CaptchaManager", () => {
 	// fields that live on the origin are surfaced on the escalation record
 	// without duplicating them at write time.
 	describe("getSessionRecordWithOriginFallback", () => {
+		const originSummary: FingerprintSummaryStored = {
+			root: "0xorigin",
+			groupHash: "0xgroup",
+			bucketId: "a".repeat(32),
+		};
+		const escalationSummary: FingerprintSummaryStored = {
+			root: "0xescalation",
+			groupHash: "0xgroup",
+			bucketId: "b".repeat(32),
+		};
+
 		const dbGet = () =>
 			db.getSessionRecordBySessionId as unknown as ReturnType<typeof vi.fn>;
 
@@ -143,6 +166,41 @@ describe("CaptchaManager", () => {
 			expect(dbGet()).toHaveBeenCalledTimes(1);
 		});
 
+		it("merges detector data sent at submit over the bag", async () => {
+			const session = {
+				sessionId: "sess",
+				captchaType: CaptchaType.pow,
+				d: { b: { first: ["x"] }, k: 1 },
+				dSubmit: { b: { second: ["y"] } },
+			} as unknown as Session;
+			dbGet().mockResolvedValue(session);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("sess");
+
+			expect(got?.d).toEqual({ b: { first: ["x"], second: ["y"] }, k: 1 });
+		});
+
+		it("keeps the origin's bag under an escalation's submitted data", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				d: { b: { first: ["x"] }, k: 1 },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				dSubmit: { b: { second: ["y"] } },
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.d).toEqual({ b: { first: ["x"], second: ["y"] }, k: 1 });
+		});
+
 		it("returns undefined when the session isn't found", async () => {
 			dbGet().mockResolvedValue(null);
 			const got =
@@ -157,16 +215,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.puzzle,
 				simdReadings: { supported: true, results: [] },
 				dnsEvent: { receivedAt: new Date() },
-				entropyMathRandomFingerprint: "a",
-				entropyCryptoFingerprint: "b",
-				entropyWallClockOffsetMs: 0,
-				entropyMathRandomFirst: 0.1,
-				g: "c",
-				i: false,
-				sw: true,
-				md: true,
-				bn: false,
-				fs: true,
+				d: { k1: "v1", k2: false },
+				fingerprintSummary: escalationSummary,
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
@@ -209,11 +259,11 @@ describe("CaptchaManager", () => {
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
 		});
 
-		it("fills g from origin when the escalation is missing it", async () => {
+		it("fills the detector bag from origin when the escalation has none", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				g: "Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+				d: { k1: "v1", k2: false },
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
@@ -225,89 +275,100 @@ describe("CaptchaManager", () => {
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.g).toBe(
-				"Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
-			);
+			expect(got?.d).toEqual({
+				k1: "v1",
+				// A false value is a measurement, not an absence, and has to
+				// survive the walk as one.
+				k2: false,
+			});
 			expect(got?.sessionId).toBe("esc");
 		});
 
-		it("keeps the escalation's own g rather than the origin's", async () => {
+		it("keeps the escalation's own keys and takes only what it lacks", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				g: "origin-value",
+				d: { k1: "origin-value", k2: 1 },
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
-				g: "escalation-value",
+				// Absent simdReadings is what sends the walker to the origin
+				// at all; the bag is then merged because it is already loaded.
+				d: { k1: "escalation-value" },
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.g).toBe("escalation-value");
+			expect(got?.d).toEqual({
+				k1: "escalation-value",
+				k2: 1,
+			});
 		});
 
-		it("fills i from origin when the escalation is missing it", async () => {
+		it("fills the fingerprint summary from origin when the escalation has none", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				i: true,
+				fingerprintSummary: originSummary,
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
+				d: { k1: "escalation-value" },
+				simdReadings: { supported: false, reason: "n/a" },
+				dnsEvent: { receivedAt: new Date() },
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.i).toBe(true);
+			expect(got?.fingerprintSummary).toEqual(originSummary);
 			expect(got?.sessionId).toBe("esc");
 		});
 
-		it("carries a false i forward rather than treating it as absent", async () => {
+		it("keeps the escalation's own fingerprint summary over the origin's", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				i: false,
+				fingerprintSummary: originSummary,
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
+				fingerprintSummary: escalationSummary,
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.i).toBe(false);
+			expect(got?.fingerprintSummary).toEqual(escalationSummary);
 		});
 
-		it("keeps the escalation's own i rather than the origin's", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				i: false,
-			} as unknown as Session;
+		it("does not walk to the origin when the escalation has everything", async () => {
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
-				i: true,
+				d: { k1: "escalation-value" },
+				simdReadings: { supported: false, reason: "n/a" },
+				dnsEvent: { receivedAt: new Date() },
+				fingerprintSummary: escalationSummary,
 			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+			dbGet().mockResolvedValueOnce(escalation);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.i).toBe(true);
+			expect(got?.d).toEqual({ k1: "escalation-value" });
+			expect(dbGet()).toHaveBeenCalledTimes(1);
 		});
 
 		it("does not fill anything when origin also lacks the fields", async () => {
@@ -421,82 +482,6 @@ describe("CaptchaManager", () => {
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
 		});
 
-		it("fills entropyMathRandomFingerprint from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyMathRandomFingerprint: "0x1234abcd",
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.image,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyMathRandomFingerprint).toBe("0x1234abcd");
-		});
-
-		it("fills entropyCryptoFingerprint from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyCryptoFingerprint: "0xdeadbeef",
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyCryptoFingerprint).toBe("0xdeadbeef");
-		});
-
-		it("fills entropyWallClockOffsetMs from origin including exact-zero (must not be treated as absent)", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyWallClockOffsetMs: 0,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.image,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyWallClockOffsetMs).toBe(0);
-		});
-
-		it("fills entropyMathRandomFirst from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyMathRandomFirst: 0.123456,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.image,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyMathRandomFirst).toBe(0.123456);
-		});
-
 		// Explicit non-inheritance surface. These fields are NOT in the
 		// fallback allowlist; the tests document that so a future change
 		// that decides to persist them has to explicitly flip the assertion.
@@ -552,9 +537,181 @@ describe("CaptchaManager", () => {
 	});
 
 	describe("isValidRequest", () => {
+		describe("captcha type feature flags", () => {
+			const puzzleSwitchedOff = (
+				captchaType: CaptchaType,
+			): Pick<ClientRecord, "account" | "tier" | "settings"> => ({
+				account: "account",
+				tier: Tier.Free,
+				settings: {
+					...defaultUserSettings,
+					captchaType,
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+
+			it("refuses a sessionless puzzle on a puzzle site with puzzle switched off", async () => {
+				const result = await captchaManager.isValidRequest({
+					clientSettings: puzzleSwitchedOff(CaptchaType.puzzle),
+					requestedCaptchaType: CaptchaType.puzzle,
+					env: mockEnv,
+				});
+
+				expect(result).toEqual({
+					valid: false,
+					reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+					type: CaptchaType.puzzle,
+				});
+			});
+
+			it("refuses a puzzle session minted before puzzle was switched off, without consuming it", async () => {
+				vi.mocked(db.checkAndRemoveSession).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.puzzle,
+				} as Session);
+
+				const result = await captchaManager.isValidRequest({
+					clientSettings: puzzleSwitchedOff(CaptchaType.frictionless),
+					requestedCaptchaType: CaptchaType.puzzle,
+					env: mockEnv,
+					sessionId: "sessionId",
+				});
+
+				expect(result).toEqual({
+					valid: false,
+					reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+					type: CaptchaType.puzzle,
+				});
+				expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+			});
+
+			it("still serves the other types", async () => {
+				vi.mocked(db.checkAndRemoveSession).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.image,
+				} as Session);
+
+				const result = await captchaManager.isValidRequest({
+					clientSettings: puzzleSwitchedOff(CaptchaType.frictionless),
+					requestedCaptchaType: CaptchaType.image,
+					env: mockEnv,
+					sessionId: "sessionId",
+				});
+
+				expect(result.valid).toBe(true);
+			});
+
+			it("serves puzzle when the flag is absent", async () => {
+				const result = await captchaManager.isValidRequest({
+					clientSettings: {
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.puzzle,
+						},
+					},
+					requestedCaptchaType: CaptchaType.puzzle,
+					env: mockEnv,
+				});
+
+				expect(result).toEqual({ valid: true, type: CaptchaType.puzzle });
+			});
+
+			describe("icon-order", () => {
+				const iconOrderSite = (
+					captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags,
+					tier: Tier = Tier.Professional,
+				): Pick<ClientRecord, "account" | "tier" | "settings"> => ({
+					account: "account",
+					tier,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.iconOrder,
+						...(captchaTypeFeatureFlags && { captchaTypeFeatureFlags }),
+					},
+				});
+
+				it("refuses a sessionless icon-order request on a site without the flag", async () => {
+					const result = await captchaManager.isValidRequest({
+						clientSettings: iconOrderSite(),
+						requestedCaptchaType: CaptchaType.iconOrder,
+						env: mockEnv,
+					});
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
+				});
+
+				it("refuses an icon-order session on a site without the flag, without consuming it", async () => {
+					vi.mocked(db.checkAndRemoveSession).mockResolvedValue({
+						sessionId: "sessionId",
+						captchaType: CaptchaType.iconOrder,
+					} as Session);
+
+					const result = await captchaManager.isValidRequest({
+						clientSettings: iconOrderSite(),
+						requestedCaptchaType: CaptchaType.iconOrder,
+						env: mockEnv,
+						sessionId: "sessionId",
+					});
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
+					expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+				});
+
+				it("serves icon-order on a free site with no flag set", async () => {
+					const result = await captchaManager.isValidRequest({
+						clientSettings: iconOrderSite(undefined, Tier.Free),
+						requestedCaptchaType: CaptchaType.iconOrder,
+						env: mockEnv,
+					});
+
+					expect(result).toEqual({
+						valid: true,
+						type: CaptchaType.iconOrder,
+					});
+				});
+
+				it("refuses icon-order on a free site whose flag is switched off", async () => {
+					const result = await captchaManager.isValidRequest({
+						clientSettings: iconOrderSite({ iconOrder: false }, Tier.Free),
+						requestedCaptchaType: CaptchaType.iconOrder,
+						env: mockEnv,
+					});
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
+				});
+
+				it("serves icon-order once Prosopo turns the flag on", async () => {
+					const result = await captchaManager.isValidRequest({
+						clientSettings: iconOrderSite({ iconOrder: true }),
+						requestedCaptchaType: CaptchaType.iconOrder,
+						env: mockEnv,
+					});
+
+					expect(result).toEqual({
+						valid: true,
+						type: CaptchaType.iconOrder,
+					});
+				});
+			});
+		});
+
 		it("should validate a request for an image captcha when the client settings are set to image and no session ID is passed", async () => {
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -562,17 +719,17 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.image,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+			});
 			expect(result).toEqual({
 				valid: true,
 				type: CaptchaType.image,
 			});
 		});
 		it("should validate a request for an pow captcha when the client settings are set to pow and no session ID is passed", async () => {
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -580,9 +737,9 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.pow,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+			});
 			expect(result).toEqual({
 				valid: true,
 				type: CaptchaType.pow,
@@ -595,8 +752,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.pow,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -604,18 +761,75 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"sessionId",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result).toEqual({
 				valid: true,
 				type: CaptchaType.pow,
 				sessionId: "sessionId",
 			});
+		});
+
+		it("rejects a session that was issued for a different site key", async () => {
+			// A session minted on a lenient site (pow) must not stand in for a
+			// site whose own settings would demand more.
+			const session: Pick<Session, "sessionId" | "captchaType" | "siteKey"> = {
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+				siteKey: "attackerSiteKey",
+			};
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(session as Session);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "victimSiteKey",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.CAPTCHA_NO_SESSION_FOUND,
+				type: CaptchaType.pow,
+			});
+		});
+
+		it("accepts a session that was issued for the requesting site key", async () => {
+			const session: Pick<Session, "sessionId" | "captchaType" | "siteKey"> = {
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+				siteKey: "account",
+			};
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(session as Session);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
+
+			expect(result.valid).toBe(true);
 		});
 
 		it("returns the session's stored ipInfo so callers can avoid a second DB read", async () => {
@@ -643,8 +857,8 @@ describe("CaptchaManager", () => {
 				ipInfo: stubIpInfo,
 			} as Pick<Session, "sessionId" | "captchaType" | "ipInfo">);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -652,12 +866,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"sessionId",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result.ipInfo).toBe(stubIpInfo);
 		});
@@ -669,8 +882,8 @@ describe("CaptchaManager", () => {
 				userSitekeyIpHash: "hash-xyz",
 			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
 
-			await captchaManager.isValidRequest(
-				{
+			await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -678,12 +891,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"sessionId",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
 				"sessionId",
@@ -700,8 +912,8 @@ describe("CaptchaManager", () => {
 				userSitekeyIpHash: "hash-xyz",
 			} as Pick<Session, "sessionId" | "captchaType" | "userSitekeyIpHash">);
 
-			await captchaManager.isValidRequest(
-				{
+			await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -709,12 +921,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				"sessionId",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(mockWriteQueue.invalidateCachedSession).toHaveBeenCalledWith(
 				"sessionId",
@@ -737,8 +948,8 @@ describe("CaptchaManager", () => {
 				userSitekeyIpHash: "hash-xyz",
 			});
 
-			await captchaManager.isValidRequest(
-				{
+			await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -746,10 +957,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"sessionId",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
 
 			// When DB has no record but Redis cache does, BOTH the sessionId
 			// cache and the hash → sessionId mapping must be invalidated;
@@ -774,7 +985,7 @@ describe("CaptchaManager", () => {
 		// follow-up `/captcha/{type}` request — old bundled SDKs, dapps
 		// that hand-roll the wrapper, network-glitch retries, browser-tab
 		// races. Without the fallback below, those requests landed on
-		// CAPTCHA.NO_SESSION_FOUND because the origin session had already
+		// NO_SESSION_FOUND because the origin session had already
 		// been consumed by the preceding /captcha/pow. The four tests
 		// below pin the contract.
 
@@ -810,8 +1021,8 @@ describe("CaptchaManager", () => {
 				>
 			).mockResolvedValueOnce("escalation-id");
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -819,12 +1030,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				"origin-id",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "origin-id",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result).toEqual({
 				valid: true,
@@ -866,8 +1076,8 @@ describe("CaptchaManager", () => {
 				>
 			).mockResolvedValueOnce("escalation-id");
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -875,12 +1085,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				"origin-id",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "origin-id",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -919,8 +1128,8 @@ describe("CaptchaManager", () => {
 				>
 			).mockResolvedValueOnce("escalation-id");
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -928,12 +1137,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"origin-id",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "origin-id",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -965,8 +1173,8 @@ describe("CaptchaManager", () => {
 				>
 			).mockResolvedValueOnce(null);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -974,12 +1182,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"origin-id",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "origin-id",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1006,8 +1213,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.pow,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			await captchaManager.isValidRequest(
-				{
+			await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1015,12 +1222,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"origin-id",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "origin-id",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(mockWriteQueue.getCachedSessionEscalation).not.toHaveBeenCalled();
 			expect(
@@ -1029,13 +1235,13 @@ describe("CaptchaManager", () => {
 		});
 
 		it("should not throw when writeQueue is null and session is consumed", async () => {
-			const managerWithoutRedis = new CaptchaManager(
+			const managerWithoutRedis = new CaptchaManager({
 				db,
 				pair,
-				mockEnv.config,
+				config: mockEnv.config,
 				logger,
-				null,
-			);
+				writeQueue: null,
+			});
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.checkAndRemoveSession as any).mockResolvedValue({
@@ -1043,8 +1249,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.pow,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			const result = await managerWithoutRedis.isValidRequest(
-				{
+			const result = await managerWithoutRedis.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1052,12 +1258,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"sessionId",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result).toEqual({
 				valid: true,
@@ -1072,8 +1277,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.image,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1081,12 +1286,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				"sessionId",
-				undefined,
-				"127.0.0.1",
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "127.0.0.1",
+			});
 
 			expect(result).toEqual({
 				valid: true,
@@ -1102,8 +1306,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.pow,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1111,10 +1315,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				"sessionId",
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1130,8 +1334,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.image,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1139,10 +1343,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				"sessionId",
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1157,8 +1361,8 @@ describe("CaptchaManager", () => {
 
 			const sessionId = "sessionId";
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1166,10 +1370,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
 				sessionId,
-			);
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1183,8 +1387,8 @@ describe("CaptchaManager", () => {
 
 			const sessionId = "sessionId";
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1192,10 +1396,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
 				sessionId,
-			);
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1204,8 +1408,8 @@ describe("CaptchaManager", () => {
 			});
 		});
 		it("should not validate a request for a pow captcha when the client settings are set to frictionless but no session ID is passed in", async () => {
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1213,10 +1417,9 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-				undefined,
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1225,8 +1428,8 @@ describe("CaptchaManager", () => {
 			});
 		});
 		it("should not validate a request for an image captcha when the client settings are set to frictionless but no session ID is passed in", async () => {
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1234,10 +1437,9 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				undefined,
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1247,8 +1449,8 @@ describe("CaptchaManager", () => {
 		});
 
 		it("should not validate a request for a pow captcha when the client settings are set to image", async () => {
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1256,9 +1458,9 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.image,
 					},
 				},
-				CaptchaType.pow,
-				mockEnv,
-			);
+				requestedCaptchaType: CaptchaType.pow,
+				env: mockEnv,
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1267,8 +1469,8 @@ describe("CaptchaManager", () => {
 			});
 		});
 		it("should not validate a request for an image captcha when the client settings are set to pow", async () => {
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1276,9 +1478,9 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.pow,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1303,8 +1505,8 @@ describe("CaptchaManager", () => {
 				type: AccessPolicyType.Block,
 			};
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1312,11 +1514,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.image,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				undefined,
-				strippedBlock,
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				userAccessPolicy: strippedBlock,
+			});
 
 			expect(result).toEqual({
 				valid: true,
@@ -1330,8 +1531,8 @@ describe("CaptchaManager", () => {
 				deferToVerify: true,
 			};
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1339,11 +1540,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.image,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				undefined,
-				deferredBlock,
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				userAccessPolicy: deferredBlock,
+			});
 
 			expect(result).toEqual({
 				valid: true,
@@ -1361,8 +1561,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.pow,
 			};
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1370,11 +1570,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				undefined,
-				restrictPow,
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				userAccessPolicy: restrictPow,
+			});
 
 			expect(result).toEqual({
 				valid: false,
@@ -1430,8 +1629,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.image,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1439,12 +1638,11 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				"sessionId",
-				undefined,
-				"192.168.1.100",
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "sessionId",
+				currentIP: "192.168.1.100",
+			});
 
 			expect(result).toEqual({
 				valid: true,
@@ -1460,8 +1658,8 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.image,
 			} as Pick<Session, "sessionId" | "captchaType">);
 
-			const result = await captchaManager.isValidRequest(
-				{
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
 					account: "account",
 					tier: Tier.Free,
 					settings: {
@@ -1469,12 +1667,10 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.frictionless,
 					},
 				},
-				CaptchaType.image,
-				mockEnv,
-				"sessionId",
-				undefined,
-				undefined, // No currentIP provided
-			);
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
 
 			expect(result).toEqual({
 				valid: true,
@@ -1511,8 +1707,8 @@ describe("CaptchaManager", () => {
 					captchaType: CaptchaType.image,
 				} as AccessPolicy;
 
-				const result = await captchaManager.isValidRequest(
-					{
+				const result = await captchaManager.isValidRequest({
+					clientSettings: {
 						account: "account",
 						tier: Tier.Free,
 						settings: {
@@ -1520,12 +1716,12 @@ describe("CaptchaManager", () => {
 							captchaType: CaptchaType.frictionless,
 						},
 					},
-					CaptchaType.pow, // widget hits /captcha/pow with the in-flight session
-					mockEnv,
-					"sessionId",
-					restrictImagePolicy,
-					"127.0.0.1",
-				);
+					requestedCaptchaType: CaptchaType.pow,
+					env: mockEnv,
+					sessionId: "sessionId",
+					userAccessPolicy: restrictImagePolicy,
+					currentIP: "127.0.0.1",
+				});
 
 				// Before the fix this returned INCORRECT_CAPTCHA_TYPE; after,
 				// the session's own captchaType wins because it's the
@@ -1549,8 +1745,8 @@ describe("CaptchaManager", () => {
 					captchaType: CaptchaType.image,
 				} as Pick<Session, "sessionId" | "captchaType">);
 
-				const result = await captchaManager.isValidRequest(
-					{
+				const result = await captchaManager.isValidRequest({
+					clientSettings: {
 						account: "account",
 						tier: Tier.Free,
 						settings: {
@@ -1558,12 +1754,11 @@ describe("CaptchaManager", () => {
 							captchaType: CaptchaType.frictionless,
 						},
 					},
-					CaptchaType.pow,
-					mockEnv,
-					"sessionId",
-					undefined,
-					"127.0.0.1",
-				);
+					requestedCaptchaType: CaptchaType.pow,
+					env: mockEnv,
+					sessionId: "sessionId",
+					currentIP: "127.0.0.1",
+				});
 
 				expect(result.valid).toBe(false);
 				expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
@@ -1579,8 +1774,8 @@ describe("CaptchaManager", () => {
 					captchaType: CaptchaType.image,
 				} as AccessPolicy;
 
-				const result = await captchaManager.isValidRequest(
-					{
+				const result = await captchaManager.isValidRequest({
+					clientSettings: {
 						account: "account",
 						tier: Tier.Free,
 						settings: {
@@ -1588,11 +1783,10 @@ describe("CaptchaManager", () => {
 							captchaType: CaptchaType.pow,
 						},
 					},
-					CaptchaType.pow,
-					mockEnv,
-					undefined, // no sessionId
-					restrictImagePolicy,
-				);
+					requestedCaptchaType: CaptchaType.pow,
+					env: mockEnv,
+					userAccessPolicy: restrictImagePolicy,
+				});
 
 				expect(result.valid).toBe(false);
 				expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
@@ -1604,8 +1798,8 @@ describe("CaptchaManager", () => {
 					captchaType: CaptchaType.image,
 				} as AccessPolicy;
 
-				const result = await captchaManager.isValidRequest(
-					{
+				const result = await captchaManager.isValidRequest({
+					clientSettings: {
 						account: "account",
 						tier: Tier.Free,
 						settings: {
@@ -1613,28 +1807,210 @@ describe("CaptchaManager", () => {
 							captchaType: CaptchaType.image,
 						},
 					},
-					CaptchaType.image,
-					mockEnv,
-					undefined,
-					restrictImagePolicy,
-				);
+					requestedCaptchaType: CaptchaType.image,
+					env: mockEnv,
+					userAccessPolicy: restrictImagePolicy,
+				});
 
 				expect(result.valid).toBe(true);
 				expect(result.type).toBe(CaptchaType.image);
 			});
 		});
 	});
+	describe("isValidRequest — audio accessibility alternative", () => {
+		const settingsWith = (
+			audioAccessibilityEnabled: boolean,
+			audioFeatureFlag = true,
+		): ClientRecord["settings"] => ({
+			...defaultUserSettings,
+			captchaType: CaptchaType.frictionless,
+			audioAccessibilityEnabled,
+			captchaTypeFeatureFlags: { audio: audioFeatureFlag },
+		});
+
+		const sessionOf = (captchaType: CaptchaType): Session =>
+			({ sessionId: "sessionId", captchaType }) as Session;
+
+		it("serves audio against a visual session when the site has the alternative on", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true),
+				},
+				requestedCaptchaType: CaptchaType.audio,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.audio,
+				sessionId: "sessionId",
+			});
+		});
+
+		it("serves audio against an icon-order session too", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.iconOrder),
+			);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true),
+				},
+				requestedCaptchaType: CaptchaType.audio,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
+
+			expect(result.valid).toBe(true);
+		});
+
+		it("refuses audio, without spending the session, when the site has the alternative off", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(false),
+				},
+				requestedCaptchaType: CaptchaType.audio,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.audio,
+			});
+			expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+		});
+
+		it("refuses audio, without spending the session, on a site without the audio feature flag", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true, false),
+				},
+				requestedCaptchaType: CaptchaType.audio,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.audio,
+			});
+			expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+		});
+
+		it("keeps serving the visual types on a site without the audio feature flag", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true, false),
+				},
+				requestedCaptchaType: CaptchaType.image,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
+
+			expect(result.valid).toBe(true);
+		});
+
+		it("refuses audio against a PoW session, which offers no alternative", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.pow),
+			);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true),
+				},
+				requestedCaptchaType: CaptchaType.audio,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
+
+			expect(result.valid).toBe(false);
+			expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+		});
+
+		it("does not let the alternative widen any other type mismatch", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true),
+				},
+				requestedCaptchaType: CaptchaType.puzzle,
+				env: mockEnv,
+				sessionId: "sessionId",
+			});
+
+			expect(result.valid).toBe(false);
+			expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+		});
+
+		it("refuses a sessionless audio request even with the alternative on", async () => {
+			const result = await captchaManager.isValidRequest({
+				clientSettings: {
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true),
+				},
+				requestedCaptchaType: CaptchaType.audio,
+				env: mockEnv,
+			});
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.audio,
+			});
+			expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+		});
+	});
+
 	describe("getVerificationResponse", () => {
 		it("should return a verification response with a score if the tier is not free", async () => {
-			const result = captchaManager.getVerificationResponse(
-				true,
-				{
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Professional,
 				} as unknown as ClientRecord,
-				() => "translated",
-				0.5,
-			);
+				translateFn: () => "translated",
+				score: 0.5,
+			});
 			expect(result).toEqual({
 				status: "translated",
 				verified: true,
@@ -1642,31 +2018,31 @@ describe("CaptchaManager", () => {
 			});
 		});
 		it("should return a verification response without a score if the tier is free", async () => {
-			const result = captchaManager.getVerificationResponse(
-				true,
-				{
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Free,
 				} as unknown as ClientRecord,
-				() => "translated",
-				0.5,
-			);
+				translateFn: () => "translated",
+				score: 0.5,
+			});
 			expect(result).toEqual({
 				status: "translated",
 				verified: true,
 			});
 		});
 		it("should return a reason when verified is false and the tier is not free", () => {
-			const result = captchaManager.getVerificationResponse(
-				false,
-				{
+			const result = captchaManager.getVerificationResponse({
+				verified: false,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Professional,
 				} as unknown as ClientRecord,
-				() => "translated",
-				0.5,
-				"API.TIMESTAMP_TOO_OLD",
-			);
+				translateFn: () => "translated",
+				score: 0.5,
+				reason: "API.TIMESTAMP_TOO_OLD",
+			});
 			expect(result).toEqual({
 				status: "translated",
 				verified: false,
@@ -1675,32 +2051,31 @@ describe("CaptchaManager", () => {
 			});
 		});
 		it("should not return a reason when verified is false and the tier is free", () => {
-			const result = captchaManager.getVerificationResponse(
-				false,
-				{
+			const result = captchaManager.getVerificationResponse({
+				verified: false,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Free,
 				} as unknown as ClientRecord,
-				() => "translated",
-				undefined,
-				"API.TIMESTAMP_TOO_OLD",
-			);
+				translateFn: () => "translated",
+				reason: "API.TIMESTAMP_TOO_OLD",
+			});
 			expect(result).toEqual({
 				status: "translated",
 				verified: false,
 			});
 		});
 		it("should not return a reason when verified is true", () => {
-			const result = captchaManager.getVerificationResponse(
-				true,
-				{
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Professional,
 				} as unknown as ClientRecord,
-				() => "translated",
-				0.5,
-				"API.TIMESTAMP_TOO_OLD",
-			);
+				translateFn: () => "translated",
+				score: 0.5,
+				reason: "API.TIMESTAMP_TOO_OLD",
+			});
 			expect(result).toEqual({
 				status: "translated",
 				verified: true,
@@ -1708,15 +2083,15 @@ describe("CaptchaManager", () => {
 			});
 		});
 		it("should not return a reason when reason is undefined", () => {
-			const result = captchaManager.getVerificationResponse(
-				false,
-				{
+			const result = captchaManager.getVerificationResponse({
+				verified: false,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Professional,
 				} as unknown as ClientRecord,
-				() => "translated",
-				0.5,
-			);
+				translateFn: () => "translated",
+				score: 0.5,
+			});
 			expect(result).toEqual({
 				status: "translated",
 				verified: false,
@@ -1724,36 +2099,274 @@ describe("CaptchaManager", () => {
 			});
 		});
 		it("should return the sessionId even on the free tier, which hides the score", () => {
-			const result = captchaManager.getVerificationResponse(
-				true,
-				{
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Free,
 				} as unknown as ClientRecord,
-				() => "translated",
-				0.5,
-				undefined,
-				"session-abc",
-			);
+				translateFn: () => "translated",
+				score: 0.5,
+				sessionId: "session-abc",
+			});
 			expect(result).toEqual({
 				status: "translated",
 				verified: true,
 				sessionId: "session-abc",
 			});
 		});
-		it("should omit the sessionId when there isn't one", () => {
-			const result = captchaManager.getVerificationResponse(
-				true,
-				{
+		it("returns a score of zero rather than dropping the field", () => {
+			// A clean session scores 0, and the old truthiness check omitted
+			// the field for exactly those users — so a paying customer saw a
+			// score for every suspicious visitor and none for their best
+			// ones, which reads as "no score available" rather than "no risk".
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
 					account: "account",
 					tier: Tier.Professional,
 				} as unknown as ClientRecord,
-				() => "translated",
-				0.5,
-				undefined,
-				undefined,
-			);
+				translateFn: () => "translated",
+				score: 0,
+			});
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				score: 0,
+			});
+		});
+
+		it("omits the score when there is no score to report", () => {
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				translateFn: () => "translated",
+			});
+			expect(result).not.toHaveProperty("score");
+		});
+
+		it("still hides a zero score from the free tier", () => {
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				translateFn: () => "translated",
+				score: 0,
+			});
+			expect(result).not.toHaveProperty("score");
+		});
+
+		it("should omit the sessionId when there isn't one", () => {
+			const result = captchaManager.getVerificationResponse({
+				verified: true,
+				clientRecord: {
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				translateFn: () => "translated",
+				score: 0.5,
+			});
 			expect(result).not.toHaveProperty("sessionId");
+		});
+	});
+
+	describe("canClientSeeScore", () => {
+		it("answers with a boolean, not the score or the tier", () => {
+			// `score && tier && tier !== Tier.Free` handed back 0 for a clean
+			// session and undefined for an absent score, so the name lied
+			// about what callers were getting.
+			expect(
+				typeof CaptchaManager.canClientSeeScore(Tier.Professional, 0),
+			).toBe("boolean");
+			expect(
+				typeof CaptchaManager.canClientSeeScore(Tier.Professional, undefined),
+			).toBe("boolean");
+		});
+
+		it("shows a zero score to a paying tier", () => {
+			expect(CaptchaManager.canClientSeeScore(Tier.Professional, 0)).toBe(true);
+		});
+
+		it("withholds the score from the free tier at any value", () => {
+			expect(CaptchaManager.canClientSeeScore(Tier.Free, 0)).toBe(false);
+			expect(CaptchaManager.canClientSeeScore(Tier.Free, 0.5)).toBe(false);
+		});
+
+		it("has nothing to show when no score was computed", () => {
+			expect(
+				CaptchaManager.canClientSeeScore(Tier.Professional, undefined),
+			).toBe(false);
+		});
+	});
+
+	describe("decodeSubmissionPayloads", () => {
+		const bundle = { key: "pk", innerConfig: "cfg" };
+
+		beforeEach(() => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockResolvedValue(
+				bundle,
+			);
+		});
+
+		it("resolves the session bundle once for both payloads", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(null);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue(undefined);
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(captchaManager.resolveBundleBySessionId).toHaveBeenCalledTimes(1);
+		});
+
+		// The regression this exists to prevent: decoding moved to worker
+		// threads, so two serialised decodes cost two round trips on the submit
+		// path. Both must be in flight at once.
+		it("runs the two decodes concurrently", async () => {
+			let behaviouralStarted = false;
+			let simdStartedWhileBehaviouralInFlight = false;
+			let releaseBehavioural: () => void = () => undefined;
+			const behaviouralGate = new Promise<void>((resolve) => {
+				releaseBehavioural = resolve;
+			});
+
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockImplementation(
+				async () => {
+					behaviouralStarted = true;
+					await behaviouralGate;
+					return null;
+				},
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockImplementation(async () => {
+				simdStartedWhileBehaviouralInFlight = behaviouralStarted;
+				releaseBehavioural();
+				return undefined;
+			});
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(simdStartedWhileBehaviouralInFlight).toBe(true);
+		});
+
+		it("returns both decoded payloads", async () => {
+			const behaviouralResult = {
+				collector1: [{ event: "click" }],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+			} as BehavioralDataResult;
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviouralResult,
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1, 2] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toEqual(behaviouralResult);
+			expect(decoded.simd).toEqual({ ops: [1, 2] });
+		});
+
+		it("keeps one payload when the other decode throws", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockRejectedValue(
+				new Error("decoder blew up"),
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toBeUndefined();
+			expect(decoded.simd).toEqual({ ops: [1] });
+		});
+
+		const behaviourWith = (l?: Record<string, unknown>): BehavioralDataResult =>
+			({
+				collector1: [],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+				...(l && { l }),
+			}) as BehavioralDataResult;
+
+		const mergeSubmit = () =>
+			db.mergeSessionSubmitDetectorData as unknown as ReturnType<typeof vi.fn>;
+
+		it("stores the detector data a behaviour payload carried", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviourWith({ b: { second: ["y"] } }),
+			);
+
+			await captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" });
+
+			expect(mergeSubmit()).toHaveBeenCalledWith("s1", {
+				b: { second: ["y"] },
+			});
+		});
+
+		it("stores nothing when the behaviour payload carried none", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviourWith(),
+			);
+
+			await captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" });
+
+			expect(mergeSubmit()).not.toHaveBeenCalled();
+		});
+
+		it("still returns the payloads when storing the detector data fails", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviourWith({ b: { second: ["y"] } }),
+			);
+			mergeSubmit().mockRejectedValue(new Error("mongo down"));
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+			});
+
+			expect(decoded.behavioural).toBeDefined();
+		});
+
+		it("does not resolve a bundle when there is nothing to decode", async () => {
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {});
+			expect(decoded).toEqual({});
+			expect(captchaManager.resolveBundleBySessionId).not.toHaveBeenCalled();
+		});
+
+		it("yields nothing when the bundle lookup throws", async () => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockRejectedValue(
+				new Error("redis down"),
+			);
+			await expect(
+				captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" }),
+			).resolves.toEqual({});
 		});
 	});
 
@@ -1762,9 +2375,8 @@ describe("CaptchaManager", () => {
 		let decryptFn: any;
 
 		beforeEach(async () => {
-			// Get the mocked default export
-			const mod = await import("../../../tasks/detection/decodeBehavior.js");
-			decryptFn = mod.default;
+			const mod = await import("../../../tasks/detection/decoderPool.js");
+			decryptFn = mod.decode;
 			vi.mocked(decryptFn).mockReset();
 		});
 
@@ -1796,7 +2408,11 @@ describe("CaptchaManager", () => {
 			);
 			expect(result).toEqual(mockResult);
 			expect(decryptFn).toHaveBeenCalledTimes(1);
-			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "pk", "cfg");
+			expect(decryptFn).toHaveBeenCalledWith("behaviour", [
+				"encryptedData",
+				"pk",
+				"cfg",
+			]);
 		});
 
 		it("should return null when the bundle fails to decrypt", async () => {
@@ -1836,12 +2452,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toBeUndefined();
 		});
 
@@ -1855,12 +2471,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([blockWithCaptchaType]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toBeUndefined();
 		});
 
@@ -1874,12 +2490,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([hardBlockPolicy]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toEqual(hardBlockPolicy);
 		});
 
@@ -1892,12 +2508,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([restrictPolicy]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toBeUndefined();
 		});
 
@@ -1919,12 +2535,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([deferBlock]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toEqual(deferBlock);
 		});
 
@@ -1943,12 +2559,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([deferBlockNoType]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toEqual(deferBlockNoType);
 		});
 
@@ -1971,12 +2587,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([restrictDefer]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toEqual(restrictDefer);
 		});
 
@@ -1995,12 +2611,12 @@ describe("CaptchaManager", () => {
 				"getPrioritisedAccessPolicies",
 			).mockResolvedValue([restrictRoute]);
 
-			const result = await captchaManager.checkForHardBlock(
-				{} as AccessRulesStorage,
-				mockChallengeRecord,
-				"userAccount",
-				mockHeaders,
-			);
+			const result = await captchaManager.checkForHardBlock({
+				userAccessRulesStorage: {} as AccessRulesStorage,
+				challengeRecord: mockChallengeRecord,
+				userAccount: "userAccount",
+				headers: mockHeaders,
+			});
 			expect(result).toBeUndefined();
 		});
 	});
@@ -2020,6 +2636,7 @@ describe("CaptchaManager", () => {
 				isAbuser: boolean;
 				abuserScore: number;
 				companyAbuserScore: number;
+				reputationScore: number;
 				providerType: "isp" | "hosting" | undefined;
 				datacenterName: string | undefined;
 				providerName: string | undefined;
@@ -2039,26 +2656,14 @@ describe("CaptchaManager", () => {
 			...overrides,
 		});
 
-		const mkEnvWithIpLookup = (
-			// biome-ignore lint/suspicious/noExplicitAny: only ipInfoService.lookup is read
-			ipLookup: () => Promise<any>,
-		): ProviderEnvironment =>
-			({
-				config: {},
-				ipInfoService: { lookup: ipLookup },
-			}) as unknown as ProviderEnvironment;
-
 		it("blocks a datacenter IP at verify time when the site configures datacenter:{action:block}", async () => {
-			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() =>
-					Promise.resolve(
-						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
-					),
-				),
-				undefined,
-				{ datacenter: { action: TrafficFilterAction.Block } },
-				"1.2.3.4",
-			);
+			const check = await captchaManager.resolveTrafficFilterCheck({
+				trafficFilter: { datacenter: { action: TrafficFilterAction.Block } },
+				currentIpInfo: ipInfoResponse({
+					isDatacenter: true,
+					providerType: "hosting",
+				}),
+			});
 			expect(check.isBlocked).toBe(true);
 			if (check.isBlocked) {
 				expect(check.reason).toBe(ResultReason.DATACENTER_BLOCKED);
@@ -2070,21 +2675,18 @@ describe("CaptchaManager", () => {
 			// overrides only affect the captcha-type / difficulty at
 			// request-time; at verify-time they don't produce a block, so
 			// the interaction succeeds and is billed as normal.
-			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() =>
-					Promise.resolve(
-						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
-					),
-				),
-				undefined,
-				{
+			const check = await captchaManager.resolveTrafficFilterCheck({
+				trafficFilter: {
 					datacenter: {
 						action: TrafficFilterAction.Challenge,
 						captchaType: CaptchaType.image,
 					},
 				},
-				"1.2.3.4",
-			);
+				currentIpInfo: ipInfoResponse({
+					isDatacenter: true,
+					providerType: "hosting",
+				}),
+			});
 			expect(check.isBlocked).toBe(false);
 		});
 
@@ -2093,33 +2695,57 @@ describe("CaptchaManager", () => {
 			// invariant in trafficFilterRequestTime.unit.test.ts — the
 			// asymmetry is deliberate. At verify-time we default the
 			// abuser block; at request-time we defer to the operator.
-			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() =>
-					Promise.resolve(
-						ipInfoResponse({
-							isAbuser: true,
-							abuserScore: 0.9,
-							companyAbuserScore: 0.9,
-						}),
-					),
-				),
-				undefined,
-				{},
-				"1.2.3.4",
-			);
+			const check = await captchaManager.resolveTrafficFilterCheck({
+				trafficFilter: {},
+				currentIpInfo: ipInfoResponse({ reputationScore: 0.99 }),
+			});
 			expect(check.isBlocked).toBe(true);
 			if (check.isBlocked) {
 				expect(check.reason).toBe(ResultReason.ABUSER_BLOCKED);
 			}
 		});
 
+		it("does not apply the abuser default below the default reputation threshold, whatever the abuser scores", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck({
+				trafficFilter: {},
+				currentIpInfo: ipInfoResponse({
+					reputationScore: 0.97,
+					isAbuser: true,
+					abuserScore: 0.9,
+					companyAbuserScore: 0.9,
+				}),
+			});
+			expect(check.isBlocked).toBe(false);
+		});
+
 		it("passes when no category is active and the abuser default doesn't match (clean IP)", async () => {
-			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() => Promise.resolve(ipInfoResponse())),
-				undefined,
-				{},
-				"1.2.3.4",
-			);
+			const check = await captchaManager.resolveTrafficFilterCheck({
+				trafficFilter: {},
+				currentIpInfo: ipInfoResponse(),
+			});
+			expect(check.isBlocked).toBe(false);
+		});
+
+		it("falls back to the record's ip info when the site sent no current ip", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck({
+				recordIpInfo: ipInfoResponse({
+					isDatacenter: true,
+					providerType: "hosting",
+				}),
+				trafficFilter: { datacenter: { action: TrafficFilterAction.Block } },
+			});
+			expect(check.isBlocked).toBe(true);
+		});
+
+		it("filters on the current ip info over the record's", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck({
+				recordIpInfo: ipInfoResponse({
+					isDatacenter: true,
+					providerType: "hosting",
+				}),
+				trafficFilter: { datacenter: { action: TrafficFilterAction.Block } },
+				currentIpInfo: ipInfoResponse(),
+			});
 			expect(check.isBlocked).toBe(false);
 		});
 	});

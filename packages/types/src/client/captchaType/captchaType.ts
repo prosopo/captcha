@@ -19,6 +19,8 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	audio = "audio",
+	iconOrder = "iconOrder",
 	// Web Bot Auth verified — no user-facing challenge. Issued only by the
 	// frictionless flow when the request carried a valid Ed25519 signature
 	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
@@ -31,13 +33,103 @@ enum CaptchaType {
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-// Decision machines only work with pow, image and puzzle captcha types.
-// Frictionless is the outer flow that dispatches to these; authenticated
-// is a pre-verified pass-through and has no scoring surface.
-const DecisionMachineCaptchaTypeSchema = z.union([
-	z.literal(CaptchaType.pow),
-	z.literal(CaptchaType.image),
-	z.literal(CaptchaType.puzzle),
-]);
+/**
+ * Every challenge a user can be asked to solve, and so everything with a
+ * verify endpoint, a usage counter and a decision-machine input.
+ *
+ * `frictionless` is the router that picks one of these and `authenticated` is
+ * a pre-verified pass-through, so neither is a challenge.
+ */
+type ChallengeCaptchaType =
+	| CaptchaType.pow
+	| CaptchaType.image
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder
+	| CaptchaType.audio;
 
-export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };
+const CHALLENGE_CAPTCHA_TYPES = [
+	CaptchaType.pow,
+	CaptchaType.image,
+	CaptchaType.puzzle,
+	CaptchaType.iconOrder,
+	CaptchaType.audio,
+] as const satisfies readonly ChallengeCaptchaType[];
+
+const ChallengeCaptchaTypeSchema = z.enum(CHALLENGE_CAPTCHA_TYPES);
+
+/**
+ * The challenges a session can be minted as. Audio is missing because it is
+ * only ever served as the accessibility alternative to one of these, on a
+ * session that already exists.
+ */
+type ConcreteCaptchaType = Exclude<ChallengeCaptchaType, CaptchaType.audio>;
+
+const CONCRETE_CAPTCHA_TYPES = [
+	CaptchaType.pow,
+	CaptchaType.image,
+	CaptchaType.puzzle,
+	CaptchaType.iconOrder,
+] as const satisfies readonly ConcreteCaptchaType[];
+
+const ConcreteCaptchaTypeSchema = z.enum(CONCRETE_CAPTCHA_TYPES);
+
+/** The visual challenges a PoW solve can escalate into. */
+type InteractiveCaptchaType = Exclude<ConcreteCaptchaType, CaptchaType.pow>;
+
+const INTERACTIVE_CAPTCHA_TYPES = [
+	CaptchaType.image,
+	CaptchaType.puzzle,
+	CaptchaType.iconOrder,
+] as const satisfies readonly InteractiveCaptchaType[];
+
+const InteractiveCaptchaTypeSchema = z.enum(INTERACTIVE_CAPTCHA_TYPES);
+
+const isChallengeCaptchaType = (
+	value: CaptchaType | undefined,
+): value is ChallengeCaptchaType =>
+	ChallengeCaptchaTypeSchema.safeParse(value).success;
+
+const isConcreteCaptchaType = (
+	value: CaptchaType | undefined,
+): value is ConcreteCaptchaType =>
+	ConcreteCaptchaTypeSchema.safeParse(value).success;
+
+const isInteractiveCaptchaType = (
+	value: CaptchaType | undefined,
+): value is InteractiveCaptchaType =>
+	InteractiveCaptchaTypeSchema.safeParse(value).success;
+
+/**
+ * @deprecated Use {@link ChallengeCaptchaTypeSchema}. Operator-authored
+ * decision machines and stored artefacts reference this name.
+ */
+const DecisionMachineCaptchaTypeSchema = ChallengeCaptchaTypeSchema;
+
+// What a site, access rule or traffic category may select. Audio is only the
+// accessibility alternative, so a record naming it is rejected on write.
+const SelectableCaptchaTypeSchema = CaptchaTypeSchema.refine(
+	// `boolean`, not an inferred type predicate, so the output stays `CaptchaType`.
+	(captchaType): boolean => captchaType !== CaptchaType.audio,
+	{ message: "audio is only served as an accessibility alternative" },
+);
+
+export {
+	CaptchaType,
+	CaptchaTypeSchema,
+	CHALLENGE_CAPTCHA_TYPES,
+	ChallengeCaptchaTypeSchema,
+	CONCRETE_CAPTCHA_TYPES,
+	ConcreteCaptchaTypeSchema,
+	DecisionMachineCaptchaTypeSchema,
+	INTERACTIVE_CAPTCHA_TYPES,
+	InteractiveCaptchaTypeSchema,
+	isChallengeCaptchaType,
+	isConcreteCaptchaType,
+	isInteractiveCaptchaType,
+	SelectableCaptchaTypeSchema,
+};
+export type {
+	ChallengeCaptchaType,
+	ConcreteCaptchaType,
+	InteractiveCaptchaType,
+};

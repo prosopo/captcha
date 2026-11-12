@@ -18,9 +18,10 @@ import {
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { ClientSettingsSchema, RegisterSitekeyBody } from "@prosopo/types";
+import { RegisterSitekeyBody } from "@prosopo/types";
 import type { z } from "zod";
 import type { ClientTaskManager } from "../../tasks/client/clientTasks.js";
+import { defaultSiteKeySettings } from "./defaultSiteKeySettings.js";
 
 type RegisterSitekeyBodyType = typeof RegisterSitekeyBody;
 
@@ -39,11 +40,13 @@ class ApiRegisterSiteKeyEndpoint
 			? logger.with({}, "admin:site-key:register")
 			: getLogger("info", "provider:admin:site-key:register");
 
-		const temp = settings || ClientSettingsSchema.parse({});
-
 		logger.info(() => ({ data: { siteKey }, msg: "`Registering site key" }));
 
-		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
+		await this.clientTaskManager.registerSiteKey(
+			siteKey,
+			tier,
+			settings || defaultSiteKeySettings(),
+		);
 
 		logger.info(() => ({ msg: "Site key registered" }));
 

@@ -22,9 +22,10 @@
  * between equally-specific rules (`ruleHarshness`); and downstream routing
  * consumers outside this repository.
  *
- * They agreed on the order — image > puzzle > pow > frictionless — but nothing
- * held them to it, and they disagreed on the encoding, which is where the
- * tier-crossing bug documented on `TIER_GAP` came from.
+ * They agreed on the order — image > iconOrder > puzzle > pow >
+ * frictionless — but nothing held them to it, and they disagreed on the
+ * encoding, which is where the tier-crossing bug documented on `TIER_GAP`
+ * came from.
  *
  * ## Two questions, two APIs
  *
@@ -96,14 +97,18 @@ const MAX_INTRA_TIER = TIER_GAP - 1;
  *
  * Keyed by the enum's string values rather than the enum itself, so callers
  * carrying a captcha type as a bare `string` rank it without importing
- * `CaptchaType`.
+ * `CaptchaType`. A Map rather than an object literal, so a key such as
+ * `constructor` or `__proto__` misses instead of reading Object.prototype.
  */
-const CAPTCHA_TYPE_TIER: Record<string, number> = {
-	image: 4 * TIER_GAP,
-	puzzle: 3 * TIER_GAP,
-	pow: 2 * TIER_GAP,
-	frictionless: 1 * TIER_GAP,
-};
+const CAPTCHA_TYPE_TIER: ReadonlyMap<string, number> = new Map([
+	["image", 5 * TIER_GAP],
+	// Several ordered clicks is harder than one drag, but easier than image.
+	["iconOrder", 4 * TIER_GAP],
+	// No `audio`: nothing selects it, so it ranks 0 like any unknown value.
+	["puzzle", 3 * TIER_GAP],
+	["pow", 2 * TIER_GAP],
+	["frictionless", 1 * TIER_GAP],
+]);
 
 /**
  * The tunables that make one challenge of a given type harder than another.
@@ -120,15 +125,13 @@ const CAPTCHA_TYPE_TIER: Record<string, number> = {
  * was strictest. Nothing ranks policies by it today, and adding it here would
  * silently start doing so.
  *
- * What carries puzzle severity instead is `solvedImagesCount`, on a puzzle
- * rule. That reads like a mistake and is not: a puzzle has no rounds — one
- * puzzle per session — so there is nothing for a round count to mean
- * literally. The number is reused as a severity level, which the provider
+ * What carries puzzle severity instead is `severity`, a level the provider
  * converts with `severityToPuzzleDifficulty` (see
  * `provider/src/tasks/puzzle/puzzleDifficulty.ts`) into an index into
  * `PUZZLE_DIFFICULTY_LEVELS`, the banded ladder that actually renders a
- * harder puzzle. Rule authoring therefore keeps the field on puzzle rules on
- * purpose, and drops it for `pow`, which has its own dial.
+ * harder puzzle. Puzzle rules written before `severity` existed carry the
+ * level in `solvedImagesCount` instead (a puzzle has no rounds, so the round
+ * count was reused), so that is read when `severity` is unset.
  */
 export interface CaptchaPolicySeverityInput {
 	captchaType?: string | undefined;
@@ -138,6 +141,11 @@ export interface CaptchaPolicySeverityInput {
 	 * rather than running that many rounds. Ignored on `pow`.
 	 */
 	solvedImagesCount?: number | undefined;
+	/**
+	 * Puzzle severity level. Takes precedence over `solvedImagesCount` on
+	 * `puzzle`, which older puzzle rules use to carry the same value.
+	 */
+	severity?: number | undefined;
 	/** PoW difficulty. Higher is harder. `pow`'s own dial. */
 	powDifficulty?: number | undefined;
 }
@@ -157,7 +165,7 @@ const clampIntraTier = (value: number): number =>
  * tie; ranking it as a real type is the consistent reading.
  */
 export const rankCaptchaType = (captchaType: string | undefined): number =>
-	captchaType === undefined ? 0 : (CAPTCHA_TYPE_TIER[captchaType] ?? 0);
+	captchaType === undefined ? 0 : (CAPTCHA_TYPE_TIER.get(captchaType) ?? 0);
 
 /**
  * True when `candidate` is a stricter captcha *type* than `incumbent`,
@@ -181,18 +189,18 @@ export const isStricterCaptchaType = (
  * Unset means "not hardened", i.e. the bottom of the tier — an operator who
  * set a value wants it to count for something against one who did not.
  *
- * `image` and `puzzle` share `solvedImagesCount` because it is the severity
- * currency both speak: a puzzle has no rounds, so the provider maps the same
- * number onto a puzzle difficulty level (`severityToPuzzleDifficulty`) instead
- * of running that many rounds. `pow` has its own dial and rule authoring drops
- * `solvedImagesCount` for it, so reading it there would rank every pow rule at
- * the bottom of its tier regardless of how hard it actually is.
+ * `puzzle` reads `severity`, falling back to `solvedImagesCount` for rules
+ * written before `severity` existed. `pow` has its own dial and rule
+ * authoring drops `solvedImagesCount` for it, so reading it there would rank
+ * every pow rule at the bottom of its tier regardless of how hard it actually
+ * is.
  */
 const intraTierSeverity = (policy: CaptchaPolicySeverityInput): number => {
 	switch (policy.captchaType) {
 		case "image":
-		case "puzzle":
 			return clampIntraTier(policy.solvedImagesCount ?? 0);
+		case "puzzle":
+			return clampIntraTier(policy.severity ?? policy.solvedImagesCount ?? 0);
 		case "pow":
 			return clampIntraTier(policy.powDifficulty ?? 0);
 		default:
@@ -234,3 +242,37 @@ export const isStricterCaptchaPolicy = (
 	incumbent: CaptchaPolicySeverityInput,
 ): boolean =>
 	captchaPolicySeverity(candidate) > captchaPolicySeverity(incumbent);
+
+/**
+ * Severity of a policy that may block instead of challenging. A block
+ * outranks every challenge; challenges rank by `captchaPolicySeverity`.
+ *
+ * Whether the policy blocks is passed in rather than read off it, because
+ * each caller encodes that with its own enum (`AccessPolicyType.Block`,
+ * `TrafficFilterAction.Block`) and this package imports neither.
+ */
+export const policyHarshness = (
+	policy: CaptchaPolicySeverityInput,
+	blocks: boolean,
+): number => (blocks ? Number.MAX_SAFE_INTEGER : captchaPolicySeverity(policy));
+
+/**
+ * The harshest of `policies` by `policyHarshness`, or undefined when there
+ * are none. A tie keeps the earlier policy, so the result never depends on
+ * anything but the policies and their order.
+ */
+export const harshestPolicy = <T extends CaptchaPolicySeverityInput>(
+	policies: readonly T[],
+	blocks: (policy: T) => boolean,
+): T | undefined => {
+	let harshest: T | undefined;
+	let harshestSeverity = Number.NEGATIVE_INFINITY;
+	for (const policy of policies) {
+		const severity = policyHarshness(policy, blocks(policy));
+		if (severity > harshestSeverity) {
+			harshest = policy;
+			harshestSeverity = severity;
+		}
+	}
+	return harshest;
+};

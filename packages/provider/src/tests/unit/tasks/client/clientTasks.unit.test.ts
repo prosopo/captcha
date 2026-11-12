@@ -13,6 +13,7 @@
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
+	CaptchaType,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -26,6 +27,7 @@ import {
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
+	type IconOrderCaptchaRecord,
 	type PoWCaptchaRecord,
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
@@ -33,7 +35,35 @@ import {
 } from "@prosopo/types-database";
 import { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
+import {
+	ClientTaskManager,
+	matchesGlob,
+	toDecisionMachineTarget,
+} from "../../../../tasks/client/clientTasks.js";
+import {
+	invalidateAllDecisionMachineArtifactCaches,
+	invalidateDecisionMachineScriptCache,
+} from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+
+vi.mock(
+	"../../../../tasks/decisionMachine/decisionMachineRunner.js",
+	async (
+		importOriginal: () => Promise<
+			typeof import("../../../../tasks/decisionMachine/decisionMachineRunner.js")
+		>,
+	) => {
+		const actual = await importOriginal();
+		return {
+			...actual,
+			invalidateAllDecisionMachineArtifactCaches: vi.fn(
+				actual.invalidateAllDecisionMachineArtifactCaches,
+			),
+			invalidateDecisionMachineScriptCache: vi.fn(
+				actual.invalidateDecisionMachineScriptCache,
+			),
+		};
+	},
+);
 
 const loggerOuter = getLogger("info", "test:client-tasks");
 
@@ -145,6 +175,10 @@ describe("ClientTaskManager", () => {
 			markDappUserCommitmentsStored: vi.fn(),
 			markDappUserPoWCommitmentsStored: vi.fn(),
 			getUnstoredDappUserPoWCommitments: vi.fn().mockResolvedValue([]),
+			getUnstoredPuzzleCaptchaRecords: vi.fn().mockResolvedValue([]),
+			getUnstoredIconOrderCaptchaRecords: vi.fn().mockResolvedValue([]),
+			getUnstoredAudioCaptchaRecords: vi.fn().mockResolvedValue([]),
+			markInteractiveCaptchaRecordsStored: vi.fn(),
 			createScheduledTaskStatus: vi.fn(
 				(taskName: ScheduledTaskNames, status: ScheduledTaskStatus) => {
 					const _id = collections.schedulers.nextID;
@@ -200,6 +234,8 @@ describe("ClientTaskManager", () => {
 				},
 			]),
 			upsertDecisionMachineArtifact: vi.fn(),
+			removeDecisionMachineArtifact: vi.fn().mockResolvedValue(true),
+			removeAllDecisionMachineArtifacts: vi.fn().mockResolvedValue(2),
 		} as unknown as IProviderDatabase;
 
 		// captchaDB = {
@@ -230,31 +266,54 @@ describe("ClientTaskManager", () => {
 		expect(providerDB.getUnstoredDappUserCommitments).not.toHaveBeenCalled();
 	});
 
-	it("paginates unstored commitments by `_id` keyset — subsequent fetches carry the last _id", async () => {
-		const page1: (Pick<UserCommitment, "id"> & { _id: string })[] = [
-			{ id: "c1", _id: "id-1" },
-			{ id: "c2", _id: "id-2" },
-		];
-		const page2: (Pick<UserCommitment, "id"> & { _id: string })[] = [
-			{ id: "c3", _id: "id-3" },
-		];
+	const commitmentPage = (
+		from: number,
+		count: number,
+	): UserCommitmentRecord[] =>
+		Array.from(
+			{ length: count },
+			(_, i): Pick<UserCommitment, "id"> & { _id: string } => ({
+				id: `c${from + i}`,
+				_id: `id-${from + i}`,
+			}),
+		) as unknown as UserCommitmentRecord[];
 
-		// biome-ignore lint/suspicious/noExplicitAny: mock-only shape
-		const commMock = providerDB.getUnstoredDappUserCommitments as any;
+	it("paginates unstored commitments by `_id` keyset — subsequent fetches carry the last _id", async () => {
+		const commMock = vi.mocked(providerDB.getUnstoredDappUserCommitments);
 		commMock
-			.mockResolvedValueOnce(page1)
-			.mockResolvedValueOnce(page2)
+			.mockResolvedValueOnce(commitmentPage(1, 1000))
+			.mockResolvedValueOnce(commitmentPage(1001, 1000))
 			.mockResolvedValueOnce([]);
-		// biome-ignore lint/suspicious/noExplicitAny: mock-only shape
-		(providerDB.createScheduledTaskStatus as any).mockResolvedValueOnce({});
-		// biome-ignore lint/suspicious/noExplicitAny: mock-only shape
-		(providerDB.updateScheduledTaskStatus as any).mockResolvedValueOnce({});
 
 		await clientTaskManager.storeCommitmentsExternal();
 
-		expect(commMock).toHaveBeenNthCalledWith(1, expect.any(Number), undefined);
-		expect(commMock).toHaveBeenNthCalledWith(2, expect.any(Number), "id-2");
-		expect(commMock).toHaveBeenNthCalledWith(3, expect.any(Number), "id-3");
+		expect(commMock).toHaveBeenCalledTimes(3);
+		expect(commMock).toHaveBeenNthCalledWith(1, {
+			limit: 1000,
+			afterId: undefined,
+		});
+		expect(commMock).toHaveBeenNthCalledWith(2, {
+			limit: 1000,
+			afterId: "id-1000",
+		});
+		expect(commMock).toHaveBeenNthCalledWith(3, {
+			limit: 1000,
+			afterId: "id-2000",
+		});
+	});
+
+	it("stops a phase at the first short page instead of chasing rows that arrive during the sweep", async () => {
+		const commMock = vi.mocked(providerDB.getUnstoredDappUserCommitments);
+		commMock
+			.mockResolvedValueOnce(commitmentPage(1, 1000))
+			.mockResolvedValueOnce(commitmentPage(1001, 3))
+			.mockResolvedValueOnce(commitmentPage(1004, 2));
+
+		await clientTaskManager.storeCommitmentsExternal();
+
+		expect(commMock).toHaveBeenCalledTimes(2);
+		expect(providerDB.markDappUserCommitmentsStored).toHaveBeenCalledTimes(2);
+		expect(providerDB.getUnstoredSessionRecords).toHaveBeenCalled();
 	});
 
 	it("should store commitments externally if mongoCaptchaUri is set", async () => {
@@ -399,8 +458,46 @@ describe("ClientTaskManager", () => {
 					processedSessionRecords: 0,
 					processedCommitments: 0,
 					processedPowRecords: 1,
+					processedPuzzleRecords: 0,
+					processedIconOrderRecords: 0,
+					processedAudioRecords: 0,
 				},
 			},
+		);
+	});
+
+	it("re-sends pending interactive records from the last 48 hours and marks them stored", async () => {
+		const pendingIconOrder: Pick<IconOrderCaptchaRecord, "challenge">[] = [
+			{ challenge: "1794190728920___user___dapp___1" },
+		];
+		vi.mocked(
+			providerDB.getUnstoredIconOrderCaptchaRecords,
+		).mockResolvedValueOnce(pendingIconOrder as IconOrderCaptchaRecord[]);
+
+		const before = Date.now();
+		await clientTaskManager.storeCommitmentsExternal();
+
+		const since = vi.mocked(providerDB.getUnstoredIconOrderCaptchaRecords).mock
+			.calls[0]?.[0]?.since;
+		expect(since).toBeInstanceOf(Date);
+		const windowMs = before - (since?.getTime() ?? 0);
+		expect(windowMs).toBeGreaterThanOrEqual(48 * 60 * 60 * 1000 - 1000);
+		expect(windowMs).toBeLessThanOrEqual(48 * 60 * 60 * 1000 + 1000);
+		expect(providerDB.getUnstoredPuzzleCaptchaRecords).toHaveBeenCalledWith({
+			limit: 1000,
+			since,
+		});
+		expect(providerDB.getUnstoredAudioCaptchaRecords).toHaveBeenCalledWith({
+			limit: 1000,
+			since,
+		});
+		expect(
+			providerDB.markInteractiveCaptchaRecordsStored,
+		).toHaveBeenCalledTimes(1);
+		expect(providerDB.markInteractiveCaptchaRecordsStored).toHaveBeenCalledWith(
+			CaptchaType.iconOrder,
+			pendingIconOrder.map((record) => record.challenge),
+			expect.any(Date),
 		);
 	});
 
@@ -447,6 +544,9 @@ describe("ClientTaskManager", () => {
 
 					processedCommitments: 0,
 					processedPowRecords: 0,
+					processedPuzzleRecords: 0,
+					processedIconOrderRecords: 0,
+					processedAudioRecords: 0,
 				},
 			},
 		);
@@ -553,6 +653,35 @@ describe("ClientTaskManager", () => {
 					"localhost",
 				),
 			).toBe(false);
+		});
+
+		it("should match glob patterns", () => {
+			expect(
+				clientTaskManager.domainPatternMatcher("shop.example.com", "shop*.com"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("a.b.example.com", "*example*"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("example.org", "*example*.com"),
+			).toBe(false);
+			// "." in a pattern is literal, not any character.
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"shopxexample.com",
+					"shop.*.com",
+				),
+			).toBe(false);
+		});
+
+		it("should match a many-star glob pattern in linear time", () => {
+			// A customer-controlled pattern like this backtracks exponentially
+			// when compiled to `.*a.*a...` and blocks the event loop.
+			const pattern = `${"*a".repeat(10)}*b`;
+			const host = "a".repeat(32);
+			const started = performance.now();
+			expect(clientTaskManager.domainPatternMatcher(host, pattern)).toBe(false);
+			expect(performance.now() - started).toBeLessThan(500);
 		});
 
 		it("should handle edge cases", () => {
@@ -721,28 +850,69 @@ describe("ClientTaskManager", () => {
 	});
 	describe("Decision machine updates", () => {
 		it("should store decision machine artifacts with global scope", async () => {
-			const result = await clientTaskManager.updateDecisionMachine(
-				DecisionMachineScope.Global,
-				DecisionMachineRuntime.Node,
-				'module.exports = () => ({ decision: "allow" });',
-				undefined,
-				DecisionMachineLanguage.JavaScript,
-				"dm",
-				"1.0.0",
-			);
+			const result = await clientTaskManager.updateDecisionMachine({
+				scope: DecisionMachineScope.Global,
+				runtime: DecisionMachineRuntime.Node,
+				source: 'module.exports = () => ({ decision: "allow" });',
+				language: DecisionMachineLanguage.JavaScript,
+				name: "dm",
+				version: "1.0.0",
+			});
 
 			expect(providerDB.upsertDecisionMachineArtifact).toHaveBeenCalled();
 			expect(result.scope).toBe(DecisionMachineScope.Global);
 		});
 
-		it("should reject dapp scope without dapp account", async () => {
-			await expect(
-				clientTaskManager.updateDecisionMachine(
-					DecisionMachineScope.Dapp,
-					DecisionMachineRuntime.Node,
-					'module.exports = () => ({ decision: "allow" });',
-				),
-			).rejects.toThrow();
+		it("should reject dapp scope without dapp account", () => {
+			expect(() => toDecisionMachineTarget(DecisionMachineScope.Dapp)).toThrow(
+				expect.objectContaining({ code: "INVALID_REQUEST" }),
+			);
 		});
+
+		it("should accept dapp scope with a dapp account", () => {
+			expect(
+				toDecisionMachineTarget(DecisionMachineScope.Dapp, "dapp"),
+			).toEqual({ scope: DecisionMachineScope.Dapp, dappAccount: "dapp" });
+		});
+
+		it("flushes the decision machine caches when one is removed", async () => {
+			vi.mocked(invalidateAllDecisionMachineArtifactCaches).mockClear();
+			vi.mocked(invalidateDecisionMachineScriptCache).mockClear();
+
+			await clientTaskManager.removeDecisionMachine("dm-id");
+
+			expect(invalidateAllDecisionMachineArtifactCaches).toHaveBeenCalledOnce();
+			expect(invalidateDecisionMachineScriptCache).toHaveBeenCalledOnce();
+		});
+
+		it("flushes the decision machine caches when all are removed", async () => {
+			vi.mocked(invalidateAllDecisionMachineArtifactCaches).mockClear();
+			vi.mocked(invalidateDecisionMachineScriptCache).mockClear();
+
+			await clientTaskManager.removeAllDecisionMachines();
+
+			expect(invalidateAllDecisionMachineArtifactCaches).toHaveBeenCalledOnce();
+			expect(invalidateDecisionMachineScriptCache).toHaveBeenCalledOnce();
+		});
+	});
+});
+
+describe("matchesGlob", () => {
+	it.each<[string, string, boolean]>([
+		["*", "", true],
+		["*", "anything", true],
+		["", "", true],
+		["", "a", false],
+		["a*", "abc", true],
+		["*c", "abc", true],
+		["a*c", "abc", true],
+		["a*c", "abd", false],
+		["a**c", "ac", true],
+		["*a*b*", "xxaxxbxx", true],
+		["*a*b*", "xxbxxaxx", false],
+		["abc", "abc", true],
+		["abc", "abcd", false],
+	])("matchesGlob(%s, %s) is %s", (pattern, text, expected) => {
+		expect(matchesGlob(pattern, text)).toBe(expected);
 	});
 });

@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Dh’fhàillig còdachadh an t-seòlaidh mhì-dhligheach",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Chan eil gealladh fuasglaidh a’ captcha ann",
+		"SIGNER_UNDEFINED": "Cha deach an soidhniche a mhìneachadh",
+		"CANNOT_FIND_KEYPAIR": "Cha ghabh am paidhir iuchraichean a lorg",
+		"INVALID_DATA_FORMAT": "Fòrmat dàta mì-dhligheach"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Chaidh àrainneachd neo-aithnichte iarraidh",
+		"INVALID_CAPTCHA_NUMBER": "Rèitich roghainnean nan captcha gu ceart",
+		"INVALID_LOG_LEVEL": "Ìre logaidh mhì-dhligheach",
+		"INVALID_PACKAGE_DIR": "Pasgan pacaid mì-dhligheach"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Mearachd le parsadh an t-seata dàta",
+		"SOLUTION_PARSE_ERROR": "Mearachd le làimhseachadh an t-seata dàta",
+		"HASH_ERROR": "Mearachd le haiseadh an t-seata dàta",
+		"DATASET_ID_UNDEFINED": "Cha deach ID an t-seata dàta a mhìneachadh",
+		"NOT_ENOUGH_LABELS": "Chan eil leubailean gu leòr ann",
+		"NOT_ENOUGH_IMAGES": "Chan eil dealbhan gu leòr ann",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Tha àireamh nan captcha san t-seata dàta nas lugha na an àireamh a chaidh a rèiteachadh",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Tha àireamh nam fuasglaidhean san t-seata dàta nas lugha na an àireamh a chaidh a rèiteachadh",
+		"DUPLICATE_IMAGE": "Mhothaich sinn do dhealbh dùbailte",
+		"MERKLE_ERROR": "Mearachd le togail craobh Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Dh’fhàillig ion-phortadh einnsean an stòir-dhàta",
+		"DATABASE_UNDEFINED": "Chan eil cliant an stòir-dhàta ceangailte",
+		"DATABASE_HOST_UNDEFINED": "Cha deach seòladh òstair an stòir-dhàta a mhìneachadh",
+		"DATASET_LOAD_FAILED": "Dh’fhàillig luchdadh an t-seata dàta",
+		"DATASET_GET_FAILED": "Dh’fhàillig faighinn an t-seata dàta",
+		"CAPTCHA_GET_FAILED": "Dh’fhàillig faighinn nan captcha",
+		"CAPTCHA_UPDATE_FAILED": "Dh’fhàillig ùrachadh nan captcha",
+		"IMAGE_GET_FAILED": "Dh’fhàillig faighinn an deilbh",
+		"PENDING_RECORD_NOT_FOUND": "Cha deach clàr ri feitheamh sam bith a lorg",
+		"INVALID_HASH": "Hais mì-dhligheach",
+		"SOLUTION_GET_FAILED": "Dh’fhàillig faighinn an fhuasglaidh",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Cha deach seata dàta leis an àireamh fhuasglaidhean a tha a dhìth a lorg",
+		"SOLUTION_APPROVE_FAILED": "Dh’fhàillig aontachadh an fhuasglaidh",
+		"SOLUTION_FLAG_FAILED": "Dh’fhàillig comharrachadh an fhuasglaidh mar làimhsichte",
+		"TABLES_UNDEFINED": "Cha deach clàran a mhìneachadh",
+		"CONNECTION_UNDEFINED": "Cha deach ceangal a mhìneachadh",
+		"COMMITMENT_FLAG_FAILED": "Dh’fhàillig comharrachadh a’ ghealladh mar làimhsichte",
+		"UNKNOWN": "Mearachd stòir-dhàta neo-aithnichte",
+		"QUERY_ERROR": "Dh’fhàillig ceist an stòir-dhàta",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Cha deach ceangal Redis nan riaghailtean inntrigidh a mhìneachadh",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Cha deach stòr riaghailtean inntrigidh nan cleachdaichean a mhìneachadh",
+		"SESSION_STORE_FAILED": "Dh’fhàillig stòradh an t-seisein",
+		"SESSION_CHECK_REMOVE_FAILED": "Dh’fhàillig sgrùdadh is toirt air falbh an t-seisein",
+		"SESSION_GET_FAILED": "Dh’fhàillig faighinn an t-seisein"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Chan urrainn dhut an cleachdaiche seilbhe atharrachadh",
+		"CANNOT_DELETE_OWN_USER": "Chan urrainn dhut do chunntas fhèin a sguabadh às",
+		"CANNOT_DELETE_LAST_USER": "Chan urrainn dhut an cleachdaiche mu dheireadh a sguabadh às",
+		"USER_ALREADY_EXISTS": "Tha an cleachdaiche ann mu thràth",
+		"NO_SUGGESTIONS_FOUND": "Cha deach moladh sam bith a lorg",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Chan urrainn dhut an làrach ghnìomhach mu dheireadh a chur à comas",
+		"DUPLICATE_SITE_NAME": "Tha làrach air a bheil an t-ainm seo ann mu thràth",
+		"INVALID_SITE_NAME": "Chan fhaod ach litrichean, àireamhan, fo-loidhnichean is tàthanan a bhith ann an ainm làraich"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Paramadair mì-dhligheach"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Cha deach am faidhle a lorg",
+		"FILE_ALREADY_EXISTS": "Tha am faidhle ann mu thràth",
+		"INVALID_DIR_FORMAT": "Fòrmat pasgain mì-dhligheach"
+	}
+}

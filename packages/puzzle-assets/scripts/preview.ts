@@ -40,13 +40,22 @@ interface Args {
 	out: string;
 }
 
+/** `--count` must be a whole number of at least 1; parseInt would read "12abc" as 12 and "abc" as NaN. */
+const parseCount = (value: string): number => {
+	const count = Number(value);
+	if (value.trim() === "" || !Number.isSafeInteger(count) || count < 1) {
+		throw new Error(`--count must be a positive integer, got "${value}"`);
+	}
+	return count;
+};
+
 const parseArgs = (argv: readonly string[]): Args => {
 	const args: Args = { count: 24, out: "./preview" };
 	for (let i = 0; i < argv.length; i++) {
 		const flag = argv[i];
 		const value = argv[i + 1];
-		if (flag === "--count" && value) {
-			args.count = Number.parseInt(value, 10);
+		if (flag === "--count" && value !== undefined) {
+			args.count = parseCount(value);
 			i++;
 		} else if (flag === "--out" && value) {
 			args.out = value;
@@ -88,16 +97,16 @@ const main = async (): Promise<void> => {
 
 		// Same pipeline as renderPuzzle, but kept in PNG so the preview shows
 		// the raw output rather than WebP artefacts.
-		const background = createBackground(DEFAULT_GEOMETRY);
+		const background = createBackground({ geometry: DEFAULT_GEOMETRY });
 		const prng = createPrng(createSeed());
 		const shape = createNotchShape(prng, DEFAULT_GEOMETRY.notchSize);
-		const { background: cut, piece } = cutNotch(
+		const { background: cut, piece } = cutNotch({
 			prng,
 			background,
 			shape,
-			DEFAULT_GEOMETRY.notchSize,
+			size: DEFAULT_GEOMETRY.notchSize,
 			placement,
-		);
+		});
 
 		const [bgPng, piecePng] = await Promise.all([
 			encodePng(cut),
@@ -155,7 +164,10 @@ const main = async (): Promise<void> => {
 	const benchStart = process.hrtime.bigint();
 	const benchRuns = 20;
 	for (let i = 0; i < benchRuns; i++) {
-		await renderPuzzle(createBackground(), { targetX: 200, targetY: 100 });
+		await renderPuzzle({
+			background: createBackground(),
+			placement: { targetX: 200, targetY: 100 },
+		});
 	}
 	const perRenderMs =
 		Number(process.hrtime.bigint() - benchStart) / 1e6 / benchRuns;

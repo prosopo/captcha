@@ -25,6 +25,12 @@ export interface NotchPlacement {
 	targetY: number;
 }
 
+/**
+ * Which drawing pipeline produced a puzzle. Stored with each challenge so a
+ * replay redraws it the way it was served.
+ */
+export type PuzzleRendererVersion = 1 | 2;
+
 export interface RenderedPuzzle {
 	/** Background with the notch cut into it, WebP. */
 	background: Buffer;
@@ -32,6 +38,24 @@ export interface RenderedPuzzle {
 	piece: Buffer;
 	/** Piece bounding-box size in px; the widget centres it on the cursor. */
 	pieceSize: number;
+	/**
+	 * The seed that drove decoy placement and the notch cut. Returned so the
+	 * caller can persist it and replay this exact render later; see the
+	 * secrecy note in prng.ts before putting it anywhere else.
+	 */
+	seed: Buffer;
+	rendererVersion: PuzzleRendererVersion;
+}
+
+export interface RenderedPuzzleBoard {
+	/** Board with the notch cut and the piece drawn at its start position, WebP. */
+	board: Buffer;
+	/** The piece's alpha, one byte per pixel, row-major, `pieceSize` square. */
+	mask: Buffer;
+	pieceSize: number;
+	/** See `RenderedPuzzle.seed`. */
+	seed: Buffer;
+	rendererVersion: PuzzleRendererVersion;
 }
 
 export interface PuzzleGeometry {
@@ -77,6 +101,13 @@ export interface PuzzleRenderSettings {
 	 * it (decoy reads as indented). Small values keep decoys subtle.
 	 */
 	decoyBodyBrightness: number;
+	/**
+	 * How many decoys copy the real piece's outline (renderer 2+); the rest
+	 * each draw their own. Unique outlines let a human — and a solver — match
+	 * the piece to the one hole of its shape, so the count rises with
+	 * difficulty. Unset means none.
+	 */
+	lookalikeDecoys?: number;
 	/**
 	 * Multiplier applied to the real cutout's pixels. Lower is darker (a
 	 * more obvious target for the human user); higher lets the cutout

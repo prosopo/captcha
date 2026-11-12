@@ -14,9 +14,11 @@
 
 import crypto from "node:crypto";
 import type { AllKeys } from "@prosopo/common";
+import { stripTrailingSlashes } from "@prosopo/util";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 import { type ZodType, z } from "zod";
+import { BYPASS_KEY_HASH_PATTERN } from "#policy/bypassKey.js";
 import type { UserAttributes, UserIp, UserScope } from "#policy/rule.js";
 import type { UserAttributesRecord, UserIpRecord } from "#policy/ruleRecord.js";
 
@@ -31,7 +33,7 @@ function normaliseSignatureAgentUrl(raw: string): string {
 	url.hostname = url.hostname.toLowerCase();
 	url.protocol = url.protocol.toLowerCase();
 	if (url.pathname === "/") url.pathname = "";
-	return url.toString().replace(/\/$/, "");
+	return stripTrailingSlashes(url.toString());
 }
 
 const userAttributesSchema = z.object({
@@ -65,6 +67,7 @@ const userAttributesSchema = z.object({
 		.url()
 		.transform(normaliseSignatureAgentUrl)
 		.optional(),
+	bypassKeyHash: z.string().regex(BYPASS_KEY_HASH_PATTERN).optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z
@@ -100,29 +103,65 @@ const userIpInput = z
 		ip: z.string().optional(),
 		ipMask: z.string().optional(),
 	} satisfies AllKeys<UserIpInput>)
-	.transform((userIpInput: UserIpInput): UserIp => {
+	.transform((userIpInput: UserIpInput, ctx): UserIp => {
 		// this line creates a new "userScope", without ip and ipMask
 		const { ip, ipMask, ...numericUserIp } = userIpInput;
 
 		if ("string" === typeof ip) {
-			numericUserIp.numericIp = getIPAddress(ip).bigInt();
+			const numericIp = parseIp(ip);
+			if (undefined === numericIp) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ["ip"],
+					message: "Invalid IP address",
+				});
+				return z.NEVER;
+			}
+			numericUserIp.numericIp = numericIp;
 		}
 
-		// Assuming ipMask is already validated to be a string in CIDR format
 		if ("string" === typeof ipMask) {
-			// Try IPv4 CIDR first (e.g., 192.168.1.0/24); fall back to IPv6
-			// CIDR (e.g., 2001:db8::/32). Both Address4 and Address6 understand
-			// CIDR notation and expose start/end addresses for the network.
-			const ipObject = Address4.isValid(ipMask)
-				? new Address4(ipMask)
-				: new Address6(ipMask);
-
-			numericUserIp.numericIpMaskMin = ipObject.startAddress().bigInt();
-			numericUserIp.numericIpMaskMax = ipObject.endAddress().bigInt();
+			const range = parseIpMask(ipMask);
+			if (undefined === range) {
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ["ipMask"],
+					message: "Invalid IP mask",
+				});
+				return z.NEVER;
+			}
+			numericUserIp.numericIpMaskMin = range.min;
+			numericUserIp.numericIpMaskMax = range.max;
 		}
 
 		return numericUserIp;
 	});
+
+const parseIp = (ip: string): bigint | undefined => {
+	try {
+		return getIPAddress(ip).bigInt();
+	} catch {
+		return undefined;
+	}
+};
+
+// Address4 and Address6 both read CIDR notation and expose the start and end
+// addresses of the network.
+const parseIpMask = (
+	ipMask: string,
+): { min: bigint; max: bigint } | undefined => {
+	try {
+		const ipObject = Address4.isValid(ipMask)
+			? new Address4(ipMask)
+			: new Address6(ipMask);
+		return {
+			min: ipObject.startAddress().bigInt(),
+			max: ipObject.endAddress().bigInt(),
+		};
+	} catch {
+		return undefined;
+	}
+};
 
 export type UserScopeInput = UserAttributesInput & UserIpInput;
 

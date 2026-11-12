@@ -249,4 +249,21 @@ describe("checkLangRules", () => {
 		const result = checkLangRules(config, "en-US-posix,en-US;q=0.9,en;q=0.8");
 		expect(result).toBe(45); // 20 + 15 + 10
 	});
+
+	it("scores a language that names an inherited object property as unknown", () => {
+		const config = {
+			lRules: {
+				en: 10,
+			},
+		} as unknown as ProsopoConfigOutput;
+		const cases: Array<[string, number]> = [
+			["constructor", 0],
+			["toString,en", 10],
+			["__proto__", 0],
+			["hasOwnProperty;q=0.5", 0],
+		];
+		for (const [header, expected] of cases) {
+			expect(checkLangRules(config, header)).toBe(expected);
+		}
+	});
 });

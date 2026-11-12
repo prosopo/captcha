@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
+import { parseInteger } from "@prosopo/util";
 import {
 	array,
 	custom,
@@ -37,6 +38,18 @@ export enum CaptchaStates {
 	Solved = "solved",
 	Unsolved = "unsolved",
 }
+
+/**
+ * How a selection was made: a tile, or the checkbox tick that opened the
+ * challenge. Keyboard activation has no pointer position, so its coordinates
+ * are always (0, 0) and say nothing about who made the selection.
+ */
+export enum InputMethod {
+	pointer = "pointer",
+	keyboard = "keyboard",
+}
+
+export const InputMethodSchema = nativeEnum(InputMethod);
 export type RawSolution = number;
 export type HashedSolution = string;
 export type Item = zInfer<typeof CaptchaItemSchema>;
@@ -141,14 +154,12 @@ export const POW_SEPARATOR = "___";
 export type PoWChallengeId =
 	`${Timestamp}${typeof POW_SEPARATOR}${UserAccount}${typeof POW_SEPARATOR}${DappAccount}`;
 
-export const PowChallengeIdSchema = custom<PoWChallengeId>((val: string) => {
-	const valSplit = val.split(POW_SEPARATOR);
-	try {
-		Number.parseInt(valSplit[0] ?? "");
-		return valSplit.length === 4;
-	} catch (e) {
+export const PowChallengeIdSchema = custom<PoWChallengeId>((val: unknown) => {
+	if (typeof val !== "string") {
 		return false;
 	}
+	const valSplit = val.split(POW_SEPARATOR);
+	return valSplit.length === 4 && parseInteger(valSplit[0], { min: 0 }).ok;
 });
 
 export interface CaptchaSolution {
@@ -156,6 +167,11 @@ export interface CaptchaSolution {
 	captchaContentId: string;
 	salt: string;
 	solution: HashedSolution[];
+	/**
+	 * One entry per coordinate pair embedded in `salt`, in the same order.
+	 * Older widgets omit it, and every pair then counts as a pointer selection.
+	 */
+	inputMethods?: InputMethod[];
 }
 
 export type PoWChallengeComponents = {
@@ -230,6 +246,7 @@ export const CaptchaSolutionSchema = object({
 	captchaContentId: string(),
 	solution: string().array(),
 	salt: string(),
+	inputMethods: array(InputMethodSchema).optional(),
 });
 
 export const CaptchaSolutionArraySchema = array(CaptchaSolutionSchema);

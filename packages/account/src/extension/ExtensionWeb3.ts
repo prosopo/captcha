@@ -29,7 +29,10 @@ export class ExtensionWeb3 extends Extension {
 		const { dappName, userAccountAddress: address } = config;
 
 		if (!address) {
-			throw new ProsopoError("WIDGET.NO_ACCOUNTS_FOUND", {
+			throw new ProsopoError({
+				code: "WALLET_NOT_FOUND",
+				errorSite: "ACCT-1",
+				message: "No accounts found",
 				context: { error: "No account address provided" },
 			});
 		}
@@ -39,7 +42,7 @@ export class ExtensionWeb3 extends Extension {
 		// enable access to all extensions
 		const extensions: InjectedExtension[] = await web3Enable(dappName);
 		if (extensions.length === 0) {
-			throw new ProsopoError("WIDGET.NO_EXTENSION_FOUND");
+			throw new ProsopoError({ code: "WALLET_NOT_FOUND", errorSite: "ACCT-2" });
 		}
 
 		// search through all extensions for the one that has the account
@@ -51,7 +54,10 @@ export class ExtensionWeb3 extends Extension {
 			}
 		}
 
-		throw new ProsopoError("WIDGET.ACCOUNT_NOT_FOUND", {
+		throw new ProsopoError({
+			code: "WALLET_NOT_FOUND",
+			errorSite: "ACCT-3",
+			message: "Account not found",
 			context: { error: `No account found matching ${address}` },
 		});
 	}

@@ -17,6 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { RedisWriteQueue } from "@prosopo/database";
 import {
+	type DetectorData,
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
@@ -84,7 +85,7 @@ describe("decryptPayload", () => {
 		const { initDetectorBundlePool } = await import(
 			"../../../../tasks/detection/bundlePool.js"
 		);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const FrictionlessManager = (
 			await import("../../../../tasks/frictionless/frictionlessTasks.js")
@@ -95,13 +96,12 @@ describe("decryptPayload", () => {
 			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
 		} as unknown as RedisWriteQueue;
 
-		const frictionlessTaskManager = new FrictionlessManager(
+		const frictionlessTaskManager = new FrictionlessManager({
 			db,
 			pair,
 			config,
-			undefined,
 			writeQueue,
-		);
+		});
 
 		const result = await frictionlessTaskManager.decryptPayload(
 			"payload",
@@ -122,12 +122,18 @@ describe("decryptPayload", () => {
 	});
 
 	it("relays the collected client signals through to the caller", async () => {
-		// Every one of these is decoded by the detector bundle and then has to
-		// survive the per-key retry relay in decryptPayload. `b`, `i`, `cv` and
-		// `sq` were all decoded and then silently dropped, so no session ever
-		// carried them; assert the whole set rather than just the ones that broke.
-		const b: Record<string, string[]> = {
-			cdpBinding: ["puppeteer", "puppeteer_1"],
+		// Whatever the detector decoded has to survive the per-key retry relay
+		// in decryptPayload. Signals used to be named one by one here and
+		// several were decoded and then silently dropped, so no session ever
+		// carried them. Relaying the bag whole is what makes that class of bug
+		// impossible, so this asserts an untouched round trip — including a key
+		// no type in this repo declares.
+		const d: DetectorData = {
+			k1: "text",
+			k2: true,
+			k3: 120,
+			nested: { list: ["a", "b"] },
+			aKeyThisRepoDoesNotKnow: 7,
 		};
 		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
 			getBotScore: vi.fn().mockImplementation(() => {
@@ -135,25 +141,14 @@ describe("decryptPayload", () => {
 					baseBotScore: 0.5,
 					timestamp: Date.now(),
 					triggeredDetectors: [50, 51],
-					g: "vendor~renderer",
-					i: true,
-					cv: 120,
-					sq: 1073741824,
-					b,
-					sw: true,
-					md: false,
-					bn: false,
-					fs: true,
-					cg: "p3",
-					sm: "0.10",
-					dz: "nc",
+					d,
 				};
 			}),
 		}));
 		const { initDetectorBundlePool } = await import(
 			"../../../../tasks/detection/bundlePool.js"
 		);
-		initDetectorBundlePool(dir);
+		initDetectorBundlePool({ dir });
 
 		const FrictionlessManager = (
 			await import("../../../../tasks/frictionless/frictionlessTasks.js")
@@ -163,13 +158,12 @@ describe("decryptPayload", () => {
 			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
 		} as unknown as RedisWriteQueue;
 
-		const frictionlessTaskManager = new FrictionlessManager(
+		const frictionlessTaskManager = new FrictionlessManager({
 			db,
 			pair,
 			config,
-			undefined,
 			writeQueue,
-		);
+		});
 
 		const result = await frictionlessTaskManager.decryptPayload(
 			"payload",
@@ -177,17 +171,54 @@ describe("decryptPayload", () => {
 			"det-1",
 		);
 
-		expect(result.b).toEqual(b);
-		expect(result.i).toBe(true);
-		expect(result.cv).toBe(120);
-		expect(result.sq).toBe(1073741824);
-		expect(result.g).toBe("vendor~renderer");
+		expect(result.d).toEqual(d);
 		expect(result.triggeredDetectors).toEqual([50, 51]);
-		expect(result.sw).toBe(true);
-		expect(result.fs).toBe(true);
-		expect(result.cg).toBe("p3");
-		expect(result.sm).toBe("0.10");
-		expect(result.dz).toBe("nc");
+	});
+
+	it("counts triggered-detector ids the decoder dropped as out of range", async () => {
+		const recordOutOfRangeDetectorIds = vi.fn<(count: number) => void>();
+		vi.doMock("../../../../api/metrics.js", async (importOriginal) => ({
+			...(await importOriginal<typeof import("../../../../api/metrics.js")>()),
+			recordOutOfRangeDetectorIds,
+		}));
+		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
+			getBotScore: vi.fn().mockImplementation(() => {
+				return {
+					baseBotScore: 0,
+					timestamp: Date.now(),
+					triggeredDetectors: [0, 1],
+					outOfRangeDetectorIds: 9,
+				};
+			}),
+		}));
+		const { initDetectorBundlePool } = await import(
+			"../../../../tasks/detection/bundlePool.js"
+		);
+		initDetectorBundlePool({ dir });
+
+		const FrictionlessManager = (
+			await import("../../../../tasks/frictionless/frictionlessTasks.js")
+		).FrictionlessManager;
+
+		const writeQueue = {
+			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
+		} as unknown as RedisWriteQueue;
+
+		const frictionlessTaskManager = new FrictionlessManager({
+			db,
+			pair,
+			config,
+			writeQueue,
+		});
+
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+			"det-1",
+		);
+
+		expect(result.triggeredDetectors).toEqual([0, 1]);
+		expect(recordOutOfRangeDetectorIds).toHaveBeenCalledWith(9);
 	});
 
 	it("fails closed (treated as bot) when no detector bundle can be resolved", async () => {
@@ -196,7 +227,11 @@ describe("decryptPayload", () => {
 		).FrictionlessManager;
 
 		// No writeQueue / no detectorSessionId ⇒ no bundle ⇒ no decrypt attempt.
-		const frictionlessTaskManager = new FrictionlessManager(db, pair, config);
+		const frictionlessTaskManager = new FrictionlessManager({
+			db,
+			pair,
+			config,
+		});
 
 		const result = await frictionlessTaskManager.decryptPayload(
 			"payload",

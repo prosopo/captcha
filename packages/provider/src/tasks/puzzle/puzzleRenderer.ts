@@ -18,7 +18,9 @@ import {
 	DEFAULT_RENDER_SETTINGS,
 	type NotchPlacement,
 	type PuzzleRenderSettings,
+	type PuzzleRendererVersion,
 	renderPuzzle,
+	renderPuzzleBoard,
 	toDataUri,
 } from "@prosopo/puzzle-assets";
 import {
@@ -26,16 +28,28 @@ import {
 	puzzlePieceScaleMaxDefault,
 	puzzlePieceScaleMinDefault,
 } from "@prosopo/types";
+import { measureSync } from "../../api/metrics.js";
 import {
 	getPuzzleBackgroundBuffer,
 	initPuzzleBackgroundBuffer,
 } from "./backgroundBuffer.js";
+import { regrainNative } from "./nativeBackground.js";
 import { createStratifiedSampler } from "./stratifiedSampler.js";
 
 export interface RenderedPuzzleImages {
 	background: string;
 	piece: string;
 	pieceSize: number;
+	/**
+	 * Hex seeds for the clean background and for decoy placement / notch cut.
+	 * Together with the geometry, render settings and notch placement these
+	 * reproduce the served imagery byte for byte, which is what the portal's
+	 * replay view needs. Handle per the secrecy note in prng.ts: they belong on
+	 * the challenge record and nowhere else.
+	 */
+	backgroundSeed: string;
+	renderSeed: string;
+	rendererVersion: PuzzleRendererVersion;
 }
 
 /**
@@ -68,6 +82,9 @@ export const resolvePuzzleRenderSettings = (
 		if (override.decoyHoleDarken !== undefined) {
 			resolved = { ...resolved, decoyHoleDarken: override.decoyHoleDarken };
 		}
+		if (override.lookalikeDecoys !== undefined) {
+			resolved = { ...resolved, lookalikeDecoys: override.lookalikeDecoys };
+		}
 	}
 	// The real cutout must remain the deepest region on the frame or a human
 	// cannot tell target from decoy at all. Enforced HERE rather than at each
@@ -89,15 +106,11 @@ const pieceSizeSampler = createStratifiedSampler();
 
 /**
  * Resolve the effective piece scale range from the same layered
- * client-settings / traffic-filter overrides used for render settings, and
- * draw a per-challenge piece size in pixels. Stratified so the distribution
- * is evenly spread across the range even for short bursts of requests.
- * Rounded to an integer because the pixel buffer is allocated as
- * `size * size * 4`.
+ * client-settings / traffic-filter overrides used for render settings.
  */
-export const resolvePuzzlePieceSize = (
+export const resolvePuzzlePieceScaleRange = (
 	...overrides: (IPuzzleSettings | undefined)[]
-): number => {
+): { min: number; max: number } => {
 	let min = puzzlePieceScaleMinDefault;
 	let max = puzzlePieceScaleMaxDefault;
 	for (const override of overrides) {
@@ -108,7 +121,20 @@ export const resolvePuzzlePieceSize = (
 	// Defend against a partial override that inverts the range (e.g. only
 	// `min` set, above the default `max`).
 	if (min > max) min = max;
-	const scale = pieceSizeSampler.sample(min, max);
+	return { min, max };
+};
+
+/**
+ * Draw a per-challenge piece size in pixels from a scale range. Stratified so
+ * the distribution is evenly spread across the range even for short bursts of
+ * requests. Rounded to an integer because the pixel buffer is allocated as
+ * `size * size * 4`.
+ */
+export const samplePuzzlePieceSize = (range: {
+	min: number;
+	max: number;
+}): number => {
+	const scale = pieceSizeSampler.sample(range.min, range.max);
 	return Math.max(1, Math.round(DEFAULT_GEOMETRY.width * scale));
 };
 
@@ -137,29 +163,88 @@ export const isPuzzleRenderAvailable = (): boolean => {
 // that has image disabled — it would have served exactly the type the
 // customer asked us never to serve.
 
-export const renderPuzzleImages = async (
-	placement: NotchPlacement,
-	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
-	pieceSize?: number,
-): Promise<RenderedPuzzleImages> => {
+export const renderPuzzleImages = async ({
+	placement,
+	settings = DEFAULT_RENDER_SETTINGS,
+	pieceSize,
+}: {
+	placement: NotchPlacement;
+	settings?: PuzzleRenderSettings;
+	pieceSize?: number;
+}): Promise<RenderedPuzzleImages> => {
 	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
 	const background = buffer.take();
-	if (!background) {
-		throw new Error("puzzle renderer: no background available");
-	}
 
-	const rendered = await renderPuzzle(
-		background,
-		placement,
-		pieceSize !== undefined
-			? { ...DEFAULT_GEOMETRY, pieceSize }
-			: DEFAULT_GEOMETRY,
-		settings,
+	// Only the decoy paint and notch cut are billed to the span; renderPuzzle
+	// hands the encode to sharp, which runs off the event loop.
+	const rendered = await measureSync("puzzle_render", () =>
+		renderPuzzle({
+			background: background.image,
+			placement,
+			geometry:
+				pieceSize !== undefined
+					? { ...DEFAULT_GEOMETRY, pieceSize }
+					: DEFAULT_GEOMETRY,
+			settings,
+			regrain: regrainNative,
+		}),
 	);
 
 	return {
 		background: toDataUri(rendered.background),
 		piece: toDataUri(rendered.piece),
 		pieceSize: rendered.pieceSize,
+		backgroundSeed: background.seed.toString("hex"),
+		renderSeed: rendered.seed.toString("hex"),
+		rendererVersion: rendered.rendererVersion,
+	};
+};
+
+export interface RenderedPuzzleBoardImages {
+	/** Board with the notch cut and the piece drawn at its start, data URI. */
+	background: string;
+	/** The piece's alpha, one byte per pixel. */
+	mask: Buffer;
+	pieceSize: number;
+	backgroundSeed: string;
+	renderSeed: string;
+	rendererVersion: PuzzleRendererVersion;
+}
+
+export const renderPuzzleBoardImages = async ({
+	placement,
+	start,
+	settings = DEFAULT_RENDER_SETTINGS,
+	pieceSize,
+}: {
+	placement: NotchPlacement;
+	start: { x: number; y: number };
+	settings?: PuzzleRenderSettings;
+	pieceSize?: number;
+}): Promise<RenderedPuzzleBoardImages> => {
+	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
+	const background = buffer.take();
+
+	const rendered = await measureSync("puzzle_render", () =>
+		renderPuzzleBoard({
+			background: background.image,
+			placement,
+			start,
+			geometry:
+				pieceSize !== undefined
+					? { ...DEFAULT_GEOMETRY, pieceSize }
+					: DEFAULT_GEOMETRY,
+			settings,
+			regrain: regrainNative,
+		}),
+	);
+
+	return {
+		background: toDataUri(rendered.board),
+		mask: rendered.mask,
+		pieceSize: rendered.pieceSize,
+		backgroundSeed: background.seed.toString("hex"),
+		renderSeed: rendered.seed.toString("hex"),
+		rendererVersion: rendered.rendererVersion,
 	};
 };

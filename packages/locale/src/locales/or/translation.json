@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "ଅବୈଧ ଠିକଣା ଏନକୋଡ କରିବାରେ ବିଫଳ",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha ସମାଧାନ ପ୍ରତିଶ୍ରୁତି ନାହିଁ",
+		"SIGNER_UNDEFINED": "ଦସ୍ତଖତକାରୀ ପରିଭାଷିତ ହୋଇନାହିଁ",
+		"CANNOT_FIND_KEYPAIR": "କି ଯୋଡ଼ି ମିଳିଲା ନାହିଁ",
+		"INVALID_DATA_FORMAT": "ଅବୈଧ ଡାଟା ଫର୍ମାଟ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "ଅଜଣା ପରିବେଶ ଅନୁରୋଧ କରାଗଲା",
+		"INVALID_CAPTCHA_NUMBER": "ଦୟାକରି captcha ବିନ୍ୟାସ ସଠିକ ଭାବେ ସେଟ କରନ୍ତୁ",
+		"INVALID_LOG_LEVEL": "ଅବୈଧ ଲଗ ସ୍ତର",
+		"INVALID_PACKAGE_DIR": "ଅବୈଧ ପ୍ୟାକେଜ ଡିରେକ୍ଟୋରି"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ଡାଟାସେଟ ପାର୍ସ କରିବାରେ ତ୍ରୁଟି",
+		"SOLUTION_PARSE_ERROR": "ଡାଟାସେଟ ପ୍ରକ୍ରିୟାକରଣରେ ତ୍ରୁଟି",
+		"HASH_ERROR": "ଡାଟାସେଟ ହାସ କରିବାରେ ତ୍ରୁଟି",
+		"DATASET_ID_UNDEFINED": "ଡାଟାସେଟ ID ପରିଭାଷିତ ହୋଇନାହିଁ",
+		"NOT_ENOUGH_LABELS": "ପର୍ଯ୍ୟାପ୍ତ ଲେବଲ ନାହିଁ",
+		"NOT_ENOUGH_IMAGES": "ପର୍ଯ୍ୟାପ୍ତ ଛବି ନାହିଁ",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ଡାଟାସେଟରେ captcha ସଂଖ୍ୟା ବିନ୍ୟାସିତ ସଂଖ୍ୟାଠାରୁ କମ",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ଡାଟାସେଟରେ ସମାଧାନ ସଂଖ୍ୟା ବିନ୍ୟାସିତ ସଂଖ୍ୟାଠାରୁ କମ",
+		"DUPLICATE_IMAGE": "ନକଲି ଛବି ଚିହ୍ନଟ ହେଲା",
+		"MERKLE_ERROR": "ମର୍କଲ ଟ୍ରି ତିଆରି କରିବାରେ ତ୍ରୁଟି"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ଡାଟାବେସ ଇଞ୍ଜିନ ଆମଦାନି କରିବାରେ ବିଫଳ",
+		"DATABASE_UNDEFINED": "ଡାଟାବେସ କ୍ଲାଏଣ୍ଟ ସଂଯୁକ୍ତ ନୁହେଁ",
+		"DATABASE_HOST_UNDEFINED": "ଡାଟାବେସ ହୋଷ୍ଟ ଠିକଣା ପରିଭାଷିତ ହୋଇନାହିଁ",
+		"DATASET_LOAD_FAILED": "ଡାଟାସେଟ ଲୋଡ ବିଫଳ",
+		"DATASET_GET_FAILED": "ଡାଟାସେଟ ପାଇବାରେ ବିଫଳ",
+		"CAPTCHA_GET_FAILED": "captcha ପାଇବାରେ ବିଫଳ",
+		"CAPTCHA_UPDATE_FAILED": "captcha ଅପଡେଟ କରିବାରେ ବିଫଳ",
+		"IMAGE_GET_FAILED": "ଛବି ପାଇବାରେ ବିଫଳ",
+		"PENDING_RECORD_NOT_FOUND": "କୌଣସି ବାକି ରେକର୍ଡ ମିଳିଲା ନାହିଁ",
+		"INVALID_HASH": "ଅବୈଧ ହାସ",
+		"SOLUTION_GET_FAILED": "ସମାଧାନ ପାଇବାରେ ବିଫଳ",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "ଆବଶ୍ୟକ ସଂଖ୍ୟକ ସମାଧାନ ଥିବା କୌଣସି ଡାଟାସେଟ ମିଳିଲା ନାହିଁ",
+		"SOLUTION_APPROVE_FAILED": "ସମାଧାନ ଅନୁମୋଦନ କରିବାରେ ବିଫଳ",
+		"SOLUTION_FLAG_FAILED": "ସମାଧାନକୁ ପ୍ରକ୍ରିୟାକୃତ ଭାବେ ଚିହ୍ନିତ କରିବାରେ ବିଫଳ",
+		"TABLES_UNDEFINED": "ଟେବୁଲ ପରିଭାଷିତ ହୋଇନାହିଁ",
+		"CONNECTION_UNDEFINED": "ସଂଯୋଗ ପରିଭାଷିତ ହୋଇନାହିଁ",
+		"COMMITMENT_FLAG_FAILED": "ପ୍ରତିଶ୍ରୁତିକୁ ପ୍ରକ୍ରିୟାକୃତ ଭାବେ ଚିହ୍ନିତ କରିବାରେ ବିଫଳ",
+		"UNKNOWN": "ଅଜଣା ଡାଟାବେସ ତ୍ରୁଟି",
+		"QUERY_ERROR": "ଡାଟାବେସ କ୍ୱେରି ବିଫଳ",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ପ୍ରବେଶ ନିୟମର Redis ସଂଯୋଗ ପରିଭାଷିତ ହୋଇନାହିଁ",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ଉପଯୋଗକର୍ତ୍ତା ପ୍ରବେଶ ନିୟମ ସଂରକ୍ଷଣ ପରିଭାଷିତ ହୋଇନାହିଁ",
+		"SESSION_STORE_FAILED": "ସେସନ ସଂରକ୍ଷଣ କରିବାରେ ବିଫଳ",
+		"SESSION_CHECK_REMOVE_FAILED": "ସେସନ ଯାଞ୍ଚ କରି ହଟାଇବାରେ ବିଫଳ",
+		"SESSION_GET_FAILED": "ସେସନ ପାଇବାରେ ବିଫଳ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ମାଲିକ ଉପଯୋଗକର୍ତ୍ତାଙ୍କୁ ପରିବର୍ତ୍ତନ କରିହେବ ନାହିଁ",
+		"CANNOT_DELETE_OWN_USER": "ନିଜ ଆକାଉଣ୍ଟ ଡିଲିଟ କରିହେବ ନାହିଁ",
+		"CANNOT_DELETE_LAST_USER": "ଶେଷ ଉପଯୋଗକର୍ତ୍ତାଙ୍କୁ ଡିଲିଟ କରିହେବ ନାହିଁ",
+		"USER_ALREADY_EXISTS": "ଉପଯୋଗକର୍ତ୍ତା ପୂର୍ବରୁ ଅଛନ୍ତି",
+		"NO_SUGGESTIONS_FOUND": "କୌଣସି ପରାମର୍ଶ ମିଳିଲା ନାହିଁ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ଶେଷ ସକ୍ରିୟ ସାଇଟକୁ ନିଷ୍କ୍ରିୟ କରିହେବ ନାହିଁ",
+		"DUPLICATE_SITE_NAME": "ଏହି ନାମର ସାଇଟ ପୂର୍ବରୁ ଅଛି",
+		"INVALID_SITE_NAME": "ସାଇଟ ନାମରେ କେବଳ ଅକ୍ଷର, ସଂଖ୍ୟା, ହାଇଫେନ ଏବଂ ଅଣ୍ଡରସ୍କୋର ରହିପାରିବ"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "ଅବୈଧ ପାରାମିଟର"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ଫାଇଲ ମିଳିଲା ନାହିଁ",
+		"FILE_ALREADY_EXISTS": "ଫାଇଲ ପୂର୍ବରୁ ଅଛି",
+		"INVALID_DIR_FORMAT": "ଅବୈଧ ଡିରେକ୍ଟୋରି ଫର୍ମାଟ"
+	}
+}

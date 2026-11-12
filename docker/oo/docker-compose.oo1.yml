@@ -1,0 +1,24 @@
+# Overlay: OpenObserve instance 1 on docker-compose.oo.yml. Use with:
+#   docker compose -f docker-compose.oo.yml -f docker-compose.oo1.yml \
+#     -f docker-compose.oo.<production|staging>.yml up -d
+services:
+    caddy:
+        pull_policy: never
+        labels:
+            - "oo.caddy=true" # enable logging as caddy
+            - "oo.docker=true" # log docker events
+        ports:
+            - '8018:80'
+            - '44318:443'
+            - '44318:443/udp'
+        volumes:
+            - ./oo1.Caddyfile:/etc/caddy/Caddyfile
+    oo:
+        # oo1.Caddyfile proxies to this name.
+        container_name: oo1
+        ports:
+            - "5080:5080"
+        labels:
+            - "oo.docker=true" # log docker events
+        volumes:
+            - /data/oo:/data

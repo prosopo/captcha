@@ -1,5 +1,952 @@
 # @prosopo/cli
 
+## 3.11.1
+### Patch Changes
+
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/provider@5.32.0
+  - @prosopo/api@4.11.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.99
+  - @prosopo/keyring@2.10.30
+
+## 3.11.0
+### Minor Changes
+
+- b877bd4: Check where a browser's WebRTC traffic comes from. When a provider runs the stun-probe sidecar, it gives the widget a STUN address. The widget gathers WebRTC candidates while detection runs and sends them with the frictionless request. The provider asks stun-probe whether the STUN request really arrived and from which address, and stores the result on the session. A mismatch with the HTTP address means the HTTP traffic went through a proxy that the UDP traffic skipped. Only the outcome and the leaked address's network are stored, never the address. Nothing routes on it yet.
+
+### Patch Changes
+
+- Updated dependencies [2df0139]
+- Updated dependencies [a7a60f4]
+- Updated dependencies [a7a60f4]
+- Updated dependencies [b877bd4]
+  - @prosopo/provider@5.31.0
+  - @prosopo/types@5.30.0
+  - @prosopo/api@4.11.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.98
+  - @prosopo/keyring@2.10.29
+
+## 3.10.13
+### Patch Changes
+
+- Updated dependencies [0f600c3]
+  - @prosopo/provider@5.30.2
+
+## 3.10.12
+### Patch Changes
+
+- Updated dependencies [93620d4]
+  - @prosopo/provider@5.30.1
+  - @prosopo/types@5.29.1
+  - @prosopo/api@4.10.4
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.97
+  - @prosopo/keyring@2.10.28
+
+## 3.10.11
+### Patch Changes
+
+- 6c07dfe: `getConfig` (exported as `defaultConfig`), `start` and `authMiddleware` take one object argument instead of several optional positional ones. CLI flags are unchanged.
+- 5c1d60e: `ensure_external_indexes` now connects to the central database before ensuring its indexes, and closes the connection afterwards. Before, it never connected, so it skipped every collection and still reported success.
+- Updated dependencies [31ba8be]
+- Updated dependencies [051d218]
+- Updated dependencies [391182a]
+- Updated dependencies [ed81f2a]
+- Updated dependencies [9b460b4]
+- Updated dependencies [d30aaea]
+- Updated dependencies [1b71105]
+- Updated dependencies [6c07dfe]
+- Updated dependencies [f9540f2]
+- Updated dependencies [88aa878]
+- Updated dependencies [32075aa]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [821743e]
+- Updated dependencies [66f512b]
+- Updated dependencies [89c3078]
+- Updated dependencies [eb5b4ae]
+- Updated dependencies [70eeb41]
+- Updated dependencies [f868427]
+- Updated dependencies [14e524b]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [d89de6c]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [cfba6f9]
+- Updated dependencies [502ec6e]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [c8f0b16]
+- Updated dependencies [06d1e89]
+- Updated dependencies [8c68a26]
+- Updated dependencies [21877ba]
+- Updated dependencies [c677fb6]
+- Updated dependencies [818c669]
+  - @prosopo/provider@5.30.0
+  - @prosopo/types@5.29.0
+  - @prosopo/api@4.10.3
+  - @prosopo/keyring@2.10.27
+  - @prosopo/logger@2.1.12
+  - @prosopo/util@3.7.1
+  - @prosopo/env@3.6.96
+  - @prosopo/common@3.3.2
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.69
+  - @prosopo/locale@3.14.4
+
+## 3.10.10
+### Patch Changes
+
+- Updated dependencies [7a4767d]
+- Updated dependencies [624db1a]
+  - @prosopo/provider@5.29.2
+  - @prosopo/types@5.28.2
+  - @prosopo/env@3.6.95
+  - @prosopo/api@4.10.2
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.26
+
+## 3.10.9
+### Patch Changes
+
+- b2e3f27: Accept behavioural data up to 512 KB on captcha answers. The cap was 128 KB. A visitor who moves around the page for a while fills the widget's behaviour buffers, and the encrypted data then goes over 128 KB. Their image answer was rejected with a 400, and the widget started a new challenge straight away. They could not get past the captcha. On 9 Nov, 502 of the 537 rejected image answers in 24 hours were over the old cap. A full buffer is about 340 KB, so the new cap leaves room to spare.
+  
+  The provider now also logs refused captcha answers at info, with the error site and the length of each field, so the next cause like this shows up in the logs.
+- 4693a20: Download the provider image's GeoLite2 databases from the publisher's `download` branch on raw.githubusercontent.com instead of via git.io, which redirects to GitHub release assets. Those returned 504 for hours on 8 Nov and broke the provider image build. The files are the same.
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/provider@5.29.1
+  - @prosopo/api@4.10.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.94
+  - @prosopo/keyring@2.10.25
+
+## 3.10.8
+### Patch Changes
+
+- af1b2d3: Stop CI depending on GitHub release downloads, which returned 504 for hours on 8 Nov and failed every PR. The actionlint check is removed. gitleaks and hadolint are now copied out of their official Docker Hub images, pinned by digest, instead of downloaded from GitHub releases.
+- Updated dependencies [2732f63]
+- Updated dependencies [196f2c0]
+- Updated dependencies [6b8a477]
+- Updated dependencies [fc89f02]
+  - @prosopo/provider@5.29.0
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/api@4.10.0
+  - @prosopo/keyring@2.10.24
+  - @prosopo/locale@3.14.3
+  - @prosopo/logger@2.1.11
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.93
+  - @prosopo/dotenv@3.0.68
+
+## 3.10.7
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [213678a]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/provider@5.28.1
+  - @prosopo/util@3.6.1
+  - @prosopo/api@4.9.2
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.92
+  - @prosopo/keyring@2.10.23
+  - @prosopo/locale@3.14.2
+  - @prosopo/logger@2.1.10
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.67
+
+## 3.10.6
+### Patch Changes
+
+- 65d87f2: Provider deployments now define provider1 and provider2 from one shared block, and both always pull their image. Mongo and Redis no longer have host ports and sit on a private network that only their users can join. Development and test compose files bind datastores to localhost only.
+- 65d87f2: The provider now keeps retrying and logging when its database is not reachable at startup, for as long as that takes, instead of crashing. Containers can start in any order.
+- Updated dependencies [65d87f2]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/provider@5.28.0
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/api@4.9.1
+  - @prosopo/env@3.6.91
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.22
+  - @prosopo/locale@3.14.1
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 3.10.5
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/provider@5.27.0
+  - @prosopo/types@5.25.0
+  - @prosopo/api@4.9.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.90
+  - @prosopo/keyring@2.10.21
+
+## 3.10.4
+### Patch Changes
+
+- f9a2e30: Stop logging the provider's whole config at debug level on start. It included database URIs, the Redis password, API keys and account secrets in plain text.
+- cc3436f: `ensure_indexes` now builds the provider's indexes instead of stopping with `mongoCaptchaUri not set in config`. That check belongs to `ensure_external_indexes`, which writes to the separate captcha store; `ensure_indexes` only touches the provider's own database, so a node without a captcha store, such as every self-hosted one, could never run it.
+- 04b6f70: The provider now decodes sealed detector payloads with
+  `@prosopo/native-bundle-payload`, a compiled Rust module published to npm. It
+  is the same code Prosopo's own servers use to read these payloads, and the
+  provider has stopped carrying its own TypeScript copy. It accepts and rejects
+  exactly the payloads the old decoder did, and a payload it cannot read still
+  counts as "decryption failed".
+  
+  - `decodePayload.js` has been regenerated. It is about half its old size, and a
+    full decode takes about 1.2 ms instead of 3.8 ms.
+  - `@prosopo/provider` depends on `@prosopo/native-bundle-payload` 0.1.0, a
+    prebuilt linux-x64 binary, so you don't need Rust to install it.
+  - The CLI bundle copies the binary beside `decodePayload.js`, as it already
+    does for the other native modules, so the Docker image needs no
+    `node_modules`. `@prosopo/native-*` packages are now hoisted so the CLI build
+    can find them.
+  - Open-format payloads (`open-v1`) are unchanged.
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [04b6f70]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/provider@5.26.2
+  - @prosopo/types@5.24.0
+  - @prosopo/api@4.8.7
+  - @prosopo/locale@3.14.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/keyring@2.10.20
+  - @prosopo/dotenv@3.0.65
+
+## 3.10.3
+### Patch Changes
+
+- bea67d6: Decide whether a visitor is on a phone in one place, from the same inputs, wherever the provider needs to know.
+  
+  Frictionless routing, post-PoW routing, the decision machines, puzzle sizing on escalation and puzzle issuance each built that verdict themselves, and fed it different evidence. Post-PoW routing judged the device before the solve was decrypted, so the touch readings the solve carried never counted, while the escalation that followed judged it again with them included. They now share `deriveDevice`, which takes the user agent, client hints, IP lookup, packet size, in-app flag and, wherever a solve exists, what that solve said about the input device. Post-PoW routing computes it once and the escalation reuses it. An escalated session keeps the solve's two device readings, so a puzzle issued for it judges the same device.
+  
+  An iPad that sends a Mac user agent but taps with a finger can now be recognised from its taps after a solve. The weighing itself is unchanged: a touchscreen laptop, or a phone browser asking for the desktop site, still counts as a desktop.
+- Updated dependencies [bea67d6]
+  - @prosopo/provider@5.26.1
+  - @prosopo/types@5.23.1
+  - @prosopo/api@4.8.6
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.88
+  - @prosopo/keyring@2.10.19
+
+## 3.10.2
+### Patch Changes
+
+- 20c1b77: Release the widget changes that record visitor behaviour from the moment the script loads. The release version follows `@prosopo/cli`, so it needs its own bump to cut a new release.
+
+## 3.10.1
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/provider@5.26.0
+  - @prosopo/api@4.8.5
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.87
+  - @prosopo/keyring@2.10.18
+
+## 3.10.0
+### Minor Changes
+
+- 8bf0957: The IP lookup now reads a detector risk for the address (a number from 0 to 1, or nothing when there is no evidence) and keeps it on the lookup result, so it is saved with the session's IP info and written to the frictionless decision log next to the session's own bot score.
+  
+  Sites get a new setting, `ipDetectorRiskWeight` (0 to 1, default 0). When it is above 0, the frictionless flow adds weight × risk to the bot score, capped at 1, before comparing it with the site's thresholds. It can only change which challenge is served; it never blocks. The amount added is recorded in the session's score components, and the log shows the score before and after. At the default of 0 nothing changes.
+
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/provider@5.25.0
+  - @prosopo/api@4.8.4
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.86
+  - @prosopo/keyring@2.10.17
+
+## 3.9.8
+### Patch Changes
+
+- Updated dependencies [3815778]
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/provider@5.24.0
+  - @prosopo/types@5.21.0
+  - @prosopo/api@4.8.3
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.85
+  - @prosopo/keyring@2.10.16
+
+## 3.9.7
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/api@4.8.2
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.84
+  - @prosopo/keyring@2.10.15
+  - @prosopo/provider@5.23.2
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+
+## 3.9.6
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/api@4.8.1
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.83
+  - @prosopo/keyring@2.10.14
+  - @prosopo/provider@5.23.1
+
+## 3.9.5
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [736e988]
+- Updated dependencies [ab3c124]
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [7cabc96]
+- Updated dependencies [f13677e]
+- Updated dependencies [3473baf]
+- Updated dependencies [77bd891]
+- Updated dependencies [cb7db6c]
+- Updated dependencies [76b6edd]
+  - @prosopo/provider@5.23.0
+  - @prosopo/common@3.3.2
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/keyring@2.10.13
+  - @prosopo/locale@3.13.2
+  - @prosopo/logger@2.1.7
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/workspace@3.2.6
+  - @prosopo/api@4.8.0
+  - @prosopo/env@3.6.82
+
+## 3.9.4
+### Patch Changes
+
+- 92aa8f5: Release the provider changes that were versioned as v3.9.3 but never published, because that release's build failed: traffic filter exceptions, plus account market countries reaching providers.
+
+## 3.9.3
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [870fab7]
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/provider@5.22.0
+  - @prosopo/api@4.7.7
+  - @prosopo/common@3.3.1
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/env@3.6.81
+  - @prosopo/keyring@2.10.12
+  - @prosopo/locale@3.13.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+  - @prosopo/workspace@3.2.5
+
+## 3.9.2
+### Patch Changes
+
+- Updated dependencies [5c9792b]
+- Updated dependencies [4201cf0]
+  - @prosopo/provider@5.21.1
+
+## 3.9.1
+### Patch Changes
+
+- 0d94ae6: Pin Node to 24.22.1 in every Docker image and CI workflow, the first 24.x release with the fix for CVE-2026-111497 (an out-of-bounds write in the bundled Brotli decoder that can lead to remote code execution).
+  
+  Before this, everything asked for plain `24`, which does not guarantee a patched build. Docker reuses a cached base image, and `setup-node` uses whatever 24.x a runner already has cached.
+  
+  The provider image needed more than a tag bump. Its runtime, `gcr.io/distroless/nodejs24-debian12`, is stuck on Node 24.14.0 and will not get the fix. It now runs on `nodejs24-debian13`, pinned by digest because distroless publishes no Node version tags. The builder moves to `node:24.22.1-trixie-slim` so both stages still use the same Debian release and glibc. Sharp and the native ja4, merkle and puzzle addons were checked loading on the new runtime.
+
+## 3.9.0
+### Minor Changes
+
+- 159766a: Let a self-hosted provider run a detector you built yourself, and ship a working example built on BotD.
+  
+  Until now the only detector a provider could load was ours. Its output can only be read by the closed decoder in the
+  provider, so a self-hosted node with any other detector had nothing to score visitors with.
+  
+  **Open detector format.** A pool bundle can now be marked `format: "open-v1"`. The provider reads those bundles with a
+  short, documented decoder: an AES-256-GCM payload whose key is wrapped with the bundle's RSA-OAEP public key, carrying
+  `{ score, timestamp, userId, userAgent, headHash, d }`. The same checks apply as for our detector — the token must
+  match this visitor's account, user agent and page, and be under ten minutes old — and `d` reaches decision and routing
+  machines as `input.d`. Open bundles are only loaded when `PROSOPO_DETECTOR_OPEN_FORMAT=1`; the hosted fleet never sets
+  it, so nothing changes there.
+  
+  **`demos/detector-botd`.** A detector built on BotD that scores automated browsers as 1 and everything else as 0, plus a
+  `pool` script that builds the bundles with a fresh keypair each. Writing your own detector means replacing one function;
+  the encryption is done for you.
+  
+  **`detector_pool_set` CLI command.** Writes a pool read from stdin into the provider's pool directory. Stdin rather than a
+  file because the provider image runs as a non-root user and cannot read a file copied in as root.
+  
+  **Self-hosted compose and image.** The image now creates its pool directory owned by the runtime user, and the
+  self-hosted compose file mounts a `detector_pool` volume there and turns the open format on. The compose file no longer
+  defaults to provider 3.8.19, which it had silently stayed on for nineteen releases: `generateSelfHostedEnv.ts` writes
+  the version of the checkout it runs from.
+  
+  `SELF_HOSTING.md` gains a "Bring your own detector" section and now loads the widget with `type="module"`, which the
+  bundle has needed since it was split into chunks.
+  
+  Tested end to end on a stack built from this branch: stock headless Chromium was flagged by BotD and served a puzzle,
+  headed Chromium passed with proof of work, the detector's signals were stored on the session, and a provider without
+  the flag rejected the pool.
+
+### Patch Changes
+
+- 5a1db28: Fix four things that broke the self-hosting guide for anyone starting from a fresh clone.
+  
+  - **The `fingerprintjs` submodule used an SSH URL**, so it could only be fetched by someone with GitHub SSH keys. It is
+    now HTTPS. The repository is public, so nobody needs credentials for it. Without it `pnpm run build:all` fails.
+  - **The guide ran the env script before anything was built.** The script imports built workspace packages, so on a fresh
+    clone it crashed with `ERR_MODULE_NOT_FOUND`. The guide now clones with `--recurse-submodules` and runs
+    `pnpm run build:all` in step 1.
+  - **Every `docker compose exec` in the guide failed** with "no configuration file provided", because the compose file is
+    not named `docker-compose.yml`. `generateSelfHostedEnv.ts` now writes `COMPOSE_FILE=docker-compose.self-hosted.yml`
+    into `.env`, which Compose reads on its own, so plain `docker compose` commands work.
+  - **The provider CLI exited 0 on a command it did not have.** An older image given `detector_pool_set` did nothing and
+    reported success. It now fails with `Unknown command`.
+- Updated dependencies [d02b3bc]
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+  - @prosopo/provider@5.21.0
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/env@3.6.80
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+  - @prosopo/keyring@2.10.11
+
+## 3.8.38
+### Patch Changes
+
+- 749fe8a: Finish holding express at 4, and build `@prosopo/fingerprint` before the
+  provider that imports it.
+  
+  v3.8.37 pinned `@prosopo/locale` back to express 4 because the i18next
+  middleware has no express 5 typings, but left `provider`, `cli`,
+  `api-express-router` and the two demos on express 5. That split the workspace:
+  `provider` takes the middleware handler from `locale`, which is now typed for
+  express 4, and hands it to its own express 5 `app.use`, which does not accept
+  it. All six are on express 4 now.
+  
+  Separately, `packages/provider` gained a dependency on `@prosopo/fingerprint`
+  without a matching tsconfig project reference, so `tsc --build` did not build
+  it first. A full build hid this because something else built fingerprint
+  earlier; a partial build of just the packages a consumer needs did not, and
+  failed with "Cannot find module '@prosopo/fingerprint/summary'". The reference
+  is now declared.
+  
+  Lift the express pins together with the dependabot ignore once the middleware
+  ships express 5 typings.
+- Updated dependencies [749fe8a]
+  - @prosopo/provider@5.20.2
+
+## 3.8.37
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/provider@5.20.1
+  - @prosopo/types@5.17.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+  - @prosopo/env@3.6.79
+  - @prosopo/keyring@2.10.10
+
+## 3.8.36
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [22f0721]
+- Updated dependencies [860948c]
+  - @prosopo/api@4.7.4
+  - @prosopo/common@3.3.0
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/env@3.6.78
+  - @prosopo/keyring@2.10.9
+  - @prosopo/locale@3.12.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/provider@5.20.0
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+  - @prosopo/workspace@3.2.4
+
+## 3.8.35
+### Patch Changes
+
+- Updated dependencies [5421e87]
+- Updated dependencies [a00fb86]
+  - @prosopo/provider@5.19.4
+
+## 3.8.34
+### Patch Changes
+
+- Updated dependencies [ebcd4ed]
+- Updated dependencies [b6e9459]
+- Updated dependencies [3c5d196]
+  - @prosopo/provider@5.19.3
+  - @prosopo/locale@3.11.1
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/workspace@3.2.3
+  - @prosopo/api@4.7.3
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/env@3.6.77
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+  - @prosopo/util@3.3.15
+
+## 3.8.33
+### Patch Changes
+
+- Updated dependencies [24e89e1]
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/provider@5.19.2
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/api@4.7.2
+  - @prosopo/env@3.6.76
+  - @prosopo/keyring@2.10.7
+
+## 3.8.32
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/common@3.2.1
+  - @prosopo/provider@5.19.1
+  - @prosopo/types@5.16.1
+  - @prosopo/env@3.6.75
+  - @prosopo/keyring@2.10.6
+  - @prosopo/api@4.7.1
+
+## 3.8.31
+### Patch Changes
+
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/provider@5.19.0
+  - @prosopo/api@4.7.0
+  - @prosopo/env@3.6.74
+  - @prosopo/keyring@2.10.5
+
+## 3.8.30
+### Patch Changes
+
+- Updated dependencies [460ca67]
+  - @prosopo/provider@5.18.0
+  - @prosopo/env@3.6.73
+
+## 3.8.29
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/provider@5.17.1
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/workspace@3.2.3
+  - @prosopo/api@4.6.1
+  - @prosopo/common@3.1.65
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/env@3.6.72
+  - @prosopo/keyring@2.10.4
+  - @prosopo/locale@3.9.1
+  - @prosopo/logger@2.1.4
+
+## 3.8.28
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/provider@5.17.0
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/locale@3.9.0
+  - @prosopo/common@3.1.64
+  - @prosopo/env@3.6.71
+  - @prosopo/keyring@2.10.3
+
+## 3.8.27
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/provider@5.16.0
+  - @prosopo/api@4.5.0
+  - @prosopo/locale@3.8.0
+  - @prosopo/keyring@2.10.2
+  - @prosopo/common@3.1.63
+  - @prosopo/env@3.6.70
+
+## 3.8.26
+### Patch Changes
+
+- 4669e64: Make the provider bundle runnable from a checkout again.
+  
+  `sharp` is a native module, so it is deliberately left out of the bundle and
+  installed next to it instead. Under npm it also ended up in the repo's top
+  level `node_modules`, so running the bundle from a checkout found it there.
+  pnpm puts a package only where something asked for it, and only
+  `@prosopo/puzzle-assets` asks for `sharp`, so running the bundle failed with
+  "Cannot find package 'sharp'" — which is what broke the bundle test. pnpm is
+  now told to put `sharp` at the top level too. Nothing about what goes into
+  the bundle, or about the provider image, changes.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [2118584]
+- Updated dependencies [1ce9482]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/provider@5.15.0
+  - @prosopo/workspace@3.2.2
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/env@3.6.69
+  - @prosopo/keyring@2.10.1
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/logger@2.1.3
+
+## 3.8.25
+### Patch Changes
+
+- 478bc6f: The cli bundle test builds a full production bundle and takes over a minute, so it is now named as an integration test instead of a unit test. Running only unit tests (`TEST_TYPE=unit`) no longer includes it. CI runs every test type, so it still runs there.
+- Updated dependencies [ede4352]
+- Updated dependencies [fc79e06]
+- Updated dependencies [382f96b]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [e62661c]
+- Updated dependencies [9ed0afd]
+- Updated dependencies [3fe7b19]
+- Updated dependencies [b1becee]
+- Updated dependencies [3e1053b]
+- Updated dependencies [df06006]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [7e9cd1e]
+- Updated dependencies [f7cfa1c]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/provider@5.14.0
+  - @prosopo/util@3.3.13
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/env@3.6.68
+  - @prosopo/api@4.3.8
+  - @prosopo/logger@2.1.2
+  - @prosopo/dotenv@3.0.59
+
+## 3.8.24
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/provider@5.13.4
+  - @prosopo/env@3.6.67
+
+## 3.8.23
+### Patch Changes
+
+- Updated dependencies [1291cb0]
+- Updated dependencies [d01f19b]
+- Updated dependencies [254bc05]
+  - @prosopo/provider@5.13.3
+  - @prosopo/types@5.11.1
+  - @prosopo/api@4.3.7
+  - @prosopo/env@3.6.66
+  - @prosopo/keyring@2.9.99
+
+## 3.8.22
+### Patch Changes
+
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e482b25]
+- Updated dependencies [8933ad5]
+- Updated dependencies [294b480]
+- Updated dependencies [026b126]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [9318584]
+- Updated dependencies [0d29dde]
+- Updated dependencies [084da7e]
+- Updated dependencies [fa316d6]
+- Updated dependencies [9ed0ac5]
+  - @prosopo/provider@5.13.2
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/locale@3.6.1
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+  - @prosopo/env@3.6.65
+  - @prosopo/keyring@2.9.98
+  - @prosopo/dotenv@3.0.58
+  - @prosopo/logger@2.1.1
+
+## 3.8.21
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/provider@5.13.1
+  - @prosopo/api@4.3.5
+  - @prosopo/env@3.6.64
+  - @prosopo/keyring@2.9.97
+
+## 3.8.20
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+- Updated dependencies [85a1bb9]
+- Updated dependencies [2cca36e]
+  - @prosopo/provider@5.13.0
+  - @prosopo/types@5.10.1
+  - @prosopo/api@4.3.4
+  - @prosopo/env@3.6.63
+  - @prosopo/keyring@2.9.96
+
+## 3.8.19
+### Patch Changes
+
+- Updated dependencies [aed164d]
+  - @prosopo/provider@5.12.3
+
+## 3.8.18
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/util@3.3.11
+  - @prosopo/keyring@2.9.95
+  - @prosopo/provider@5.12.2
+  - @prosopo/env@3.6.62
+  - @prosopo/api@4.3.3
+  - @prosopo/dotenv@3.0.57
+
+## 3.8.17
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+  - @prosopo/common@3.1.58
+  - @prosopo/provider@5.12.1
+  - @prosopo/types@5.9.2
+  - @prosopo/env@3.6.61
+  - @prosopo/keyring@2.9.94
+  - @prosopo/api@4.3.2
+
+## 3.8.16
+### Patch Changes
+
+- 6d9711f: Measure where the provider's CPU actually goes, and move puzzle background generation to Rust.
+  
+  **Measuring first.** We have been choosing what to optimise by reading the code and guessing, and the guesses have been wrong in both directions — a decoder shipped nine times slower than its predecessor without anyone noticing, and a background generator we assumed would be ten to twenty times faster in Rust turned out to be three. Two things now answer the question with numbers instead.
+  
+  `measureSync` wraps a named block of synchronous work and records the CPU it burns, so `prosopo_sync_span_cpu_seconds_total` gives a per-day ranking of which blocks cost the most. Seven blocks are instrumented: the three payload decoders, puzzle background generation and rendering, the merkle build, and decision machine execution. The measurement is only honest for work that holds the event loop, which is why the helper takes a plain function and not an async one — billing a function for the requests served during its awaits would produce a confident wrong answer.
+  
+  A periodic CPU profiler covers what nobody thought to instrument. It samples the isolate for a few seconds, logs the busiest call frames by self time, and sleeps. It is off unless `PROSOPO_CPU_PROFILE_ENABLED=true`, samples a short window every fifteen minutes by default, and cannot take the provider down with it if it fails.
+  
+  Event loop lag and process CPU were already being collected by the default Prometheus metrics; nothing was added there.
+  
+  **Puzzle backgrounds in Rust.** The new `@prosopo/native-puzzle` package generates the mesh-gradient background the slider puzzle sits on. It produces byte-identical output to the JavaScript for the same seed — verified against the existing implementation, which stays in place as the reference — and takes about a third of the time, so a buffer refill now stalls the event loop for around eleven milliseconds instead of thirty-two. The JavaScript remains the browser-side implementation and the thing the differential test compares against.
+- c151f8a: Decode detector payloads on worker threads instead of on the request path, and fix the CPU metric that was measuring the wrong thing.
+  
+  **The measurement was wrong.** `prosopo_sync_span_cpu_seconds_total` claimed to report the CPU a block of synchronous work costs, on the reasoning that nothing else can run while it holds the event loop. That is true of the main thread but not of the process: `process.cpuUsage()` counts every thread, so V8's background garbage collector and compiler and the image encoder's thread pool were all billed to whichever block happened to be open. In production it reported *more* CPU than wall-clock time, which is impossible for work on one thread, and that is what gave it away. Node offers no per-thread CPU clock, so the counter is removed rather than corrected — process-wide CPU is already reported as `prosopo_process_cpu_seconds_total`. The wall-time counter was never affected and is the one to rank by: for a synchronous block it is exactly the delay imposed on everything else waiting.
+  
+  **What that measurement found.** The three detector decoders held the event loop for 15–47 ms every time they ran, and together accounted for about 84% of all the blocking we measured. That cost does not stay with the request doing the decoding — it delays every other request being served at that moment, health checks included. It is the same shape of problem as the decoder that shipped nine times slower in 3.8.14.
+  
+  **The fix.** The decoders now run on a small pool of worker threads. The decoders themselves are untouched: the same file, the same input, the same output, including the same failures — the tests check that decoding through the pool is indistinguishable from decoding inline. A round trip to a worker costs between 0.01 and 0.2 ms against the 15–47 ms it takes off the request path.
+  
+  Set `PROSOPO_DECODER_WORKERS=0` to go back to decoding inline; it takes a restart but not a rollback. `PROSOPO_DECODER_WORKERS` sets the pool size (default: up to four, leaving a core spare) and `PROSOPO_DECODER_TIMEOUT_MS` caps how long one decode may take before the worker is replaced. If workers cannot be started at all the provider decodes inline and says so in the log, because serving slowly is better than not serving.
+  
+  Two new metrics replace the decoder spans: `prosopo_decoder_duration_seconds` and `prosopo_decoder_calls_total`. Watch them next to `prosopo_nodejs_eventloop_lag_p99_seconds` — that pair is how you confirm the work moved rather than disappeared.
+  
+  The decoders are now copied next to the bundle under fixed names and loaded by path, because a worker cannot ask the bundler what it called a chunk. `copyAssetsPlugin` does the copying.
+- Updated dependencies [a22069d]
+- Updated dependencies [6d9711f]
+- Updated dependencies [c151f8a]
+- Updated dependencies [de1dc32]
+  - @prosopo/provider@5.12.0
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/api@4.3.1
+  - @prosopo/common@3.1.57
+  - @prosopo/env@3.6.60
+  - @prosopo/keyring@2.9.93
+
+## 3.8.15
+### Patch Changes
+
+- Updated dependencies [6c00bca]
+  - @prosopo/provider@5.11.1
+
+## 3.8.14
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+- Updated dependencies [a4a71be]
+  - @prosopo/types@5.9.0
+  - @prosopo/provider@5.11.0
+  - @prosopo/api@4.3.0
+  - @prosopo/env@3.6.59
+  - @prosopo/keyring@2.9.92
+
 ## 3.8.13
 ### Patch Changes
 

@@ -24,6 +24,7 @@ import {
 	puzzleDecoyCountFieldSchema,
 	puzzleDecoyEdgeDarknessFieldSchema,
 	puzzleDecoyHoleDarkenFieldSchema,
+	puzzleLookalikeDecoysFieldSchema,
 	puzzlePieceScaleFieldSchema,
 	puzzleToleranceFieldSchema,
 } from "@prosopo/types";
@@ -60,6 +61,11 @@ describe("PUZZLE_DIFFICULTY_LEVELS table", () => {
 			for (const v of [band.pieceScale.min, band.pieceScale.max]) {
 				expect(puzzlePieceScaleFieldSchema.safeParse(v).success).toBe(true);
 			}
+			for (const v of [band.lookalikeDecoys.min, band.lookalikeDecoys.max]) {
+				expect(puzzleLookalikeDecoysFieldSchema.safeParse(v).success).toBe(
+					true,
+				);
+			}
 		}
 	});
 });
@@ -79,6 +85,12 @@ describe("samplePuzzleDifficulty", () => {
 				expect(s.tolerance).toBeLessThanOrEqual(band.tolerance.max);
 				expect(s.puzzle.decoyCount).toBeGreaterThanOrEqual(band.decoyCount.min);
 				expect(s.puzzle.decoyCount).toBeLessThanOrEqual(band.decoyCount.max);
+				expect(s.puzzle.lookalikeDecoys).toBeGreaterThanOrEqual(
+					band.lookalikeDecoys.min,
+				);
+				expect(s.puzzle.lookalikeDecoys).toBeLessThanOrEqual(
+					band.lookalikeDecoys.max,
+				);
 			}
 		}
 	});

@@ -17,6 +17,7 @@ import { getProviders } from "@prosopo/load-balancer";
 import type { Logger } from "@prosopo/logger";
 import type { ClientApiPaths, VerificationResponse } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
+import { stripTrailingSlashes } from "@prosopo/util";
 
 /**
  * A client can send a verify request to *any* pronode, not necessarily the
@@ -45,9 +46,23 @@ function normalizeProviderUrl(url: string): string {
 	try {
 		const parsed = new URL(url);
 		parsed.hostname = parsed.hostname.replace(/^(ipv4|ipv6)\./, "");
-		return parsed.toString().replace(/\/$/, "");
+		return stripTrailingSlashes(parsed.toString());
 	} catch {
-		return url.replace(/\/$/, "");
+		return stripTrailingSlashes(url);
+	}
+}
+
+// `config.host` is this node's bare hostname (e.g. `pronode4.prosopo.io`), the
+// same value `/healthz` hands to the widget to embed in the token.
+function isOwnProviderUrl(providerUrl: string, ownHost: string): boolean {
+	if (!ownHost) {
+		return false;
+	}
+	try {
+		const { hostname } = new URL(normalizeProviderUrl(providerUrl));
+		return hostname === ownHost.toLowerCase();
+	} catch {
+		return false;
 	}
 }
 
@@ -75,6 +90,12 @@ export async function forwardVerifyIfNotIssuer(args: {
 	// No issuer url in the token → we can't forward; verify locally (this also
 	// preserves behaviour for any older tokens that omit providerUrl).
 	if (!providerUrl) {
+		return null;
+	}
+
+	// A token this node minted is verified here whatever the list says, so
+	// don't make the caller wait on fetching it.
+	if (isOwnProviderUrl(providerUrl, env.config.host)) {
 		return null;
 	}
 

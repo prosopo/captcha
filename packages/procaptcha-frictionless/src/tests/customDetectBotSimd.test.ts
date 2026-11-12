@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { widgetLanguageHeaders } from "@prosopo/locale";
+import type { BehavioralDataSource } from "@prosopo/procaptcha-common";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // `vi.mock` is hoisted; share state via `vi.hoisted` so the factories can
@@ -36,6 +38,22 @@ vi.mock("@prosopo/api", () => ({
 }));
 
 vi.mock("@prosopo/procaptcha-common", () => ({
+	PAGE_BEHAVIOUR_LIMITS: { mouse: 1000, touch: 500, press: 200, scroll: 500 },
+	getPageBehaviour: vi.fn(() => undefined),
+	mergeBehaviourPoints: vi.fn(
+		<T>(early: readonly T[], tracked: readonly T[]): T[] => [
+			...early,
+			...tracked,
+		],
+	),
+	stopPageBehaviourCapture: vi.fn(),
+	encryptBehavioralDataForSubmit: vi.fn(
+		async (_source?: BehavioralDataSource): Promise<string | undefined> =>
+			undefined,
+	),
+	widgetRequestHeaders: (
+		siteLanguage: string | undefined,
+	): Record<string, string> => widgetLanguageHeaders(siteLanguage),
 	ExtensionLoader: vi.fn(async () => {
 		return class FakeExtension {
 			getAccount() {
@@ -47,6 +65,11 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 	}),
 	getProcaptchaRandomActiveProvider: mocks.getProcaptchaRandomActiveProvider,
 	pickIpMode: vi.fn(() => undefined),
+	// Nothing here runs Protect, so the real function would return the site's
+	// own value unchanged.
+	resolveClientSessionId: vi.fn(
+		(clientSessionId?: string): string | undefined => clientSessionId,
+	),
 }));
 
 vi.mock("../detectorLoader.js", () => ({

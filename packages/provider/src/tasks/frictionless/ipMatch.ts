@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { CompositeIpAddress } from "@prosopo/types";
+import { type CompositeIpAddress, IpAddressType } from "@prosopo/types";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 
 /**
@@ -37,10 +37,27 @@ const asBigInt = (half: unknown): bigint | null => {
 	}
 };
 
+type NumericIp = { type: IpAddressType; lower: bigint; upper: bigint };
+
+// ::ffff:a.b.c.d sits in the low 48 bits of a v6 address with a zero upper half.
+const V4_MAPPED_MARKER = 0xffffn;
+
+/**
+ * A dual-stack socket reports an IPv4 client as `::ffff:a.b.c.d`, while the
+ * operator usually forwards the same client as `a.b.c.d`. Both are reduced to
+ * the plain v4 address so the binding compares the client, not the socket.
+ */
+const unmapV4 = (ip: NumericIp): NumericIp =>
+	ip.type === IpAddressType.v6 &&
+	ip.upper === 0n &&
+	ip.lower >> 32n === V4_MAPPED_MARKER
+		? { type: IpAddressType.v4, lower: ip.lower & 0xffffffffn, upper: 0n }
+		: ip;
+
 /**
  * Compare an operator-supplied plain-string IP against the CompositeIpAddress
  * captured on a session. Returns true iff the parsed IP has the same type
- * (v4/v6) and numeric halves.
+ * (v4/v6) and numeric halves, once IPv4-mapped v6 addresses are unmapped.
  *
  * Load-bearing for Web Bot Auth IP binding — a leaked authenticated token
  * replayed from a different IP fails here. Malformed operator IPs degrade
@@ -53,12 +70,21 @@ export const ipMatchesSession = (
 	operatorIp: string,
 	sessionIp: CompositeIpAddress,
 ): boolean => {
-	const parsed = getCompositeIpAddress(operatorIp);
-	if (parsed.type !== sessionIp.type) return false;
-
 	const lower = asBigInt(sessionIp.lower);
 	const upper = asBigInt(sessionIp.upper);
 	if (lower === null || upper === null) return false;
 
-	return parsed.lower === lower && (parsed.upper ?? 0n) === upper;
+	const parsed = getCompositeIpAddress(operatorIp);
+	const operator = unmapV4({
+		type: parsed.type,
+		lower: BigInt(parsed.lower),
+		upper: BigInt(parsed.upper ?? 0n),
+	});
+	const session = unmapV4({ type: sessionIp.type, lower, upper });
+
+	return (
+		operator.type === session.type &&
+		operator.lower === session.lower &&
+		operator.upper === session.upper
+	);
 };

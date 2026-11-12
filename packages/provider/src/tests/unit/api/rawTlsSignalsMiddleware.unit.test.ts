@@ -14,10 +14,13 @@
 
 import type { IncomingHttpHeaders } from "node:http";
 import type { Logger } from "@prosopo/logger";
+import type { TcpProbeHit } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
 	getRawTlsSignals,
+	parseTcpProbeHeader,
 	rawTlsSignalsForSession,
+	rawTlsSignalsFromRecord,
 } from "../../../api/rawTlsSignalsMiddleware.js";
 
 const mockLogger = (): Logger => {
@@ -104,6 +107,16 @@ describe("getRawTlsSignals", () => {
 		expect(result.tcpWscale).toBe(7);
 	});
 
+	it("rejects values with trailing junk or a fraction", () => {
+		const headers: IncomingHttpHeaders = {
+			"x-tls-tcp-mss": "1460abc",
+			"x-tls-tcp-wscale": "7.5",
+		};
+		const result = getRawTlsSignals(headers, mockLogger());
+		expect(result.tcpMss).toBeUndefined();
+		expect(result.tcpWscale).toBeUndefined();
+	});
+
 	it("takes the first value when the header is repeated (string[])", () => {
 		const headers: IncomingHttpHeaders = {
 			"x-tls-tcp-mss": ["1452", "1460"],
@@ -113,7 +126,217 @@ describe("getRawTlsSignals", () => {
 	});
 });
 
+const encodeProbe = (body: unknown): string =>
+	Buffer.from(JSON.stringify(body), "utf8").toString("base64url");
+
+const probeHit: TcpProbeHit = {
+	v: 2,
+	hit: true,
+	flags: 15,
+	remote_ip: "2001:db8::1",
+	remote_port: 51000,
+	local_ip: "2001:db8::2",
+	local_port: 443,
+	is_v6: true,
+	syn_ns: 2 ** 60,
+	est_ns: 2 ** 60,
+	est_srtt_us: 900,
+	est_mss: 1440,
+	ack_window: 502,
+	ack_tsval: 1,
+	ack_tsecr: 2,
+	retrans: 0,
+	last_state: 1,
+	rtt_us: [900, 950],
+	pkts: [{ ns: 5, tsval: 3, len: 517, window: 502, flags: 24 }],
+	syn: {
+		ttl: 52,
+		tos: 0,
+		total_len: 60,
+		ip_id: 0,
+		frag_flags: 0,
+		flow_label: 12345,
+		ip_options: false,
+		seq: 7,
+		data_offset_resv: 160,
+		tcp_flags: 2,
+		window: 64240,
+		urg_ptr: 0,
+		opts: [{ kind: 2, data: "05a0" }],
+		opts_malformed: false,
+		raw: "ab",
+	},
+	tcp_info: { state: 1, snd_cwnd: 10 },
+};
+
+// A record captured from tcp-probe v2 on staging, addresses replaced. Written
+// from the wire rather than from the schema, so a schema that disagrees with
+// what the probe sends fails here.
+const capturedV6Hit: TcpProbeHit = {
+	ack_tsecr: 3240538491,
+	ack_tsval: 397830579,
+	ack_window: 507,
+	est_mss: 1428,
+	est_ns: 1991669376458802,
+	est_srtt_us: 106401,
+	flags: 15,
+	hit: true,
+	is_v6: true,
+	last_state: 1,
+	local_ip: "2001:db8::443",
+	local_port: 443,
+	pkts: [
+		{
+			flags: 24,
+			len: 549,
+			ns: 4135637,
+			tsval: 397830583,
+			window: 507,
+		},
+		{
+			flags: 16,
+			len: 32,
+			ns: 115606308,
+			tsval: 397830692,
+			window: 505,
+		},
+	],
+	remote_ip: "2001:db8::1",
+	remote_port: 35542,
+	retrans: 0,
+	rtt_us: [106401],
+	syn: {
+		data_offset_resv: 160,
+		flow_label: 556646,
+		frag_flags: 0,
+		ip_id: 0,
+		ip_options: false,
+		opts: [
+			{
+				data: "05a0",
+				kind: 2,
+			},
+			{
+				data: "",
+				kind: 4,
+			},
+			{
+				data: "17b6694800000000",
+				kind: 8,
+			},
+			{
+				data: "",
+				kind: 1,
+			},
+			{
+				data: "07",
+				kind: 3,
+			},
+		],
+		opts_malformed: false,
+		raw: "60000000",
+		seq: 910862214,
+		tcp_flags: 2,
+		tos: 0,
+		total_len: 80,
+		ttl: 52,
+		urg_ptr: 0,
+		window: 64800,
+	},
+	syn_ns: 1991669269997656,
+	tcp_info: {
+		advmss: 1428,
+		bytes_acked: 3800,
+		bytes_received: 1157,
+		bytes_sent: 3933,
+		ca_state: 0,
+		delivery_rate: 39438,
+		lost: 0,
+		min_rtt: 106401,
+		options: 7,
+		pmtu: 1500,
+		rcv_mss: 536,
+		rcv_rtt: 0,
+		rcv_wscale: 7,
+		reordering: 3,
+		rto: 320000,
+		rtt: 107132,
+		rttvar: 23545,
+		segs_in: 9,
+		segs_out: 7,
+		snd_cwnd: 10,
+		snd_mss: 1428,
+		snd_wnd: 64896,
+		snd_wscale: 7,
+		state: 1,
+		total_retrans: 0,
+	},
+	v: 2,
+};
+
+describe("parseTcpProbeHeader", () => {
+	it("accepts a record exactly as tcp-probe v2 emits it", () => {
+		expect(
+			parseTcpProbeHeader(encodeProbe(capturedV6Hit), mockLogger()),
+		).toEqual(capturedV6Hit);
+	});
+
+	it("decodes a full IPv6 hit, keeping post-handshake packets", () => {
+		expect(parseTcpProbeHeader(encodeProbe(probeHit), mockLogger())).toEqual(
+			probeHit,
+		);
+	});
+
+	it("keeps a miss so the blank rate can be measured", () => {
+		const miss = { v: 2, hit: false, reason: "unavailable" };
+		expect(parseTcpProbeHeader(encodeProbe(miss), mockLogger())).toEqual(miss);
+	});
+
+	it("returns undefined when the header is absent", () => {
+		expect(parseTcpProbeHeader(undefined, mockLogger())).toBeUndefined();
+	});
+
+	it("takes the first value of a repeated header", () => {
+		const raw = [encodeProbe(probeHit), "junk"];
+		expect(parseTcpProbeHeader(raw, mockLogger())).toEqual(probeHit);
+	});
+
+	it.each<[string, string]>([
+		["non-base64 junk", "%%%"],
+		["base64 that is not JSON", Buffer.from("nope").toString("base64url")],
+		["an oversized value", "a".repeat(8193)],
+		["an unknown version", encodeProbe({ ...probeHit, v: 3 })],
+		["a missing field", encodeProbe({ v: 2, hit: true })],
+		["an out-of-range port", encodeProbe({ ...probeHit, remote_port: 70000 })],
+		[
+			"too many packets",
+			encodeProbe({ ...probeHit, pkts: Array(17).fill(probeHit.pkts[0]) }),
+		],
+		[
+			"non-hex SYN bytes",
+			encodeProbe({ ...probeHit, syn: { ...probeHit.syn, raw: "<script>" } }),
+		],
+	])("rejects %s", (_name, raw) => {
+		expect(parseTcpProbeHeader(raw, mockLogger())).toBeUndefined();
+	});
+
+	it("drops fields a forger added", () => {
+		const parsed = parseTcpProbeHeader(
+			encodeProbe({ ...probeHit, $where: "1" }),
+			mockLogger(),
+		);
+		expect(parsed).toEqual(probeHit);
+	});
+});
+
 describe("rawTlsSignalsForSession", () => {
+	it("carries the tcp-probe record", () => {
+		const out = rawTlsSignalsForSession({
+			tcpProbe: probeHit,
+		} as Parameters<typeof rawTlsSignalsForSession>[0]);
+		expect(out).toEqual({ tcpProbe: probeHit });
+	});
+
 	it("omits undefined fields so Mongo docs stay slim", () => {
 		const out = rawTlsSignalsForSession({
 			tcpMss: 1460,
@@ -145,6 +368,190 @@ describe("rawTlsSignalsForSession", () => {
 			tcpOptsOrder: 8,
 			tcpWindow: 9,
 		});
+	});
+});
+
+describe("getRawTlsSignals — whole-SYN fields from the 104-byte record", () => {
+	it("parses every new header", () => {
+		const headers: IncomingHttpHeaders = {
+			// MSS(2), SACK-permitted(4), Timestamps(8), NOP(1), Window-Scale(3)
+			// packed one byte per option, least-significant byte first. The
+			// probe sends this as decimal, so it is built from the hex here
+			// rather than written out.
+			"x-tls-tcp-opts-kinds": String(0x0000000301080402n),
+			// The same five options as presence bits: 4 | 16 | 64 | 2 | 8.
+			"x-tls-tcp-opts-present": "94",
+			"x-tls-tcp-opts-count": "5",
+			"x-tls-tcp-tsval": "3456789",
+			"x-tls-tcp-tsecr": "0",
+			"x-tls-tcp-flags": "2",
+			"x-tls-tcp-data-offset-resv": "160",
+			"x-tls-tcp-urg-ptr": "0",
+			"x-tls-ip-ident": "0",
+			"x-tls-ip-total-len": "60",
+			"x-tls-ip-frag-flags": "16384",
+			"x-tls-ip-tos": "0",
+		};
+
+		const result = getRawTlsSignals(headers, mockLogger());
+
+		expect(result.tcpOptsKinds).toEqual([2, 4, 8, 1, 3]);
+		expect(result.tcpOptsPresent).toBe(94);
+		expect(result.tcpOptsCount).toBe(5);
+		expect(result.tcpTsval).toBe(3456789);
+		expect(result.tcpTsecr).toBe(0);
+		expect(result.tcpFlags).toBe(2);
+		expect(result.tcpDataOffsetResv).toBe(160);
+		expect(result.tcpUrgPtr).toBe(0);
+		expect(result.ipIdent).toBe(0);
+		expect(result.ipTotalLen).toBe(60);
+		expect(result.ipFragFlags).toBe(16384);
+		expect(result.ipTos).toBe(0);
+	});
+
+	// The whole reason the packed value is decoded rather than stored: a u64
+	// reaches 2^64 and a JS number is exact only to 2^53, so Number.parseInt
+	// would round — and the rounding lands in the low bytes, which are the
+	// option kinds themselves.
+	it("reads a packed value above 2^53 without losing the low bytes", () => {
+		// Eight options, every slot occupied, so the value needs all 64 bits.
+		const packed = 0x22130805040302_01n;
+		expect(Number(packed) > Number.MAX_SAFE_INTEGER).toBe(true);
+
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": String(packed) },
+			mockLogger(),
+		);
+
+		expect(result.tcpOptsKinds).toEqual([1, 2, 3, 4, 5, 8, 0x13, 0x22]);
+	});
+
+	// Kind numbers a 4-bit-per-slot encoding could not tell apart: MSS(2) vs
+	// Fast Open(34), Window Scale(3) vs MD5(19).
+	it("keeps the kind numbers the old packed order aliased together", () => {
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": String(0x00000000_13220302n) },
+			mockLogger(),
+		);
+		expect(result.tcpOptsKinds).toEqual([2, 3, 34, 19]);
+	});
+
+	it("stops at the first empty slot so a trailing EOL is not an option", () => {
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": String(0x0000000000000402n) },
+			mockLogger(),
+		);
+		expect(result.tcpOptsKinds).toEqual([2, 4]);
+	});
+
+	// The probe's absent-marker. An empty array would claim a SYN that
+	// carried no options at all, which is a different statement.
+	it("treats an all-zero packed value as absent, not as an empty list", () => {
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": "0" },
+			mockLogger(),
+		);
+		expect(result.tcpOptsKinds).toBeUndefined();
+	});
+
+	it("ignores a malformed or out-of-range packed value", () => {
+		for (const raw of ["not a number", "-1", "1.5", String((1n << 64n) + 1n)]) {
+			const result = getRawTlsSignals(
+				{ "x-tls-tcp-opts-kinds": raw },
+				mockLogger(),
+			);
+			expect(result.tcpOptsKinds, raw).toBeUndefined();
+		}
+	});
+
+	// chaddy sends exactly one of the two option encodings, so a provider
+	// behind an un-upgraded chaddy must still get the legacy pair.
+	it("still reads the legacy option headers an 80-byte record produces", () => {
+		const result = getRawTlsSignals(
+			{
+				"x-tls-tcp-opts-flags": "31",
+				"x-tls-tcp-opts-order": "202818",
+			},
+			mockLogger(),
+		);
+		expect(result.tcpOptsFlags).toBe(31);
+		expect(result.tcpOptsOrder).toBe(202818);
+		expect(result.tcpOptsKinds).toBeUndefined();
+		expect(result.tcpOptsPresent).toBeUndefined();
+	});
+});
+
+describe("getRawTlsSignals — TLS handshake round trip", () => {
+	it("reads the handshake round trip alongside the TCP one it is compared with", () => {
+		const headers: IncomingHttpHeaders = {
+			"x-tls-synack-ns": "1000000000",
+			"x-tls-ack-ns": "1021900000",
+			"x-tls-handshake-rtt-us": "1250000",
+		};
+		const signals = getRawTlsSignals(headers, mockLogger());
+		expect(signals.synackNs).toBe(1_000_000_000);
+		expect(signals.ackNs).toBe(1_021_900_000);
+		expect(signals.tlsHandshakeRttUs).toBe(1_250_000);
+	});
+
+	it("ignores a malformed or negative round trip", () => {
+		for (const raw of ["-5", "12.5", "fast", "4294967296"]) {
+			const headers: IncomingHttpHeaders = { "x-tls-handshake-rtt-us": raw };
+			expect(getRawTlsSignals(headers, mockLogger()).tlsHandshakeRttUs).toBe(
+				undefined,
+			);
+		}
+	});
+
+	it("is carried from the request onto the session record", () => {
+		const signals = getRawTlsSignals(
+			{ "x-tls-handshake-rtt-us": "21900" },
+			mockLogger(),
+		);
+		expect(rawTlsSignalsFromRecord(signals)).toEqual({
+			tlsHandshakeRttUs: 21_900,
+		});
+	});
+});
+
+describe("rawTlsSignalsFromRecord", () => {
+	it("carries every field off a session record", () => {
+		const out = rawTlsSignalsFromRecord({
+			synNs: 1,
+			tcpOptsKinds: [2, 4, 8],
+			tcpOptsPresent: 94,
+			tcpTsval: 7,
+			ipIdent: 0,
+		});
+		expect(out).toEqual({
+			synNs: 1,
+			tcpOptsKinds: [2, 4, 8],
+			tcpOptsPresent: 94,
+			tcpTsval: 7,
+			ipIdent: 0,
+		});
+	});
+
+	// Called with `sessionRecord?.` at several sites, where the session may
+	// not exist at all.
+	it("is an empty object for a missing record", () => {
+		expect(rawTlsSignalsFromRecord(undefined)).toEqual({});
+		expect(rawTlsSignalsFromRecord(null)).toEqual({});
+	});
+
+	it("omits undefined fields so Mongo docs stay slim", () => {
+		expect(rawTlsSignalsFromRecord({ tcpMss: 1460 })).toEqual({
+			tcpMss: 1460,
+		});
+	});
+
+	// A zero here is a real observation — Linux sends ip_ident 0 with DF set,
+	// and a TSecr of 0 is what a well-formed SYN carries — so the filter has
+	// to be on `undefined`, not on falsiness.
+	it("keeps a zero, which is a real reading for several of these", () => {
+		expect(
+			rawTlsSignalsFromRecord({ ipIdent: 0, tcpTsecr: 0, tcpFlags: 0 }),
+		).toEqual({ ipIdent: 0, tcpTsecr: 0, tcpFlags: 0 });
 	});
 });
 

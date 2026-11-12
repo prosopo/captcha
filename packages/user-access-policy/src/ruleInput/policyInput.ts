@@ -13,13 +13,14 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { CaptchaTypeSchema } from "@prosopo/types";
+import { ResultReason, SelectableCaptchaTypeSchema } from "@prosopo/types";
 import { z } from "zod";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
 	GLOBAL_CLIENT_SCOPE_SENTINEL,
 	type PolicyScope,
+	type PolicyScopeExclusions,
 } from "#policy/rule.js";
 
 // `satisfies ZodType<AccessPolicy>` is intentionally omitted: the
@@ -46,10 +47,11 @@ import {
 // `ZodEffects`, which loses `.shape`.
 export const accessPolicyInputShape = z.object({
 	type: z.nativeEnum(AccessPolicyType),
-	captchaType: CaptchaTypeSchema.optional(),
+	captchaType: SelectableCaptchaTypeSchema.optional(),
 	description: z.coerce.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),
+	severity: z.coerce.number().optional(),
 	// the percentage of image panels that must be solved per image CAPTCHA
 	imageThreshold: z.coerce.number().optional(),
 	// the Proof-of-Work difficulty level
@@ -64,6 +66,7 @@ export const accessPolicyInputShape = z.object({
 	deferToVerify: z
 		.preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
 		.optional(),
+	messageKey: z.nativeEnum(ResultReason).optional(),
 } satisfies AllKeys<AccessPolicy>);
 
 export const accessPolicyInput = accessPolicyInputShape.superRefine(
@@ -85,6 +88,14 @@ export const accessPolicyInput = accessPolicyInputShape.superRefine(
 					"Block policies cannot set solvedImagesCount — the field only applies to Restrict policies that adjust image-captcha rounds.",
 			});
 		}
+		if (policy.severity !== undefined) {
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				path: ["severity"],
+				message:
+					"Block policies cannot set severity — the field only applies to Restrict policies that serve a puzzle.",
+			});
+		}
 	},
 );
 
@@ -95,7 +106,7 @@ export const accessPolicyInput = accessPolicyInputShape.superRefine(
 // canonical shape. New writes are rejected at input.
 export const sanitizeAccessPolicy = (policy: AccessPolicy): AccessPolicy => {
 	if (policy.type === AccessPolicyType.Block) {
-		const { captchaType, solvedImagesCount, ...blockPolicy } = policy;
+		const { captchaType, solvedImagesCount, severity, ...blockPolicy } = policy;
 		return blockPolicy;
 	}
 	return policy;
@@ -117,3 +128,28 @@ export const policyScopeInput = z.object({
 		z.coerce.string().optional(),
 	),
 } satisfies AllKeys<PolicyScope>);
+
+// Redis has no list type for a hash field, so the writer joins the ids with
+// the TAG field's default "," separator. Accept that form as well as the
+// array the API sends, and treat an empty list as no exclusions at all.
+const toClientIdList = (value: unknown): unknown => {
+	const list =
+		typeof value === "string"
+			? value.split(",").filter((id) => id.length > 0)
+			: value;
+	return Array.isArray(list) && list.length === 0 ? undefined : list;
+};
+
+export const policyScopeExclusionsInput = z.object({
+	excludedClientIds: z.preprocess(
+		toClientIdList,
+		z
+			.array(
+				z
+					.string()
+					.min(1)
+					.regex(/^[^,]+$/, "Client ids cannot contain a comma."),
+			)
+			.optional(),
+	),
+} satisfies AllKeys<PolicyScopeExclusions>);

@@ -17,12 +17,12 @@ import type { CaptchaResult } from "../datasets/captcha.js";
 import { CaptchaStatus } from "../datasets/captcha.js";
 import { ResultReason } from "./reasons.js";
 
-// Reasons that represent a legitimate user-side failure of an image or
-// puzzle challenge — the user selected the wrong images or dropped the
-// puzzle piece in the wrong place. Everything else that produces a
-// Disapproved verdict on those flows is a server-side block (traffic
-// filter, decision machine, IP validation, spam rules, replay/timestamp
-// detection, etc.).
+// Reasons that represent a legitimate user-side failure of an interactive
+// challenge — the user selected the wrong images, dropped the puzzle piece in
+// the wrong place, clicked the wrong icons, or mistyped what they heard.
+// Everything else that produces a Disapproved verdict on those flows is a
+// server-side block (traffic filter, decision machine, IP validation, spam
+// rules, replay/timestamp detection, etc.).
 const USER_FAILURE_REASONS: ReadonlySet<ResultReason> = new Set([
 	ResultReason.CAPTCHA_INVALID_SOLUTION,
 ]);
@@ -38,8 +38,9 @@ const USER_FAILURE_REASONS: ReadonlySet<ResultReason> = new Set([
  *
  * PoW is a special case: nobody should ever legitimately "fail" a
  * proof-of-work, so any Disapproved PoW counts as a block regardless of
- * reason. For image and puzzle we distinguish user failure
- * (CAPTCHA_INVALID_SOLUTION) from server-side rejections.
+ * reason. For every interactive type — image, puzzle, icon-order, audio — we
+ * distinguish user failure (CAPTCHA_INVALID_SOLUTION) from server-side
+ * rejections.
  */
 export const isBlockingCaptchaResult = (
 	captchaType: CaptchaType,

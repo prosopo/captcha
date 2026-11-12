@@ -17,6 +17,8 @@ import {
 	CaptchaType,
 	type IUserSettings,
 	Tier,
+	iconOrderToleranceDefault,
+	ipDetectorRiskWeightDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -67,7 +69,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 				frictionlessPuzzleThreshold: 0.5,
 				frictionlessImageThreshold: 1,
 			},
-			frictionlessTypes: { image: true, puzzle: true },
+			frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 			powDifficulty: 100000,
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,
@@ -75,7 +77,10 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			verifiedTimeout: 120000,
 			solutionTimeout: 60000,
 			puzzleTolerance: 15,
+			iconOrderTolerance: iconOrderToleranceDefault,
 			puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+			ipDetectorRiskWeight: ipDetectorRiskWeightDefault,
+			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 		};
 
@@ -88,6 +93,22 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			siteKey,
 			tier,
 			settings,
+		);
+	});
+
+	it("registers a site key sent without settings with the default settings", async () => {
+		const siteKey = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+		const args = endpoint
+			.getRequestArgsSchema()
+			.parse({ siteKey, tier: Tier.Free });
+
+		const result = await endpoint.processRequest(args, mockLogger as never);
+
+		expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
+		expect(mockClientTaskManager.registerSiteKey).toHaveBeenCalledWith(
+			siteKey,
+			Tier.Free,
+			expect.objectContaining({ domains: ["localhost"] }),
 		);
 	});
 

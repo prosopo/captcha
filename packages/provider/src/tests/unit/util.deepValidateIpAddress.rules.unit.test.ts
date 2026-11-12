@@ -16,7 +16,7 @@ import type { Logger } from "@prosopo/logger";
 import type { IIPValidationRules, IPInfoResult } from "@prosopo/types";
 import { IPValidationAction } from "@prosopo/types";
 import type { IIpInfoService } from "@prosopo/types-env";
-import { Address4 } from "ip-address";
+import { Address4, Address6 } from "ip-address";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deepValidateIpAddress } from "../../util.js";
 
@@ -63,7 +63,8 @@ const abuseOnlyRules = (threshold: number): IIPValidationRules => ({
 		abuseScoreExceedAction: IPValidationAction.Reject,
 	},
 	distanceThresholdKm: 1000,
-	abuseScoreThreshold: threshold,
+	abuseScoreThreshold: 0.005,
+	reputationScoreThreshold: threshold,
 	requireAllConditions: false,
 	forceConsistentIp: false,
 });
@@ -86,110 +87,208 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 		lookup = vi.fn();
 		ipInfoService = {
 			initialize: vi.fn(),
+			accountSighting: vi
+				.fn<IIpInfoService["accountSighting"]>()
+				.mockResolvedValue(undefined),
 			lookup: lookup as unknown as IIpInfoService["lookup"],
 			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),
 		};
 	});
 
-	it("rejects when the verify IP's abuse score exceeds the threshold", async () => {
+	it("rejects when the verify IP's reputation score meets the threshold", async () => {
 		lookup
-			.mockResolvedValueOnce(mockIpInfo({ ip: "1.1.1.1", abuserScore: 0.001 }))
 			.mockResolvedValueOnce(
-				mockIpInfo({ ip: "8.8.8.8", isAbuser: true, abuserScore: 0.42 }),
+				mockIpInfo({ ip: "1.1.1.1", reputationScore: 0.001 }),
+			)
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "8.8.8.8", reputationScore: 0.42 }),
 			);
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(false);
-		expect(result.errorMessage).toContain("Abuse score 0.4200");
+		expect(result.errorMessage).toContain("Reputation score 0.4200");
 	});
 
-	it("rejects on the challenge IP's abuse score too, not just the verify IP", async () => {
+	it("rejects on the challenge IP's reputation score too, not just the verify IP", async () => {
 		lookup
 			.mockResolvedValueOnce(
-				mockIpInfo({ ip: "1.1.1.1", isAbuser: true, abuserScore: 0.42 }),
+				mockIpInfo({ ip: "1.1.1.1", reputationScore: 0.42 }),
 			)
-			.mockResolvedValueOnce(mockIpInfo({ ip: "8.8.8.8", abuserScore: 0.001 }));
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "8.8.8.8", reputationScore: 0.001 }),
+			);
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(false);
-		expect(result.errorMessage).toContain("Abuse score 0.4200");
+		expect(result.errorMessage).toContain("Reputation score 0.4200");
 	});
 
-	it("allows when both abuse scores sit under the threshold", async () => {
+	it("allows when both reputation scores sit under the threshold", async () => {
 		lookup
-			.mockResolvedValueOnce(mockIpInfo({ ip: "1.1.1.1", abuserScore: 0.01 }))
-			.mockResolvedValueOnce(mockIpInfo({ ip: "8.8.8.8", abuserScore: 0.19 }));
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "1.1.1.1", reputationScore: 0.01 }),
+			)
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "8.8.8.8", reputationScore: 0.19 }),
+			);
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 	});
 
-	// The ipinfo feed omits the field for plenty of IPs. `?? 0` would have made
-	// a missing score indistinguishable from a clean one; it must simply not fire.
-	it("allows when the feed omits abuserScore entirely", async () => {
+	// Many addresses have no reputation score. `?? 0` would have made a
+	// missing score indistinguishable from a low one; it must simply not fire.
+	it("allows when neither address has a reputation score", async () => {
 		lookup
 			.mockResolvedValueOnce(mockIpInfo({ ip: "1.1.1.1" }))
 			.mockResolvedValueOnce(mockIpInfo({ ip: "8.8.8.8" }));
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
+
+		expect(result.isValid).toBe(true);
+	});
+
+	it("ignores the abuser scores", async () => {
+		lookup
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "1.1.1.1", isAbuser: true, abuserScore: 0.9 }),
+			)
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "8.8.8.8", isAbuser: true, companyAbuserScore: 0.9 }),
+			);
+
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
+			ipInfoService,
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 	});
 
 	it("short-circuits to valid on an exact IP match without consulting ipinfo", async () => {
-		const result = await deepValidateIpAddress(
-			"1.1.1.1",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "1.1.1.1",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 		expect(lookup).not.toHaveBeenCalled();
 	});
 
 	it("rejects on forceConsistentIp when the DNS peer IP differs from the client IP", async () => {
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("8.8.8.8"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("8.8.8.8"),
+			logger: mockLogger,
 			ipInfoService,
-			{ ...abuseOnlyRules(0.2), forceConsistentIp: true },
-			"9.9.9.9",
-		);
+			ipValidationRules: { ...abuseOnlyRules(0.2), forceConsistentIp: true },
+			dnsPeerIp: "9.9.9.9",
+		});
 
 		expect(result.isValid).toBe(false);
 		expect(result.errorMessage).toContain("does not match dnsEvent.peerIp");
 		expect(lookup).not.toHaveBeenCalled();
+	});
+
+	it("allows a rotated IPv6 address inside the same /64 without consulting ipinfo", async () => {
+		const result = await deepValidateIpAddress({
+			ip: "2001:db8:aa:bb::6",
+			challengeIpAddress: new Address6("2001:db8:aa:bb::5"),
+			logger: mockLogger,
+			ipInfoService,
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
+
+		expect(result.isValid).toBe(true);
+		expect(lookup).not.toHaveBeenCalled();
+	});
+
+	it("allows a neighbouring IPv4 address inside the same /24 without consulting ipinfo", async () => {
+		const result = await deepValidateIpAddress({
+			ip: "203.0.113.23",
+			challengeIpAddress: new Address4("203.0.113.22"),
+			logger: mockLogger,
+			ipInfoService,
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
+
+		expect(result.isValid).toBe(true);
+		expect(lookup).not.toHaveBeenCalled();
+	});
+
+	it("still checks an IPv6 address outside the challenge /64", async () => {
+		lookup
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "2001:db8:aa:bb::5", reputationScore: 0.42 }),
+			)
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "2001:db8:aa:cc::5", reputationScore: 0.42 }),
+			);
+
+		const result = await deepValidateIpAddress({
+			ip: "2001:db8:aa:cc::5",
+			challengeIpAddress: new Address6("2001:db8:aa:bb::5"),
+			logger: mockLogger,
+			ipInfoService,
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
+
+		expect(result.isValid).toBe(false);
+		expect(result.errorMessage).toContain("Reputation score 0.4200");
+	});
+
+	it("still checks an IPv4 address outside the challenge /24", async () => {
+		lookup
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "203.0.113.22", reputationScore: 0.42 }),
+			)
+			.mockResolvedValueOnce(
+				mockIpInfo({ ip: "203.0.114.22", reputationScore: 0.42 }),
+			);
+
+		const result = await deepValidateIpAddress({
+			ip: "203.0.114.22",
+			challengeIpAddress: new Address4("203.0.113.22"),
+			logger: mockLogger,
+			ipInfoService,
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
+
+		expect(result.isValid).toBe(false);
 	});
 
 	// Fail-open is deliberate: an ipinfo outage must not reject real users.
@@ -200,13 +299,13 @@ describe("deepValidateIpAddress with ipValidationRules", () => {
 			ip: "8.8.8.8",
 		});
 
-		const result = await deepValidateIpAddress(
-			"8.8.8.8",
-			new Address4("1.1.1.1"),
-			mockLogger,
+		const result = await deepValidateIpAddress({
+			ip: "8.8.8.8",
+			challengeIpAddress: new Address4("1.1.1.1"),
+			logger: mockLogger,
 			ipInfoService,
-			abuseOnlyRules(0.2),
-		);
+			ipValidationRules: abuseOnlyRules(0.2),
+		});
 
 		expect(result.isValid).toBe(true);
 	});

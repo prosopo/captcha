@@ -46,6 +46,9 @@ const createMockService = (responses: IPInfoResponse[]): IIpInfoService => {
 	let callIndex = 0;
 	return {
 		initialize: vi.fn(),
+		accountSighting: vi
+			.fn<IIpInfoService["accountSighting"]>()
+			.mockResolvedValue(undefined),
 		lookup: vi.fn().mockImplementation(async () => {
 			const response = responses[callIndex];
 			callIndex++;
@@ -165,6 +168,7 @@ describe("compareIPs", () => {
 		const ip2Info: IPInfoResponse = createMockIPInfo({
 			ip: "1.1.1.1",
 			providerName: "Cloudflare Inc",
+			asnNumber: 13335,
 			isDatacenter: true,
 			country: "Australia",
 			city: "Sydney",
@@ -303,6 +307,7 @@ describe("compareIPs", () => {
 		const ip2Info: IPInfoResponse = createMockIPInfo({
 			ip: "1.1.1.1",
 			providerName: undefined,
+			asnNumber: 13335,
 			asnOrganization: undefined,
 		});
 
@@ -317,9 +322,106 @@ describe("compareIPs", () => {
 		}
 	});
 
+	it("treats a shared ASN as the same provider when the names differ", async () => {
+		const v4Info: IPInfoResponse = createMockIPInfo({
+			ip: "14.8.163.129",
+			providerName: "KDDI CORPORATION",
+			asnNumber: 2516,
+			asnOrganization: "KDDI CORPORATION",
+		});
+		const v6Info: IPInfoResponse = createMockIPInfo({
+			ip: "240b:12:a381:3a10:19f7:6f28:b80f:4de1",
+			providerName: "Japan Internet Xing Co., Ltd.",
+			asnNumber: 2516,
+			asnOrganization: "KDDI CORPORATION",
+		});
+
+		const result = await compareIPs(
+			"14.8.163.129",
+			"240b:12:a381:3a10:19f7:6f28:b80f:4de1",
+			createMockService([v4Info, v6Info]),
+		);
+
+		expect(
+			"comparison" in result && result.comparison?.differentProviders,
+		).toBe(false);
+	});
+
+	it("treats a shared name as the same provider when the ASNs differ", async () => {
+		const v4Info: IPInfoResponse = createMockIPInfo({
+			ip: "74.125.0.1",
+			providerName: "AT&T Services, Inc.",
+			asnNumber: 6389,
+		});
+		const v6Info: IPInfoResponse = createMockIPInfo({
+			ip: "2600:1700::1",
+			providerName: "AT&T Services, Inc.",
+			asnNumber: 7018,
+		});
+
+		const result = await compareIPs(
+			"74.125.0.1",
+			"2600:1700::1",
+			createMockService([v4Info, v6Info]),
+		);
+
+		expect(
+			"comparison" in result && result.comparison?.differentProviders,
+		).toBe(false);
+	});
+
+	it("reports different providers when both ASN and name differ", async () => {
+		const ip1Info: IPInfoResponse = createMockIPInfo({
+			ip: "14.8.163.129",
+			providerName: "KDDI CORPORATION",
+			asnNumber: 2516,
+		});
+		const ip2Info: IPInfoResponse = createMockIPInfo({
+			ip: "126.0.0.1",
+			providerName: "SoftBank Corp.",
+			asnNumber: 17676,
+		});
+
+		const result = await compareIPs(
+			"14.8.163.129",
+			"126.0.0.1",
+			createMockService([ip1Info, ip2Info]),
+		);
+
+		expect(
+			"comparison" in result && result.comparison?.differentProviders,
+		).toBe(true);
+	});
+
+	it("does not treat two missing ASNs as a match", async () => {
+		const ip1Info: IPInfoResponse = createMockIPInfo({
+			ip: "8.8.8.8",
+			providerName: "Provider A",
+			asnNumber: undefined,
+		});
+		const ip2Info: IPInfoResponse = createMockIPInfo({
+			ip: "1.1.1.1",
+			providerName: "Provider B",
+			asnNumber: undefined,
+		});
+
+		const result = await compareIPs(
+			"8.8.8.8",
+			"1.1.1.1",
+			createMockService([ip1Info, ip2Info]),
+		);
+
+		expect(
+			"comparison" in result && result.comparison?.differentProviders,
+		).toBe(true);
+	});
+
 	it("should handle exceptions gracefully", async () => {
 		const service: IIpInfoService = {
 			initialize: vi.fn(),
+			accountSighting: vi
+				.fn<IIpInfoService["accountSighting"]>()
+				.mockResolvedValue(undefined),
 			lookup: vi.fn().mockRejectedValue(new Error("Network error")),
 			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),
@@ -367,6 +469,26 @@ describe("compareIPs", () => {
 		if ("comparison" in result) {
 			expect(result.comparison?.ip1Details.abuserScore).toBe(0.0115);
 			expect(result.comparison?.ip2Details.abuserScore).toBe(0.42);
+		}
+	});
+
+	// The IP validation rules read each address's own reputation score from
+	// here, so dropping it would silently disable them, as above.
+	it("should propagate reputationScore onto both IP details", async () => {
+		const ip1Info: IPInfoResponse = createMockIPInfo({
+			ip: "8.8.8.8",
+			reputationScore: 0.12,
+		});
+		const ip2Info: IPInfoResponse = createMockIPInfo({ ip: "1.1.1.1" });
+
+		const service = createMockService([ip1Info, ip2Info]);
+
+		const result = await compareIPs("8.8.8.8", "1.1.1.1", service);
+
+		expect("comparison" in result).toBe(true);
+		if ("comparison" in result) {
+			expect(result.comparison?.ip1Details.reputationScore).toBe(0.12);
+			expect(result.comparison?.ip2Details.reputationScore).toBeUndefined();
 		}
 	});
 

@@ -1,7 +1,7 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { blake2b as blake2bJs } from "@noble/hashes/blake2b";
+import { blake2b as blake2bJs } from "@noble/hashes/blake2.js";
 import { u8aToU8a } from "@polkadot/util";
 
 import { createAsHex } from "../helpers.js";

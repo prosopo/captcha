@@ -29,14 +29,21 @@ on:
       - synchronize # when a PR is pushed to
       - reopened # when a PR is reopened
       - ready_for_review # when a PR is marked as ready for review (e.g. taken off draft mode)
+      - converted_to_draft
   workflow_dispatch:
+    inputs:
+      runner:
+        description: "Where the jobs run: auto (GH_RUNNER_MAP, else hosted), hosted or self-hosted. Fork PRs are always hosted."
+        type: choice
+        options: [auto, hosted, self-hosted]
+        default: auto
 
 permissions:
   contents: read
   pull-requests: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ inputs.runner }}
   cancel-in-progress: true
 
 env:
@@ -54,114 +61,136 @@ defaults:
   run:
     shell: bash
 
+# Fork guard on every job: a PR from a fork never runs here. Jobs hold
+# secrets and write shared caches that later trusted jobs restore, so fork
+# code must not run in them (https://github.com/prosopo/gh-runner).
 jobs:
+  runner:
+    # Hosted vs self-hosted for the jobs below (precedence in pick-runner.yml).
+    # Public repo, so keep it out of GH_RUNNER_MAP: fork PRs are hosted regardless,
+    # and standard hosted runners are free and unlimited on public repos, so the
+    # fleet buys nothing. Only *larger* runners are billed; do not add size labels.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    # workflow-lint: allow pr-types -- not skipped on drafts or forks: every job below reads runs-on from it
+    uses: prosopo/github_actions/.github/workflows/pick-runner.yml@aa71b53c10f350e217c92ebe31beed8bd114a587  # main
+    permissions:
+      contents: read
+      pull-requests: read
+    with:
+      actions-ref: aa71b53c10f350e217c92ebe31beed8bd114a587
+      workflow: cypress
+      runner: ${{ inputs.runner || 'auto' }}
+
   check:
     name: cypress
-    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
-    # other repos: this repository is public, so a fork PR would run on the
-    # self-hosted fleet -- executing arbitrary contributor code on hardware we
-    # own, where it can also persist and poison later trusted jobs. Nothing is
-    # given up by staying hosted: standard GitHub-hosted runners are free and
-    # unlimited on public repos, macOS and Windows included. Only *larger*
-    # runners are billed, so do not "upgrade" a job to one.
-    # https://docs.github.com/en/billing/reference/actions-runner-pricing
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    timeout-minutes: 60
+    needs: runner
+    runs-on: ${{ fromJSON(needs.runner.outputs.default) }}
+    if: ${{ (github.event.pull_request.draft != true) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     steps:
       - name: Print contexts
-        uses: prosopo/github_actions/.github/actions/print_contexts@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+        timeout-minutes: 5
+        uses: prosopo/github_actions/.github/actions/print_contexts@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
           VARS_CONTEXT: ${{ toJson(vars) }}
-          SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        timeout-minutes: 5
         with:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: actions/setup-node@v7
+      - name: Setup node and pnpm
+        timeout-minutes: 30
+        uses: prosopo/github_actions/.github/actions/setup-pnpm@0f332e76cb54093f6130fa9bdee5b54a9f870de9  # main
         with:
-          node-version: '24'
-          cache: 'npm'
-
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
-        with:
-          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
+          node-version-file: .nvmrc
+          node-cache: 'pnpm'
+          store-path: ''
 
       # setup certs
       - name: Setup certs
+        timeout-minutes: 5
         run: |
           ./setup_certs.sh
           ./install_cert.sh
 
       - name: Setup env
+        timeout-minutes: 5
         run: |
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
-          cp demos/client-example-server/env.development demos/client-example-server/.env.test
-          cp demos/client-bundle-example/env.development demos/client-bundle-example/.env.test
-          cp dev/scripts/env.test .env.test
-          cp dev/scripts/env.test dev/scripts/.env.test
-          cp dev/scripts/env.test packages/cli/.env.test
-          cp dev/scripts/env.test packages/procaptcha-bundle/.env.test
-
-          # Update URLs to use HTTPS since certificates are present
-          sed -i 's|http://localhost|https://localhost|g' demos/client-bundle-example/.env.test
-          sed -i 's|http://localhost|https://localhost|g' .env.test
-          sed -i 's|http://localhost|https://localhost|g' dev/scripts/.env.test
-          sed -i 's|http://localhost|https://localhost|g' packages/cli/.env.test
-          sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
-
-          # Change PROSOPO_VERIFICATION_TYPE to local
-          sed -i '/^PROSOPO_VERIFICATION_TYPE=/s/=.*/=local/' demos/client-example-server/.env.test
+          node .github/scripts/setup-env-files.mjs --https --verification-type local
 
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace
-      - run: npx turbo run build
+      - run: timeout 29m pnpm exec turbo run build
+        timeout-minutes: 30
 
       - name: Start the docker images
+        timeout-minutes: 30
         run: |
-          docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
-          docker container ls
+          timeout 29m docker compose --file ./docker/docker-compose.test.yml up -d --remove-orphans --force-recreate --always-recreate-deps
+          timeout 5m docker container ls
           sleep 10s
 
       # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-      - run: NODE_ENV="test" npm run setup
+      - run: timeout 29m pnpm run setup
+        timeout-minutes: 30
 
       # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
       # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
       # by the cypress tests to find the elements they need to interact with
-      - run: NODE_ENV="development" npx turbo run @prosopo/procaptcha-bundle#bundle
+      - env:
+          NODE_ENV: "development"
+        run: timeout 29m pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
+        timeout-minutes: 30
 
       - name: Run the cypress tests on client-bundle-example
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
+        timeout-minutes: 30
         env:
           # Committed test detector-pool fixture (throwaway keys) so the browser
           # is served a real per-session bundle and frictionless runs genuine
           # detection instead of the empty-pool PoW fallback.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with pow captcha
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with puzzle captcha
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:puzzle" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:puzzle" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
+
+      - name: Run the cypress tests on client-bundle-example explicit rendering with audio captcha
+        timeout-minutes: 30
+        run: |
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:audio" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
+
+      - name: Run the cypress tests on client-bundle-example explicit rendering with icon-order captcha
+        timeout-minutes: 30
+        run: |
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:iconOrder" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with invisible captcha
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the post-PoW route() escalation flow
+        timeout-minutes: 30
         env:
           # Headless cypress can't produce a server-decryptable detector
           # token, so without this override the frictionless flow short-
@@ -170,9 +199,10 @@ jobs:
           # set it by accident.
           PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:escalation" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:escalation" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless-phase routing machine
+        timeout-minutes: 30
         env:
           # Same reason as escalation — the routing machine only reaches
           # its route() phase when the detector override lets frictionless
@@ -186,43 +216,52 @@ jobs:
           # fixture pool keeps that fallback declined.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the post-PoW route() escalation to puzzle
+        timeout-minutes: 30
         env:
           PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for decide() decision machine deny at verify — image
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for decide() decision machine deny at verify — pow
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for decide() decision machine deny at verify — puzzle
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the client session id correlation
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:clientSessionId" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:clientSessionId" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for user access policy blocks (request-time + defer-to-verify)
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for user access policy Restrict rules
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for user access policy conflict resolution (specificity + harshness)
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless score ladder (pow / puzzle / image bands)
+        timeout-minutes: 30
         env:
           # Same reason as escalation and routingFrictionless: headless
           # cypress can't produce a server-decryptable detector token, so
@@ -244,9 +283,10 @@ jobs:
           # LANG_PUZZLE_BAND / LANG_IMAGE_BAND in frictionlessLadder.cy.ts.
           L_RULES: '{"zz-puzzleband":0.8,"zz-imageband":1.5}'
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless challenge-type toggles (image / puzzle on / off)
+        timeout-minutes: 30
         env:
           # Same three levers as the score-ladder step above, for the same
           # reasons: without the detector override the flow short-circuits to
@@ -265,14 +305,16 @@ jobs:
           # in frictionlessTypes.cy.ts, which mirror frictionlessLadder.cy.ts.
           L_RULES: '{"zz-puzzleband":0.8,"zz-imageband":1.5}'
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessTypes" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessTypes" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       - name: Run the cypress tests for the frictionless no-captchaType widget-cascade guard
+        timeout-minutes: 30
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others
+          timeout 29m pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others  # no-timeout: quoted commands run under the outer timeout
 
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        timeout-minutes: 5
         # store screenshots only on failures
         if: failure()
         with:
@@ -281,7 +323,8 @@ jobs:
           if-no-files-found: ignore  # 'warn' or 'error' are also available, defaults to `warn`
 
       # after the test run completes store videos and any screenshots
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        timeout-minutes: 5
         # store videos only on failures
         if: failure()
         with:
@@ -290,7 +333,8 @@ jobs:
           if-no-files-found: ignore   # 'warn' or 'error' are also available, defaults to `warn`
 
       # visual-regression diffs (and the actual frames that produced them) when snapshots don't match
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        timeout-minutes: 5
         if: failure()
         with:
           name: cypress-snapshot-diffs
@@ -299,4 +343,10 @@ jobs:
             ./demos/cypress-shared/cypress/snapshots/actual
           if-no-files-found: ignore
 
-      - run: docker compose --file ./docker/docker-compose.test.yml down
+      - name: Container logs
+        if: ${{ failure() || cancelled() }}
+        timeout-minutes: 3
+        uses: prosopo/github_actions/.github/actions/container-logs@1b3257b005f4c59f97205f5e99c19d11e9d70a25  # main
+
+      - run: timeout 4m docker compose --file ./docker/docker-compose.test.yml down
+        timeout-minutes: 5

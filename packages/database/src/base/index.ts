@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from "./mongo.js";
 export * from "./mongoMemory.js";
+export * from "./reconcileIndexes.js";

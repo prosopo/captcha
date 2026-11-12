@@ -1,0 +1,57 @@
+# Overlay: the tcp-probe eBPF sidecar. Layer it last, after the env overlay:
+#   docker compose -f docker-compose.provider.yml -f docker-compose.provider.<env>.yml \
+#     -f docker-compose.provider.tcp-probe.yml up -d
+# The caddy service in the base already mounts /var/run/tcp-probe read-only.
+services:
+  caddy:
+    depends_on:
+      # Must attach first: only listeners opened afterwards keep the saved SYN.
+      tcp-probe:
+        condition: service_started
+    group_add:
+      - "${TCP_PROBE_GID:-10500}"
+  # eBPF sidecar that records each connection's TCP handshake from a sockops
+  # program on the root cgroup and serves per-connection lookups over a Unix
+  # socket. Chaddy reads that socket and forwards the record as `X-TCP-Probe`;
+  # the provider persists it onto the Session record. The service lives only
+  # in this overlay, so the base stack neither pulls nor starts it. Ansible
+  # layers it on for hosts with `tcp_probe_enabled`. The image is published
+  # from `protect/tcp-probe`.
+  #
+  # `network_mode: host` and `cgroup: host` are mandatory: the program attaches
+  # to the host's root cgroup. It never modifies traffic, so a crash cannot
+  # black-hole requests; chaddy just stops adding the header.
+  tcp-probe:
+    container_name: tcp-probe
+    # Pinned, not `:latest`, so publishing cannot change a host without a deploy.
+    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:?set TCP_PROBE_IMAGE to a version}
+    network_mode: host
+    cap_add:
+      - BPF
+      - NET_ADMIN
+      - SYS_RESOURCE
+      - PERFMON
+    labels:
+      - "vector.tcp-probe=true"
+      - "vector.docker=true"
+    volumes:
+      # Host-side socket dir; caddy mounts the same path read-only so both
+      # containers see the same inode. Docker will create the dir if it
+      # doesn't exist yet.
+      - /var/run/tcp-probe:/var/run/tcp-probe
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    cgroup: host
+    command:
+      # The port the listener sees, after Docker's DNAT.
+      - "--port"
+      - "443"
+      - "--socket-gid"
+      - "${TCP_PROBE_GID:-10500}"
+      - "--lookup-socket"
+      - "/var/run/tcp-probe/lookup.sock"
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'

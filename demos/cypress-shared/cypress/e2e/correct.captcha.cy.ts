@@ -13,13 +13,14 @@
 // limitations under the License.
 /// <reference types="cypress" />
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import type { Captcha, CaptchaType } from "@prosopo/types";
 import {
 	buildTestSolutions,
 	checkboxClass,
 	getWidgetElement,
+	widgetHostSelector,
 } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
@@ -62,12 +63,12 @@ describe("Captchas", () => {
 		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-3",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 
 		cy.intercept("/dummy").as("dummy");
@@ -124,6 +125,8 @@ describe("Captchas", () => {
 			"postSolution",
 		);
 
+		cy.get(widgetHostSelector).first().snap("image-widget-initial");
+
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
@@ -147,6 +150,7 @@ describe("Captchas", () => {
 			cy.wait(1000);
 
 			getWidgetElement(checkboxClass).first().should("not.be.checked");
+			cy.get(widgetHostSelector).first().snap("image-widget-failure");
 		});
 
 		// check the logs by going through all recorded calls
@@ -190,6 +194,8 @@ describe("Captchas", () => {
 		getWidgetElement(checkboxClass, { timeout: 15000 })
 			.first()
 			.should("be.checked");
+
+		cy.get(widgetHostSelector).first().snap("image-widget-success");
 
 		// check the logs by going through all recorded calls
 		// Use a generous timeout — CI can be slow processing the callback

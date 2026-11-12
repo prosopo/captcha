@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import type { IPInfoResponse } from "@prosopo/types";
+import type { AccountSighting, IPInfoResponse } from "@prosopo/types";
+import type { LookupCacheConfig } from "./lookupCache.js";
 
 export interface IIpInfoService {
 	initialize(): Promise<void>;
@@ -24,6 +25,15 @@ export interface IIpInfoService {
 	 * answer is available.
 	 */
 	country(ip: string): string | undefined;
+	/**
+	 * The reputation DB's sighting of `account` on `siteKey`. Undefined when
+	 * the DB does not know the account, has no account data, or cannot be
+	 * reached, so a caller has one "no answer" case to handle.
+	 */
+	accountSighting(
+		siteKey: string,
+		account: string,
+	): Promise<AccountSighting | undefined>;
 	isAvailable(): boolean;
 }
 
@@ -33,4 +43,5 @@ export interface IpInfoServiceConfig {
 	ipapiUrl?: string;
 	ipapiKey?: string;
 	logger?: Logger;
+	lookupCache?: LookupCacheConfig;
 }

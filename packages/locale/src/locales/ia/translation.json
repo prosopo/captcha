@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Falleva a codificar le adresse non valide",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Le compromisso de solution del captcha non existe",
+		"SIGNER_UNDEFINED": "Signator non definite",
+		"CANNOT_FIND_KEYPAIR": "Impossibile trovar le par de claves",
+		"INVALID_DATA_FORMAT": "Formato de datos non valide"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Ambiente incognite requirite",
+		"INVALID_CAPTCHA_NUMBER": "Per favor configura correctemente le configurationes del captchas",
+		"INVALID_LOG_LEVEL": "Nivello de registro non valide",
+		"INVALID_PACKAGE_DIR": "Directorio de pacchetto non valide"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Error in le analyse del collection de datos",
+		"SOLUTION_PARSE_ERROR": "Error in le tractamento del collection de datos",
+		"HASH_ERROR": "Error in le hashing del collection de datos",
+		"DATASET_ID_UNDEFINED": "ID del collection de datos non definite",
+		"NOT_ENOUGH_LABELS": "Non bastante etiquettas",
+		"NOT_ENOUGH_IMAGES": "Non bastante imagines",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Le numero de captchas in le collection de datos es minus que le numero configurate",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Le numero de solutiones in le collection de datos es minus que le numero configurate",
+		"DUPLICATE_IMAGE": "Imagine duplicate detegite",
+		"MERKLE_ERROR": "Error in le construction del arbore de Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Falleva a importar le motor del base de datos",
+		"DATABASE_UNDEFINED": "Cliente del base de datos non connectite",
+		"DATABASE_HOST_UNDEFINED": "Adresse del hospite del base de datos non definite",
+		"DATASET_LOAD_FAILED": "Cargamento del collection de datos falleva",
+		"DATASET_GET_FAILED": "Falleva a obtener le collection de datos",
+		"CAPTCHA_GET_FAILED": "Falleva a obtener le captchas",
+		"CAPTCHA_UPDATE_FAILED": "Falleva a actualisar le captchas",
+		"IMAGE_GET_FAILED": "Falleva a obtener le imagine",
+		"PENDING_RECORD_NOT_FOUND": "Nulle registros pendente trovate",
+		"INVALID_HASH": "Hash non valide",
+		"SOLUTION_GET_FAILED": "Falleva a obtener le solution",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nulle collection de datos con le numero requirite de solutiones trovate",
+		"SOLUTION_APPROVE_FAILED": "Falleva a approbar le solution",
+		"SOLUTION_FLAG_FAILED": "Falleva a marcar le solution como tractate",
+		"TABLES_UNDEFINED": "Tabellas non definite",
+		"CONNECTION_UNDEFINED": "Connexion non definite",
+		"COMMITMENT_FLAG_FAILED": "Falleva a marcar le compromisso como tractate",
+		"UNKNOWN": "Error de base de datos incognite",
+		"QUERY_ERROR": "Consulta del base de datos falleva",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Connexion Redis del regulas de accesso non definite",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Magazin de regulas de accesso de usator non definite",
+		"SESSION_STORE_FAILED": "Falleva a salvar le session",
+		"SESSION_CHECK_REMOVE_FAILED": "Falleva a verificar e remover le session",
+		"SESSION_GET_FAILED": "Falleva a obtener le session"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Impossibile modificar le usator proprietario",
+		"CANNOT_DELETE_OWN_USER": "Impossibile deler tu proprie conto",
+		"CANNOT_DELETE_LAST_USER": "Impossibile deler le ultime usator",
+		"USER_ALREADY_EXISTS": "Le usator jam existe",
+		"NO_SUGGESTIONS_FOUND": "Nulle suggestiones trovate",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Impossibile disactivar le ultime sito active",
+		"DUPLICATE_SITE_NAME": "Un sito con iste nomine jam existe",
+		"INVALID_SITE_NAME": "Le nomine del sito pote continer solmente litteras, numeros, sublineas e tractos de union"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parametro non valide"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "File non trovate",
+		"FILE_ALREADY_EXISTS": "Le file jam existe",
+		"INVALID_DIR_FORMAT": "Formato de directorio non valide"
+	}
+}

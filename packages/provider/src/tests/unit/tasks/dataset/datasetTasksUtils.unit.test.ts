@@ -1,4 +1,3 @@
-import { ProsopoEnvError } from "@prosopo/common";
 import { buildDataset } from "@prosopo/datasets";
 import { CaptchaTypes, type Dataset, type DatasetRaw } from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
@@ -40,11 +39,12 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
-				context: { failedFuncName: "providerValidateDataset" },
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-55",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
+		});
 	});
 
 	it("should throw an error if solved captchas count is less than configured", async () => {
@@ -60,11 +60,12 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED", {
-				context: { failedFuncName: "providerValidateDataset" },
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-56",
+			message:
+				"Number of solutions in dataset is less than configured number of solutions",
+		});
 	});
 
 	it("should throw an error if unsolved captchas count is less than configured", async () => {
@@ -80,16 +81,73 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
-				context: { failedFuncName: "providerValidateDataset" },
-			}),
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-55",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
+		});
+	});
+
+	it("should throw an error if every captcha is solved but unsolved captchas are required", async () => {
+		const datasetRaw = {
+			captchas: [
+				{ solution: "sol1" },
+				{ solution: "sol2" },
+				{ solution: "sol3" },
+			],
+		} as unknown as DatasetRaw;
+
+		await expect(
+			providerValidateDataset(datasetRaw, 1, 1),
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-57",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
+		});
+		expect(buildDataset).not.toHaveBeenCalled();
+	});
+
+	it("should not count an empty solution as solved", async () => {
+		const datasetRaw = {
+			captchas: [{ solution: [] }, { solution: [] }, { solution: [] }],
+		} as unknown as DatasetRaw;
+
+		await expect(
+			providerValidateDataset(datasetRaw, 2, 0),
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-56",
+		});
+		expect(buildDataset).not.toHaveBeenCalled();
+	});
+
+	it("should count captchas with an empty solution as unsolved", async () => {
+		const datasetRaw = {
+			captchas: [
+				{ solution: ["a"] },
+				{ solution: ["b"] },
+				{ solution: [] },
+				{ solution: [] },
+			],
+		} as unknown as DatasetRaw;
+		const mockDataset: Dataset = {
+			datasetId: "datasetId",
+			datasetContentId: "datasetContentId",
+			captchas: [],
+			format: CaptchaTypes.SelectAll,
+		};
+		vi.mocked(buildDataset).mockResolvedValue(mockDataset);
+
+		await expect(providerValidateDataset(datasetRaw, 2, 2)).resolves.toEqual(
+			mockDataset,
 		);
 	});
 
 	it("should throw an error if datasetId or datasetContentId is undefined", async () => {
 		const datasetRaw = {
-			captchas: [{ solution: "sol1" }, { solution: "sol2" }],
+			captchas: [{ solution: "sol1" }, {}],
 		} as unknown as DatasetRaw;
 		const minSolvedCaptchas = 1;
 		const minUnsolvedCaptchas = 1;
@@ -106,15 +164,11 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.DATASET_ID_UNDEFINED", {
-				context: {
-					failedFuncName: "providerValidateDataset",
-					datasetId: undefined,
-					datasetContentId: undefined,
-				},
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-58",
+			message: "Dataset id undefined",
+		});
 	});
 
 	it("should return the dataset if validation is successful", async () => {

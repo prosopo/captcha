@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
-import { captchaPolicySeverity } from "@prosopo/captcha-severity";
+import { policyHarshness } from "@prosopo/captcha-severity";
+import { ProsopoError, toPublicError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiPrefix,
@@ -43,26 +44,51 @@ import {
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
+import { errorCodeForReason } from "./errorCodeForReason.js";
 import {
 	HardBlockVerdictCache,
 	hardBlockCacheKey,
 } from "./hardBlockVerdictCache.js";
 import { recordBlockedRequest } from "./metrics.js";
+import {
+	getRawTlsSignals,
+	rawTlsSignalsFromRecord,
+} from "./rawTlsSignalsMiddleware.js";
 
-export const getRequestUserScope = (
-	requestHeaders: Record<string, unknown>,
-	ja4?: string,
-	ip?: string,
-	user?: string,
-	headHash?: string,
-	coords?: string,
-	countryCode?: string,
-	asn?: number,
-	// Present only when Web Bot Auth signature verification succeeded on the
-	// inbound request. Passed through to rule matching so `webBotAuthAgent`
-	// rules match the verified signer URL, never a spoofed header.
-	webBotAuthAgent?: string,
-): Pick<
+export type BlockOutcome = {
+	messageKey?: ResultReason;
+};
+
+export type RequestUserScopeInput = {
+	requestHeaders: Record<string, unknown>;
+	ja4?: string;
+	ip?: string;
+	user?: string;
+	headHash?: string;
+	coords?: string;
+	countryCode?: string;
+	asn?: number;
+	/**
+	 * Present only when Web Bot Auth signature verification succeeded on the
+	 * inbound request, so `webBotAuthAgent` rules match the verified signer
+	 * URL, never a spoofed header.
+	 */
+	webBotAuthAgent?: string;
+	bypassKeyHash?: string;
+};
+
+export const getRequestUserScope = ({
+	requestHeaders,
+	ja4,
+	ip,
+	user,
+	headHash,
+	coords,
+	countryCode,
+	asn,
+	webBotAuthAgent,
+	bypassKeyHash,
+}: RequestUserScopeInput): Pick<
 	UserScopeRecord,
 	| "userId"
 	| "ja4Hash"
@@ -76,6 +102,7 @@ export const getRequestUserScope = (
 	| "browser"
 	| "headerMatch"
 	| "webBotAuthAgent"
+	| "bypassKeyHash"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -93,6 +120,7 @@ export const getRequestUserScope = (
 		// Only set when signature verification succeeded, so a rule scoped to
 		// a signer can never be matched by a spoofed header.
 		...(webBotAuthAgent && { webBotAuthAgent }),
+		...(bypassKeyHash && { bypassKeyHash }),
 		// Unconditional, unlike the fields above: an allow-list has to match a
 		// request whose UA we can't classify, which lands on "unknown".
 		os: classifyOs(userAgent),
@@ -144,6 +172,7 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	// reader's SPECIFICITY_EXPR.
 	"headerMatch",
 	"webBotAuthAgent",
+	"bypassKeyHash",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape
@@ -219,8 +248,16 @@ const ruleApplies = (
 	requestHeaders: Record<string, string>,
 ): boolean => {
 	// Client-scoped rules: rule.clientId must equal the request's clientId.
-	// Rules without a clientId are global and apply to any client.
+	// Rules without a clientId are global and apply to any client they do not
+	// exclude.
 	if (rule.clientId !== undefined && rule.clientId !== requestClientId) {
+		return false;
+	}
+	if (
+		rule.clientId === undefined &&
+		requestClientId !== undefined &&
+		rule.excludedClientIds?.includes(requestClientId)
+	) {
 		return false;
 	}
 	for (const field of SCALAR_USER_SCOPE_FIELDS) {
@@ -287,20 +324,15 @@ const ruleSpecificity = (
 // than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow,
 // so every pow rule previously scored at the bottom of its tier regardless of
 // difficulty.
-// Image and puzzle both keep `solvedImagesCount` — it is the severity
-// currency they share, which the provider maps onto a puzzle difficulty
-// level via `severityToPuzzleDifficulty` rather than a literal round count.
+// Puzzle rules rank on `severity`, falling back to `solvedImagesCount` for
+// rules written before `severity` existed.
 //
 // `deferToVerify` doesn't affect this ordering: it controls *when* a Block
 // fires (request-time vs verify-time), not how severe it is. The flag
 // rides on the chosen rule and downstream consumers (`findHardBlockPolicy`,
 // blockMiddleware's `enforceable` filter) read it after ranking.
-const ruleHarshness = (rule: AccessRule): number => {
-	if (rule.type === AccessPolicyType.Block) {
-		return Number.MAX_SAFE_INTEGER;
-	}
-	return captchaPolicySeverity(rule);
-};
+const ruleHarshness = (rule: AccessRule): number =>
+	policyHarshness(rule, rule.type === AccessPolicyType.Block);
 
 /**
  * Rank the candidate rules a single Redis query returned. A rule "applies" iff
@@ -407,23 +439,30 @@ export type GetPrioritisedAccessRuleOptions = {
 	skipCache?: boolean;
 };
 
-export const getPrioritisedAccessRule = async (
-	userAccessRulesStorage: AccessRulesStorage,
-	userScope: UserScope | UserScopeRecord,
-	clientId: string | undefined,
+export type GetPrioritisedAccessRuleArgs = GetPrioritisedAccessRuleOptions & {
+	userAccessRulesStorage: AccessRulesStorage;
+	userScope: UserScope | UserScopeRecord;
+	clientId?: string;
 	// Raw request headers (lower-cased name → value) for the in-code header
 	// condition check. Required, with no default: the negated header operators
 	// treat a missing header as "does not match", so a lookup that silently
 	// ran with an empty header map would make every allow-list rule fire on
 	// every request. Callers with nothing but a scope must say so explicitly.
-	requestHeaders: Record<string, string>,
-	options?: GetPrioritisedAccessRuleOptions,
-): Promise<AccessRule[]> => {
+	requestHeaders: Record<string, string>;
+};
+
+export const getPrioritisedAccessRule = async ({
+	userAccessRulesStorage,
+	userScope,
+	clientId,
+	requestHeaders,
+	...options
+}: GetPrioritisedAccessRuleArgs): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
-	const blockOnly = options?.blockOnly ?? false;
-	const includeDeferred = options?.includeDeferred ?? false;
-	const skipCache = options?.skipCache ?? false;
-	const requestMemoHost = options?.requestMemoHost as
+	const blockOnly = options.blockOnly ?? false;
+	const includeDeferred = options.includeDeferred ?? false;
+	const skipCache = options.skipCache ?? false;
+	const requestMemoHost = options.requestMemoHost as
 		| RequestWithMemo
 		| undefined;
 
@@ -459,11 +498,10 @@ export const getPrioritisedAccessRule = async (
 	// others await the same Promise. Kills the wave-1 stampede where
 	// every retry-storm identity misses simultaneously.
 	const compute = async (): Promise<AccessRule[]> =>
-		userAccessRulesStorage.findRules(
-			filter,
-			true, // matchingFieldsOnly — engages the split-query hot path
-			true,
-		);
+		userAccessRulesStorage.findRules(filter, {
+			matchingFieldsOnly: true,
+			skipEmptyUserScopes: true,
+		});
 
 	// Only the *candidate fetch* is cached — the Redis round-trip is what the
 	// cache exists to absorb. Ranking stays outside it because `ruleApplies`
@@ -520,35 +558,34 @@ export class BlacklistRequestInspector {
 			data: { ja4: request.ja4 },
 		}));
 
-		const shouldAbortRequest = await this.shouldAbortRequest(
-			request.url,
+		const blockOutcome: BlockOutcome = {};
+
+		const shouldAbortRequest = await this.shouldAbortRequest({
+			requestedRoute: request.url,
 			rawIp,
-			request.ja4,
-			request.headers,
-			request.body,
-			request.logger,
-			request.ipInfo,
-			// Share the per-request memo so a downstream captcha task
-			// hitting checkForHardBlock in the same request reuses this
-			// lookup rather than re-querying Redis.
-			request,
-		);
+			ja4: request.ja4,
+			requestHeaders: request.headers,
+			requestBody: request.body,
+			logger: request.logger,
+			ipInfo: request.ipInfo,
+			requestMemoHost: request,
+			blockOutcome,
+		});
 
 		if (shouldAbortRequest) {
 			// Any deny decision from shouldAbortRequest - a matched Block rule
 			// (blocked IP / JA4 / user / country / ASN), a request with no IP, or
 			// a fail-closed middleware error - is a 403 Forbidden, not a 401
 			// Unauthorized: the client isn't lacking credentials, it is denied
-			// access. Body must be a structured `{ message, code }` object
-			// (not a plain string) so the widget's `result.error?.message`
-			// extractor picks it up — a plain string falls through to the
-			// generic "Cannot load CAPTCHA" fallback. Surfacing the
-			// requestId lets support quote it back on tickets.
-			res.status(403).json({
-				error: {
-					message: `Forbidden: ${request.requestId ?? "unknown"}`,
-					code: 403,
-				},
+			// access. The requestId lets support find the request from a ticket.
+			const error = new ProsopoError({
+				code: errorCodeForReason(blockOutcome.messageKey, "FORBIDDEN"),
+				errorSite: "PROV-84",
+				status: 403,
+				data: { requestId: request.requestId ?? "unknown" },
+			});
+			res.status(error.status).json({
+				error: toPublicError(error, "BACKEND_ERROR"),
 			});
 			return;
 		}
@@ -556,16 +593,27 @@ export class BlacklistRequestInspector {
 		next();
 	}
 
-	public async shouldAbortRequest(
-		requestedRoute: string,
-		rawIp: string,
-		ja4: string,
-		requestHeaders: Record<string, unknown>,
-		requestBody: Record<string, unknown>,
-		logger: Logger,
-		ipInfo?: IPInfoResponse,
-		requestMemoHost?: object,
-	): Promise<boolean> {
+	public async shouldAbortRequest({
+		requestedRoute,
+		rawIp,
+		ja4,
+		requestHeaders,
+		requestBody,
+		logger,
+		ipInfo,
+		requestMemoHost,
+		blockOutcome,
+	}: {
+		requestedRoute: string;
+		rawIp: string;
+		ja4: string;
+		requestHeaders: Record<string, unknown>;
+		requestBody: Record<string, unknown>;
+		logger: Logger;
+		ipInfo?: IPInfoResponse;
+		requestMemoHost?: object;
+		blockOutcome?: BlockOutcome;
+	}): Promise<boolean> {
 		// Skip this middleware for non-api routes like /json /favicon.ico etc
 		if (this.isApiUnrelatedRoute(requestedRoute)) {
 			return false;
@@ -601,28 +649,21 @@ export class BlacklistRequestInspector {
 			const countryCode = ipInfo?.isValid ? ipInfo.countryCode : undefined;
 			const asn = ipInfo?.isValid ? ipInfo.asnNumber : undefined;
 
-			const accessPolicies = await getPrioritisedAccessRule(
-				this.userAccessRulesStorage,
-				getRequestUserScope(
+			const accessPolicies = await getPrioritisedAccessRule({
+				userAccessRulesStorage: this.userAccessRulesStorage,
+				userScope: getRequestUserScope({
 					requestHeaders,
 					ja4,
-					rawIp,
-					userId,
-					undefined, // headHash
-					undefined, // coords
+					ip: rawIp,
+					user: userId,
 					countryCode,
 					asn,
-				),
+				}),
 				clientId,
-				normalizeHeadersForMatching(requestHeaders),
-				// Request-time middleware only ever fires on Block policies
-				// (Restrict rules flow through and let the captcha-creation
-				// path decorate the response). Restrict the Redis-side
-				// candidate pool so the SERVER_SIDE_RANK_TOP_N cap can't
-				// crowd out hard-block rules in clients with dense Restrict
-				// rule populations.
-				{ blockOnly: true, requestMemoHost },
-			);
+				requestHeaders: normalizeHeadersForMatching(requestHeaders),
+				blockOnly: true,
+				requestMemoHost,
+			});
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from
 			// `checkForHardBlock` inside each captcha task's verify path —
@@ -638,6 +679,9 @@ export class BlacklistRequestInspector {
 
 			const isBlock = AccessPolicyType.Block === accessPolicy.type;
 			if (isBlock) {
+				if (blockOutcome) {
+					blockOutcome.messageKey = accessPolicy.messageKey;
+				}
 				recordBlockedRequest("access_policy");
 				// `Restrict` policies aren't logged or persisted here — those
 				// don't 403, they let the request through with modified
@@ -770,6 +814,7 @@ export class BlacklistRequestInspector {
 			ruleType,
 			ruleDescription,
 			matchedRule: describeMatchedRule(accessPolicy),
+			...rawTlsSignalsFromRecord(getRawTlsSignals(headers, logger)),
 			// blocked + deleted are stamped inside storeBlockedSession so
 			// the synthetic record is unmistakably a block-middleware
 			// artefact and can never be picked up by the captcha flow.
@@ -788,12 +833,15 @@ export class BlacklistRequestInspector {
 		userId: string | undefined;
 		clientId: string | undefined;
 	} {
+		// The body wins so a header cannot swap out the ids a body-scoped rule
+		// already matches; the header covers routes that send the ids only there.
+		// Node lower-cases incoming header names.
 		const userId =
-			this.getObjectValue(requestHeaders, "Prosopo-User") ||
-			this.getObjectValue(requestBody, "user");
+			this.getObjectValue(requestBody, "user") ||
+			this.getObjectValue(requestHeaders, "prosopo-user");
 		const clientId =
-			this.getObjectValue(requestHeaders, "Prosopo-Site-Key") ||
-			this.getObjectValue(requestBody, "dapp");
+			this.getObjectValue(requestBody, "dapp") ||
+			this.getObjectValue(requestHeaders, "prosopo-site-key");
 
 		return {
 			userId: "string" === typeof userId ? userId : undefined,

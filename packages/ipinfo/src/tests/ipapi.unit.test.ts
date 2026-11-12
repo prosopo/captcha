@@ -22,13 +22,21 @@
 // validates, so the tests cover fields the type claims are required going
 // missing on the wire.
 
-import type { IPApiResponse, IPInfoResult } from "@prosopo/types";
+import type {
+	IPApiResponse,
+	IPInfoResult,
+	ReputationAccountResponse,
+} from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
 	DEFAULT_TIMEOUT_MS,
 	type FetchFn,
 	IpapiBackend,
 	parseAbuserScore,
+	parseAccountSighting,
+	parseDetectorRisk,
+	parseReputationScore,
+	parseSharedReason,
 } from "../backends/ipapi.js";
 
 const BASE_URL = "https://api.ipapi.test/";
@@ -121,6 +129,11 @@ describe("parseAbuserScore", () => {
 		// silently pass checks it should not.
 		expect(parseAbuserScore("unknown")).toBeUndefined();
 		expect(parseAbuserScore("(Low)")).toBeUndefined();
+	});
+
+	it("rejects a partly-numeric or infinite score rather than its prefix", () => {
+		expect(parseAbuserScore("0.5abc (Low)")).toBeUndefined();
+		expect(parseAbuserScore("Infinity")).toBeUndefined();
 	});
 
 	it("distinguishes a genuine zero from an unknown score", () => {
@@ -443,6 +456,180 @@ describe("IpapiBackend.lookup responses", () => {
 	});
 });
 
+describe("the crawler name", () => {
+	// The worker this replaced returned the crawler's name through
+	// `is_crawler`, a field typed boolean, so `isCrawler === true` matched
+	// nothing and the name had nowhere to live. Ours answers both separately.
+	it("keeps the boolean and the name apart", async () => {
+		const result = expectValid(
+			await backend(
+				respondWith(baseResponse({ is_crawler: true, crawler: "GoogleBot" })),
+			).lookup(IP),
+		);
+
+		expect(result.isCrawler).toBe(true);
+		expect(result.crawlerName).toBe("GoogleBot");
+	});
+
+	// Some ranges are flagged without a name.
+	it("reports a crawler with no name as a crawler", async () => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ is_crawler: true }))).lookup(IP),
+		);
+
+		expect(result.isCrawler).toBe(true);
+		expect(result.crawlerName).toBeUndefined();
+	});
+
+	it("leaves a non-crawler false and unnamed", async () => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ is_crawler: false }))).lookup(
+				IP,
+			),
+		);
+
+		expect(result.isCrawler).toBe(false);
+		expect(result.crawlerName).toBeUndefined();
+	});
+});
+
+describe("the detector risk", () => {
+	const lookupRisk = async (
+		reputation: IPApiResponse["reputation"],
+	): Promise<number | undefined> =>
+		expectValid(
+			await backend(respondWith(baseResponse({ reputation }))).lookup(IP),
+		).detectorRisk;
+
+	it("passes a risk in range through", async () => {
+		expect(await lookupRisk({ detector_risk: 0.42 })).toBe(0.42);
+	});
+
+	it("keeps both ends of the range", () => {
+		expect(parseDetectorRisk({ detector_risk: 0 })).toBe(0);
+		expect(parseDetectorRisk({ detector_risk: 1 })).toBe(1);
+	});
+
+	it("reads a null risk as no evidence", async () => {
+		expect(await lookupRisk({ detector_risk: null })).toBeUndefined();
+	});
+
+	it("reads a missing risk or reputation section as no evidence", async () => {
+		expect(await lookupRisk({})).toBeUndefined();
+		expect(await lookupRisk(undefined)).toBeUndefined();
+	});
+
+	it("drops a risk outside 0..1 rather than clamping it", () => {
+		expect(parseDetectorRisk({ detector_risk: -0.1 })).toBeUndefined();
+		expect(parseDetectorRisk({ detector_risk: 1.5 })).toBeUndefined();
+		expect(
+			parseDetectorRisk({ detector_risk: Number.POSITIVE_INFINITY }),
+		).toBeUndefined();
+		expect(parseDetectorRisk({ detector_risk: Number.NaN })).toBeUndefined();
+	});
+
+	it("drops a risk sent as a string", async () => {
+		const result: IPInfoResult = expectValid(
+			await backend(
+				respondWith({
+					...baseResponse(),
+					reputation: { detector_risk: "0.5" },
+				}),
+			).lookup(IP),
+		);
+		expect(result.detectorRisk).toBeUndefined();
+	});
+});
+
+describe("reputation score", () => {
+	const lookupScore = async (
+		reputation: IPApiResponse["reputation"],
+	): Promise<Pick<IPInfoResult, "reputationScore" | "reputationBand">> => {
+		const result = expectValid(
+			await backend(respondWith(baseResponse({ reputation }))).lookup(IP),
+		);
+		return {
+			reputationScore: result.reputationScore,
+			reputationBand: result.reputationBand,
+		};
+	};
+
+	it("carries a scored assessment's score and band onto the result", async () => {
+		expect(
+			await lookupScore({
+				assessment: { state: "scored", score: 0.476, band: "elevated" },
+			}),
+		).toEqual({ reputationScore: 0.476, reputationBand: "elevated" });
+	});
+
+	it("keeps both ends of the range", () => {
+		expect(
+			parseReputationScore({ assessment: { state: "scored", score: 0 } }),
+		).toEqual({ score: 0 });
+		expect(
+			parseReputationScore({ assessment: { state: "scored", score: 1 } }),
+		).toEqual({ score: 1 });
+	});
+
+	it("reads an unscored assessment as no score, never as 0", async () => {
+		expect(await lookupScore({ assessment: { state: "no_evidence" } })).toEqual(
+			{ reputationScore: undefined, reputationBand: undefined },
+		);
+		expect(await lookupScore({})).toEqual({
+			reputationScore: undefined,
+			reputationBand: undefined,
+		});
+		expect(await lookupScore(undefined)).toEqual({
+			reputationScore: undefined,
+			reputationBand: undefined,
+		});
+	});
+
+	it("ignores a score that is not under a scored state", () => {
+		expect(
+			parseReputationScore({
+				assessment: { state: "no_evidence", score: 0.9 },
+			}),
+		).toBeUndefined();
+		expect(
+			parseReputationScore({ assessment: { score: 0.9 } }),
+		).toBeUndefined();
+	});
+
+	it("drops a score outside 0..1 or not a finite number", () => {
+		for (const score of [-0.1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+			expect(
+				parseReputationScore({ assessment: { state: "scored", score } }),
+			).toBeUndefined();
+		}
+	});
+
+	it("drops a score sent as a string", async () => {
+		const result: IPInfoResult = expectValid(
+			await backend(
+				respondWith({
+					...baseResponse(),
+					reputation: { assessment: { state: "scored", score: "0.9" } },
+				}),
+			).lookup(IP),
+		);
+		expect(result.reputationScore).toBeUndefined();
+	});
+
+	it("does not read the abuser scores as a reputation score", async () => {
+		const result = expectValid(
+			await backend(
+				respondWith({
+					...baseResponse({ is_abuser: true }),
+					asn: { asn: 1, abuser_score: "0.9 (Very High)" },
+					company: { name: "Example", abuser_score: "0.9 (Very High)" },
+				}),
+			).lookup(IP),
+		);
+		expect(result.reputationScore).toBeUndefined();
+	});
+});
+
 describe("IpapiBackend.lookup timeout", () => {
 	it("gives up on a hanging upstream and says so", async () => {
 		// An IP lookup sits in the request path: a backend that never answers
@@ -505,5 +692,122 @@ describe("IpapiBackend default fetch", () => {
 		}).lookup(IP);
 
 		expect(result.isValid).toBe(false);
+	});
+});
+
+describe("parseSharedReason", () => {
+	it("reads a reason this client knows", () => {
+		expect(parseSharedReason({ shared_reason: "many_accounts" })).toBe(
+			"many_accounts",
+		);
+	});
+
+	it("reports a null, absent or unknown reason as not shared", () => {
+		expect(parseSharedReason({ shared_reason: null })).toBeUndefined();
+		expect(parseSharedReason({})).toBeUndefined();
+		expect(parseSharedReason(undefined)).toBeUndefined();
+		// A reason added to the DB before this client learns it is not
+		// guessed at.
+		const fromTheWire = JSON.parse(
+			'{"shared_reason":"something_new"}',
+		) as Parameters<typeof parseSharedReason>[0];
+		expect(parseSharedReason(fromTheWire)).toBeUndefined();
+	});
+});
+
+describe("IpapiBackend.lookup shared reason", () => {
+	it("carries the reputation DB's shared reason onto the result", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: respondWith(
+				baseResponse({ reputation: { shared_reason: "mobile" } }),
+			),
+		});
+		const result = expectValid(await backend.lookup(IP));
+		expect(result.sharedReason).toBe("mobile");
+	});
+});
+
+describe("parseAccountSighting", () => {
+	it("reads a known account", () => {
+		expect(
+			parseAccountSighting({
+				known: true,
+				user_agents_7d: 3,
+				device_types: ["iOS", "Mac"],
+			}),
+		).toEqual({ userAgents7d: 3, deviceTypes: ["iOS", "Mac"] });
+	});
+
+	it("has no answer for an unknown account or a malformed body", () => {
+		expect(parseAccountSighting({ known: false })).toBeUndefined();
+		expect(parseAccountSighting(undefined)).toBeUndefined();
+		expect(parseAccountSighting({ known: true })).toBeUndefined();
+		expect(
+			parseAccountSighting({ known: true, user_agents_7d: -1 }),
+		).toBeUndefined();
+		expect(
+			parseAccountSighting({ known: true, user_agents_7d: 1.5 }),
+		).toBeUndefined();
+	});
+
+	it("drops device types that are not strings", () => {
+		const fromTheWire = JSON.parse(
+			'{"known":true,"user_agents_7d":1,"device_types":["iOS",3,null]}',
+		) as ReputationAccountResponse;
+		expect(parseAccountSighting(fromTheWire)?.deviceTypes).toEqual(["iOS"]);
+	});
+});
+
+describe("IpapiBackend.accountSighting", () => {
+	it("asks for the site's account by path", async () => {
+		const fetch = vi.fn<FetchFn>(
+			respondWith({ known: true, user_agents_7d: 2, device_types: [] }),
+		);
+		const backend = new IpapiBackend({ baseUrl: BASE_URL, fetch });
+
+		expect(await backend.accountSighting("5Site", "5User/x")).toEqual({
+			userAgents7d: 2,
+			deviceTypes: [],
+		});
+		expect(fetch.mock.calls[0]?.[0]).toBe(
+			"https://api.ipapi.test/v1/account/5Site/5User%2Fx",
+		);
+		expect(fetch.mock.calls[0]?.[1].method).toBe("GET");
+	});
+
+	it("has no answer when the DB has no account data", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: respondWith({ error: "not found" }, { status: 404 }),
+		});
+		expect(await backend.accountSighting("5Site", "5User")).toBeUndefined();
+	});
+
+	it("has no answer when the DB cannot be reached", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: async (): Promise<globalThis.Response> => {
+				throw new Error("connection refused");
+			},
+		});
+		expect(await backend.accountSighting("5Site", "5User")).toBeUndefined();
+	});
+
+	it("has no answer when the DB is too slow", async () => {
+		const backend = new IpapiBackend({
+			baseUrl: BASE_URL,
+			fetch: respondNever,
+			timeoutMs: 5,
+		});
+		expect(await backend.accountSighting("5Site", "5User")).toBeUndefined();
+	});
+
+	it("does not call out without a site or an account", async () => {
+		const fetch = vi.fn<FetchFn>(respondWith({}));
+		const backend = new IpapiBackend({ baseUrl: BASE_URL, fetch });
+		expect(await backend.accountSighting("", "5User")).toBeUndefined();
+		expect(await backend.accountSighting("5Site", "")).toBeUndefined();
+		expect(fetch).not.toHaveBeenCalled();
 	});
 });

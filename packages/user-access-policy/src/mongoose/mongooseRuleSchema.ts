@@ -38,6 +38,7 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	headerValue: { type: String, required: false },
 	headerOperator: { type: String, required: false },
 	webBotAuthAgent: { type: String, required: false },
+	bypassKeyHash: { type: String, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {
@@ -59,11 +60,13 @@ const accessPolicySchema: SchemaDefinition<AccessPolicy> = {
 	captchaType: { type: String, required: false },
 	description: { type: String, required: false },
 	solvedImagesCount: { type: Number, required: false },
+	severity: { type: Number, required: false },
 	imageThreshold: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
 	unsolvedImagesCount: { type: Number, required: false },
 	frictionlessScore: { type: Number, required: false },
 	deferToVerify: { type: Boolean, required: false },
+	messageKey: { type: String, required: false },
 } satisfies AllKeys<AccessPolicy>;
 
 export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
@@ -71,4 +74,7 @@ export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
 	...policyScopeSchema,
 	...userScopeSchema,
 	ruleGroupId: { type: String, required: false },
+	// `default: undefined` stops mongoose stamping an empty array on every
+	// rule, which would read as "has exclusions" to anything checking presence.
+	excludedClientIds: { type: [String], required: false, default: undefined },
 } satisfies Keys<AccessRuleRecord>;

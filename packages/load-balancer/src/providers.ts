@@ -13,9 +13,11 @@
 // limitations under the License.
 
 import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
+import { joinUrl, stripTrailingSlashes } from "@prosopo/util";
 import {
 	type HardcodedProvider,
 	type IpMode,
+	getProviderListOverride,
 	loadBalancer,
 } from "./balancer.js";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
@@ -46,7 +48,7 @@ const applyIpModeToUrl = (url: string, ipMode?: IpMode): string => {
 	try {
 		const parsed = new URL(url);
 		parsed.hostname = withIpModeLabel(parsed.hostname, ipMode);
-		return parsed.toString().replace(/\/$/, "");
+		return stripTrailingSlashes(parsed.toString());
 	} catch {
 		return url;
 	}
@@ -74,7 +76,7 @@ let healthzRetryBaseDelayMs = HEALTHZ_RETRY_BASE_DELAY_MS;
 let healthzRetryMaxDelayMs = HEALTHZ_RETRY_MAX_DELAY_MS;
 
 const fetchPinnedHost = async (baseUrl: string): Promise<string> => {
-	const res = await fetch(`${baseUrl}/healthz`, {
+	const res = await fetch(joinUrl(baseUrl, "healthz"), {
 		method: "GET",
 		cache: "no-store",
 		credentials: "omit",
@@ -105,6 +107,18 @@ const resolvePinnedUrl = async (
 	env: EnvironmentTypes,
 	ipMode?: IpMode,
 ): Promise<string> => {
+	// An overridden list needs no discovery: healthz exists to report which
+	// pronode the DNS layer picked, and an override already names the nodes.
+	// Returning early also keeps the widget off Prosopo's hostnames entirely.
+	// The pick is weighted and per-call rather than cached, so traffic spreads
+	// across a multi-provider override instead of every page in a browser
+	// session pinning to whichever node was drawn first.
+	const override = getProviderListOverride(undefined, ipMode);
+	if (override.length > 0) {
+		const chosen = pickWeightedProvider(override, Math.random);
+		if (chosen) return chosen.url;
+	}
+
 	// The base for /healthz already carries the ipv4./ipv6. label when one is
 	// requested, so DNS keeps the discovery request on the same single-stack
 	// path as the captcha calls that follow.
@@ -125,7 +139,7 @@ const resolvePinnedUrl = async (
 			// Re-apply the ipMode label so the per-pronode URL stays on the same
 			// single-stack sub-zone (`ipv4.pronode4.prosopo.io`).
 			parsed.hostname = withIpModeLabel(host, ipMode);
-			return parsed.toString().replace(/\/$/, "");
+			return stripTrailingSlashes(parsed.toString());
 		} catch (err) {
 			// Healthz is a prerequisite for the rest of the captcha flow — the
 			// token must embed a specific pronodeN URL for verify to accept it.
@@ -142,13 +156,77 @@ const resolvePinnedUrl = async (
 	return promise;
 };
 
-// Cached, in-flight provider-list load per env. The list rarely changes, so a
-// single fetch is shared across callers rather than re-fetching the
-// provider-list JSON on every verify-forward decision.
-const providerListPromiseCache: Map<
-	EnvironmentTypes,
-	Promise<HardcodedProvider[]>
-> = new Map();
+// How long a loaded list is served before the next caller reloads it. The
+// hosted list advertises `cache-control: max-age=300`, so this matches what it
+// asks for. `findProvider` covers the window where a pronode is added mid-TTL.
+export const PROVIDER_LIST_TTL_MS = 5 * 60 * 1000;
+
+// Floor on how often a lookup miss may force an early reload. `providerUrl` is
+// read from the token, which a caller controls, so an unknown url must not be
+// able to turn every request into a fresh fetch of the list.
+export const PROVIDER_LIST_MISS_RELOAD_MS = 10 * 1000;
+
+// How long a failed refresh keeps serving the last good list before the next
+// refresh is attempted.
+export const PROVIDER_LIST_FAILED_REFRESH_RETRY_MS = 30 * 1000;
+
+interface ProviderListEntry {
+	providers: Promise<HardcodedProvider[]>;
+	loadedAt: number;
+	lastGood?: HardcodedProvider[];
+	refreshing: boolean;
+}
+
+// Cached provider list per env + ipMode. The list rarely changes, so a single
+// fetch is shared across callers rather than re-fetching the provider-list JSON
+// on every verify decision. Keyed the same way as the pin cache: the
+// `ipv4`/`ipv6` sections carry different urls to the dual-stack default, so
+// they cannot share an entry.
+//
+// Once a list has loaded, callers are never made to wait on the network again:
+// an expired list is refreshed in the background while the last good list
+// keeps being served, and a failed refresh keeps serving it too. Only the very
+// first load can be awaited, and only that load's failure reaches the caller.
+const providerListCache: Map<CacheKey, ProviderListEntry> = new Map();
+
+const isFresh = (entry: ProviderListEntry, maxAgeMs: number): boolean =>
+	Date.now() - entry.loadedAt < maxAgeMs;
+
+const loadProviders = (
+	key: CacheKey,
+	env: EnvironmentTypes,
+	ipMode: IpMode | undefined,
+	lastGood: HardcodedProvider[] | undefined,
+): Promise<HardcodedProvider[]> => {
+	const entry: ProviderListEntry = {
+		loadedAt: Date.now(),
+		lastGood,
+		refreshing: true,
+		providers: loadBalancer(env, ipMode).then(
+			(providers) => {
+				entry.lastGood = providers;
+				entry.refreshing = false;
+				return providers;
+			},
+			(err: unknown) => {
+				entry.refreshing = false;
+				if (lastGood) {
+					entry.loadedAt =
+						Date.now() -
+						PROVIDER_LIST_TTL_MS +
+						PROVIDER_LIST_FAILED_REFRESH_RETRY_MS;
+					return lastGood;
+				}
+				if (providerListCache.get(key) === entry) {
+					providerListCache.delete(key);
+				}
+				throw err;
+			},
+		),
+	};
+	providerListCache.set(key, entry);
+	return entry.providers;
+};
 
 /**
  * Returns the full (cached) list of active providers for an environment.
@@ -157,18 +235,53 @@ const providerListPromiseCache: Map<
  */
 export const getProviders = async (
 	env: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<HardcodedProvider[]> => {
-	const cached = providerListPromiseCache.get(env);
-	if (cached) return cached;
+	const key = cacheKey(env, ipMode);
+	const cached = providerListCache.get(key);
+	if (!cached) {
+		return loadProviders(key, env, ipMode, undefined);
+	}
+	if (!cached.lastGood) {
+		return cached.providers;
+	}
+	if (!cached.refreshing && !isFresh(cached, PROVIDER_LIST_TTL_MS)) {
+		void loadProviders(key, env, ipMode, cached.lastGood);
+	}
+	return cached.lastGood;
+};
 
-	const promise = loadBalancer(env).catch((err) => {
-		// Don't cache failures — a transient fetch error shouldn't poison the
-		// cache for the lifetime of the process.
-		providerListPromiseCache.delete(env);
-		throw err;
-	});
-	providerListPromiseCache.set(env, promise);
-	return promise;
+/**
+ * Finds the provider that minted a token, by exact url match.
+ *
+ * Exact-string rather than normalised: the single-stack sections of the list
+ * carry sub-zone urls (`https://ipv4.pronode15.prosopo.io`), so the caller
+ * passes the `ipMode` it derived from the token's own hostname and both sides
+ * of the comparison stay in the same section.
+ *
+ * A miss reloads the list once before giving up, so a pronode added part-way
+ * through the TTL still verifies the tokens it has already minted. That reload
+ * is rate-limited, because a miss is also what an unknown url produces.
+ */
+export const findProvider = async (
+	env: EnvironmentTypes,
+	providerUrl: string | undefined,
+	ipMode?: IpMode,
+): Promise<HardcodedProvider | undefined> => {
+	if (!providerUrl) return undefined;
+
+	const providers = await getProviders(env, ipMode);
+	const provider = providers.find((p) => p.url === providerUrl);
+	if (provider) return provider;
+
+	const key = cacheKey(env, ipMode);
+	const cached = providerListCache.get(key);
+	if (cached && isFresh(cached, PROVIDER_LIST_MISS_RELOAD_MS)) {
+		return undefined;
+	}
+
+	const reloaded = await loadProviders(key, env, ipMode, cached?.lastGood);
+	return reloaded.find((p) => p.url === providerUrl);
 };
 
 export const getRandomActiveProvider = async (
@@ -185,7 +298,7 @@ export const getRandomActiveProvider = async (
 // Compare two provider URLs ignoring a trailing slash so a stored "failed" URL
 // still matches its list entry regardless of formatting.
 const sameProviderUrl = (a: string, b: string): boolean =>
-	a.replace(/\/$/, "") === b.replace(/\/$/, "");
+	stripTrailingSlashes(a) === stripTrailingSlashes(b);
 
 // Weighted random pick — providers advertise a capacity weight (1-100), so
 // fallback traffic is spread in proportion to capacity rather than uniformly.
@@ -257,7 +370,7 @@ export const _resetPinCache = () => {
 // Test-only escape hatch to isolate the provider-list cache between cases.
 // Not exported from the package index — internal use only.
 export const _resetProviderListCache = () => {
-	providerListPromiseCache.clear();
+	providerListCache.clear();
 };
 
 // Test-only override for the healthz retry policy — tests use it to disable

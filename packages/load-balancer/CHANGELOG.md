@@ -1,5 +1,453 @@
 # @prosopo/load-balancer
 
+## 2.11.34
+### Patch Changes
+
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/common@3.3.2
+
+## 2.11.33
+### Patch Changes
+
+- Updated dependencies [a7a60f4]
+- Updated dependencies [b877bd4]
+  - @prosopo/types@5.30.0
+  - @prosopo/common@3.3.2
+
+## 2.11.32
+### Patch Changes
+
+- Updated dependencies [93620d4]
+  - @prosopo/types@5.29.1
+  - @prosopo/common@3.3.2
+
+## 2.11.31
+### Patch Changes
+
+- 818c669: A provider verifying a token it issued itself no longer fetches the provider list first. That fetch was only needed to decide whether to forward the request elsewhere, and when the list endpoint was slow every such verify waited for the full fetch timeout.
+  
+  Once the provider list has loaded, callers no longer wait on it again. An expired list is refreshed in the background while the previous one keeps being served, and a failed refresh keeps serving the previous list and tries again 30 seconds later, instead of discarding it so the next caller has to fetch from scratch.
+- Updated dependencies [88aa878]
+- Updated dependencies [89c3078]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/types@5.29.0
+  - @prosopo/util@3.7.1
+  - @prosopo/common@3.3.2
+
+## 2.11.30
+### Patch Changes
+
+- Updated dependencies [624db1a]
+  - @prosopo/types@5.28.2
+  - @prosopo/common@3.3.2
+
+## 2.11.29
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/common@3.3.2
+
+## 2.11.28
+### Patch Changes
+
+- Updated dependencies [2732f63]
+- Updated dependencies [fc89f02]
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/common@3.3.2
+
+## 2.11.27
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/util@3.6.1
+  - @prosopo/common@3.3.2
+
+## 2.11.26
+### Patch Changes
+
+- 1ba238e: Add `joinUrl` and `stripTrailingSlashes` to `@prosopo/util` and use them instead of each package's own slash handling, so a base URL ending in `/` no longer produces a `//` path.
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/common@3.3.2
+
+## 2.11.25
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+  - @prosopo/types@5.25.0
+  - @prosopo/common@3.3.2
+
+## 2.11.24
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/common@3.3.2
+
+## 2.11.23
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/common@3.3.2
+
+## 2.11.22
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/common@3.3.2
+
+## 2.11.21
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/common@3.3.2
+
+## 2.11.20
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/common@3.3.2
+
+## 2.11.19
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/common@3.3.2
+
+## 2.11.18
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/common@3.3.2
+
+## 2.11.17
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/common@3.3.2
+  - @prosopo/types@5.20.0
+
+## 2.11.16
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/common@3.3.1
+  - @prosopo/types@5.19.0
+
+## 2.11.15
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/common@3.3.0
+
+## 2.11.14
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/common@3.3.0
+
+## 2.11.13
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/common@3.3.0
+  - @prosopo/types@5.17.0
+
+## 2.11.12
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+
+## 2.11.10
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+
+## 2.11.8
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/common@3.1.65
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/common@3.1.63
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/common@3.1.62
+
+## 2.11.4
+### Patch Changes
+
+- 70fcefd: `retryWithBackoff` now fails straight away with a clear "maxAttempts must be a positive integer" error when `maxAttempts` is 0, negative, fractional or NaN. Before, it never ran the function and threw a confusing `Error("undefined")`.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+  - @prosopo/types@5.12.0
+  - @prosopo/common@3.1.61
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 2.11.2
+### Patch Changes
+
+- e5aefc6: Stop re-downloading the provider list on every server-side verification.
+  
+  `ProsopoServer.isVerified` only needs the list to find the one provider that minted the token, but it called `loadBalancer` directly, which fetches the list fresh every time. The package already had a cached `getProviders`, and the verify path was the one caller not using it.
+  
+  That fetch was measured at 201 ms (p50, and flat — 216 ms at p90) inside the production `siteverify` lambda, on a total invocation of 376 ms. It is a 5.6 KB file listing eight providers that changes when the fleet does, and it was being downloaded roughly 360,000 times a day.
+  
+  `getProviders` is now keyed by environment *and* ipMode — the `ipv4`/`ipv6` sections of the list carry different urls to the dual-stack default, so they can't share a cache entry — and it ages entries out after five minutes, matching the `cache-control: max-age=300` the list is served with.
+  
+  A new `findProvider` does the lookup. On a miss it reloads the list once before giving up, so a pronode added part-way through the TTL still verifies the tokens it has already minted. That reload is rate-limited to once every ten seconds, because `providerUrl` is read from the token and an unknown url is a miss too — without the floor, a caller could put the fetch back on every request.
+- 5375d10: The provider-list fetch in `loadBalancer` now gives up after 10 seconds (overridable via a new optional third argument). `@prosopo/server` calls it on every `isVerified`, so a stalled provider-list endpoint used to hold the site owner's verification request open for the runtime's default timeout (about five minutes in Node). Browsers without `AbortSignal.timeout` keep the old unbounded behaviour.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+
+## 2.11.0
+### Minor Changes
+
+- f13bea8: Let a deployment supply its own provider list with `PROSOPO_PROVIDER_LIST`.
+  
+  There was no supported way to point the widget at providers you run. The only lever was
+  `PROSOPO_PROVIDER_URL_DEVELOPMENT`, which is read solely when the environment is `development`, and the widget takes
+  that environment from `NODE_ENV` at build time. So redirecting a bundle meant building it as a development bundle:
+  unminified, ~1.9 MB across chunks instead of ~1.4 MB, with rate limiting implications if anyone copied the same setting
+  onto their provider. Building with `NODE_ENV=production` silently ignored the variable and sent the widget back to
+  Prosopo's fleet, with nothing in the output to say so.
+  
+  `PROSOPO_PROVIDER_LIST` is environment-independent, so `production` stays correct everywhere. It short-circuits both
+  halves of discovery — the `/healthz` call that picks a node, and the list `@prosopo/server` matches a token against —
+  so a self-hosted deployment makes no request to Prosopo at all.
+  
+  Two forms, because one node and several have different needs:
+  
+  ```bash
+  PROSOPO_PROVIDER_LIST=https://captcha1.example.com,https://captcha2.example.com
+  PROSOPO_PROVIDER_LIST='{"one":{"address":"5Abc...","url":"https://captcha1.example.com","datasetId":"","weight":3}}'
+  ```
+  
+  The JSON form is the exact shape `provider-list.prosopo.io` serves, parsed by the same `convertHostedProvider`, so
+  weights and the `ipv4` / `ipv6` sub-lists behave identically. The bare-URL form fills in placeholder `address` and
+  `datasetId`, neither of which is load-bearing on this path — the DNS-routed production path already passes a constant
+  for `address`, and clients stopped sending `datasetId`.
+  
+  Because it returns a list rather than one URL, a multi-provider override gets weighted selection and real failover:
+  `getRandomProviderFromList` can now exclude a node that just errored and pick a different one, which with a single
+  development URL degraded to retrying the same node.
+  
+  Details worth knowing:
+  
+  - Trailing slashes are stripped. A token embeds the provider URL it was minted against and the verifier matches by
+    exact string, so `https://host/` and `https://host` must not disagree.
+  - A malformed value is ignored and normal discovery resumes rather than throwing, so a deployment-time typo cannot
+    take every captcha on a page down with it.
+  - The env read lives in its own module holding nothing else. Parsing needs `convertHostedProvider` from `balancer.ts`,
+    and `balancer.ts` needs the read — putting both in one file would create an import cycle, which this package has
+    already lost a release to when a cycle between chunks broke the widget at load.
+  - `PROSOPO_PROVIDER_URL_DEVELOPMENT` is untouched and still works for local development.
+  
+  Verified by building a production bundle with the override set: `defaultEnvironment` stays `production`, the bundle is
+  minified, and the override is baked in.
+
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+
+## 2.10.50
+### Patch Changes
+
+- a9141c3: Stop loading zod before the widget can draw itself. Takes another 13KB gzipped off the critical path.
+  
+  zod is 14KB gzipped and it was being downloaded and parsed before the checkbox appeared, because six small things on the startup path happened to use it:
+  
+  - two lists of strings in `@prosopo/logger` (log levels, output format)
+  - two lists of strings in `@prosopo/locale` (language codes, translation keys)
+  - two lists of two strings in `@prosopo/types` (start mode, challenge placement)
+  - one four-field object in `@prosopo/load-balancer` (a provider entry)
+  - an `instanceof ZodError` check in `@prosopo/common`
+  - `INPUT_LIMITS`, a plain table of numbers, that happened to live in the same file as zod-based string builders
+  
+  None of these need a validation library. They are now plain TypeScript: a list, a type, and where input is untrusted, a one-line guard. `INPUT_LIMITS` moved to its own file so reading it no longer drags the builders along.
+  
+  zod has not gone anywhere — the real request and response schemas in `@prosopo/types` still use it, and still validate exactly as before. It now arrives with the code that needs it, after the widget is on screen, rather than in front of it.
+  
+  Two API changes for anyone importing these directly:
+  
+  - `LanguageSchema`, `TranslationKeysSchema`, `StartModeSchema` and `Placement` are no longer exported as zod schemas. Use `isLanguage()`, `isStartMode()`, `isPlacement()` to check a value, and `LanguageCodes`, `translationKeys`, `StartModes`, `Placements` for the lists.
+  - `isZodError()` now recognises a zod error by its name rather than `instanceof`. That is strictly more tolerant: the name still matches when an error crosses a realm boundary or comes from a second copy of zod, which `instanceof` misses — it was already the fallback arm of the same check.
+  
+  Two behaviour notes: a malformed entry in the fetched provider list now throws a plain `Error` naming the entry, where it used to throw an untranslated zod error; and the language codes accepted are unchanged.
+  
+  Covered by the existing suites for every package touched (types, types-database, locale, logger, common, load-balancer, all five procaptcha packages, api, cli, api-express-router, server, and the provider's 1322 unit tests), all passing. The built bundle was also loaded in a real browser: the widget renders from the first eight chunks, zod arrives in the second wave, and the provider's error came back translated into German.
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+
+## 2.10.49
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+
+## 2.10.48
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/common@3.1.57
+
+## 2.10.47
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+
 ## 2.10.46
 ### Patch Changes
 

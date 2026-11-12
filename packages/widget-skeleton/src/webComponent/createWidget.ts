@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getCheckboxInteractiveArea } from "../elements/checkbox.js";
 import { createWidgetSkeletonElement } from "../elements/skeleton.js";
 import type { Theme } from "../theme.js";
 import { applyDefaultStyles } from "./createWebComponent.js";
@@ -23,27 +22,26 @@ import { applyDefaultStyles } from "./createWebComponent.js";
  * @param container - The HTML element to attach the widget to
  * @param theme - The theme to apply to the widget
  * @param webComponentTag - The tag name for the web component
+ * @param loadingLabel - What the spinner is announced as, in the widget's language
  * @returns The interactive area of the widget as an HTMLElement
  */
 export function createWidgetSkeleton(
 	container: Element,
 	theme: Theme,
 	webComponentTag: string,
+	loadingLabel?: string,
 ): { widgetInteractiveArea: HTMLElement; webComponent: HTMLElement } {
 	const host = document.createElement(webComponentTag);
 	applyDefaultStyles(host);
 
-	const widget = createWidgetSkeletonElement(theme);
-	host.appendChild(widget);
+	const { element, interactiveArea } = createWidgetSkeletonElement(
+		theme,
+		loadingLabel,
+	);
+	host.appendChild(element);
 
 	container.innerHTML = "";
 	container.appendChild(host);
 
-	const widgetInteractiveArea = getCheckboxInteractiveArea(host);
-
-	if (!(widgetInteractiveArea instanceof HTMLElement)) {
-		throw new Error("Fail to initialize widget: interactive area is not found");
-	}
-
-	return { widgetInteractiveArea, webComponent: host };
+	return { widgetInteractiveArea: interactiveArea, webComponent: host };
 }

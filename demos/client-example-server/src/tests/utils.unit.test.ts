@@ -28,6 +28,9 @@ const mocks = vi.hoisted(() => ({
 	models: {} as Record<string, unknown>,
 	model: vi.fn(),
 	plugin: vi.fn(),
+	// A plain array, not vi.fn: the plugin runs at import, before the test
+	// runner clears mock call history.
+	autoIncrementCalls: [] as Array<[Schema, { field: string }]>,
 	connectionOptions: vi.fn(),
 	memoryUri: "mongodb://memory:27017/",
 	memoryCreate: vi.fn(),
@@ -51,7 +54,9 @@ vi.mock("mongoose", async (importOriginal) => {
 });
 
 vi.mock("@typegoose/auto-increment", () => ({
-	AutoIncrementID: "auto-increment-plugin",
+	AutoIncrementID: (schema: Schema, options: { field: string }): void => {
+		mocks.autoIncrementCalls.push([schema, options]);
+	},
 }));
 
 vi.mock("@prosopo/database", async (importOriginal) => {
@@ -110,21 +115,24 @@ describe("connectionFactory", () => {
 		});
 	});
 
-	test("registers the User model with auto-incrementing ids", () => {
+	test("registers the User model", () => {
 		connectionFactory(URI);
-		expect(mocks.plugin).toHaveBeenCalledWith("auto-increment-plugin", {
-			field: "id",
-		});
 		expect(mocks.model).toHaveBeenCalledWith("User", UserSchema);
 	});
 
 	test("leaves an already-registered model alone", () => {
 		// Re-registering throws in mongoose (OverwriteModelError), so the
 		// factory has to be safe to call on a connection that has been set up.
-		mocks.models = { user: {} };
+		mocks.models = { User: {} };
 		connectionFactory(URI);
 		expect(mocks.model).not.toHaveBeenCalled();
+	});
+
+	test("does not add another auto-increment hook per connection", () => {
+		connectionFactory(URI);
+		connectionFactory(URI);
 		expect(mocks.plugin).not.toHaveBeenCalled();
+		expect(mocks.autoIncrementCalls).toHaveLength(1);
 	});
 
 	test("returns the connection it created", () => {
@@ -147,6 +155,10 @@ describe("memoryServerSetup", () => {
 });
 
 describe("the User schema", () => {
+	test("numbers users with the auto-increment plugin, applied once", () => {
+		expect(mocks.autoIncrementCalls).toEqual([[UserSchema, { field: "id" }]]);
+	});
+
 	test("requires the fields a login needs to work", () => {
 		// Without email, password and salt, a stored user cannot be logged in.
 		for (const field of ["email", "password", "salt"]) {

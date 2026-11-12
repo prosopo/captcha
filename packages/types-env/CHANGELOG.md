@@ -1,5 +1,417 @@
 # @prosopo/types-env
 
+## 2.12.9
+### Patch Changes
+
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/types-database@5.20.1
+  - @prosopo/keyring@2.10.30
+
+## 2.12.8
+### Patch Changes
+
+- Updated dependencies [a7a60f4]
+- Updated dependencies [b877bd4]
+  - @prosopo/types@5.30.0
+  - @prosopo/types-database@5.20.0
+  - @prosopo/keyring@2.10.29
+
+## 2.12.7
+### Patch Changes
+
+- Updated dependencies [93620d4]
+  - @prosopo/types@5.29.1
+  - @prosopo/types-database@5.19.1
+  - @prosopo/keyring@2.10.28
+
+## 2.12.6
+### Patch Changes
+
+- Updated dependencies [f9540f2]
+- Updated dependencies [88aa878]
+- Updated dependencies [32075aa]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [a676f91]
+- Updated dependencies [89c3078]
+- Updated dependencies [eb5b4ae]
+- Updated dependencies [f868427]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [c8f0b16]
+- Updated dependencies [8c68a26]
+- Updated dependencies [c677fb6]
+  - @prosopo/types-database@5.19.0
+  - @prosopo/types@5.29.0
+  - @prosopo/keyring@2.10.27
+  - @prosopo/logger@2.1.12
+
+## 2.12.5
+### Patch Changes
+
+- Updated dependencies [7a4767d]
+- Updated dependencies [624db1a]
+  - @prosopo/types-database@5.18.4
+  - @prosopo/types@5.28.2
+  - @prosopo/keyring@2.10.26
+
+## 2.12.4
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+  - @prosopo/types@5.28.1
+  - @prosopo/keyring@2.10.25
+  - @prosopo/types-database@5.18.3
+
+## 2.12.3
+### Patch Changes
+
+- Updated dependencies [fc89f02]
+  - @prosopo/types@5.28.0
+  - @prosopo/keyring@2.10.24
+  - @prosopo/logger@2.1.11
+  - @prosopo/types-database@5.18.2
+
+## 2.12.2
+### Patch Changes
+
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+  - @prosopo/types@5.27.0
+  - @prosopo/types-database@5.18.1
+  - @prosopo/keyring@2.10.23
+  - @prosopo/logger@2.1.10
+
+## 2.12.1
+### Patch Changes
+
+- Updated dependencies [a85559d]
+- Updated dependencies [d9520ea]
+  - @prosopo/types-database@5.18.0
+  - @prosopo/types@5.26.0
+  - @prosopo/keyring@2.10.22
+  - @prosopo/logger@2.1.9
+
+## 2.12.0
+### Minor Changes
+
+- b80b627: Decision machines can now act on repeated wild guesses at an interactive captcha.
+  
+  - Usage counters gain a `farMiss` kind. It is written per user account and per address when a puzzle answer lands well away from the slot, as opposed to a near miss.
+  - A decision machine can export `requiredDecideCounters()` (named apart from the routing `requiredCounters()`, since one bundle serves both) and `requiresAccountSighting()`. At verification the provider reads what it asked for into `input.counters` and `input.accountSighting`. Anything that cannot be read is left out rather than passed as zero.
+  - The reputation DB client reads `reputation.shared_reason` onto `IPInfoResult.sharedReason`. `IIpInfoService` gains `accountSighting(siteKey, account)`, which reads `GET /v1/account/{siteKey}/{account}` and has no answer for an unknown account, a 404 or an error.
+
+### Patch Changes
+
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/types@5.25.0
+  - @prosopo/types-database@5.17.0
+  - @prosopo/keyring@2.10.21
+
+## 2.11.35
+### Patch Changes
+
+- Updated dependencies [91ef450]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [ec4ed10]
+  - @prosopo/types@5.24.0
+  - @prosopo/logger@2.1.8
+  - @prosopo/types-database@5.16.2
+  - @prosopo/keyring@2.10.20
+
+## 2.11.34
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/types@5.23.1
+  - @prosopo/types-database@5.16.1
+  - @prosopo/keyring@2.10.19
+
+## 2.11.33
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/types-database@5.16.0
+  - @prosopo/keyring@2.10.18
+
+## 2.11.32
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/types-database@5.15.0
+  - @prosopo/keyring@2.10.17
+
+## 2.11.31
+### Patch Changes
+
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/types@5.21.0
+  - @prosopo/types-database@5.14.0
+  - @prosopo/keyring@2.10.16
+
+## 2.11.30
+### Patch Changes
+
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/keyring@2.10.15
+  - @prosopo/types-database@5.13.2
+  - @prosopo/logger@2.1.7
+
+## 2.11.29
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/keyring@2.10.14
+  - @prosopo/types-database@5.13.1
+
+## 2.11.28
+### Patch Changes
+
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [77bd891]
+- Updated dependencies [76b6edd]
+  - @prosopo/keyring@2.10.13
+  - @prosopo/logger@2.1.7
+  - @prosopo/types@5.20.0
+  - @prosopo/types-database@5.13.0
+
+## 2.11.27
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/keyring@2.10.12
+  - @prosopo/logger@2.1.6
+  - @prosopo/types-database@5.12.0
+  - @prosopo/types@5.19.0
+
+## 2.11.26
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/types-database@5.11.2
+  - @prosopo/keyring@2.10.11
+
+## 2.11.25
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/types-database@5.11.1
+  - @prosopo/keyring@2.10.10
+
+## 2.11.24
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/keyring@2.10.9
+  - @prosopo/logger@2.1.5
+  - @prosopo/types@5.17.0
+  - @prosopo/types-database@5.11.0
+
+## 2.11.23
+### Patch Changes
+
+  - @prosopo/types@5.16.3
+  - @prosopo/types-database@5.10.6
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+
+## 2.11.22
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/types-database@5.10.5
+  - @prosopo/keyring@2.10.7
+
+## 2.11.21
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+  - @prosopo/types-database@5.10.4
+  - @prosopo/keyring@2.10.6
+
+## 2.11.20
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+  - @prosopo/types-database@5.10.3
+  - @prosopo/keyring@2.10.5
+
+## 2.11.19
+### Patch Changes
+
+  - @prosopo/types-database@5.10.2
+
+## 2.11.18
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/types-database@5.10.1
+  - @prosopo/keyring@2.10.4
+  - @prosopo/logger@2.1.4
+
+## 2.11.17
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/types-database@5.10.0
+  - @prosopo/keyring@2.10.3
+
+## 2.11.16
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/types-database@5.9.0
+  - @prosopo/keyring@2.10.2
+
+## 2.11.15
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/types-database@5.8.0
+  - @prosopo/keyring@2.10.1
+  - @prosopo/logger@2.1.3
+
+## 2.11.14
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/types-database@5.7.3
+  - @prosopo/logger@2.1.2
+
+## 2.11.13
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/types-database@5.7.2
+
+## 2.11.12
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/keyring@2.9.99
+  - @prosopo/types-database@5.7.1
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+- Updated dependencies [fa316d6]
+  - @prosopo/types-database@5.7.0
+  - @prosopo/types@5.11.0
+  - @prosopo/keyring@2.9.98
+  - @prosopo/logger@2.1.1
+
+## 2.11.10
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/types-database@5.6.5
+  - @prosopo/keyring@2.9.97
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/keyring@2.9.96
+  - @prosopo/types-database@5.6.4
+
+## 2.11.8
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/types-database@5.6.3
+  - @prosopo/keyring@2.9.95
+
+## 2.11.7
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/keyring@2.9.94
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/types-database@5.6.1
+  - @prosopo/keyring@2.9.93
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [ce2500b]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/types-database@5.6.0
+  - @prosopo/keyring@2.9.92
+
 ## 2.11.4
 ### Patch Changes
 

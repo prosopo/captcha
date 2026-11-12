@@ -2,9 +2,9 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
-		"lib": ["es6", "dom"],
-		"jsxImportSource": "@emotion/react"
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
+		"lib": ["es6", "dom"]
 	},
 	"include": [
 		"src",
@@ -21,7 +21,13 @@
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../locale"
+		},
+		{
 			"path": "../types"
+		},
+		{
+			"path": "../util"
 		},
 		{
 			"path": "../widget-skeleton"

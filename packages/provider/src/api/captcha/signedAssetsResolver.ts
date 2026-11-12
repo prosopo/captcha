@@ -33,9 +33,15 @@
 // different image.
 
 import { createHash } from "node:crypto";
+import {
+	DEFAULT_ASSET_TOKEN_TTL_SECONDS,
+	assetTokenBase,
+	encodeAssetToken,
+} from "@prosopo/datasets";
 import type { Asset, AssetsResolver } from "@prosopo/types";
+import { parseInteger } from "@prosopo/util";
 
-export const DEFAULT_ASSET_TOKEN_TTL_SECONDS = 300;
+export { DEFAULT_ASSET_TOKEN_TTL_SECONDS };
 
 export interface SignedAssetsResolverOptions {
 	securityKey: string;
@@ -61,13 +67,15 @@ export class SignedAssetsResolver implements AssetsResolver {
 	}
 
 	private sign(path: string, expires: number): string {
-		const base = `${this.securityKey}${path}${expires}${this.clientIp ?? ""}`;
-		return createHash("sha256")
-			.update(base)
-			.digest("base64")
-			.replace(/\+/g, "-")
-			.replace(/\//g, "_")
-			.replace(/=/g, "");
+		return encodeAssetToken(
+			new Uint8Array(
+				createHash("sha256")
+					.update(
+						assetTokenBase(this.securityKey, path, expires, this.clientIp),
+					)
+					.digest(),
+			),
+		);
 	}
 
 	resolveAsset(assetURI: string): Asset {
@@ -122,9 +130,9 @@ export function getSignedAssetsResolver(
 		return undefined;
 	}
 
-	const ttlSeconds =
-		Number.parseInt(process.env.PROSOPO_ASSET_TOKEN_TTL_SECONDS ?? "", 10) ||
-		DEFAULT_ASSET_TOKEN_TTL_SECONDS;
+	const ttlSeconds = parseInteger(process.env.PROSOPO_ASSET_TOKEN_TTL_SECONDS, {
+		min: 1,
+	}).unwrapOr(DEFAULT_ASSET_TOKEN_TTL_SECONDS);
 
 	// Binding a URL to the requesting IP is stronger, but it has to match the
 	// zone's `ZoneSecurityIncludeHashRemoteIP` setting exactly, and it breaks

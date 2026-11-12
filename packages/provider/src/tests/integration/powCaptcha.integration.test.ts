@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Server } from "node:net";
-import { sha256 } from "@noble/hashes/sha256";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
@@ -271,6 +271,42 @@ describe("PoW Integration Tests", () => {
 				console.error("Error stopping redis container:", error);
 			}
 		}
+	});
+
+	describe("malformed request bodies", () => {
+		const post = (body: string): Promise<Response> =>
+			fetch(`${baseUrl}${getPowCaptchaChallengePath}`, {
+				method: "POST",
+				headers: {
+					Connection: "close",
+					"Content-Type": "application/json",
+				},
+				body,
+			});
+
+		it("answers JSON that does not parse with the JSON error envelope", async () => {
+			const response = await post("{not json");
+
+			expect(response.status).toBe(400);
+			expect(response.headers.get("content-type")).toContain(
+				"application/json",
+			);
+			const data = (await response.json()) as { error: { code: string } };
+			expect(data.error.code).toBe("INVALID_REQUEST");
+		});
+
+		it("answers a body over the size limit with 413 and the JSON error envelope", async () => {
+			const response = await post(
+				JSON.stringify({ padding: "x".repeat(1024 * 1024) }),
+			);
+
+			expect(response.status).toBe(413);
+			expect(response.headers.get("content-type")).toContain(
+				"application/json",
+			);
+			const data = (await response.json()) as { error: { code: string } };
+			expect(data.error.code).toBe("INVALID_REQUEST");
+		});
 	});
 
 	describe("GetPowCaptchaChallenge", () => {
@@ -566,7 +602,7 @@ describe("PoW Integration Tests", () => {
 
 		expect(challengeBody).toHaveProperty("error");
 		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
-		expect(challengeBody.error?.code).toBe(400);
+		expect(challengeBody.error?.status).toBe(400);
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
 		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
@@ -592,6 +628,6 @@ describe("PoW Integration Tests", () => {
 
 		expect(challengeBody).toHaveProperty("error");
 		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
-		expect(challengeBody.error?.code).toBe(400);
+		expect(challengeBody.error?.status).toBe(400);
 	});
 });

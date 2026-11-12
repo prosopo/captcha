@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Methu amgodio cyfeiriad annilys",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Nid yw ymrwymiad datrysiad y captcha yn bodoli",
+		"SIGNER_UNDEFINED": "Llofnodwr heb ei ddiffinio",
+		"CANNOT_FIND_KEYPAIR": "Methu dod o hyd i bâr allweddi",
+		"INVALID_DATA_FORMAT": "Fformat data annilys"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Gofynnwyd am amgylchedd anhysbys",
+		"INVALID_CAPTCHA_NUMBER": "Ffurfweddwch osodiadau'r captchas yn gywir",
+		"INVALID_LOG_LEVEL": "Lefel log annilys",
+		"INVALID_PACKAGE_DIR": "Cyfeiriadur pecyn annilys"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Gwall wrth ddosrannu'r set ddata",
+		"SOLUTION_PARSE_ERROR": "Gwall wrth ddosrannu'r set ddata",
+		"HASH_ERROR": "Gwall wrth stwnshio'r set ddata",
+		"DATASET_ID_UNDEFINED": "ID set ddata heb ei ddiffinio",
+		"NOT_ENOUGH_LABELS": "Dim digon o labeli",
+		"NOT_ENOUGH_IMAGES": "Dim digon o luniau",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Mae nifer y captchas yn y set ddata yn llai na'r nifer a ffurfweddwyd",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Mae nifer y datrysiadau yn y set ddata yn llai na'r nifer a ffurfweddwyd",
+		"DUPLICATE_IMAGE": "canfuwyd llun dyblyg",
+		"MERKLE_ERROR": "Gwall wrth greu coeden Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Methu mewnforio peiriant y gronfa ddata",
+		"DATABASE_UNDEFINED": "Nid yw cleient y gronfa ddata wedi'i gysylltu",
+		"DATABASE_HOST_UNDEFINED": "Nid yw cyfeiriad gwesteiwr y gronfa ddata wedi'i ddiffinio",
+		"DATASET_LOAD_FAILED": "Methodd llwytho'r set ddata",
+		"DATASET_GET_FAILED": "Methu cael y set ddata",
+		"CAPTCHA_GET_FAILED": "Methu cael y captcha",
+		"CAPTCHA_UPDATE_FAILED": "Methu diweddaru'r captcha",
+		"IMAGE_GET_FAILED": "Methu cael y llun",
+		"PENDING_RECORD_NOT_FOUND": "Heb ddod o hyd i gofnod yn yr arfaeth",
+		"INVALID_HASH": "Stwnsh annilys",
+		"SOLUTION_GET_FAILED": "Methu cael y datrysiad",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Heb ddod o hyd i setiau data gyda'r nifer gofynnol o ddatrysiadau",
+		"SOLUTION_APPROVE_FAILED": "Methu cymeradwyo'r datrysiad",
+		"SOLUTION_FLAG_FAILED": "Methu nodi'r datrysiad fel un wedi'i brosesu",
+		"TABLES_UNDEFINED": "Tablau heb eu diffinio",
+		"CONNECTION_UNDEFINED": "Cysylltiad heb ei ddiffinio",
+		"COMMITMENT_FLAG_FAILED": "Methu nodi'r ymrwymiad fel un wedi'i brosesu",
+		"UNKNOWN": "Gwall cronfa ddata anhysbys",
+		"QUERY_ERROR": "Methodd ymholiad y gronfa ddata",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Cysylltiad rheolau mynediad Redis heb ei ddiffinio",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Storfa rheolau mynediad defnyddwyr heb ei diffinio",
+		"SESSION_STORE_FAILED": "Methu storio'r sesiwn",
+		"SESSION_CHECK_REMOVE_FAILED": "Methu gwirio a thynnu'r sesiwn",
+		"SESSION_GET_FAILED": "Methu cael y sesiwn"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Methu addasu'r defnyddiwr perchennog",
+		"CANNOT_DELETE_OWN_USER": "Methu dileu eich cyfrif eich hun",
+		"CANNOT_DELETE_LAST_USER": "Methu dileu'r defnyddiwr olaf",
+		"USER_ALREADY_EXISTS": "Mae'r defnyddiwr eisoes yn bodoli",
+		"NO_SUGGESTIONS_FOUND": "Heb ddod o hyd i awgrymiadau",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Methu dadactifadu'r wefan weithredol olaf",
+		"DUPLICATE_SITE_NAME": "Mae gwefan gyda'r enw hwn eisoes yn bodoli",
+		"INVALID_SITE_NAME": "Rhaid i enw'r wefan gynnwys llythrennau, rhifau, cysylltnodau a thanlinellau yn unig"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Paramedr annilys"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Heb ddod o hyd i'r ffeil",
+		"FILE_ALREADY_EXISTS": "Mae'r ffeil eisoes yn bodoli",
+		"INVALID_DIR_FORMAT": "Fformat cyfeiriadur annilys"
+	}
+}

@@ -1,10 +1,12 @@
+# Mongo + redis for local development, unit tests and CI. Run on its own:
+#   docker compose --file ./docker/docker-compose.test.yml up -d
 services:
     database:
         image: mongo:6.0.28
         # volumes:
         #   - ./db:/data/db
         ports:
-            - '27017:27017'
+            - '127.0.0.1:27017:27017'
         environment:
             - MONGO_INITDB_ROOT_USERNAME=root
             - MONGO_INITDB_ROOT_PASSWORD=root
@@ -18,13 +20,13 @@ services:
     redis-stack:
         container_name: redis-stack
         # unlike "redis/redis-stack-server" this image includes Insights
-        image: redis/redis-stack:latest
+        image: redis/redis-stack:7.4.0-v8
         volumes:
             # - ./data:/data we don't need a persistent storage for Tests
             - ./redis.conf:/redis-stack.conf
         ports:
-            - '6379:6379' # DB
-            - '8001:8001' # Insight tool
+            - '127.0.0.1:6379:6379' # DB
+            - '127.0.0.1:8001:8001' # Insight tool
         environment:
             - REDIS_ARGS=--requirepass root
         # Cap the json log file so a chatty container can't fill the host disk.

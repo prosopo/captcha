@@ -24,12 +24,17 @@ import {
 import type { KeyringPair } from "@prosopo/types";
 import { getDB, getSecret } from "./process.env.js";
 import getConfig from "./prosopo.config.js";
+import { waitForEnvironment } from "./retryWithBackoff.js";
 
-export async function start(
-	env?: ProviderEnvironment,
-	admin?: boolean,
-	port?: number,
-) {
+export async function start({
+	env,
+	admin,
+	port,
+}: {
+	env?: ProviderEnvironment;
+	admin?: boolean;
+	port?: number;
+} = {}) {
 	if (!env) {
 		loadEnv();
 
@@ -37,9 +42,11 @@ export async function start(
 		getDB();
 
 		const secret = getSecret();
-		const config = getConfig(undefined, {
-			solved: { count: 2 },
-			unsolved: { count: 0 },
+		const config = getConfig({
+			captchaServeConfig: {
+				solved: { count: 2 },
+				unsolved: { count: 0 },
+			},
 		});
 
 		const pair = getPair(secret);
@@ -49,15 +56,10 @@ export async function start(
 		}
 		env = new ProviderEnvironment(config, pair, authAccount);
 	} else {
-		env.logger.debug(() => ({
-			msg: "Env already defined",
-			data: {
-				config: env?.config,
-			},
-		}));
+		env.logger.debug(() => ({ msg: "Env already defined" }));
 	}
 
-	await env.isReady();
+	await waitForEnvironment(env);
 
 	// Get rid of any scheduled task records from previous runs
 	env.cleanup();

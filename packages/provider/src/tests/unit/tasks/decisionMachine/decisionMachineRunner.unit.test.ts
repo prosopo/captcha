@@ -31,6 +31,10 @@ import {
 	invalidateAllDecisionMachineArtifactCaches,
 	invalidateDecisionMachineScriptCache,
 } from "../../../../tasks/decisionMachine/decisionMachineRunner.js";
+import {
+	recordDnsSidecarBatch,
+	resetDnsSidecarHealth,
+} from "../../../../tasks/dnsEvent/dnsSidecarHealth.js";
 
 const stubLogger = (): Logger => {
 	const noop = (): void => {};
@@ -366,6 +370,57 @@ describe("DecisionMachineRunner", () => {
 		expect(result.decision).toBe(DecisionMachineDecision.Allow);
 	});
 
+	describe("dnsSidecarHealthy", () => {
+		const echoArtifact = (): DecisionMachineArtifact =>
+			buildArtifact(
+				`module.exports = (input) => ({
+					decision: "allow",
+					tags: ["dnsSidecarHealthy:" + input.dnsSidecarHealthy],
+				});`,
+				DecisionMachineScope.Global,
+			);
+
+		beforeEach(() => {
+			resetDnsSidecarHealth();
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(echoArtifact());
+		});
+
+		it("is false when no DNS batch has arrived", async () => {
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:false"]);
+		});
+
+		it("is true after a recent DNS batch", async () => {
+			recordDnsSidecarBatch(new Date());
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:true"]);
+		});
+
+		it("keeps a caller-supplied value", async () => {
+			recordDnsSidecarBatch(new Date());
+			const result = await runner.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+				dnsSidecarHealthy: false,
+			});
+			expect(result.tags).toEqual(["dnsSidecarHealthy:false"]);
+		});
+	});
+
 	describe("route", () => {
 		it("returns undefined when no artifact is configured", async () => {
 			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
@@ -561,6 +616,61 @@ describe("DecisionMachineRunner", () => {
 		});
 	});
 
+	describe("getDecisionRequirements", () => {
+		const decideInput: Parameters<
+			DecisionMachineRunner["getDecisionRequirements"]
+		>[0] = {
+			dappAccount: "dapp",
+			userAccount: "user",
+			captchaType: CaptchaType.puzzle,
+		};
+		const useArtifact = (source: string): void => {
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(
+					buildArtifact(source, DecisionMachineScope.Global),
+				);
+		};
+
+		it("reads requiredDecideCounters and requiresAccountSighting", async () => {
+			useArtifact(`module.exports.decide = () => ({ decision: "allow" });
+				module.exports.requiredDecideCounters = () => [
+					{ kind: "farMiss", captchaType: "puzzle", dimension: "userAccount", window: "10m" }
+				];
+				module.exports.requiresAccountSighting = () => true;`);
+
+			const result = await runner.getDecisionRequirements(decideInput);
+			expect(result.accountSighting).toBe(true);
+			expect(result.counters).toEqual([
+				{
+					kind: "farMiss",
+					captchaType: "puzzle",
+					dimension: "userAccount",
+					window: "10m",
+				},
+			]);
+		});
+
+		it("ignores the routing requiredCounters export of the same bundle", async () => {
+			useArtifact(`module.exports.decide = () => ({ decision: "allow" });
+				module.exports.requiredCounters = () => [
+					{ kind: "served", captchaType: "pow", dimension: "ip", window: "10m" }
+				];`);
+
+			const result = await runner.getDecisionRequirements(decideInput);
+			expect(result).toEqual({ counters: [], accountSighting: false });
+		});
+
+		it("asks for nothing when the exports throw", async () => {
+			useArtifact(`module.exports.decide = () => ({ decision: "allow" });
+				module.exports.requiredDecideCounters = () => { throw new Error("nope"); };
+				module.exports.requiresAccountSighting = () => { throw new Error("nope"); };`);
+
+			const result = await runner.getDecisionRequirements(decideInput);
+			expect(result).toEqual({ counters: [], accountSighting: false });
+		});
+	});
+
 	describe("script cache", () => {
 		beforeEach(() => {
 			// Clean slate for cache tests — leftover entries from other tests
@@ -744,6 +854,50 @@ describe("DecisionMachineRunner", () => {
 			invalidateAllDecisionMachineArtifactCaches();
 
 			expect((await runner.decide(input)).reason).toBe("new");
+		});
+
+		it("shares cached artifacts between runners built on the same database", async () => {
+			// Runners are built per request, so a cache that lived on the
+			// runner never served a second lookup.
+			const artifact = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "shared" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifact);
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+
+			await new DecisionMachineRunner(db).decide(input);
+			const second = await new DecisionMachineRunner(db).decide(input);
+
+			expect(second.reason).toBe("shared");
+			expect(db.getDecisionMachineArtifact).toHaveBeenCalledTimes(2);
+		});
+
+		it("keeps the caches of different databases apart", async () => {
+			const otherDb = {
+				getDecisionMachineArtifact: vi.fn().mockResolvedValue(undefined),
+			} as unknown as IProviderDatabase;
+			(
+				db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue(undefined);
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+
+			await new DecisionMachineRunner(db).decide(input);
+			await new DecisionMachineRunner(otherDb).decide(input);
+
+			expect(otherDb.getDecisionMachineArtifact).toHaveBeenCalledTimes(2);
 		});
 
 		it("does not retain runners, so construction is not bounded by a registry", async () => {

@@ -12,9 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import type { IUserSettings, Tier, Timestamp } from "@prosopo/types";
+import {
+	type IUserSettings,
+	type Tier,
+	type Timestamp,
+	withMarketCountries,
+} from "@prosopo/types";
 import {
 	AccountSchema,
 	type IClientDatabase,
@@ -29,10 +34,20 @@ import { MongoDatabase } from "../base/index.js";
 // fields read below cannot drift apart.
 interface UpdatedClientAccount {
 	tier: Tier;
+	marketCountries?: string[];
 	sites?: {
 		siteKey?: string;
 		settings?: IUserSettings;
 		updatedAt?: Timestamp;
+		active?: boolean;
+	}[];
+}
+
+interface RevokedClientAccount {
+	accountDisabled?: boolean;
+	sites?: {
+		siteKey?: string;
+		active?: boolean;
 	}[];
 }
 
@@ -68,9 +83,11 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 
 	getTables(): Tables<TableNames> {
 		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-4",
+				message: "Tables undefined",
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;
@@ -82,24 +99,33 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 		await this.connect();
 		// get remote client records that have been updated since the last task
 		//
-		// The query matches at document level, so an account is returned when
-		// ANY of its sites is new — the per-site test below is what decides
-		// which of them are actually carried across. `tier` is projected from
-		// the account: it does not exist on a site.
+		// An account is returned when ANY of its sites is new — the per-site
+		// test below is what decides which of them are actually carried
+		// across. `$elemMatch` is needed for the unstamped case: on an array,
+		// `"sites.updatedAt": { $exists: false }` only matches when no site
+		// has an `updatedAt` at all. `tier` is projected from the account: it
+		// does not exist on a site.
 		const accounts = await this.tables.accounts
 			.find<UpdatedClientAccount>(
 				{
-					$or: [
-						{ "sites.updatedAt": { $gt: updatedAtTimestamp } },
-						{ "sites.updatedAt": { $exists: false } },
-					],
+					sites: {
+						$elemMatch: {
+							$or: [
+								{ updatedAt: { $gt: updatedAtTimestamp } },
+								{ updatedAt: { $exists: false } },
+							],
+						},
+					},
 					"users.status": "active",
+					accountDisabled: { $ne: true },
 				},
 				{
 					tier: 1,
+					marketCountries: 1,
 					"sites.siteKey": 1,
 					"sites.settings": 1,
 					"sites.updatedAt": 1,
+					"sites.active": 1,
 				},
 			)
 			.lean();
@@ -111,13 +137,13 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 		const newClientRecords: IUserDataSlim[] = [];
 		for (const account of accounts) {
 			for (const site of account.sites ?? []) {
-				if (!site.siteKey || !site.settings) continue;
+				if (!site.siteKey || !site.settings || site.active === false) continue;
 				const isNew =
 					site.updatedAt === undefined || site.updatedAt > updatedAtTimestamp;
 				if (!isNew) continue;
 				newClientRecords.push({
 					account: site.siteKey,
-					settings: site.settings,
+					settings: withMarketCountries(site.settings, account.marketCountries),
 					tier: account.tier,
 				});
 			}
@@ -125,5 +151,32 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 
 		await this.close();
 		return newClientRecords;
+	}
+
+	// Bans and site deletions do not move `sites.updatedAt` into the sync
+	// window, so the keys to drop are read in full every run rather than by
+	// time. This is what keeps a ban in force when the portal's direct
+	// removal call to a provider fails.
+	async getRevokedSiteKeys(): Promise<string[]> {
+		await this.connect();
+		const accounts = await this.tables.accounts
+			.find<RevokedClientAccount>(
+				{ $or: [{ accountDisabled: true }, { "sites.active": false }] },
+				{ accountDisabled: 1, "sites.siteKey": 1, "sites.active": 1 },
+			)
+			.lean();
+
+		const revoked: string[] = [];
+		for (const account of accounts) {
+			for (const site of account.sites ?? []) {
+				if (!site.siteKey) continue;
+				if (account.accountDisabled === true || site.active === false) {
+					revoked.push(site.siteKey);
+				}
+			}
+		}
+
+		await this.close();
+		return revoked;
 	}
 }

@@ -19,20 +19,26 @@ import { fileURLToPath } from "node:url";
 // Top Level
 
 /**
- * The repository root — three levels up from this module, which sits at
- * `dev/workspace/{src,dist}/`. Both the source and the built layout are the
- * same depth, so this holds whether it is imported from `src` under vitest or
- * from `dist` by a consumer.
+ * The repository root: two levels above this package (`dev/workspace`), found
+ * by walking up to the package's package.json. The module itself sits at
+ * different depths in `src/` and `dist/<variant>/`, so a fixed `../` count
+ * from it holds for only one layout.
  *
  * `fileURLToPath` rather than `new URL(...).pathname`: `pathname` is
  * percent-encoded, so a checkout under a path containing a space or a `#`
  * yields `%20`/`%23` and every derived path fails to resolve.
- *
- * `path.resolve` drops the trailing separator that URL resolution leaves on a
- * directory, which is what the previous `.slice(0, -1)` was doing by hand.
  */
-export const getRootDir = (): string =>
-	path.resolve(fileURLToPath(new URL("../../..", import.meta.url)));
+export const getRootDir = (): string => {
+	let dir = path.dirname(fileURLToPath(import.meta.url));
+	while (!fs.existsSync(path.join(dir, "package.json"))) {
+		const parent = path.dirname(dir);
+		if (parent === dir) {
+			throw new Error("@prosopo/workspace: no package.json above module");
+		}
+		dir = parent;
+	}
+	return path.resolve(dir, "../..");
+};
 
 export const getCacheDir = () => `${getRootDir()}/.cache`;
 

@@ -1,0 +1,71 @@
+{
+	"name": "@prosopo/better-auth-procaptcha-plugin",
+	"version": "0.1.0",
+	"description": "Prosopo Procaptcha bot protection for Better Auth. Verifies a Procaptcha token before sign-up, sign-in and other auth endpoints run.",
+	"type": "module",
+	"engines": {
+		"node": "^24"
+	},
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
+			"require": "./dist/cjs/index.cjs"
+		},
+		"./client": {
+			"types": "./dist/types/client.d.ts",
+			"import": "./dist/esm/client.js",
+			"require": "./dist/cjs/client.cjs"
+		}
+	},
+	"scripts": {
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
+		"build:tsc": "tsc --build --verbose",
+		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
+		"build:types": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
+	},
+	"keywords": [
+		"better-auth",
+		"captcha",
+		"procaptcha",
+		"prosopo",
+		"bot-protection"
+	],
+	"dependencies": {
+		"@prosopo/types": "workspace:*"
+	},
+	"peerDependencies": {
+		"better-auth": "^1.7.0"
+	},
+	"devDependencies": {
+		"@prosopo/config": "workspace:*",
+		"@types/node": "22.10.2",
+		"@vitest/coverage-v8": "5.0.4",
+		"better-auth": "1.7.15",
+		"del-cli": "6.0.0",
+		"tslib": "2.7.0",
+		"typescript": "5.6.2",
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
+	},
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	},
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha/tree/main/integration/frameworks/better-auth/better-auth-procaptcha-plugin#readme",
+	"sideEffects": false,
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "integration/frameworks/better-auth/better-auth-procaptcha-plugin"
+	}
+}

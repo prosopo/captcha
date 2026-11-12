@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { I18nLookup } from "@prosopo/locale";
 import { ApiParams, POW_SEPARATOR } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -24,6 +25,7 @@ const { mockGetMaintenanceMode, mockedDbMethods, mockedManagers } = vi.hoisted(
 			getSessionByuserSitekeyIpHash: vi.fn(),
 			storePowCaptchaRecord: vi.fn(),
 			storePuzzleCaptchaRecord: vi.fn(),
+			storeIconOrderCaptchaRecord: vi.fn(),
 		};
 		const managers = {
 			powCaptchaManager: {
@@ -34,6 +36,11 @@ const { mockGetMaintenanceMode, mockedDbMethods, mockedManagers } = vi.hoisted(
 			puzzleCaptchaManager: {
 				isValidRequest: vi.fn(),
 				getPuzzleCaptchaChallenge: vi.fn(),
+				getPrioritisedAccessPolicies: vi.fn(),
+			},
+			iconOrderCaptchaManager: {
+				isValidRequest: vi.fn(),
+				getIconOrderCaptchaChallenge: vi.fn(),
 				getPrioritisedAccessPolicies: vi.fn(),
 			},
 			frictionlessManager: {
@@ -72,6 +79,7 @@ vi.mock("../../../../tasks/index.js", () => ({
 	}),
 }));
 
+import getIconOrderChallenge from "../../../../api/captcha/getIconOrderCaptchaChallenge.js";
 import getPowChallenge from "../../../../api/captcha/getPoWCaptchaChallenge.js";
 import getPuzzleChallenge from "../../../../api/captcha/getPuzzleCaptchaChallenge.js";
 
@@ -86,7 +94,7 @@ type MockReq = {
 		error: ReturnType<typeof vi.fn>;
 		debug: ReturnType<typeof vi.fn>;
 	};
-	i18n: { t: (s: string) => string };
+	i18n: I18nLookup;
 	ipInfo?: unknown;
 };
 
@@ -107,7 +115,7 @@ const buildReqRes = (body: unknown) => {
 			error: vi.fn(),
 			debug: vi.fn(),
 		},
-		i18n: { t: (s: string) => s },
+		i18n: { t: (s: string): string => s, exists: (): boolean => false },
 	};
 	const res: MockRes = {
 		json: vi.fn().mockReturnValue(undefined),
@@ -189,6 +197,23 @@ describe("maintenance mode short-circuit", () => {
 			await handler(req as never, res as never, next);
 
 			expect(mockedDbMethods.getClientRecord).toHaveBeenCalled();
+		});
+	});
+
+	describe("getIconOrderCaptchaChallenge", () => {
+		it("returns dummy challenge without hitting the DB", async () => {
+			const handler = getIconOrderChallenge({} as never, {} as never);
+			const { req, res, next } = buildReqRes(validBody);
+			await handler(req as never, res as never, next);
+
+			expect(res.json).toHaveBeenCalledTimes(1);
+			const body = res.json.mock.calls[0]?.[0];
+			expect(body[ApiParams.status]).toBe("ok");
+			expect(body[ApiParams.legend]).toMatch(/^data:image\/webp;base64,/);
+			expect(mockedDbMethods.getClientRecord).not.toHaveBeenCalled();
+			expect(
+				mockedDbMethods.storeIconOrderCaptchaRecord,
+			).not.toHaveBeenCalled();
 		});
 	});
 });

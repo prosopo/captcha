@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 // Vite plugin to inject a popup/float placement switcher into HTML files.
 //
 // Placement is resolved once, when the widget renders, so switching it means
@@ -20,57 +21,17 @@
 // script of their own, so the injected script stamps `data-placement` onto
 // their containers instead, which exercises the attribute path.
 import type { IndexHtmlTransformContext, Plugin } from "vite";
+import { fillSlot } from "./slots.js";
 
 export default function placementInjector(): Plugin {
-	const placementCss = `
-	<style>
-		.placement-switcher {
-			margin: 20px 0;
-			padding: 12px 15px;
-			background-color: #f0f8ff;
-			border: 2px solid #2196F3;
-			border-radius: 5px;
-			font-family: monospace;
-			font-size: 14px;
-		}
-		.placement-switcher-title {
-			font-weight: bold;
-			margin-bottom: 10px;
-			border-bottom: 1px solid #2196F3;
-			padding-bottom: 5px;
-		}
-		.placement-option {
-			display: inline-block;
-			text-decoration: none;
-			margin-right: 8px;
-			padding: 6px 14px;
-			border: 1px solid #2196F3;
-			border-radius: 4px;
-			background-color: white;
-			color: #2196F3;
-			cursor: pointer;
-			font-family: inherit;
-			font-size: inherit;
-		}
-		.placement-option[aria-current="page"] {
-			background-color: #2196F3;
-			color: white;
-			font-weight: bold;
-		}
-		.placement-note {
-			margin-top: 10px;
-			color: #555;
-		}
-	</style>
-  `;
-
 	const placementHtml = `
-	<!-- Challenge placement switcher -->
-	<div id="placement-switcher" class="placement-switcher">
-		<div class="placement-switcher-title">Challenge placement</div>
-		<a class="placement-option" data-placement-option="popup" href="?placement=popup">popup</a>
-		<a class="placement-option" data-placement-option="float" href="?placement=float">float</a>
-		<div id="placement-note" class="placement-note"></div>
+	<div id="placement-switcher" class="demo-group">
+		<div class="demo-group__label">Challenge placement</div>
+		<nav class="demo-segmented" aria-label="Challenge placement">
+			<a data-placement-option="popup" href="?placement=popup">Popup</a>
+			<a data-placement-option="float" href="?placement=float">Float</a>
+		</nav>
+		<p id="placement-note" class="demo-placement-note"></p>
 	</div>
   `;
 
@@ -96,10 +57,10 @@ export default function placementInjector(): Plugin {
 			var note = document.getElementById("placement-note");
 			if (note) {
 				note.textContent = placement === "float" && invisible
-					? "float requested, but an invisible widget has nothing to anchor to, so the challenge opens as a popup."
+					? "An invisible widget has nothing to anchor to, so the challenge opens as a popup."
 					: placement === "float"
-						? "The challenge opens directly above the widget and stays pinned there while you scroll. The page stays usable behind it."
-						: "The challenge opens centred over the page. This is the default.";
+						? "The challenge opens next to the widget and stays pinned while you scroll."
+						: "The challenge opens in the middle of the page.";
 			}
 
 			// Links rather than buttons, and not only because navigation is what
@@ -124,7 +85,7 @@ export default function placementInjector(): Plugin {
 	return {
 		name: "placement-injector",
 		transformIndexHtml: {
-			order: "post", // after the nav bar and status log are in place
+			order: "post",
 			handler(html: string, _ctx: IndexHtmlTransformContext): string {
 				if (!html.includes("<body") || !html.includes("</body>")) {
 					return html;
@@ -134,19 +95,19 @@ export default function placementInjector(): Plugin {
 					return html;
 				}
 
-				const withCss = html.replace("</head>", `${placementCss}</head>`);
+				// Without the layout, the switcher goes above the status log so the
+				// widget and its controls stay together.
+				const withSwitcher =
+					fillSlot(html, "placement", placementHtml) ??
+					(html.includes('<div id="captcha-status"')
+						? html.replace(
+								'<div id="captcha-status"',
+								() => `${placementHtml}<div id="captcha-status"`,
+							)
+						: html.replace("</body>", () => `${placementHtml}</body>`));
 
-				// The switcher goes above the status log so the widget and its
-				// controls stay together, and the script goes last so every
-				// element it touches has been parsed.
-				const withSwitcher = withCss.includes('<div id="captcha-status"')
-					? withCss.replace(
-							'<div id="captcha-status"',
-							`${placementHtml}<div id="captcha-status"`,
-						)
-					: withCss.replace("</body>", `${placementHtml}</body>`);
-
-				return withSwitcher.replace("</body>", `${placementJs}</body>`);
+				// The script goes last so every element it touches has been parsed.
+				return withSwitcher.replace("</body>", () => `${placementJs}</body>`);
 			},
 		},
 	};

@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import type { Logger } from "@prosopo/logger";
-import { type IPComparison, IPValidationAction } from "@prosopo/types";
+import {
+	type IPComparison,
+	type IPConnectionType,
+	IPValidationAction,
+} from "@prosopo/types";
 import type { IIPValidationRules, IPComparisonResult } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { evaluateIpValidationRules } from "../../util.js";
@@ -41,6 +45,7 @@ describe("evaluateIpValidationRules", () => {
 		},
 		distanceThresholdKm: 1000,
 		abuseScoreThreshold: 0.005,
+		reputationScoreThreshold: 0.15,
 		requireAllConditions: false,
 		forceConsistentIp: false,
 	};
@@ -278,6 +283,7 @@ describe("evaluateIpValidationRules", () => {
 			},
 			distanceThresholdKm: 1000,
 			abuseScoreThreshold: 0.005,
+			reputationScoreThreshold: 0.15,
 			requireAllConditions: true,
 			forceConsistentIp: false,
 		};
@@ -390,7 +396,7 @@ describe("evaluateIpValidationRules", () => {
 				B: {
 					actions: {},
 					distanceThresholdKm: 500,
-					abuseScoreThreshold: 0.01,
+					reputationScoreThreshold: 0.3,
 				},
 			},
 		};
@@ -405,7 +411,7 @@ describe("evaluateIpValidationRules", () => {
 		);
 	});
 
-	it("returns Reject if abuse score exceeds threshold", () => {
+	it("returns Reject if the reputation score meets the threshold", () => {
 		const comparison: IPComparisonResult = {
 			ipsMatch: false,
 			ip1: "ip1",
@@ -417,7 +423,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.001,
+					reputationScore: 0.03,
 				},
 				ip2Details: {
 					country: "A",
@@ -425,7 +431,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.01,
+					reputationScore: 0.3,
 				},
 				differentProviders: false,
 				differentConnectionTypes: false,
@@ -435,7 +441,7 @@ describe("evaluateIpValidationRules", () => {
 		const result = evaluateIpValidationRules(comparison, baseRules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Reject);
 		expect(result.errorMessage).toContain(
-			"Abuse score 0.0100 exceeds threshold 0.005",
+			"Reputation score 0.3000 is at or above threshold 0.15",
 		);
 	});
 
@@ -451,7 +457,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.001,
+					reputationScore: 0.03,
 				},
 				ip2Details: {
 					country: "A",
@@ -459,7 +465,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.002,
+					reputationScore: 0.06,
 				},
 				differentProviders: false,
 				differentConnectionTypes: false,
@@ -482,7 +488,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.03,
+					reputationScore: 0.9,
 				},
 				ip2Details: {
 					country: "A",
@@ -490,7 +496,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.01,
+					reputationScore: 0.3,
 				},
 				differentProviders: false,
 				differentConnectionTypes: false,
@@ -500,7 +506,7 @@ describe("evaluateIpValidationRules", () => {
 		const result = evaluateIpValidationRules(comparison, baseRules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Reject);
 		expect(result.errorMessage).toContain(
-			"Abuse score 0.0300 exceeds threshold 0.005",
+			"Reputation score 0.9000 is at or above threshold 0.15",
 		);
 	});
 
@@ -517,7 +523,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.02,
+					reputationScore: 0.6,
 				},
 				ip2Details: {
 					country: "A",
@@ -525,7 +531,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.03,
+					reputationScore: 0.9,
 				},
 				differentProviders: false,
 				differentConnectionTypes: false,
@@ -557,7 +563,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.001,
+					reputationScore: 0.03,
 				},
 				ip2Details: {
 					country: "B",
@@ -565,7 +571,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.007,
+					reputationScore: 0.21,
 				},
 				differentProviders: false,
 				differentConnectionTypes: false,
@@ -580,7 +586,7 @@ describe("evaluateIpValidationRules", () => {
 						abuseScoreExceedAction: IPValidationAction.Flag,
 					},
 					distanceThresholdKm: 500,
-					abuseScoreThreshold: 0.0001,
+					reputationScoreThreshold: 0.003,
 				},
 			},
 		};
@@ -590,6 +596,125 @@ describe("evaluateIpValidationRules", () => {
 			mockLogger,
 		);
 		expect(result.action).toBe(IPValidationAction.Flag);
+	});
+
+	describe("dual-stack address pair skip", () => {
+		const dualStackRules: IIPValidationRules = {
+			...baseRules,
+			actions: {
+				...baseRules.actions,
+				cityChangeAction: IPValidationAction.Reject,
+				distanceExceedAction: IPValidationAction.Reject,
+				ispChangeAction: IPValidationAction.Reject,
+			},
+			distanceThresholdKm: 300,
+		};
+
+		// IPv4 leg on the access carrier, IPv6 leg on a wholesaler with its own
+		// ASN and POP: different provider, city and a long distance apart.
+		const dualStackComparison = (
+			overrides: {
+				ip1?: string;
+				ip2?: string;
+				ip2CountryCode?: string;
+				ip2ConnectionType?: IPConnectionType;
+				anyVpnOrProxy?: boolean;
+				ip2ReputationScore?: number;
+			} = {},
+		): IPComparisonResult => ({
+			ipsMatch: false,
+			ip1: overrides.ip1 ?? "203.0.113.10",
+			ip2: overrides.ip2 ?? "2001:db8:1234:5678::1",
+			comparison: {
+				ip1Details: {
+					country: "Country A",
+					countryCode: "AA",
+					city: "City One",
+					provider: "Access Carrier",
+					connectionType: "residential",
+					isVpnOrProxy: false,
+				},
+				ip2Details: {
+					country:
+						overrides.ip2CountryCode === undefined ? "Country A" : "Country B",
+					countryCode: overrides.ip2CountryCode ?? "AA",
+					city: "City Two",
+					provider: "IPv6 Wholesaler",
+					connectionType: overrides.ip2ConnectionType ?? "residential",
+					isVpnOrProxy: overrides.anyVpnOrProxy ?? false,
+					reputationScore: overrides.ip2ReputationScore,
+				},
+				distanceKm: 400,
+				differentProviders: true,
+				differentConnectionTypes: false,
+				anyVpnOrProxy: overrides.anyVpnOrProxy ?? false,
+			},
+		});
+
+		it("skips ISP, city and distance rules for an IPv4/IPv6 pair in one country", () => {
+			const result = evaluateIpValidationRules(
+				dualStackComparison(),
+				dualStackRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Allow);
+			expect(result.errorMessage).toBeUndefined();
+		});
+
+		it("treats an IPv4-mapped IPv6 address as IPv4", () => {
+			const result = evaluateIpValidationRules(
+				dualStackComparison({ ip1: "::ffff:203.0.113.10" }),
+				dualStackRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Allow);
+		});
+
+		it("does not skip when both addresses are in the same family", () => {
+			const result = evaluateIpValidationRules(
+				dualStackComparison({ ip2: "198.51.100.20" }),
+				dualStackRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+		});
+
+		it("does not skip when the countries differ", () => {
+			const result = evaluateIpValidationRules(
+				dualStackComparison({ ip2CountryCode: "BB" }),
+				dualStackRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+		});
+
+		it("does not skip when either side is a datacenter", () => {
+			const result = evaluateIpValidationRules(
+				dualStackComparison({ ip2ConnectionType: "datacenter" }),
+				dualStackRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+		});
+
+		it("does not skip when either side is a VPN or proxy", () => {
+			const result = evaluateIpValidationRules(
+				dualStackComparison({ anyVpnOrProxy: true }),
+				dualStackRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+		});
+
+		it("still applies the reputation rule", () => {
+			const result = evaluateIpValidationRules(
+				dualStackComparison({ ip2ReputationScore: 0.5 }),
+				dualStackRules,
+				mockLogger,
+			);
+			expect(result.action).toBe(IPValidationAction.Reject);
+			expect(result.errorMessage).toContain("Reputation score");
+		});
 	});
 
 	describe("same trusted provider skip", () => {
@@ -762,7 +887,7 @@ describe("evaluateIpValidationRules", () => {
 						provider: "AT&T Enterprises, LLC",
 						connectionType: "residential",
 						isVpnOrProxy: false,
-						abuserScore: 0.001,
+						reputationScore: 0.03,
 					},
 					ip2Details: {
 						country: "United States",
@@ -771,7 +896,7 @@ describe("evaluateIpValidationRules", () => {
 						provider: "AT&T Enterprises, LLC",
 						connectionType: "residential",
 						isVpnOrProxy: false,
-						abuserScore: 0.02,
+						reputationScore: 0.6,
 					},
 					distanceKm: 1930,
 					differentProviders: false,
@@ -785,7 +910,7 @@ describe("evaluateIpValidationRules", () => {
 				mockLogger,
 			);
 			expect(result.action).toBe(IPValidationAction.Reject);
-			expect(result.errorMessage).toContain("Abuse score");
+			expect(result.errorMessage).toContain("Reputation score");
 		});
 	});
 
@@ -801,7 +926,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.001,
+					reputationScore: 0.03,
 				},
 				ip2Details: {
 					country: "A",
@@ -809,7 +934,7 @@ describe("evaluateIpValidationRules", () => {
 					provider: "X",
 					connectionType: "residential",
 					isVpnOrProxy: false,
-					abuserScore: 0.01,
+					reputationScore: 0.3,
 				},
 				differentProviders: false,
 				differentConnectionTypes: false,
@@ -826,7 +951,7 @@ describe("evaluateIpValidationRules", () => {
 		const result = evaluateIpValidationRules(comparison, rules, mockLogger);
 		expect(result.action).toBe(IPValidationAction.Flag);
 		expect(result.errorMessage).toContain(
-			"Abuse score 0.0100 exceeds threshold 0.005",
+			"Reputation score 0.3000 is at or above threshold 0.15",
 		);
 	});
 });

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
 import { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
@@ -24,20 +24,17 @@ import type {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { UsageCounters } from "../util/usageCounters.js";
+import { AudioCaptchaManager } from "./audioCaptcha/audioTasks.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
 import { DecisionMachineRunner } from "./decisionMachine/decisionMachineRunner.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
+import { IconOrderCaptchaManager } from "./iconOrderCaptcha/iconOrderTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
 import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
 
-/**
- * Singleton write queue manager.
- * Ensures only one flush timer exists across all Tasks instances.
- */
 let globalWriteQueue: RedisWriteQueue | null = null;
-let flushStarted = false;
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -50,6 +47,8 @@ export class Tasks {
 	pair: KeyringPair;
 	powCaptchaManager: PowCaptchaManager;
 	puzzleCaptchaManager: PuzzleCaptchaManager;
+	audioCaptchaManager: AudioCaptchaManager;
+	iconOrderCaptchaManager: IconOrderCaptchaManager;
 	datasetManager: DatasetManager;
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
@@ -67,7 +66,10 @@ export class Tasks {
 		this.logger =
 			logger || getLogger(parseLogLevel(env.config.logLevel), "Tasks");
 		if (!env.pair) {
-			throw new ProsopoEnvError("DEVELOPER.MISSING_PROVIDER_PAIR", {
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "PROV-76",
+				message: "Missing provider pair",
 				context: { failedFuncName: "Tasks.constructor" },
 			});
 		}
@@ -93,49 +95,66 @@ export class Tasks {
 		this.decisionMachineRunner = new DecisionMachineRunner(this.db);
 		this.usageCounters = this.initUsageCounters();
 
-		this.powCaptchaManager = new PowCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.writeQueue,
-			this.usageCounters,
-		);
-		this.puzzleCaptchaManager = new PuzzleCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.usageCounters,
-		);
+		this.powCaptchaManager = new PowCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
+		this.puzzleCaptchaManager = new PuzzleCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
+		this.audioCaptchaManager = new AudioCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
+		this.iconOrderCaptchaManager = new IconOrderCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
 		this.datasetManager = new DatasetManager(
 			this.config,
 			this.logger,
 			this.captchaConfig,
 			this.db,
 		);
-		this.imgCaptchaManager = new ImgCaptchaManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.writeQueue,
-			this.usageCounters,
-		);
+		this.imgCaptchaManager = new ImgCaptchaManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			usageCounters: this.usageCounters,
+		});
 		this.clientTaskManager = new ClientTaskManager(
 			this.config,
 			this.logger,
 			this.db,
 		);
-		this.frictionlessManager = new FrictionlessManager(
-			this.db,
-			this.pair,
-			this.config,
-			this.logger,
-			this.writeQueue,
-			this.decisionMachineRunner,
-			this.usageCounters,
-		);
+		this.frictionlessManager = new FrictionlessManager({
+			db: this.db,
+			pair: this.pair,
+			config: this.config,
+			logger: this.logger,
+			writeQueue: this.writeQueue,
+			decisionMachineRunner: this.decisionMachineRunner,
+			usageCounters: this.usageCounters,
+		});
 	}
 
 	private initUsageCounters(): UsageCounters | null {
@@ -160,55 +179,12 @@ export class Tasks {
 			const redisConnection = this.db.getRedisConnection();
 			globalWriteQueue = new RedisWriteQueue(redisConnection, this.logger);
 
-			if (!flushStarted) {
-				flushStarted = true;
-				const db = this.db;
-				const logger = this.logger;
-				globalWriteQueue.startPeriodicFlush(async (queue) => {
-					await Tasks.flushWriteQueue(queue, db, logger);
-				}, 10_000);
-			}
-
 			return globalWriteQueue;
 		} catch {
 			this.logger.debug(() => ({
 				msg: "Redis not available for write queue - falling back to direct writes",
 			}));
 			return null;
-		}
-	}
-
-	/**
-	 * Flush queued session records from Redis to MongoDB in bulk.
-	 * Called periodically by the write queue timer.
-	 *
-	 * Note: PoW challenge and pending image commitment records are written
-	 * directly to MongoDB (not queued) because verification endpoints need
-	 * to read them immediately after creation. Session records are safe to
-	 * queue because they are not read in the immediate request path.
-	 */
-	static async flushWriteQueue(
-		queue: RedisWriteQueue,
-		db: IProviderDatabase,
-		logger: Logger,
-	): Promise<void> {
-		const sessionRecords = await queue.drainSessionRecords();
-		if (sessionRecords.length > 0) {
-			logger.info(() => ({
-				msg: `Flushing ${sessionRecords.length} queued session records to MongoDB`,
-			}));
-			for (const { record } of sessionRecords) {
-				try {
-					await db.storeSessionRecord(
-						record as Parameters<typeof db.storeSessionRecord>[0],
-					);
-				} catch (error) {
-					logger.error(() => ({
-						msg: "Failed to flush queued session record",
-						err: error,
-					}));
-				}
-			}
 		}
 	}
 
@@ -226,6 +202,8 @@ export class Tasks {
 		this.logger = logger;
 		this.powCaptchaManager.logger = logger;
 		this.puzzleCaptchaManager.logger = logger;
+		this.audioCaptchaManager.logger = logger;
+		this.iconOrderCaptchaManager.logger = logger;
 		this.datasetManager.logger = logger;
 		this.imgCaptchaManager.logger = logger;
 		this.clientTaskManager.logger = logger;

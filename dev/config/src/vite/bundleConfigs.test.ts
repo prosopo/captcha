@@ -18,6 +18,7 @@ import os from "node:os";
 import path from "node:path";
 import type { Rollup, UserConfig } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { copyAssetsPlugin } from "./CopyAssetsPlugin.js";
 import { nodejsPolarsNativeFilePlugin } from "./NodejsPolarsNativeFilePlugin.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import ViteCommonJSConfig from "./vite.commonjs.config.js";
@@ -114,7 +115,7 @@ describe("ViteEsmConfig", () => {
 			entry: "src/index.ts",
 		});
 		expect(config.build?.target).toBe("node24");
-		expect(config.build?.outDir).toBe("dist");
+		expect(config.build?.outDir).toBe("dist/esm");
 	});
 
 	it("accepts an explicit entry, including a multi-entry map", async () => {
@@ -183,6 +184,11 @@ describe("ViteEsmConfig", () => {
 		const config = await ViteEsmConfig("my-lib", leafTsConfig());
 		const output = config.build?.rollupOptions?.output;
 		expect(output).toMatchObject({ polyfillRequire: false });
+	});
+
+	it("strips the bare node:module import the disabled polyfill leaves behind", async () => {
+		const names = pluginNames(await ViteEsmConfig("my-lib", leafTsConfig()));
+		expect(names).toContain("drop-bare-node-module-import");
 	});
 
 	it("registers the copy and tsconfig-paths plugins", async () => {
@@ -324,6 +330,50 @@ describe("nodejsPolarsNativeFilePlugin", () => {
 		expect(plugin.resolveId("anything", undefined, resolveOptions)).toBeNull();
 		expect(plugin.load("anything")).toBeNull();
 		expect(() => plugin.generateBundle(outputOptions, {})).not.toThrow();
+	});
+});
+
+describe("copyAssetsPlugin", () => {
+	it("copies each asset under its declared basename", () => {
+		const src = path.join(root, "decodePayload.js");
+		const outDir = path.join(root, "nested", "dist");
+		fs.writeFileSync(src, "export default 1;");
+
+		copyAssetsPlugin(
+			[{ src, dest: "decodePayload.js" }],
+			outDir,
+		).generateBundle();
+
+		expect(fs.readFileSync(path.join(outDir, "decodePayload.js"), "utf8")).toBe(
+			"export default 1;",
+		);
+	});
+
+	it("renames on copy when dest differs from the source basename", () => {
+		const src = path.join(root, "a.js");
+		const outDir = path.join(root, "dist");
+		fs.writeFileSync(src, "x");
+
+		copyAssetsPlugin([{ src, dest: "b.js" }], outDir).generateBundle();
+
+		expect(fs.existsSync(path.join(outDir, "b.js"))).toBe(true);
+		expect(fs.existsSync(path.join(outDir, "a.js"))).toBe(false);
+	});
+
+	it("throws when a declared asset is missing", () => {
+		// Skipping silently would ship a bundle whose decoders resolve to
+		// nothing, and the first request would be the one to find out.
+		const plugin = copyAssetsPlugin(
+			[{ src: path.join(root, "absent.js"), dest: "absent.js" }],
+			path.join(root, "dist"),
+		);
+		expect(() => plugin.generateBundle()).toThrow();
+	});
+
+	it("does nothing at all when there are no assets", () => {
+		expect(() =>
+			copyAssetsPlugin([], path.join(root, "dist")).generateBundle(),
+		).not.toThrow();
 	});
 });
 

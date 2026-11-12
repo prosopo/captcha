@@ -81,6 +81,30 @@ describe("ipMatchesSession", () => {
 		});
 	});
 
+	describe("IPv4-mapped IPv6", () => {
+		// A dual-stack listener reports IPv4 clients as ::ffff:a.b.c.d, which is
+		// what lands on the session, while operators forward the plain v4.
+		it("matches a v4 operator IP against a v4-mapped session", () => {
+			const session = composeV6("::ffff:192.0.2.42");
+			expect(ipMatchesSession("192.0.2.42", session)).toBe(true);
+		});
+
+		it("matches a v4-mapped operator IP against a v4 session", () => {
+			const session = composeV4("192.0.2.42");
+			expect(ipMatchesSession("::ffff:192.0.2.42", session)).toBe(true);
+		});
+
+		it("rejects a different v4 against a v4-mapped session", () => {
+			const session = composeV6("::ffff:192.0.2.42");
+			expect(ipMatchesSession("192.0.2.43", session)).toBe(false);
+		});
+
+		it("does not unmap a v6 address that only shares the low 32 bits", () => {
+			const session = composeV6("2001:db8::ffff:c000:22a");
+			expect(ipMatchesSession("192.0.2.42", session)).toBe(false);
+		});
+	});
+
 	describe("Malformed input", () => {
 		it("rejects an empty operator IP against any real session", () => {
 			expect(ipMatchesSession("", composeV4("192.0.2.42"))).toBe(false);

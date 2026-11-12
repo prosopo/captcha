@@ -153,7 +153,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 						upper: IP_V6_LOWER_UNSAFE, // exercises both halves
 						type: IpAddressType.v6,
 					},
-					lastUpdatedAtTimestamp: timestamp,
+					lastUpdatedTimestamp: timestamp,
 					pendingStage: true,
 				},
 			},
@@ -288,7 +288,9 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 			logger,
 		);
 		try {
-			await central.saveCaptchas([], [poisoned as UserCommitmentRecord], []);
+			await central.saveCaptchas({
+				imageCaptchaEvents: [poisoned as UserCommitmentRecord],
+			});
 
 			// Reconnect to read back — `saveCaptchas` closes the
 			// connection on its way out.

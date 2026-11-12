@@ -1,5 +1,969 @@
 # @prosopo/scripts
 
+## 3.1.233
+### Patch Changes
+
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/provider@5.32.0
+  - @prosopo/cli@3.11.1
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.30
+  - @prosopo/env@3.6.99
+  - @prosopo/keyring@2.10.30
+  - @prosopo/types-env@2.12.9
+
+## 3.1.232
+### Patch Changes
+
+- Updated dependencies [2df0139]
+- Updated dependencies [a7a60f4]
+- Updated dependencies [a7a60f4]
+- Updated dependencies [b877bd4]
+  - @prosopo/provider@5.31.0
+  - @prosopo/types@5.30.0
+  - @prosopo/cli@3.11.0
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.29
+  - @prosopo/env@3.6.98
+  - @prosopo/keyring@2.10.29
+  - @prosopo/types-env@2.12.8
+
+## 3.1.231
+### Patch Changes
+
+- Updated dependencies [0f600c3]
+  - @prosopo/provider@5.30.2
+  - @prosopo/cli@3.10.13
+
+## 3.1.230
+### Patch Changes
+
+- Updated dependencies [93620d4]
+  - @prosopo/provider@5.30.1
+  - @prosopo/types@5.29.1
+  - @prosopo/cli@3.10.12
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.28
+  - @prosopo/env@3.6.97
+  - @prosopo/keyring@2.10.28
+  - @prosopo/types-env@2.12.7
+
+## 3.1.229
+### Patch Changes
+
+- Updated dependencies [31ba8be]
+- Updated dependencies [051d218]
+- Updated dependencies [391182a]
+- Updated dependencies [8473b14]
+- Updated dependencies [ed81f2a]
+- Updated dependencies [9b460b4]
+- Updated dependencies [d30aaea]
+- Updated dependencies [1b71105]
+- Updated dependencies [6c07dfe]
+- Updated dependencies [f9540f2]
+- Updated dependencies [88aa878]
+- Updated dependencies [32075aa]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [821743e]
+- Updated dependencies [5c1d60e]
+- Updated dependencies [66f512b]
+- Updated dependencies [89c3078]
+- Updated dependencies [eb5b4ae]
+- Updated dependencies [70eeb41]
+- Updated dependencies [f868427]
+- Updated dependencies [14e524b]
+- Updated dependencies [206235c]
+- Updated dependencies [5345619]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [d89de6c]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [8e1ce57]
+- Updated dependencies [cfba6f9]
+- Updated dependencies [502ec6e]
+- Updated dependencies [2e606df]
+- Updated dependencies [f7e7ea0]
+- Updated dependencies [c8f0b16]
+- Updated dependencies [06d1e89]
+- Updated dependencies [8c68a26]
+- Updated dependencies [21877ba]
+- Updated dependencies [c677fb6]
+- Updated dependencies [818c669]
+  - @prosopo/provider@5.30.0
+  - @prosopo/util-crypto@13.6.6
+  - @prosopo/cli@3.10.11
+  - @prosopo/types@5.29.0
+  - @prosopo/keyring@2.10.27
+  - @prosopo/logger@2.1.12
+  - @prosopo/util@3.7.1
+  - @prosopo/datasets@3.2.27
+  - @prosopo/env@3.6.96
+  - @prosopo/types-env@2.12.6
+  - @prosopo/common@3.3.2
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.69
+
+## 3.1.228
+### Patch Changes
+
+- Updated dependencies [7a4767d]
+- Updated dependencies [624db1a]
+  - @prosopo/provider@5.29.2
+  - @prosopo/types@5.28.2
+  - @prosopo/env@3.6.95
+  - @prosopo/cli@3.10.10
+  - @prosopo/types-env@2.12.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.26
+  - @prosopo/keyring@2.10.26
+
+## 3.1.227
+### Patch Changes
+
+- Updated dependencies [b2e3f27]
+- Updated dependencies [4693a20]
+  - @prosopo/types@5.28.1
+  - @prosopo/provider@5.29.1
+  - @prosopo/cli@3.10.9
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.25
+  - @prosopo/env@3.6.94
+  - @prosopo/keyring@2.10.25
+  - @prosopo/types-env@2.12.4
+
+## 3.1.226
+### Patch Changes
+
+- Updated dependencies [af1b2d3]
+- Updated dependencies [2732f63]
+- Updated dependencies [196f2c0]
+- Updated dependencies [6b8a477]
+- Updated dependencies [fc89f02]
+  - @prosopo/cli@3.10.8
+  - @prosopo/provider@5.29.0
+  - @prosopo/util@3.7.0
+  - @prosopo/types@5.28.0
+  - @prosopo/datasets@3.2.24
+  - @prosopo/keyring@2.10.24
+  - @prosopo/logger@2.1.11
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.93
+  - @prosopo/types-env@2.12.3
+  - @prosopo/dotenv@3.0.68
+
+## 3.1.225
+### Patch Changes
+
+- a191c21: Move TODO and FIXME comments into GitHub issues. Comments that still help a reader now state the fact plainly and link the issue; lint suppressions give a real reason. No behaviour changes.
+- Updated dependencies [e1cb7f4]
+- Updated dependencies [213678a]
+- Updated dependencies [7caad4c]
+- Updated dependencies [6b96e77]
+- Updated dependencies [a191c21]
+  - @prosopo/types@5.27.0
+  - @prosopo/provider@5.28.1
+  - @prosopo/util@3.6.1
+  - @prosopo/util-crypto@13.6.5
+  - @prosopo/cli@3.10.7
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.23
+  - @prosopo/env@3.6.92
+  - @prosopo/keyring@2.10.23
+  - @prosopo/types-env@2.12.2
+  - @prosopo/logger@2.1.10
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.67
+
+## 3.1.224
+### Patch Changes
+
+- Updated dependencies [65d87f2]
+- Updated dependencies [65d87f2]
+- Updated dependencies [65d87f2]
+- Updated dependencies [d9520ea]
+- Updated dependencies [1ba238e]
+  - @prosopo/provider@5.28.0
+  - @prosopo/cli@3.10.6
+  - @prosopo/types@5.26.0
+  - @prosopo/util@3.6.0
+  - @prosopo/env@3.6.91
+  - @prosopo/types-env@2.12.1
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.22
+  - @prosopo/keyring@2.10.22
+  - @prosopo/logger@2.1.9
+  - @prosopo/dotenv@3.0.66
+
+## 3.1.223
+### Patch Changes
+
+- 223ec85: Self-hosting no longer needs a Rust toolchain. The guide used `pnpm run build:all`, which also compiles the provider's Rust addons and fails without `cargo`, even though the provider runs from the prebuilt image and nothing built on the host uses those addons. The new `pnpm run build:self-hosted` builds only what the env script and the widget need. `build:all` is unchanged.
+  
+  `docker-compose.self-hosted.yml` now sets `platform: linux/amd64` on the provider and Caddy, because those images are only published for amd64; the guide says ARM hosts run them under emulation. Its default Caddy image moves from 2.5.9 to 2.5.12: `docker/provider.Caddyfile` uses `crawler_list`, which 2.5.9 does not have, so Caddy would not start.
+  
+  The `@prosopo/datasets-fs` `cli` script pointed at `dist/esm/cli.js`, which the build never writes. It now runs `dist/tsc/cli.js`, the file `build:tsc` writes, and the guide and the package README build and run the CLI that way.
+  
+  Other corrections in the guide: the detector example runs `bundle` (`detector-botd` has no `build` script), and the expected startup log line is `bundle pool loaded {"count":0}`.
+- Updated dependencies [b80b627]
+- Updated dependencies [007f43c]
+- Updated dependencies [ec54f21]
+  - @prosopo/provider@5.27.0
+  - @prosopo/types@5.25.0
+  - @prosopo/types-env@2.12.0
+  - @prosopo/cli@3.10.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.21
+  - @prosopo/env@3.6.90
+  - @prosopo/keyring@2.10.21
+
+## 3.1.222
+### Patch Changes
+
+- cdea91f: Stop malformed input from turning into silent wrong values or unhandled throws. Numbers from env vars, headers, request fields and CLI flags are now parsed strictly: "12abc" is no longer read as 12, and an empty string is no longer read as 0. A bad request timestamp now gets a 400 response instead of a 500 or NaN. JSON reads name the file or source that was bad, and JSON writes no longer throw on bigints. Composite IP addresses and dates that cannot be read are now rejected instead of crashing or slipping through as an Invalid Date.
+- Updated dependencies [91ef450]
+- Updated dependencies [f9a2e30]
+- Updated dependencies [cc3436f]
+- Updated dependencies [04b6f70]
+- Updated dependencies [7c58be4]
+- Updated dependencies [cdea91f]
+- Updated dependencies [f679760]
+- Updated dependencies [cf9a1bb]
+- Updated dependencies [cdea91f]
+- Updated dependencies [ec4ed10]
+  - @prosopo/provider@5.26.2
+  - @prosopo/types@5.24.0
+  - @prosopo/cli@3.10.4
+  - @prosopo/datasets@3.2.20
+  - @prosopo/logger@2.1.8
+  - @prosopo/util-crypto@13.6.4
+  - @prosopo/util@3.5.0
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.6.89
+  - @prosopo/keyring@2.10.20
+  - @prosopo/types-env@2.11.35
+  - @prosopo/dotenv@3.0.65
+
+## 3.1.221
+### Patch Changes
+
+- Updated dependencies [bea67d6]
+  - @prosopo/provider@5.26.1
+  - @prosopo/types@5.23.1
+  - @prosopo/cli@3.10.3
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.19
+  - @prosopo/env@3.6.88
+  - @prosopo/keyring@2.10.19
+  - @prosopo/types-env@2.11.34
+
+## 3.1.220
+### Patch Changes
+
+- Updated dependencies [20c1b77]
+  - @prosopo/cli@3.10.2
+
+## 3.1.219
+### Patch Changes
+
+- Updated dependencies [ae0fc8d]
+- Updated dependencies [77fdb57]
+  - @prosopo/types@5.23.0
+  - @prosopo/provider@5.26.0
+  - @prosopo/cli@3.10.1
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.18
+  - @prosopo/env@3.6.87
+  - @prosopo/keyring@2.10.18
+  - @prosopo/types-env@2.11.33
+
+## 3.1.218
+### Patch Changes
+
+- Updated dependencies [8bf0957]
+  - @prosopo/types@5.22.0
+  - @prosopo/provider@5.25.0
+  - @prosopo/cli@3.10.0
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.17
+  - @prosopo/env@3.6.86
+  - @prosopo/keyring@2.10.17
+  - @prosopo/types-env@2.11.32
+
+## 3.1.217
+### Patch Changes
+
+- Updated dependencies [3815778]
+- Updated dependencies [b18a733]
+- Updated dependencies [fb7e3ec]
+- Updated dependencies [25a151e]
+  - @prosopo/provider@5.24.0
+  - @prosopo/types@5.21.0
+  - @prosopo/cli@3.9.8
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.16
+  - @prosopo/env@3.6.85
+  - @prosopo/keyring@2.10.16
+  - @prosopo/types-env@2.11.31
+
+## 3.1.216
+### Patch Changes
+
+- f53d027: A self-hosted widget (one built with `PROSOPO_PROVIDER_LIST`) now sends Prosopo a usage beacon on about one render in a thousand: a single `GET https://beacon.prosopo.io/v1/b.gif` carrying the page hostname, site key, bundle version and sample rate, with no referrer, cookies or visitor data. It lets us count self-hosted installs and the versions they run, so we can tell self-hosters about new releases and critical fixes. Hosted widgets never send it.
+  
+  Build the bundle with `PROSOPO_USAGE_BEACON=false` to turn it off. The generated self-hosted `.env` now includes the setting, and `SELF_HOSTING.md` documents exactly what is sent.
+- Updated dependencies [23ef59a]
+- Updated dependencies [b52263f]
+  - @prosopo/types@5.20.2
+  - @prosopo/cli@3.9.7
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.15
+  - @prosopo/env@3.6.84
+  - @prosopo/keyring@2.10.15
+  - @prosopo/provider@5.23.2
+  - @prosopo/types-env@2.11.30
+  - @prosopo/workspace@3.2.6
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/logger@2.1.7
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+
+## 3.1.215
+### Patch Changes
+
+- Updated dependencies [f019ec4]
+  - @prosopo/types@5.20.1
+  - @prosopo/cli@3.9.6
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.14
+  - @prosopo/env@3.6.83
+  - @prosopo/keyring@2.10.14
+  - @prosopo/provider@5.23.1
+  - @prosopo/types-env@2.11.29
+
+## 3.1.214
+### Patch Changes
+
+- 1966fc1: Bump the npm-minor-and-patch group across 1 directory with 15 updates
+- Updated dependencies [736e988]
+- Updated dependencies [ab3c124]
+- Updated dependencies [1966fc1]
+- Updated dependencies [c69b636]
+- Updated dependencies [78107d9]
+- Updated dependencies [d6cc6fe]
+- Updated dependencies [7cabc96]
+- Updated dependencies [f13677e]
+- Updated dependencies [3473baf]
+- Updated dependencies [77bd891]
+- Updated dependencies [cb7db6c]
+- Updated dependencies [76b6edd]
+  - @prosopo/provider@5.23.0
+  - @prosopo/cli@3.9.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.13
+  - @prosopo/dotenv@3.0.64
+  - @prosopo/keyring@2.10.13
+  - @prosopo/logger@2.1.7
+  - @prosopo/types@5.20.0
+  - @prosopo/util@3.4.0
+  - @prosopo/util-crypto@13.6.3
+  - @prosopo/workspace@3.2.6
+  - @prosopo/env@3.6.82
+  - @prosopo/types-env@2.11.28
+
+## 3.1.213
+### Patch Changes
+
+- Updated dependencies [92aa8f5]
+  - @prosopo/cli@3.9.4
+
+## 3.1.212
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [870fab7]
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/provider@5.22.0
+  - @prosopo/cli@3.9.3
+  - @prosopo/common@3.3.1
+  - @prosopo/datasets@3.2.12
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/env@3.6.81
+  - @prosopo/keyring@2.10.12
+  - @prosopo/logger@2.1.6
+  - @prosopo/types-env@2.11.27
+  - @prosopo/types@5.19.0
+  - @prosopo/util-crypto@13.6.2
+  - @prosopo/util@3.3.17
+  - @prosopo/workspace@3.2.5
+
+## 3.1.211
+### Patch Changes
+
+- Updated dependencies [5c9792b]
+- Updated dependencies [4201cf0]
+  - @prosopo/provider@5.21.1
+  - @prosopo/cli@3.9.2
+
+## 3.1.210
+### Patch Changes
+
+- Updated dependencies [0d94ae6]
+  - @prosopo/cli@3.9.1
+
+## 3.1.209
+### Patch Changes
+
+- b4235b4: Document and support self-hosting on Cloudflare's free plan, for anyone without a server that has a public IP.
+  
+  A Worker on the free `workers.dev` subdomain serves the widget and forwards API calls through a Workers VPC binding to a
+  Cloudflare Tunnel, so the provider can run on any machine with Docker: no domain, no open ports, no certificates.
+  
+  - `docker/cloudflare/worker.ts` and `wrangler.jsonc`: the Worker. It also serves a demo page at `/` that shows whether
+    the provider is reachable, renders the CAPTCHA and displays the response token. It sets `X-Forwarded-For` to the
+    visitor's address, because without it the provider sees every visitor as the tunnel and per-IP limits apply to all of
+    them together.
+  - `docker-compose.self-hosted.cloudflare.yml`: adds `cloudflared` and leaves Caddy out, since Cloudflare terminates TLS.
+  - `generateSelfHostedEnv.ts --cloudflare`: writes a `COMPOSE_FILE` that loads both compose files and a
+    `CLOUDFLARE_TUNNEL_TOKEN` to fill in.
+  - `SELF_HOSTING.md`: a "No server? Run it on Cloudflare's free plan" section.
+- 159766a: Let a self-hosted provider run a detector you built yourself, and ship a working example built on BotD.
+  
+  Until now the only detector a provider could load was ours. Its output can only be read by the closed decoder in the
+  provider, so a self-hosted node with any other detector had nothing to score visitors with.
+  
+  **Open detector format.** A pool bundle can now be marked `format: "open-v1"`. The provider reads those bundles with a
+  short, documented decoder: an AES-256-GCM payload whose key is wrapped with the bundle's RSA-OAEP public key, carrying
+  `{ score, timestamp, userId, userAgent, headHash, d }`. The same checks apply as for our detector — the token must
+  match this visitor's account, user agent and page, and be under ten minutes old — and `d` reaches decision and routing
+  machines as `input.d`. Open bundles are only loaded when `PROSOPO_DETECTOR_OPEN_FORMAT=1`; the hosted fleet never sets
+  it, so nothing changes there.
+  
+  **`demos/detector-botd`.** A detector built on BotD that scores automated browsers as 1 and everything else as 0, plus a
+  `pool` script that builds the bundles with a fresh keypair each. Writing your own detector means replacing one function;
+  the encryption is done for you.
+  
+  **`detector_pool_set` CLI command.** Writes a pool read from stdin into the provider's pool directory. Stdin rather than a
+  file because the provider image runs as a non-root user and cannot read a file copied in as root.
+  
+  **Self-hosted compose and image.** The image now creates its pool directory owned by the runtime user, and the
+  self-hosted compose file mounts a `detector_pool` volume there and turns the open format on. The compose file no longer
+  defaults to provider 3.8.19, which it had silently stayed on for nineteen releases: `generateSelfHostedEnv.ts` writes
+  the version of the checkout it runs from.
+  
+  `SELF_HOSTING.md` gains a "Bring your own detector" section and now loads the widget with `type="module"`, which the
+  bundle has needed since it was split into chunks.
+  
+  Tested end to end on a stack built from this branch: stock headless Chromium was flagged by BotD and served a puzzle,
+  headed Chromium passed with proof of work, the detector's signals were stored on the session, and a provider without
+  the flag rejected the pool.
+- 5a1db28: Fix four things that broke the self-hosting guide for anyone starting from a fresh clone.
+  
+  - **The `fingerprintjs` submodule used an SSH URL**, so it could only be fetched by someone with GitHub SSH keys. It is
+    now HTTPS. The repository is public, so nobody needs credentials for it. Without it `pnpm run build:all` fails.
+  - **The guide ran the env script before anything was built.** The script imports built workspace packages, so on a fresh
+    clone it crashed with `ERR_MODULE_NOT_FOUND`. The guide now clones with `--recurse-submodules` and runs
+    `pnpm run build:all` in step 1.
+  - **Every `docker compose exec` in the guide failed** with "no configuration file provided", because the compose file is
+    not named `docker-compose.yml`. `generateSelfHostedEnv.ts` now writes `COMPOSE_FILE=docker-compose.self-hosted.yml`
+    into `.env`, which Compose reads on its own, so plain `docker compose` commands work.
+  - **The provider CLI exited 0 on a command it did not have.** An older image given `detector_pool_set` did nothing and
+    reported success. It now fails with `Unknown command`.
+- Updated dependencies [d02b3bc]
+- Updated dependencies [159766a]
+- Updated dependencies [5a1db28]
+  - @prosopo/provider@5.21.0
+  - @prosopo/types@5.18.0
+  - @prosopo/cli@3.9.0
+  - @prosopo/env@3.6.80
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.11
+  - @prosopo/keyring@2.10.11
+  - @prosopo/types-env@2.11.26
+
+## 3.1.208
+### Patch Changes
+
+- Updated dependencies [749fe8a]
+  - @prosopo/provider@5.20.2
+  - @prosopo/cli@3.8.38
+
+## 3.1.207
+### Patch Changes
+
+  - @prosopo/cli@3.8.37
+  - @prosopo/provider@5.20.1
+  - @prosopo/types@5.17.1
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.10
+  - @prosopo/env@3.6.79
+  - @prosopo/keyring@2.10.10
+  - @prosopo/types-env@2.11.25
+
+## 3.1.206
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [22f0721]
+- Updated dependencies [860948c]
+  - @prosopo/cli@3.8.36
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.9
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/env@3.6.78
+  - @prosopo/keyring@2.10.9
+  - @prosopo/logger@2.1.5
+  - @prosopo/provider@5.20.0
+  - @prosopo/types@5.17.0
+  - @prosopo/types-env@2.11.24
+  - @prosopo/util@3.3.16
+  - @prosopo/util-crypto@13.6.1
+  - @prosopo/workspace@3.2.4
+
+## 3.1.205
+### Patch Changes
+
+- Updated dependencies [5421e87]
+- Updated dependencies [a00fb86]
+  - @prosopo/provider@5.19.4
+  - @prosopo/cli@3.8.35
+
+## 3.1.204
+### Patch Changes
+
+- Updated dependencies [ebcd4ed]
+- Updated dependencies [3c5d196]
+  - @prosopo/provider@5.19.3
+  - @prosopo/cli@3.8.34
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/workspace@3.2.3
+  - @prosopo/datasets@3.2.8
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/env@3.6.77
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+  - @prosopo/types-env@2.11.23
+  - @prosopo/util@3.3.15
+  - @prosopo/util-crypto@13.6.0
+
+## 3.1.203
+### Patch Changes
+
+- Updated dependencies [24e89e1]
+- Updated dependencies [03df637]
+  - @prosopo/provider@5.19.2
+  - @prosopo/types@5.16.2
+  - @prosopo/cli@3.8.33
+  - @prosopo/common@3.2.2
+  - @prosopo/datasets@3.2.7
+  - @prosopo/env@3.6.76
+  - @prosopo/keyring@2.10.7
+  - @prosopo/types-env@2.11.22
+
+## 3.1.202
+### Patch Changes
+
+  - @prosopo/cli@3.8.32
+  - @prosopo/common@3.2.1
+  - @prosopo/provider@5.19.1
+  - @prosopo/types@5.16.1
+  - @prosopo/datasets@3.2.6
+  - @prosopo/env@3.6.75
+  - @prosopo/keyring@2.10.6
+  - @prosopo/types-env@2.11.21
+
+## 3.1.201
+### Patch Changes
+
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/provider@5.19.0
+  - @prosopo/cli@3.8.31
+  - @prosopo/datasets@3.2.5
+  - @prosopo/env@3.6.74
+  - @prosopo/keyring@2.10.5
+  - @prosopo/types-env@2.11.20
+
+## 3.1.200
+### Patch Changes
+
+- Updated dependencies [460ca67]
+  - @prosopo/provider@5.18.0
+  - @prosopo/cli@3.8.30
+  - @prosopo/env@3.6.73
+  - @prosopo/types-env@2.11.19
+
+## 3.1.199
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/cli@3.8.29
+  - @prosopo/provider@5.17.1
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/workspace@3.2.3
+  - @prosopo/common@3.1.65
+  - @prosopo/datasets@3.2.4
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/env@3.6.72
+  - @prosopo/keyring@2.10.4
+  - @prosopo/locale@3.9.1
+  - @prosopo/logger@2.1.4
+  - @prosopo/types-env@2.11.18
+  - @prosopo/util-crypto@13.6.0
+
+## 3.1.198
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/provider@5.17.0
+  - @prosopo/types@5.15.0
+  - @prosopo/locale@3.9.0
+  - @prosopo/cli@3.8.28
+  - @prosopo/common@3.1.64
+  - @prosopo/datasets@3.2.3
+  - @prosopo/env@3.6.71
+  - @prosopo/keyring@2.10.3
+  - @prosopo/types-env@2.11.17
+
+## 3.1.197
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/provider@5.16.0
+  - @prosopo/locale@3.8.0
+  - @prosopo/keyring@2.10.2
+  - @prosopo/cli@3.8.27
+  - @prosopo/common@3.1.63
+  - @prosopo/datasets@3.2.2
+  - @prosopo/env@3.6.70
+  - @prosopo/types-env@2.11.16
+
+## 3.1.196
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [4669e64]
+- Updated dependencies [2118584]
+- Updated dependencies [1ce9482]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/provider@5.15.0
+  - @prosopo/workspace@3.2.2
+  - @prosopo/util@3.3.14
+  - @prosopo/cli@3.8.26
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/datasets@3.2.1
+  - @prosopo/env@3.6.69
+  - @prosopo/keyring@2.10.1
+  - @prosopo/types-env@2.11.15
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/logger@2.1.3
+  - @prosopo/util-crypto@13.6.0
+
+## 3.1.195
+### Patch Changes
+
+- e8b5f98: `npm run setup` no longer rewrites the site key in the demo HTML files. It used to rewrite every `data-sitekey` once for each captcha type, so every demo page ended up with the last key registered (puzzle), and the PoW and frictionless demos served puzzle challenges. The demos already read their keys from the `PROSOPO_SITE_KEY_*` env vars at build time, and setup still writes those.
+- Updated dependencies [ede4352]
+- Updated dependencies [478bc6f]
+- Updated dependencies [97d65fa]
+- Updated dependencies [08daf16]
+- Updated dependencies [1144e04]
+- Updated dependencies [fc79e06]
+- Updated dependencies [382f96b]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [e62661c]
+- Updated dependencies [9ed0afd]
+- Updated dependencies [3fe7b19]
+- Updated dependencies [b1becee]
+- Updated dependencies [3e1053b]
+- Updated dependencies [df06006]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+- Updated dependencies [7e9cd1e]
+- Updated dependencies [f7cfa1c]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/provider@5.14.0
+  - @prosopo/cli@3.8.25
+  - @prosopo/datasets@3.2.0
+  - @prosopo/util@3.3.13
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/env@3.6.68
+  - @prosopo/types-env@2.11.14
+  - @prosopo/logger@2.1.2
+  - @prosopo/dotenv@3.0.59
+
+## 3.1.194
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/provider@5.13.4
+  - @prosopo/types-env@2.11.13
+  - @prosopo/cli@3.8.24
+  - @prosopo/env@3.6.67
+
+## 3.1.193
+### Patch Changes
+
+- Updated dependencies [1291cb0]
+- Updated dependencies [d01f19b]
+- Updated dependencies [254bc05]
+  - @prosopo/provider@5.13.3
+  - @prosopo/types@5.11.1
+  - @prosopo/cli@3.8.23
+  - @prosopo/datasets@3.1.93
+  - @prosopo/env@3.6.66
+  - @prosopo/keyring@2.9.99
+  - @prosopo/types-env@2.11.12
+
+## 3.1.192
+### Patch Changes
+
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e482b25]
+- Updated dependencies [8933ad5]
+- Updated dependencies [294b480]
+- Updated dependencies [026b126]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [9318584]
+- Updated dependencies [0d29dde]
+- Updated dependencies [084da7e]
+- Updated dependencies [fa316d6]
+- Updated dependencies [9ed0ac5]
+  - @prosopo/provider@5.13.2
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/datasets@3.1.92
+  - @prosopo/locale@3.6.1
+  - @prosopo/util@3.3.12
+  - @prosopo/cli@3.8.22
+  - @prosopo/env@3.6.65
+  - @prosopo/types-env@2.11.11
+  - @prosopo/keyring@2.9.98
+  - @prosopo/dotenv@3.0.58
+  - @prosopo/logger@2.1.1
+
+## 3.1.191
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/provider@5.13.1
+  - @prosopo/cli@3.8.21
+  - @prosopo/datasets@3.1.91
+  - @prosopo/env@3.6.64
+  - @prosopo/keyring@2.9.97
+  - @prosopo/types-env@2.11.10
+
+## 3.1.190
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+- Updated dependencies [85a1bb9]
+- Updated dependencies [2cca36e]
+  - @prosopo/provider@5.13.0
+  - @prosopo/types@5.10.1
+  - @prosopo/cli@3.8.20
+  - @prosopo/datasets@3.1.90
+  - @prosopo/env@3.6.63
+  - @prosopo/keyring@2.9.96
+  - @prosopo/types-env@2.11.9
+
+## 3.1.189
+### Patch Changes
+
+- Updated dependencies [aed164d]
+  - @prosopo/datasets@3.1.89
+  - @prosopo/provider@5.12.3
+  - @prosopo/cli@3.8.19
+
+## 3.1.188
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/util-crypto@13.5.33
+  - @prosopo/util@3.3.11
+  - @prosopo/keyring@2.9.95
+  - @prosopo/provider@5.12.2
+  - @prosopo/cli@3.8.18
+  - @prosopo/datasets@3.1.88
+  - @prosopo/env@3.6.62
+  - @prosopo/types-env@2.11.8
+  - @prosopo/dotenv@3.0.57
+
+## 3.1.187
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+  - @prosopo/cli@3.8.17
+  - @prosopo/common@3.1.58
+  - @prosopo/provider@5.12.1
+  - @prosopo/types@5.9.2
+  - @prosopo/datasets@3.1.87
+  - @prosopo/env@3.6.61
+  - @prosopo/keyring@2.9.94
+  - @prosopo/types-env@2.11.7
+
+## 3.1.186
+### Patch Changes
+
+- Updated dependencies [a22069d]
+- Updated dependencies [6d9711f]
+- Updated dependencies [c151f8a]
+- Updated dependencies [de1dc32]
+  - @prosopo/provider@5.12.0
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/cli@3.8.16
+  - @prosopo/common@3.1.57
+  - @prosopo/datasets@3.1.86
+  - @prosopo/env@3.6.60
+  - @prosopo/keyring@2.9.93
+  - @prosopo/types-env@2.11.6
+
+## 3.1.185
+### Patch Changes
+
+- Updated dependencies [6c00bca]
+  - @prosopo/provider@5.11.1
+  - @prosopo/cli@3.8.15
+
+## 3.1.184
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+- Updated dependencies [a4a71be]
+  - @prosopo/types@5.9.0
+  - @prosopo/provider@5.11.0
+  - @prosopo/cli@3.8.14
+  - @prosopo/datasets@3.1.85
+  - @prosopo/env@3.6.59
+  - @prosopo/keyring@2.9.92
+  - @prosopo/types-env@2.11.5
+
 ## 3.1.183
 ### Patch Changes
 
