@@ -56,8 +56,21 @@ describe("createLogoElement", () => {
 	});
 
 	test("passes on the site's chosen language", () => {
-		const anchor = createLogoElement(lightTheme, "pt-BR").querySelector("a");
+		const anchor = createLogoElement(lightTheme, {
+			language: "pt-BR",
+		}).querySelector("a");
 		expect(new URL(anchor?.href ?? "").searchParams.get("hl")).toBe("pt-BR");
+	});
+
+	test("carries the site key as the campaign, like hCaptcha", () => {
+		const anchor = createLogoElement(lightTheme, {
+			siteKey: "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw",
+		}).querySelector("a");
+		const params: URLSearchParams = new URL(anchor?.href ?? "").searchParams;
+		expect(params.get("utm_campaign")).toBe(
+			"5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw",
+		);
+		expect(params.get("utm_medium")).toBe("checkbox");
 	});
 
 	test("falls back to the browser's language", () => {
@@ -124,18 +137,24 @@ describe("createLogoElement", () => {
 });
 
 describe("widgetLinkUrl", () => {
-	test("carries the host and language as query parameters", () => {
-		expect(widgetLinkUrl("pimeyes.com", "de")).toBe(
-			`${WIDGET_URL}${WIDGET_LINK_PATH}?ref=pimeyes.com&hl=de`,
+	test("carries the host, site key and language as query parameters", () => {
+		expect(
+			widgetLinkUrl("pimeyes.com", { siteKey: "5Fsite", language: "de" }),
+		).toBe(
+			`${WIDGET_URL}${WIDGET_LINK_PATH}?ref=pimeyes.com&utm_campaign=5Fsite&utm_medium=checkbox&hl=de`,
 		);
 	});
 
 	test("leaves out what it was not given", () => {
-		expect(widgetLinkUrl("")).toBe(`${WIDGET_URL}${WIDGET_LINK_PATH}`);
+		expect(widgetLinkUrl("")).toBe(
+			`${WIDGET_URL}${WIDGET_LINK_PATH}?utm_medium=checkbox`,
+		);
 	});
 
 	test("keeps a hostile language inside its own parameter", () => {
-		const url: URL = new URL(widgetLinkUrl("example.com", "en&ref=evil.com"));
+		const url: URL = new URL(
+			widgetLinkUrl("example.com", { language: "en&ref=evil.com" }),
+		);
 		expect(url.searchParams.getAll("ref")).toEqual(["example.com"]);
 		expect(url.searchParams.get("hl")).toBe("en&ref=evil.com");
 	});

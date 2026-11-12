@@ -14,7 +14,7 @@
 
 export { createWidgetSkeleton } from "./webComponent/createWidget.js";
 export { isDevMode } from "./elements/skeleton.js";
-export { widgetLinkUrl } from "./elements/logo.js";
+export { type WidgetLinkContext, widgetLinkUrl } from "./elements/logo.js";
 export * from "./hover.js";
 export * from "./obfuscation.js";
 export * from "./theme.js";

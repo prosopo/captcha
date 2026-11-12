@@ -24,7 +24,7 @@ import {
 } from "../constants.js";
 import { type Theme, withAlpha } from "../theme.js";
 import { createCheckboxElement } from "./checkbox.js";
-import { createLogoElement } from "./logo.js";
+import { type WidgetLinkContext, createLogoElement } from "./logo.js";
 
 // The widget ignores the page's direction and follows only a `dir` set on its
 // own host, which the bundle derives from the widget language.
@@ -42,18 +42,18 @@ export interface WidgetSkeletonElement {
  *
  * @param theme - The theme to apply to the widget
  * @param loadingLabel - What the spinner is announced as, in the widget's language
- * @param language - The site's chosen widget language, if it chose one
+ * @param link - What the logo link tells the page it opens
  */
 export function createWidgetSkeletonElement(
 	theme: Theme,
 	loadingLabel?: string,
-	language?: string,
+	link?: WidgetLinkContext,
 ): WidgetSkeletonElement {
 	const widgetElement = document.createElement("div");
 	widgetElement.className = "prosopo-widget";
 
 	const checkbox = createCheckboxElement(theme, loadingLabel);
-	const logoElement = createLogoElement(theme, language);
+	const logoElement = createLogoElement(theme, link);
 
 	widgetElement.innerHTML =
 		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());

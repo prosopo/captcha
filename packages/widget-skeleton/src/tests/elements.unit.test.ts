@@ -69,12 +69,17 @@ describe("the widget skeleton", () => {
 		expect(widget.querySelector(".prosopo-logo-container")).not.toBeNull();
 	});
 
-	test("hands the language to the logo", () => {
+	test("hands the language and site key to the logo", () => {
 		const href: string =
-			createWidgetSkeletonElement(lightTheme, undefined, "fr")
+			createWidgetSkeletonElement(lightTheme, undefined, {
+				language: "fr",
+				siteKey: "5Fsite",
+			})
 				.element.querySelector(".prosopo-logo-container a")
 				?.getAttribute("href") ?? "";
-		expect(new URL(href).searchParams.get("hl")).toBe("fr");
+		const params: URLSearchParams = new URL(href).searchParams;
+		expect(params.get("hl")).toBe("fr");
+		expect(params.get("utm_campaign")).toBe("5Fsite");
 	});
 
 	test("puts the checkbox before the logo", () => {

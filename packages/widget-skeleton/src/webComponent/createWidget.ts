@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { WidgetLinkContext } from "../elements/logo.js";
 import { createWidgetSkeletonElement } from "../elements/skeleton.js";
 import type { Theme } from "../theme.js";
 import { applyDefaultStyles } from "./createWebComponent.js";
@@ -23,7 +24,7 @@ import { applyDefaultStyles } from "./createWebComponent.js";
  * @param theme - The theme to apply to the widget
  * @param webComponentTag - The tag name for the web component
  * @param loadingLabel - What the spinner is announced as, in the widget's language
- * @param language - The site's chosen widget language, if it chose one
+ * @param link - What the logo link tells the page it opens
  * @returns The interactive area of the widget as an HTMLElement
  */
 export function createWidgetSkeleton(
@@ -31,7 +32,7 @@ export function createWidgetSkeleton(
 	theme: Theme,
 	webComponentTag: string,
 	loadingLabel?: string,
-	language?: string,
+	link?: WidgetLinkContext,
 ): { widgetInteractiveArea: HTMLElement; webComponent: HTMLElement } {
 	const host = document.createElement(webComponentTag);
 	applyDefaultStyles(host);
@@ -39,7 +40,7 @@ export function createWidgetSkeleton(
 	const { element, interactiveArea } = createWidgetSkeletonElement(
 		theme,
 		loadingLabel,
-		language,
+		link,
 	);
 	host.appendChild(element);
 

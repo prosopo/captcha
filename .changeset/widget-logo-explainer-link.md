@@ -3,4 +3,4 @@
 "@prosopo/procaptcha-bundle": patch
 ---
 
-The widget logo links to prosopo.io/what-is-procaptcha/ with the site's hostname and language.
+The widget logo links to prosopo.io/what-is-procaptcha/ with the site's hostname, site key and language.
