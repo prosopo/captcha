@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { CheckboxProps } from "../components/checkbox.js";
 import {
 	type CheckboxFrameMessage,
+	FLUSH_MS,
 	FRAME_READY_TIMEOUT_MS,
 	mountFramedCheckbox,
 } from "../components/framedCheckbox.js";
@@ -234,6 +235,20 @@ describe("talking to the frame", () => {
 });
 
 describe("tearing down", () => {
+	test("asks a ready frame to send its input again, then removes it once that has had time", () => {
+		const post = vi.spyOn(frame().contentWindow as Window, "postMessage");
+		fromFrame({ t: "ready" });
+		fromFrame({ t: "drawn" });
+		checkbox?.destroy();
+		checkbox = undefined;
+
+		expect(post.mock.calls.at(-1)?.[0]).toMatchObject({ t: "flush" });
+		expect(mounted.container.querySelector("iframe")).not.toBeNull();
+
+		vi.advanceTimersByTime(FLUSH_MS);
+		expect(mounted.container.querySelector("iframe")).toBeNull();
+	});
+
 	test("removes the frame and stops listening", () => {
 		const contentWindow = frame().contentWindow;
 		checkbox?.destroy();
