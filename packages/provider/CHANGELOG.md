@@ -1,5 +1,36 @@
 # @prosopo/provider
 
+## 5.32.0
+### Minor Changes
+
+- 1f29d99: Let the routing machine escalate a correct icon order solve to a follow-up challenge, the same way it can escalate a PoW solve.
+  
+  After a correct icon order submission, the provider runs the site's routing machine again with the new `postIconOrder` phase. The machine sees the pointer trail, the clicks and the behavioural data (`raw.iconOrderEvents`, `raw.iconOrderClicks`, `raw.deviceCapability`). If it routes to image or puzzle, the provider creates the follow-up session and answers `{ verified: false, escalation: { captchaType, sessionId } }`. The icon order record is disapproved with `CAPTCHA_DECISION_MACHINE_DENIED`, so its token can never verify. The session is not marked blocked, because the user is still being challenged.
+  
+  The icon order widget hands an escalation to the frictionless wrapper's `onEscalate`, which opens the follow-up challenge straight away. `submitSolution` now returns `"verified"`, `"escalated"` or `"failed"`. Without a wrapper, an escalation fails like a rejected solve.
+  
+  A machine that doesn't handle the new phase returns its baseline, so nothing changes until a machine opts in. Session minting for escalations moved out of the PoW handler into `mintEscalation`, which PoW and icon order share.
+
+### Patch Changes
+
+- adabe50: Store detector data sent with a solution submission and merge it into the session's detector bag on read.
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/types-database@5.20.1
+  - @prosopo/database@4.6.10
+  - @prosopo/api@4.11.1
+  - @prosopo/api-express-router@3.3.22
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.30
+  - @prosopo/env@3.6.99
+  - @prosopo/fingerprint@2.8.21
+  - @prosopo/ipinfo@0.7.8
+  - @prosopo/keyring@2.10.30
+  - @prosopo/load-balancer@2.11.34
+  - @prosopo/types-env@2.12.9
+  - @prosopo/user-access-policy@3.17.3
+
 ## 5.31.0
 ### Minor Changes
 

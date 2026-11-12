@@ -1,5 +1,16 @@
 # @prosopo/procaptcha-common
 
+## 2.23.10
+### Patch Changes
+
+- 43aa3df: The checkbox reports where and how it was activated instead of passing on the raw event.
+- 43aa3df: Optionally draw the widget checkbox in a frame served beside the bundle (build flag PROSOPO_FRAMED_CHECKBOX).
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/account@2.8.133
+  - @prosopo/load-balancer@2.11.34
+
 ## 2.23.9
 ### Patch Changes
 

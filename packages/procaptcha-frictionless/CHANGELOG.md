@@ -1,5 +1,32 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.26.1
+### Patch Changes
+
+- 43aa3df: The checkbox reports where and how it was activated instead of passing on the raw event.
+- 43aa3df: Optionally draw the widget checkbox in a frame served beside the bundle (build flag PROSOPO_FRAMED_CHECKBOX).
+- 1f29d99: Let the routing machine escalate a correct icon order solve to a follow-up challenge, the same way it can escalate a PoW solve.
+  
+  After a correct icon order submission, the provider runs the site's routing machine again with the new `postIconOrder` phase. The machine sees the pointer trail, the clicks and the behavioural data (`raw.iconOrderEvents`, `raw.iconOrderClicks`, `raw.deviceCapability`). If it routes to image or puzzle, the provider creates the follow-up session and answers `{ verified: false, escalation: { captchaType, sessionId } }`. The icon order record is disapproved with `CAPTCHA_DECISION_MACHINE_DENIED`, so its token can never verify. The session is not marked blocked, because the user is still being challenged.
+  
+  The icon order widget hands an escalation to the frictionless wrapper's `onEscalate`, which opens the follow-up challenge straight away. `submitSolution` now returns `"verified"`, `"escalated"` or `"failed"`. Without a wrapper, an escalation fails like a rejected solve.
+  
+  A machine that doesn't handle the new phase returns its baseline, so nothing changes until a machine opts in. Session minting for escalations moved out of the PoW handler into `mintEscalation`, which PoW and icon order share.
+- Updated dependencies [43aa3df]
+- Updated dependencies [43aa3df]
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/procaptcha-common@2.23.10
+  - @prosopo/procaptcha-pow@2.14.18
+  - @prosopo/procaptcha-puzzle@2.18.10
+  - @prosopo/procaptcha-icon-order@0.4.0
+  - @prosopo/procaptcha-audio@0.3.10
+  - @prosopo/procaptcha-react@2.14.29
+  - @prosopo/types@5.31.0
+  - @prosopo/api@4.11.1
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.21
+
 ## 2.26.0
 ### Minor Changes
 

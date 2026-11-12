@@ -1,0 +1,12 @@
+# @prosopo/better-auth-procaptcha-plugin
+
+## 0.1.0
+### Minor Changes
+
+- 1bc57d2: Add a Better Auth plugin that verifies Procaptcha tokens on sign-up, sign-in and password reset.
+
+### Patch Changes
+
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0

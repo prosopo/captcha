@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/better-auth-procaptcha-plugin",
-	"version": "0.0.0",
+	"version": "0.1.0",
 	"description": "Prosopo Procaptcha bot protection for Better Auth. Verifies a Procaptcha token before sign-up, sign-in and other auth endpoints run.",
 	"type": "module",
 	"engines": {

@@ -1,5 +1,17 @@
 # @prosopo/procaptcha-bundle
 
+## 4.6.16
+### Patch Changes
+
+- 43aa3df: Optionally draw the widget checkbox in a frame served beside the bundle (build flag PROSOPO_FRAMED_CHECKBOX).
+- Updated dependencies [43aa3df]
+- Updated dependencies [43aa3df]
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/procaptcha-common@2.23.10
+  - @prosopo/procaptcha-frictionless@2.26.1
+  - @prosopo/types@5.31.0
+
 ## 4.6.15
 ### Patch Changes
 

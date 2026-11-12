@@ -1,5 +1,16 @@
 # @prosopo/client-example-server
 
+## 2.7.203
+### Patch Changes
+
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/database@4.6.10
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.30
+  - @prosopo/server@2.14.19
+
 ## 2.7.202
 ### Patch Changes
 
