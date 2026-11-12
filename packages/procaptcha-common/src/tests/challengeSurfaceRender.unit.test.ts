@@ -14,11 +14,7 @@
 
 // jsdom has no PointerEvent; the dismiss handler only reads event.target, so
 // a plain Event of the same type is dispatched instead.
-import {
-	InputMethod,
-	PlacementEnum,
-	type PlacementType,
-} from "@prosopo/types";
+import { InputMethod, PlacementEnum, type PlacementType } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	type ChallengeSurfaceComponent,

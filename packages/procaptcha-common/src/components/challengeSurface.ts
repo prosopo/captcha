@@ -325,11 +325,7 @@ export const mountChallengeSurface = (
 	 * panel, so a user who has since moved is left alone.
 	 */
 	const upgradeDialogFocus = () => {
-		if (
-			!dialogOpen ||
-			openedByPointer ||
-			document.activeElement !== content
-		) {
+		if (!dialogOpen || openedByPointer || document.activeElement !== content) {
 			return;
 		}
 		focusableWithin(content)[0]?.focus();
