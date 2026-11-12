@@ -7,6 +7,7 @@
 # versions + committed lockfile + `pnpm install --frozen-lockfile` blocks the
 # auto-pull of a bad release.
 
+# Shared actions: https://github.com/prosopo/github_actions. Runners: https://github.com/prosopo/gh-runner.
 name: pinned-versions
 
 on:

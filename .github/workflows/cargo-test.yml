@@ -5,6 +5,7 @@
 # Rust failure is reported on its own and does not wait for the full JS build,
 # and so it runs only when a crate can have changed.
 
+# Shared actions: https://github.com/prosopo/github_actions. Runners: https://github.com/prosopo/gh-runner.
 name: cargo-test
 
 on:
