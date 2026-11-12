@@ -1,5 +1,16 @@
 # @prosopo/database
 
+## 4.6.10
+### Patch Changes
+
+- adabe50: Store detector data sent with a solution submission and merge it into the session's detector bag on read.
+- Updated dependencies [1f29d99]
+- Updated dependencies [adabe50]
+  - @prosopo/types@5.31.0
+  - @prosopo/types-database@5.20.1
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.17.3
+
 ## 4.6.9
 ### Patch Changes
 
