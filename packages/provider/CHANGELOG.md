@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 5.33.0
+### Minor Changes
+
+- 55da81f: Site keys can name their own image dataset, and the provider's default dataset can be pinned with `PROSOPO_DEFAULT_DATASET_ID`.
+
+### Patch Changes
+
+- Updated dependencies [55da81f]
+  - @prosopo/types@5.32.0
+  - @prosopo/types-database@5.20.2
+  - @prosopo/env@3.7.0
+  - @prosopo/api@4.11.2
+  - @prosopo/api-express-router@3.3.23
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.11
+  - @prosopo/datasets@3.2.31
+  - @prosopo/fingerprint@2.8.22
+  - @prosopo/ipinfo@0.7.9
+  - @prosopo/keyring@2.10.31
+  - @prosopo/load-balancer@2.11.35
+  - @prosopo/types-env@2.12.10
+  - @prosopo/user-access-policy@3.17.4
+
 ## 5.32.0
 ### Minor Changes
 
