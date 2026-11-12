@@ -1,5 +1,11 @@
 # @prosopo/better-auth-procaptcha-plugin
 
+## 0.1.1
+### Patch Changes
+
+- Updated dependencies [55da81f]
+  - @prosopo/types@5.32.0
+
 ## 0.1.0
 ### Minor Changes
 
