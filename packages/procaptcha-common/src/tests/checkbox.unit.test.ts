@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { InputMethod } from "@prosopo/types";
 import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
@@ -500,9 +501,7 @@ describe("activating it", () => {
 		render();
 		fire(row(), "click", { clientX: 12, clientY: 40 });
 		expect(onChange).toHaveBeenCalledTimes(1);
-		const event = onChange.mock.calls[0]?.[0] as MouseEvent;
-		expect(event.clientX).toBe(12);
-		expect(event.clientY).toBe(40);
+		expect(onChange.mock.calls[0]?.[0]).toMatchObject({ x: 12, y: 40 });
 	});
 
 	test("the row is at least 44px tall, so the tap area is too", () => {
@@ -577,13 +576,23 @@ describe("activating it", () => {
 		expect(onChange).not.toHaveBeenCalled();
 	});
 
-	test("hands the raw event through, so coordinates survive", () => {
-		// The solution salt records where on the page the user clicked.
+	test("reports where the click landed, so coordinates survive", () => {
+		// The solution salt records where on the page the user clicked. The
+		// harness's click has a press count of 0, as a click the browser forwards
+		// from the label can, and its position must still come through.
 		render();
 		fire(box(), "click", { clientX: 42, clientY: 7 });
-		const event = onChange.mock.calls[0]?.[0] as MouseEvent;
-		expect(event.clientX).toBe(42);
-		expect(event.clientY).toBe(7);
+		expect(onChange.mock.calls[0]?.[0]).toMatchObject({ x: 42, y: 7 });
+	});
+
+	test("reports Enter as a keyboard activation with no position", () => {
+		render();
+		fire(box(), "keydown", { key: "Enter" });
+		expect(onChange.mock.calls[0]?.[0]).toEqual({
+			x: 0,
+			y: 0,
+			inputMethod: InputMethod.keyboard,
+		});
 	});
 
 	test("prevents the browser toggling the box itself", () => {

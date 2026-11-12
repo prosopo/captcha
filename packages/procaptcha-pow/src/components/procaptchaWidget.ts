@@ -14,6 +14,7 @@
 
 import { createTranslator, loadI18next, localiseError } from "@prosopo/locale";
 import {
+	type Activation,
 	type CheckboxProps,
 	type Component,
 	type HoneypotComponent,
@@ -23,9 +24,8 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	isEventTrusted,
-	mountCheckbox,
 	mountHoneypot,
+	mountWidgetCheckbox,
 } from "@prosopo/procaptcha-common";
 import {
 	ModeEnum,
@@ -156,31 +156,12 @@ export const mountProcaptchaPowWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading,
-		onChange: async (
-			event: MouseEvent | KeyboardEvent | TouchEvent,
-		): Promise<void> => {
+		onChange: async ({ x, y }: Activation): Promise<void> => {
 			if (loading) {
 				return;
 			}
 			loading = true;
 			scheduler.schedule();
-
-			// Capture click coordinates. Untrusted events are left at (0, 0) so a
-			// synthesised click can't seed the solution salt.
-			let x = 0;
-			let y = 0;
-			if (!isEventTrusted(event)) {
-				// Don't capture coordinates for non-trusted events
-			} else if ("touches" in event && event.touches.length > 0) {
-				const touch = event.touches[0];
-				if (touch) {
-					x = touch.clientX;
-					y = touch.clientY;
-				}
-			} else if ("clientX" in event && "clientY" in event) {
-				x = event.clientX;
-				y = event.clientY;
-			}
 
 			lastCoords = { x, y };
 			try {
@@ -196,7 +177,7 @@ export const mountProcaptchaPowWidget = (
 	});
 
 	if (!isInvisible) {
-		checkbox = mountCheckbox(root, checkboxProps());
+		checkbox = mountWidgetCheckbox(root, checkboxProps());
 	}
 
 	teardown.add(scheduler.cancel);

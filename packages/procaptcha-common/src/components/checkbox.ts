@@ -29,16 +29,16 @@ import {
 	createElement,
 } from "../dom/element.js";
 import { injectStyle } from "../dom/styleSheet.js";
-import { isEventTrusted } from "../events/trust.js";
+import { type Activation, activationOf } from "../events/activation.js";
+import { isEventTrusted, trustedClickCoords } from "../events/trust.js";
 
 /**
- * The checkbox is activated by a real pointer click or by Enter, so the handler
- * sees the raw DOM event rather than a synthetic one. Coordinate capture reads
- * `clientX`/`clientY` off it directly — the click path is what carries them,
+ * The checkbox is activated by a trusted pointer click or by Enter, and the
+ * handler is told where and how. The click path is what carries a position,
  * which is why this listens for `click` and not `change`.
  */
 export type CheckboxChangeHandler = (
-	event: MouseEvent | KeyboardEvent | TouchEvent,
+	activation: Activation,
 ) => Promise<void> | void;
 
 export interface CheckboxProps {
@@ -375,7 +375,12 @@ export const mountCheckbox = (
 		// the browser toggling it, and this restores the box if anything already
 		// flipped it, matching how React reset a controlled input on re-render.
 		input.checked = props.checked;
-		void props.onChange(event);
+		// The position is read whatever the press count: a click the browser
+		// forwards from the label to the box can carry a count of 0.
+		void props.onChange({
+			...trustedClickCoords(event),
+			inputMethod: activationOf(event).inputMethod,
+		});
 	};
 
 	teardown.addEventListener(input, "click", (event: Event) => {

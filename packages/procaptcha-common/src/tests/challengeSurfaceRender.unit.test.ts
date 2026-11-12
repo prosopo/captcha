@@ -14,13 +14,14 @@
 
 // jsdom has no PointerEvent; the dismiss handler only reads event.target, so
 // a plain Event of the same type is dispatched instead.
-import { PlacementEnum, type PlacementType } from "@prosopo/types";
+import { InputMethod, PlacementEnum, type PlacementType } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	type ChallengeSurfaceComponent,
 	mountChallengeSurface,
 } from "../components/challengeSurface.js";
 import { createElement } from "../dom/element.js";
+import { noteInputMethod } from "../events/inputModality.js";
 
 let surface: ChallengeSurfaceComponent | undefined;
 let anchor: HTMLDivElement;
@@ -419,6 +420,29 @@ describe("as a dialog", () => {
 
 	it("takes focus so a screen reader lands on the challenge", () => {
 		render({ dialogLabel: "Puzzle challenge", focusableChildren: 2 });
+
+		expect(document.activeElement).toBe(buttons()[0]);
+	});
+
+	it("focuses the panel, not its first control, when a pointer opened it", () => {
+		// A click on the framed checkbox never reaches the page, so the
+		// browser would take the handover for a keyboard move and ring the
+		// first tile.
+		noteInputMethod(InputMethod.pointer);
+		render({ dialogLabel: "Image challenge", focusableChildren: 2 });
+
+		expect(document.activeElement).toBe(content());
+		expect(content()?.style.outline).toBe("none");
+
+		surface?.update({ show: true, anchor, dialogLabel: "Image challenge" });
+		expect(document.activeElement).toBe(content());
+
+		noteInputMethod(InputMethod.keyboard);
+	});
+
+	it("still lands on the first control when the keyboard opened it", () => {
+		noteInputMethod(InputMethod.keyboard);
+		render({ dialogLabel: "Image challenge", focusableChildren: 2 });
 
 		expect(document.activeElement).toBe(buttons()[0]);
 	});
