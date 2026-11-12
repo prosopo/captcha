@@ -1,5 +1,14 @@
 # @prosopo/account
 
+## 2.8.134
+### Patch Changes
+
+- Updated dependencies [55da81f]
+  - @prosopo/types@5.32.0
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.22
+  - @prosopo/keyring@2.10.31
+
 ## 2.8.133
 ### Patch Changes
 

@@ -102,6 +102,11 @@
 			}
 			client_hello
 			tls
+			# Forwards the client's header order as `X-Header-Order`, which
+			# Go's map-based parsing otherwise loses. Must sit after `tls`
+			# to read plaintext. Needs prosopo/caddy >= 2.5.14, or Caddy
+			# won't recognise the directive and won't start.
+			header_order
 		}
 		timeouts {
 			read_body 15s

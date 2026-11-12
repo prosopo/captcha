@@ -48,7 +48,7 @@ type ValidRequestResult = { valid: boolean; reason?: string };
 
 type TasksStub = {
 	db: {
-		getClientRecord: Mock<() => Promise<{ settings: object }>>;
+		getClientRecord: Mock<() => Promise<{ settings: { datasetId?: string } }>>;
 		getDatasetDetails: Mock<(datasetId: string) => Promise<object>>;
 	};
 	imgCaptchaManager: {
@@ -60,6 +60,7 @@ type TasksStub = {
 const PAST_DATASET_CHECK = "past the dataset check";
 const KNOWN_DATASET =
 	"0x9f460e81ac9c71b486f796a21bb36e2263694756a6621134d4d1fc7a5c5eb1d4";
+const KNOWN_DATASET_2 = `0x${"cd".repeat(32)}`;
 const UNKNOWN_DATASET = `0x${"ab".repeat(32)}`;
 
 const holder = vi.hoisted((): { tasks: TasksStub | undefined } => ({
@@ -124,9 +125,13 @@ afterAll(async () => {
 beforeEach(() => {
 	holder.tasks = {
 		db: {
-			getClientRecord: vi.fn(async () => ({ settings: {} })),
+			getClientRecord: vi.fn(
+				async (): Promise<{ settings: { datasetId?: string } }> => ({
+					settings: {},
+				}),
+			),
 			getDatasetDetails: vi.fn(async (datasetId: string) => {
-				if (datasetId === KNOWN_DATASET) {
+				if (datasetId === KNOWN_DATASET || datasetId === KNOWN_DATASET_2) {
 					return { datasetId };
 				}
 				throw new ProsopoError({
@@ -205,5 +210,37 @@ describe("image challenge with a client-supplied datasetId", () => {
 		const { status } = await post(undefined);
 		expect(holder.tasks?.db.getDatasetDetails).not.toHaveBeenCalled();
 		expect(status).toBe(500);
+	});
+});
+
+describe("image challenge for a site key with its own dataset", () => {
+	it("looks up the site key's dataset when the client omits one", async () => {
+		holder.tasks?.db.getClientRecord.mockResolvedValueOnce({
+			settings: { datasetId: KNOWN_DATASET_2 },
+		});
+		await post(undefined);
+		expect(holder.tasks?.db.getDatasetDetails).toHaveBeenCalledWith(
+			KNOWN_DATASET_2,
+		);
+	});
+
+	it("does not reject a site dataset this provider lacks", async () => {
+		holder.tasks?.db.getClientRecord.mockResolvedValueOnce({
+			settings: { datasetId: UNKNOWN_DATASET },
+		});
+		const { status, text } = await post(undefined);
+		expect(text).not.toContain("INVALID_REQUEST");
+		expect(status).toBe(500);
+	});
+
+	it("lets a client-supplied datasetId win over the site key's", async () => {
+		holder.tasks?.db.getClientRecord.mockResolvedValueOnce({
+			settings: { datasetId: KNOWN_DATASET_2 },
+		});
+		await post(KNOWN_DATASET);
+		expect(holder.tasks?.db.getDatasetDetails).toHaveBeenCalledTimes(1);
+		expect(holder.tasks?.db.getDatasetDetails).toHaveBeenCalledWith(
+			KNOWN_DATASET,
+		);
 	});
 });

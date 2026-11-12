@@ -17,14 +17,22 @@
 // missing-config paths, the isReady short-circuits, dataset resolution, and
 // importDatabase error wrapping.
 
+import { ProsopoError } from "@prosopo/common";
 import type { AssetsResolver, KeyringPair } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+declare module "@prosopo/common" {
+	interface ErrorSites {
+		"DBSE-17": true;
+	}
+}
 
 type MockDb = {
 	connect: () => Promise<void>;
 	connected: boolean;
 	connection: { readyState: number };
 	getMostRecentDatasetId: () => Promise<string | undefined>;
+	getDatasetDetails: (datasetId: string) => Promise<{ datasetId: string }>;
 };
 
 const { mockProviderDatabase, mockIpInfoInit, mockAddPair, mockGetPair } =
@@ -118,6 +126,9 @@ const mockDb = (overrides: Partial<MockDb> = {}): MockDb => ({
 	getMostRecentDatasetId: vi
 		.fn<() => Promise<string | undefined>>()
 		.mockResolvedValue("0xdataset"),
+	getDatasetDetails: vi
+		.fn<(datasetId: string) => Promise<{ datasetId: string }>>()
+		.mockImplementation(async (datasetId: string) => ({ datasetId })),
 	...overrides,
 });
 
@@ -136,6 +147,8 @@ beforeEach(() => {
 afterEach(() => {
 	// biome-ignore lint/performance/noDelete: assigning undefined would leave the string "undefined" in the env
 	delete process.env.MAINTENANCE_MODE;
+	// biome-ignore lint/performance/noDelete: assigning undefined would leave the string "undefined" in the env
+	delete process.env.PROSOPO_DEFAULT_DATASET_ID;
 });
 
 describe("Environment construction", () => {
@@ -305,6 +318,45 @@ describe("Environment.isReady", () => {
 		await env.isReady();
 
 		expect(env.datasetId).toBe("0xdataset");
+	});
+
+	it("serves the pinned dataset rather than the most recent upload", async () => {
+		process.env.PROSOPO_DEFAULT_DATASET_ID = "0xpinned";
+		const db = mockDb();
+		mockProviderDatabase.mockImplementation(function () {
+			return db;
+		});
+
+		const env = buildEnv();
+		await env.isReady();
+
+		expect(env.datasetId).toBe("0xpinned");
+		expect(db.getDatasetDetails).toHaveBeenCalledWith("0xpinned");
+		expect(db.getMostRecentDatasetId).not.toHaveBeenCalled();
+	});
+
+	it("serves no dataset when the pinned one is not stored", async () => {
+		process.env.PROSOPO_DEFAULT_DATASET_ID = "0xmissing";
+		mockProviderDatabase.mockImplementation(function () {
+			return mockDb({
+				getDatasetDetails: vi
+					.fn<(datasetId: string) => Promise<{ datasetId: string }>>()
+					.mockRejectedValue(
+						new ProsopoError({
+							code: "RECORD_NOT_FOUND",
+							errorSite: "DBSE-17",
+							context: {},
+						}),
+					),
+			});
+		});
+
+		const env = buildEnv();
+		await env.isReady();
+
+		expect(env.ready).toBe(true);
+		expect(env.datasetId).toBeUndefined();
+		expect(env.logger.warn).toHaveBeenCalled();
 	});
 
 	it("warns but stays ready when there are no datasets", async () => {
