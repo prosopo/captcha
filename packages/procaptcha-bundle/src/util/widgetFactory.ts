@@ -115,6 +115,7 @@ class WidgetFactory {
 				widgetTheme,
 				"prosopo-procaptcha",
 				this.loadingLabel(language),
+				language,
 			);
 			widgetInteractiveArea = widgetResult.widgetInteractiveArea;
 			widgetContainer = widgetResult.webComponent;

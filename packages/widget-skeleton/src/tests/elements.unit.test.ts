@@ -17,19 +17,17 @@ import { afterEach, describe, expect, test } from "vitest";
 import { CHECKBOX_HOST_CSS_CLASS } from "../elements/checkbox.js";
 import { createLogoElement } from "../elements/logo.js";
 import { createWidgetSkeletonElement } from "../elements/skeleton.js";
-import { WIDGET_URL } from "../index.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
 
 const skeletonOf = (theme: Theme): HTMLElement =>
 	createWidgetSkeletonElement(theme).element;
 
 describe("the logo", () => {
-	test("links out to the product page in a new, unprivileged tab", () => {
+	test("links out in a new, unprivileged tab", () => {
 		// rel=noopener is what stops the opened page reaching back into the
 		// consumer's window.
 		const logo = createLogoElement(lightTheme);
 		const link = logo.querySelector("a");
-		expect(link?.getAttribute("href")).toBe(`${WIDGET_URL}/`);
 		expect(link?.getAttribute("target")).toBe("_blank");
 		expect(link?.getAttribute("rel")).toBe("noopener");
 	});
@@ -69,6 +67,14 @@ describe("the widget skeleton", () => {
 		expect(widget.querySelector(".prosopo-widget__logo")).toBeNull();
 		expect(widget.querySelector(`.${CHECKBOX_HOST_CSS_CLASS}`)).not.toBeNull();
 		expect(widget.querySelector(".prosopo-logo-container")).not.toBeNull();
+	});
+
+	test("hands the language to the logo", () => {
+		const href: string =
+			createWidgetSkeletonElement(lightTheme, undefined, "fr")
+				.element.querySelector(".prosopo-logo-container a")
+				?.getAttribute("href") ?? "";
+		expect(new URL(href).searchParams.get("hl")).toBe("fr");
 	});
 
 	test("puts the checkbox before the logo", () => {

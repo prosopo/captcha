@@ -14,8 +14,8 @@
 // @vitest-environment jsdom
 
 import { describe, expect, test } from "vitest";
-import { WIDGET_URL } from "../constants.js";
-import { createLogoElement } from "../elements/logo.js";
+import { WIDGET_LINK_PATH, WIDGET_URL } from "../constants.js";
+import { createLogoElement, widgetLinkUrl } from "../elements/logo.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
 
 const logoAnchor = (theme: Theme): HTMLAnchorElement => {
@@ -35,13 +35,35 @@ describe("createLogoElement", () => {
 		expect(logo.isConnected).toBe(false);
 	});
 
-	test("links to the marketing site in a new tab without leaking the opener", () => {
+	test("opens in a new tab without leaking the opener", () => {
 		const anchor: HTMLAnchorElement = logoAnchor(lightTheme);
 		// rel=noopener matters: the widget is embedded in third party pages, and
 		// without it the opened tab can navigate the embedder.
 		expect(anchor.getAttribute("rel")).toBe("noopener");
 		expect(anchor.getAttribute("target")).toBe("_blank");
-		expect(anchor.getAttribute("href")).toBe(`${WIDGET_URL}/`);
+	});
+
+	test("links to the explainer page, not the homepage", () => {
+		expect(new URL(logoAnchor(lightTheme).href).pathname).toBe(
+			WIDGET_LINK_PATH,
+		);
+	});
+
+	test("names the site the widget is on", () => {
+		expect(new URL(logoAnchor(lightTheme).href).searchParams.get("ref")).toBe(
+			window.location.hostname,
+		);
+	});
+
+	test("passes on the site's chosen language", () => {
+		const anchor = createLogoElement(lightTheme, "pt-BR").querySelector("a");
+		expect(new URL(anchor?.href ?? "").searchParams.get("hl")).toBe("pt-BR");
+	});
+
+	test("falls back to the browser's language", () => {
+		expect(new URL(logoAnchor(lightTheme).href).searchParams.get("hl")).toBe(
+			navigator.language,
+		);
 	});
 
 	test("the resolved href stays on the prosopo origin", () => {
@@ -98,5 +120,23 @@ describe("createLogoElement", () => {
 		expect(light.split(lightTheme.palette.logoFill).join("X")).toBe(
 			dark.split(darkTheme.palette.logoFill).join("X"),
 		);
+	});
+});
+
+describe("widgetLinkUrl", () => {
+	test("carries the host and language as query parameters", () => {
+		expect(widgetLinkUrl("pimeyes.com", "de")).toBe(
+			`${WIDGET_URL}${WIDGET_LINK_PATH}?ref=pimeyes.com&hl=de`,
+		);
+	});
+
+	test("leaves out what it was not given", () => {
+		expect(widgetLinkUrl("")).toBe(`${WIDGET_URL}${WIDGET_LINK_PATH}`);
+	});
+
+	test("keeps a hostile language inside its own parameter", () => {
+		const url: URL = new URL(widgetLinkUrl("example.com", "en&ref=evil.com"));
+		expect(url.searchParams.getAll("ref")).toEqual(["example.com"]);
+		expect(url.searchParams.get("hl")).toBe("en&ref=evil.com");
 	});
 });
