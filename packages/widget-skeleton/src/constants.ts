@@ -13,7 +13,7 @@
 // limitations under the License.
 export const WIDGET_URL = "https://prosopo.io";
 /** The page that explains the widget to the person who was shown it. */
-export const WIDGET_LINK_PATH = "/what-is-procaptcha/";
+export const WIDGET_LINK_PATH = "/captcha-help/";
 export const WIDGET_URL_TEXT =
 	"Procaptcha: Frictionless, Privacy-focused Bot Protection by Prosopo.";
 export const WIDGET_INNER_HEIGHT = 74;

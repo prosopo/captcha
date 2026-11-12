@@ -15,7 +15,7 @@
 import { describe, expect, test } from "vitest";
 import { widgetLinkUrl } from "../widgetLink.js";
 
-const PAGE = "https://prosopo.io/what-is-procaptcha/";
+const PAGE = "https://prosopo.io/captcha-help/";
 
 describe("widgetLinkUrl", () => {
 	test("carries the site, site key, clicked element and language", () => {

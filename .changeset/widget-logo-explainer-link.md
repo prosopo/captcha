@@ -8,4 +8,4 @@
 "@prosopo/procaptcha-audio": patch
 ---
 
-The widget logo links to prosopo.io/what-is-procaptcha/, and the logo and error links carry the site's hostname, site key, language and which one was clicked.
+The widget logo links to prosopo.io/captcha-help/, and the logo and error links carry the site's hostname, site key, language and which one was clicked.
