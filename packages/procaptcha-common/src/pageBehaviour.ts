@@ -39,6 +39,7 @@ export interface PageBehaviour {
 
 interface PageBehaviourCapture {
 	behaviour: PageBehaviour;
+	recording: boolean;
 	stop: () => void;
 }
 
@@ -167,9 +168,11 @@ export const startPageBehaviourCapture = (): void => {
 	}
 	window.addEventListener("scroll", onScroll, LISTENER_OPTIONS);
 
-	captureHost[CAPTURE_KEY] = {
+	const capture: PageBehaviourCapture = {
 		behaviour,
+		recording: true,
 		stop: () => {
+			capture.recording = false;
 			window.removeEventListener("mousemove", onMouseMove, LISTENER_OPTIONS);
 			for (const type of PRESS_EVENTS) {
 				window.removeEventListener(type, onPress, LISTENER_OPTIONS);
@@ -180,6 +183,23 @@ export const startPageBehaviourCapture = (): void => {
 			window.removeEventListener("scroll", onScroll, LISTENER_OPTIONS);
 		},
 	};
+	captureHost[CAPTURE_KEY] = capture;
+};
+
+/**
+ * Records input the page's listeners cannot see, such as taps inside the
+ * framed checkbox, for as long as the capture is still recording.
+ */
+export const addPageBehaviour = <K extends keyof PageBehaviour>(
+	kind: K,
+	point: PageBehaviour[K][number],
+): void => {
+	const capture = captureHost[CAPTURE_KEY];
+	if (!capture?.recording) {
+		return;
+	}
+	const points: PageBehaviour[K][number][] = capture.behaviour[kind];
+	pushCapped(points, point, PAGE_BEHAVIOUR_LIMITS[kind]);
 };
 
 /**
