@@ -821,6 +821,71 @@ describe("PowCaptchaManager", () => {
 		});
 	});
 
+	describe("post-PoW routing detector data", () => {
+		it("hands the router the bag with any data the submission carried", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const providerSignature = "testSignature";
+			const headers: RequestHeaders = { a: "1" };
+			const ipAddress = getIPAddress("1.1.1.1");
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+				sessionId: "linked-session-id",
+			};
+			const sessionRecord: Partial<Session> = {
+				sessionId: "linked-session-id",
+				scoreComponents: { baseScore: 0.5 },
+				d: { b: { first: ["x"] } },
+				dSubmit: { b: { second: ["y"] } },
+			};
+			vi.mocked(verifyRecency).mockReturnValue(true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockReturnValue(true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as unknown as PoWCaptchaRecord,
+			);
+			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord as Session,
+			);
+			vi.mocked(applyRouter).mockResolvedValueOnce({
+				captchaType: CaptchaType.pow,
+			});
+			powCaptchaManager.setPostPowContext({
+				ip: "1.1.1.1",
+				device: { userAgent: "", headers },
+				raw: { headers, userAgent: "" },
+			});
+
+			await powCaptchaManager.verifyPowCaptchaSolution({
+				challenge,
+				providerChallengeSignature: providerSignature,
+				nonce: 12345,
+				timeout: 1000,
+				userTimestampSignature: "testTimestampSignature",
+				ipAddress,
+			});
+
+			expect(vi.mocked(applyRouter).mock.lastCall?.[0]).toMatchObject({
+				ctx: { d: { b: { first: ["x"], second: ["y"] } } },
+			});
+		});
+	});
+
 	describe("serverVerifyPowCaptchaSolution", () => {
 		it("should verify a valid PoW captcha solution on the server", async () => {
 			const dappAccount = "dappAccount";

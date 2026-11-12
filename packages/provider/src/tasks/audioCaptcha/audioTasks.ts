@@ -111,7 +111,7 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 		replays: number;
 		audioEvents: AudioEvent[];
 	}): Promise<boolean> {
-		return this.submitInteractiveCaptchaSolution({
+		const { verified } = await this.submitInteractiveCaptchaSolution({
 			...submission,
 			isCorrect: (record) =>
 				validateAudioSolution(submittedAnswer, record.answer),
@@ -124,5 +124,6 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 					submittedAnswer: normaliseAudioAnswer(submittedAnswer),
 				}),
 		});
+		return verified;
 	}
 }

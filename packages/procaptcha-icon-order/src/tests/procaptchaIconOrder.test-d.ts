@@ -36,7 +36,7 @@ import {
 } from "../components/iconOrderCanvas.js";
 import type * as entrypoint from "../index.js";
 import { mountProcaptchaIconOrder } from "../index.js";
-import { Manager } from "../services/Manager.js";
+import { type IconOrderSubmitOutcome, Manager } from "../services/Manager.js";
 import {
 	challengeResponse,
 	clicks,
@@ -127,7 +127,7 @@ describe("Manager's types", () => {
 		>();
 		expectTypeOf<
 			ReturnType<ReturnType<typeof Manager>["submitSolution"]>
-		>().toEqualTypeOf<Promise<boolean>>();
+		>().toEqualTypeOf<Promise<IconOrderSubmitOutcome>>();
 	});
 
 	test("resetState takes the frictionless restart callback and nothing else", () => {

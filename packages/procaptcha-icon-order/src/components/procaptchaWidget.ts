@@ -45,7 +45,7 @@ import {
 	type ProcaptchaState,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
-import { Manager } from "../services/Manager.js";
+import { type IconOrderSubmitOutcome, Manager } from "../services/Manager.js";
 import {
 	type IconOrderCanvasProps,
 	mountIconOrderCanvas,
@@ -94,6 +94,7 @@ export const mountProcaptchaIconOrderWidget = (
 		callbacks,
 		frictionlessState,
 		() => honeypot?.getValue(),
+		props.onEscalate,
 	);
 
 	const root = createElement("div");
@@ -134,14 +135,17 @@ export const mountProcaptchaIconOrderWidget = (
 		iconOrderPhase = "submitting";
 		scheduler.schedule();
 
-		let verified = false;
+		let outcome: IconOrderSubmitOutcome = "failed";
 		try {
-			verified = await manager.submitSolution(clicks, iconOrderEvents);
+			outcome = await manager.submitSolution(clicks, iconOrderEvents);
 		} catch (error) {
 			reportError(error);
 		}
 
-		if (verified) {
+		// The wrapper is mounting the follow-up challenge in our place.
+		if (outcome === "escalated") return;
+
+		if (outcome === "verified") {
 			returnToCheckbox();
 			loading = false;
 			scheduler.schedule();

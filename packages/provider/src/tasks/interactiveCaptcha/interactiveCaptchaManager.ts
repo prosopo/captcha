@@ -19,6 +19,7 @@ import {
 	ApiParams,
 	type BehavioralDataPacked,
 	type CaptchaResult,
+	type CaptchaSolutionEscalation,
 	CaptchaStatus,
 	type ClientMetaData,
 	type DecisionMachineCaptchaType,
@@ -32,6 +33,7 @@ import {
 	type Session,
 	SimdReadingsStage,
 	isBlockingCaptchaResult,
+	isInteractiveCaptchaType,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { describeMatchedRule } from "@prosopo/user-access-policy";
@@ -57,7 +59,11 @@ import {
 	isClientSessionMismatch,
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
-import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
+import {
+	deriveDevice,
+	deriveTrafficPolicies,
+	solveDeviceSignals,
+} from "../../utils/devicePlatform.js";
 import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -66,6 +72,11 @@ import {
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { applyRouter } from "../frictionless/routingMachine.js";
+import {
+	type PostSolveRouting,
+	sessionRoutingSignals,
+} from "../postSolveRouting.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
@@ -117,7 +128,22 @@ export interface InteractiveSubmission<TRecord>
 	isFarMiss?: (record: TRecord) => boolean;
 	/** Persists the raw interaction trail, whatever the verdict. */
 	persistInteraction: (record: TRecord) => Promise<void>;
+	/** Set for a type whose correct solves the routing machine judges again. */
+	postSolve?: PostSolveRouting;
 }
+
+/** `verified` is false on an escalation: the follow-up must be cleared first. */
+export interface InteractiveSubmissionOutcome {
+	verified: boolean;
+	escalation?: CaptchaSolutionEscalation;
+}
+
+// Recorded on a correct solve the routing machine escalated, so its token can
+// never verify. The user's outcome lives on the escalated session.
+const ESCALATED_RESULT: CaptchaResult = {
+	status: CaptchaStatus.disapproved,
+	reason: ResultReason.CAPTCHA_DECISION_MACHINE_DENIED,
+};
 
 /**
  * Shared pipeline for the captcha types a human solves on screen (puzzle,
@@ -195,11 +221,11 @@ export abstract class InteractiveCaptchaManager<
 
 	/**
 	 * Grades a user's submission and records the outcome on the captcha and
-	 * session records. Returns whether the solution was correct.
+	 * session records.
 	 */
 	protected async submitInteractiveCaptchaSolution(
 		submission: InteractiveSubmission<TRecord>,
-	): Promise<boolean> {
+	): Promise<InteractiveSubmissionOutcome> {
 		const { challenge, userTimestampSignature, behavioralData, simdReadings } =
 			submission;
 		// Check signatures before doing DB reads to avoid unnecessary network connections
@@ -242,7 +268,7 @@ export abstract class InteractiveCaptchaManager<
 			this.logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
-			return false;
+			return { verified: false };
 		}
 
 		const { coords, saltDecodeError } = this.decodeSaltCoords(submission.salt);
@@ -253,7 +279,7 @@ export abstract class InteractiveCaptchaManager<
 			this.logger.debug(() => ({
 				msg: `Challenge already submitted: ${challenge}`,
 			}));
-			return false;
+			return { verified: false };
 		}
 
 		if (saltDecodeError) {
@@ -265,7 +291,7 @@ export abstract class InteractiveCaptchaManager<
 				},
 				userSignature: userTimestampSignature,
 			});
-			return false;
+			return { verified: false };
 		}
 
 		if (!verifyRecency(challenge, submission.timeout)) {
@@ -278,7 +304,7 @@ export abstract class InteractiveCaptchaManager<
 				userSignature: userTimestampSignature,
 				coords,
 			});
-			return false;
+			return { verified: false };
 		}
 
 		const dappAccount = at(challengeSplit, 2);
@@ -320,6 +346,7 @@ export abstract class InteractiveCaptchaManager<
 			{ behavioural: behavioralData, simd: simdReadings },
 		);
 
+		let behavioralDataPacked: BehavioralDataPacked | undefined;
 		if (behavioralData) {
 			try {
 				const decryptedData = decodedPayloads.behavioural;
@@ -340,7 +367,7 @@ export abstract class InteractiveCaptchaManager<
 						},
 					}));
 
-					const packedData: BehavioralDataPacked = {
+					behavioralDataPacked = {
 						c1: decryptedData.collector1 || [],
 						c2: decryptedData.collector2 || [],
 						c3: decryptedData.collector3 || [],
@@ -349,7 +376,7 @@ export abstract class InteractiveCaptchaManager<
 					};
 
 					await this.updateRecord(challenge, {
-						behavioralDataPacked: packedData,
+						behavioralDataPacked,
 						deviceCapability: decryptedData.deviceCapability,
 					});
 				}
@@ -371,12 +398,22 @@ export abstract class InteractiveCaptchaManager<
 			});
 		}
 
+		const escalation =
+			correct && submission.postSolve
+				? await this.escalateSolve(
+						challengeRecord,
+						submission.postSolve,
+						behavioralDataPacked,
+					)
+				: undefined;
+
 		await this.recordSubmissionResult({
 			challengeRecord,
-			result,
+			result: escalation ? ESCALATED_RESULT : result,
 			userSignature: userTimestampSignature,
 			coords,
 			clientMetaData: storedClientMetaData,
+			escalated: escalation !== undefined,
 		});
 
 		if (challengeRecord.sessionId && decodedPayloads.simd) {
@@ -387,7 +424,89 @@ export abstract class InteractiveCaptchaManager<
 			);
 		}
 
-		return correct;
+		return escalation ? { verified: false, escalation } : { verified: correct };
+	}
+
+	/**
+	 * Runs the post-solve routing pass over a correct solve and mints the
+	 * follow-up session when the machine escalates it. Any failure leaves the
+	 * solve standing, as if no machine had fired.
+	 */
+	private async escalateSolve(
+		challengeRecord: TRecord,
+		postSolve: PostSolveRouting,
+		behavioralDataPacked: BehavioralDataPacked | undefined,
+	): Promise<CaptchaSolutionEscalation | undefined> {
+		if (!challengeRecord.sessionId) return undefined;
+		try {
+			const sessionRecord = await this.db.getSessionRecordBySessionId(
+				challengeRecord.sessionId,
+			);
+			if (!sessionRecord) return undefined;
+			const { context } = postSolve;
+			const device = deriveDevice({
+				...context.device,
+				webView: sessionRecord.webView,
+				solve: solveDeviceSignals(behavioralDataPacked),
+			});
+			const routingOutput = await applyRouter({
+				runner: this.decisionMachineRunner,
+				counters: this.usageCounters,
+				baseline: postSolve.baseline,
+				ctx: {
+					dappAccount: challengeRecord.dappAccount,
+					userAccount: challengeRecord.userAccount,
+					...(context.tier !== undefined && { tier: context.tier }),
+					ip: context.ip,
+					countryCode: context.countryCode,
+					score: computeFrictionlessScore(sessionRecord.scoreComponents),
+					platform: device.platform,
+					...(sessionRecord.d !== undefined && { d: sessionRecord.d }),
+					raw: {
+						...context.raw,
+						...sessionRoutingSignals(sessionRecord),
+						...postSolve.raw,
+						...(behavioralDataPacked && { behavioralDataPacked }),
+						...(behavioralDataPacked?.d && {
+							deviceCapability: behavioralDataPacked.d,
+						}),
+					},
+				},
+				logger: this.logger,
+				phase: postSolve.phase,
+			});
+			if (
+				!isInteractiveCaptchaType(routingOutput.captchaType) ||
+				routingOutput.captchaType === postSolve.baseline.captchaType
+			) {
+				return undefined;
+			}
+			this.logger.info(() => ({
+				msg: `Routing machine escalated a ${this.logLabel} solve`,
+				data: {
+					challenge: challengeRecord.challenge,
+					routedCaptchaType: routingOutput.captchaType,
+					routingReason: routingOutput.reason,
+				},
+			}));
+			return await postSolve.escalate({
+				routingOutput,
+				device,
+				origin: {
+					sessionId: challengeRecord.sessionId,
+					dappAccount: challengeRecord.dappAccount,
+					captchaType: postSolve.baseline.captchaType,
+					behavioralDataPacked,
+				},
+			});
+		} catch (error) {
+			this.logger.error(() => ({
+				msg: `Post-solve routing failed for a ${this.logLabel} solve`,
+				err: error,
+				data: { challenge: challengeRecord.challenge },
+			}));
+			return undefined;
+		}
 	}
 
 	/**
@@ -468,12 +587,15 @@ export abstract class InteractiveCaptchaManager<
 		userSignature,
 		coords,
 		clientMetaData,
+		escalated = false,
 	}: {
 		challengeRecord: TRecord;
 		result: CaptchaResult;
 		userSignature: string;
 		coords?: [number, number][][];
 		clientMetaData?: ClientMetaData;
+		// An escalation is not a block: the user is still being challenged.
+		escalated?: boolean;
 	}): Promise<void> {
 		await this.updateSubmissionResult(
 			challengeRecord.challenge,
@@ -485,9 +607,10 @@ export abstract class InteractiveCaptchaManager<
 			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 				userSubmitted: true,
 				result,
-				...(isBlockingCaptchaResult(this.captchaType, result) && {
-					blocked: true,
-				}),
+				...(!escalated &&
+					isBlockingCaptchaResult(this.captchaType, result) && {
+						blocked: true,
+					}),
 				// Mirrored so the session carries the clientSessionId that the
 				// verify call correlates against.
 				...(clientMetaData && { clientMetaData }),

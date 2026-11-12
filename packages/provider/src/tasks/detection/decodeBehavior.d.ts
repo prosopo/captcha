@@ -19,6 +19,8 @@ export interface BehavioralDataResult {
 	collector4?: Array<Record<string, unknown>>;
 	deviceCapability: string;
 	timestamp: number;
+	/** Detector data taken when the behaviour data was packed, at submit. */
+	l?: Record<string, unknown>;
 }
 
 export default function decryptBehavioralData(

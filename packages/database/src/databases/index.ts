@@ -21,6 +21,7 @@ export * from "./captcha.js";
 export * from "./centralDbStreamer.js";
 export * from "./client.js";
 export { ProviderDatabase } from "./provider.js";
+export * from "./submitDetectorData.js";
 export const Databases = {
 	[DatabaseTypes.Values.mongo]: MongoDatabase,
 	[DatabaseTypes.Values.provider]: ProviderDatabase,

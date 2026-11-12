@@ -23,6 +23,7 @@ import {
 	type IconClick,
 	type IconOrderEvent,
 	ModeEnum,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaProps,
 	type ProcaptchaState,
 } from "@prosopo/types";
@@ -40,6 +41,7 @@ import {
 	type ProcaptchaIconOrderHandle,
 	mountProcaptchaIconOrderWidget,
 } from "../components/procaptchaWidget.js";
+import type { IconOrderSubmitOutcome } from "../services/Manager.js";
 import { type Mounted, fire, mount, settle } from "./domHarness.js";
 import { challengeResponse, config, frictionless } from "./managerHarness.js";
 
@@ -53,13 +55,17 @@ const mocks = vi.hoisted(() => {
 		>();
 	const submitSolution =
 		vi.fn<
-			(clicks: IconClick[], events: IconOrderEvent[]) => Promise<boolean>
+			(
+				clicks: IconClick[],
+				events: IconOrderEvent[],
+			) => Promise<IconOrderSubmitOutcome>
 		>();
 	const resetState = vi.fn<() => void>();
 	const dispose = vi.fn<() => void>();
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
+		onEscalate?: ProcaptchaEscalationHandler;
 	}[] = [];
 	const loadI18next = vi.fn<(a?: boolean, b?: string) => Promise<unknown>>();
 	const canvasProps: { current: IconOrderCanvasProps | undefined } = {
@@ -88,8 +94,9 @@ vi.mock("../services/Manager.js", () => ({
 		_callbacks: unknown,
 		_frictionlessState: unknown,
 		getHoneypotValue?: () => string | undefined,
+		onEscalate?: ProcaptchaEscalationHandler,
 	) => {
-		mocks.constructions.push({ updateState, getHoneypotValue });
+		mocks.constructions.push({ updateState, getHoneypotValue, onEscalate });
 		return {
 			start: mocks.start,
 			submitSolution: mocks.submitSolution,
@@ -183,7 +190,7 @@ beforeEach(() => {
 	mocks.translatorI18n.current = undefined;
 	mocks.canvasProps.current = undefined;
 	mocks.start.mockResolvedValue(challengeResponse());
-	mocks.submitSolution.mockResolvedValue(true);
+	mocks.submitSolution.mockResolvedValue("verified");
 	mocks.loadI18next.mockResolvedValue(undefined);
 	widget = undefined;
 	mounted = mount();
@@ -284,6 +291,12 @@ describe("what the widget renders", () => {
 	test("a session without one renders no bait at all", () => {
 		render(props({ frictionlessState: frictionless() }));
 		expect(document.querySelector('input[name="email_confirm"]')).toBeNull();
+	});
+
+	test("the manager gets the wrapper's escalation handler", () => {
+		const onEscalate = vi.fn<ProcaptchaEscalationHandler>();
+		render(props({ onEscalate }));
+		expect(mocks.constructions[0]?.onEscalate).toBe(onEscalate);
 	});
 
 	test("the manager can read the honeypot input the widget rendered", () => {
@@ -489,7 +502,7 @@ describe("finishing the selection", () => {
 	});
 
 	test("a rejected solution asks for another go on a fresh challenge", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		const retryChallenge = challengeResponse({
 			legend: "data:image/webp;base64,cmV0cnk=",
 		});
@@ -507,7 +520,7 @@ describe("finishing the selection", () => {
 	});
 
 	test("a rejected solution on a frictionless session re-mints rather than re-requesting", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		await openIconOrder(
 			props({
@@ -526,12 +539,27 @@ describe("finishing the selection", () => {
 	});
 
 	test("a rejected solution still re-requests when there is no session to re-mint", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		await openIconOrder(props({ frictionlessState: frictionless(), onReload }));
 		await complete();
 		expect(onReload).not.toHaveBeenCalled();
 		expect(mocks.start).toHaveBeenCalledTimes(2);
+	});
+
+	test("an escalated solution leaves the follow-up to the wrapper", async () => {
+		mocks.submitSolution.mockResolvedValue("escalated");
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openIconOrder(
+			props({
+				frictionlessState: frictionless({ sessionId: "session-one" }),
+				onReload,
+			}),
+		);
+		await complete();
+		expect(onReload).not.toHaveBeenCalled();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(mocks.canvasProps.current).toMatchObject({ submitting: true });
 	});
 
 	test("a re-minted widget keeps the retry prompt on the replacement challenge", async () => {
@@ -541,7 +569,7 @@ describe("finishing the selection", () => {
 	});
 
 	test("a rejected solution with no replacement challenge closes the icon-order", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockResolvedValue(undefined);
@@ -551,7 +579,7 @@ describe("finishing the selection", () => {
 	});
 
 	test("a rejected solution whose retry throws closes the icon-order", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockRejectedValue(new Error("provider down"));
@@ -578,14 +606,14 @@ describe("finishing the selection", () => {
 	});
 
 	test("the icon-order is frozen while the solution is in flight", async () => {
-		const { promise, release } = deferred<boolean>();
+		const { promise, release } = deferred<IconOrderSubmitOutcome>();
 		mocks.submitSolution.mockReturnValue(promise);
 		await openIconOrder();
 		void mocks.canvasProps.current?.onComplete([{ x: 60, y: 50 }], []);
 		await settle();
 		expect(mocks.canvasProps.current?.submitting).toBe(true);
 		expect(spinner()).not.toBeNull();
-		release(true);
+		release("verified");
 		await settle();
 	});
 });
