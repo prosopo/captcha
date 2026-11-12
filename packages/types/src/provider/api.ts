@@ -607,7 +607,14 @@ export interface GetIconOrderCaptchaResponse extends ApiResponse {
 
 export type AudioCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 
-export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
+/**
+ * On escalation `verified` is false and the user must clear the escalated
+ * challenge before a token is issued.
+ */
+export interface IconOrderCaptchaSolutionResponse
+	extends PuzzleCaptchaSolutionResponse {
+	[ApiParams.escalation]?: CaptchaSolutionEscalation;
+}
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]: ConcreteCaptchaType | CaptchaType.authenticated;
@@ -636,10 +643,13 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 
 export const PUZZLE_KEY_HEADER = "x-prosopo-trace";
 
-export interface PowCaptchaSolutionEscalation {
+/** The follow-up challenge a verified solve was escalated to. */
+export interface CaptchaSolutionEscalation {
 	[ApiParams.captchaType]: InteractiveCaptchaType;
 	[ApiParams.sessionId]: string;
 }
+
+export type PowCaptchaSolutionEscalation = CaptchaSolutionEscalation;
 
 export interface PowCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;

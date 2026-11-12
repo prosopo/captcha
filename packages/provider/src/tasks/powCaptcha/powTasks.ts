@@ -86,6 +86,7 @@ import {
 	type RoutingContext,
 	applyRouter,
 } from "../frictionless/routingMachine.js";
+import { sessionRoutingSignals } from "../postSolveRouting.js";
 import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import {
 	evaluateEmailSpamRules,
@@ -649,30 +650,11 @@ export class PowCaptchaManager extends CaptchaManager {
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
-				...(sessionRecord.mode && { mode: sessionRecord.mode }),
 				coordsAllZero: isCoordsAllZero(coords),
 				// SIMD readings are decrypted and attached to the session above
 				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
 				// they are available here in decoded form for the routing machine.
-				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
-				// currentUrl / iframeUrl were captured at frictionless time
-				// from the widget's payload — the submit request has no
-				// equivalent signal (its Referer is the captcha iframe, not
-				// the host page) so we surface them from the persisted
-				// session. iframeUrl is only present when the widget was
-				// embedded at frictionless time.
-				...(sessionRecord.currentUrl && {
-					currentUrl: sessionRecord.currentUrl,
-				}),
-				...(sessionRecord.iframeUrl && {
-					iframeUrl: sessionRecord.iframeUrl,
-				}),
-				...(sessionRecord.scoreComponents?.triggeredDetectors?.length
-					? {
-							triggeredDetectors:
-								sessionRecord.scoreComponents.triggeredDetectors,
-						}
-					: {}),
+				...sessionRoutingSignals(sessionRecord),
 			},
 		};
 

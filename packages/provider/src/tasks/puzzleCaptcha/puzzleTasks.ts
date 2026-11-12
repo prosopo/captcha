@@ -154,7 +154,7 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 		finalY: number;
 		puzzleEvents: PuzzleEvent[];
 	}): Promise<boolean> {
-		return this.submitInteractiveCaptchaSolution({
+		const { verified } = await this.submitInteractiveCaptchaSolution({
 			...submission,
 			isCorrect: (record) =>
 				validatePuzzleSolution({
@@ -179,5 +179,6 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 					),
 				}),
 		});
+		return verified;
 	}
 }
