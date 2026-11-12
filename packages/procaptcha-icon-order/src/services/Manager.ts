@@ -41,12 +41,19 @@ import {
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
 import { embedData, sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
+
+/**
+ * `escalated`: the provider accepted the clicks but wants a follow-up
+ * challenge, which the frictionless wrapper mounts in this widget's place.
+ */
+export type IconOrderSubmitOutcome = "verified" | "escalated" | "failed";
 
 interface IconOrderManagerHandle {
 	start: (
@@ -56,7 +63,7 @@ interface IconOrderManagerHandle {
 	submitSolution: (
 		clicks: IconClick[],
 		iconOrderEvents: IconOrderEvent[],
-	) => Promise<boolean>;
+	) => Promise<IconOrderSubmitOutcome>;
 	resetState: (frictionlessRestart?: () => void) => void;
 	dispose: () => void;
 }
@@ -68,6 +75,7 @@ export const Manager = (
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
 	getHoneypotValue?: () => string | undefined,
+	onEscalate?: ProcaptchaEscalationHandler,
 ): IconOrderManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
@@ -315,7 +323,7 @@ export const Manager = (
 	const submitSolution = async (
 		clicks: IconClick[],
 		iconOrderEvents: IconOrderEvent[],
-	): Promise<boolean> => {
+	): Promise<IconOrderSubmitOutcome> => {
 		if (
 			!storedChallengeResponse ||
 			!storedProviderApi ||
@@ -389,7 +397,26 @@ export const Manager = (
 				simdReadings,
 				clientMetaData,
 			);
-			if (lifecycle.isDisposed()) return false;
+			if (lifecycle.isDisposed()) return "failed";
+
+			const escalation = verifiedSolution[ApiParams.escalation];
+			if (escalation && onEscalate) {
+				updateState({ loading: false });
+				// (0, 0) is the untrusted-event / autoStart default, so it is not
+				// passed on as a click the escalated widget should re-encode.
+				const checkboxClick =
+					storedClickX !== undefined &&
+					storedClickY !== undefined &&
+					(storedClickX !== 0 || storedClickY !== 0)
+						? { x: storedClickX, y: storedClickY }
+						: undefined;
+				onEscalate(
+					escalation[ApiParams.captchaType],
+					escalation[ApiParams.sessionId],
+					checkboxClick,
+				);
+				return "escalated";
+			}
 
 			if (verifiedSolution[ApiParams.verified]) {
 				updateState({
@@ -415,10 +442,10 @@ export const Manager = (
 					}),
 				);
 				setValidChallengeTimeout();
-				return true;
+				return "verified";
 			}
 			onFailed();
-			return false;
+			return "failed";
 		} catch (error) {
 			updateState({ loading: false });
 			throw error;

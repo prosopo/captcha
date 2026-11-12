@@ -33,8 +33,10 @@ import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
 	type InteractiveSolutionSubmission,
+	type InteractiveSubmissionOutcome,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
+import type { PostSolveRouting } from "../postSolveRouting.js";
 
 /** `targets` is the answer: persist it, never put it in a response. */
 export interface IconOrderCaptchaChallenge extends MintedChallenge {
@@ -117,14 +119,20 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 		};
 	}
 
+	/**
+	 * Grades the clicks and, when `postSolve` is given, has the routing machine
+	 * judge a correct solve's trail before a token is issued.
+	 */
 	async verifyIconOrderCaptchaSolution({
 		clicks,
 		iconOrderEvents,
+		postSolve,
 		...submission
 	}: InteractiveSolutionSubmission & {
 		clicks: IconClick[];
 		iconOrderEvents: IconOrderEvent[];
-	}): Promise<boolean> {
+		postSolve?: Pick<PostSolveRouting, "context" | "escalate">;
+	}): Promise<InteractiveSubmissionOutcome> {
 		return this.submitInteractiveCaptchaSolution({
 			...submission,
 			isCorrect: (record) =>
@@ -134,6 +142,14 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 					clicks,
 					iconOrderEvents,
 				}),
+			...(postSolve && {
+				postSolve: {
+					...postSolve,
+					phase: "postIconOrder",
+					baseline: { captchaType: CaptchaType.iconOrder },
+					raw: { iconOrderEvents, iconOrderClicks: clicks },
+				},
+			}),
 		});
 	}
 }

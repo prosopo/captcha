@@ -138,9 +138,9 @@ export interface ProcaptchaProps {
 	// display an error message
 	errorMessage?: string;
 	container?: HTMLElement;
-	// Set by ProcaptchaFrictionless on the PoW widget so a verified PoW
-	// solution that the provider chose to escalate can be transitioned into
-	// the appropriate image/puzzle widget without a full restart.
+	// Set by ProcaptchaFrictionless so a verified PoW or icon order solution
+	// that the provider chose to escalate can be transitioned into the
+	// follow-up widget without a full restart.
 	onEscalate?: ProcaptchaEscalationHandler;
 	// When true the widget calls manager.start() on mount instead of waiting
 	// for a checkbox click. Set by ProcaptchaFrictionless after a PoW

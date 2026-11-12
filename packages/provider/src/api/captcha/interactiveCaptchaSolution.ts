@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
-import type { PuzzleCaptchaSolutionResponse } from "@prosopo/types";
+import type { IconOrderCaptchaSolutionResponse } from "@prosopo/types";
+import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
+import type { InteractiveSubmissionOutcome } from "../../tasks/interactiveCaptcha/interactiveCaptchaManager.js";
 import { Tasks } from "../../tasks/tasks.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { summariseRequestBody } from "../requestBodySummary.js";
@@ -32,7 +34,8 @@ export interface InteractiveSolutionSpec<TBody> {
 		body: TBody,
 		submitWindowMs: number,
 		req: Request & AugmentedRequest,
-	) => Promise<boolean>;
+		clientRecord: ClientRecord,
+	) => Promise<InteractiveSubmissionOutcome>;
 }
 
 /** Request handling shared by the solution endpoints of the interactive types. */
@@ -53,7 +56,7 @@ export const interactiveSolutionHandler =
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning verified",
 			}));
-			const response: PuzzleCaptchaSolutionResponse = {
+			const response: IconOrderCaptchaSolutionResponse = {
 				status: "ok",
 				verified: true,
 			};
@@ -86,7 +89,7 @@ export const interactiveSolutionHandler =
 		// lookup, so they work in every environment without a registered record.
 		const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
 		if (testVerdict !== null) {
-			const response: PuzzleCaptchaSolutionResponse = {
+			const response: IconOrderCaptchaSolutionResponse = {
 				status: "ok",
 				verified: testVerdict,
 			};
@@ -116,10 +119,17 @@ export const interactiveSolutionHandler =
 				| undefined;
 			const submitWindowMs: number =
 				persistedSolutionTimeout ?? clientRecord.settings.verifiedTimeout;
-			const verified = await spec.verify(tasks, parsed, submitWindowMs, req);
-			const response: PuzzleCaptchaSolutionResponse = {
+			const { verified, escalation } = await spec.verify(
+				tasks,
+				parsed,
+				submitWindowMs,
+				req,
+				clientRecord,
+			);
+			const response: IconOrderCaptchaSolutionResponse = {
 				status: "ok",
 				verified,
+				...(escalation && { escalation }),
 			};
 			return res.json(response);
 		} catch (err) {

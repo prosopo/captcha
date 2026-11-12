@@ -20,8 +20,8 @@ export default (env: ProviderEnvironment) =>
 	interactiveSolutionHandler(env, {
 		label: "puzzle",
 		parse: (body) => SubmitPuzzleCaptchaSolutionBody.parse(body),
-		verify: (tasks, body, submitWindowMs, req) =>
-			tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
+		verify: async (tasks, body, submitWindowMs, req) => ({
+			verified: await tasks.puzzleCaptchaManager.verifyPuzzleCaptchaSolution({
 				challenge: body.challenge,
 				providerChallengeSignature: body.signature.provider.challenge,
 				finalX: body.finalX,
@@ -35,4 +35,5 @@ export default (env: ProviderEnvironment) =>
 				simdReadings: body.simdReadings,
 				clientMetaData: body.clientMetaData,
 			}),
+		}),
 	});

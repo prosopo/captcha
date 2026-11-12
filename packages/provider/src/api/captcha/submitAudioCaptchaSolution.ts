@@ -20,8 +20,8 @@ export default (env: ProviderEnvironment) =>
 	interactiveSolutionHandler(env, {
 		label: "audio",
 		parse: (body) => SubmitAudioCaptchaSolutionBody.parse(body),
-		verify: (tasks, body, submitWindowMs, req) =>
-			tasks.audioCaptchaManager.verifyAudioCaptchaSolution({
+		verify: async (tasks, body, submitWindowMs, req) => ({
+			verified: await tasks.audioCaptchaManager.verifyAudioCaptchaSolution({
 				challenge: body.challenge,
 				providerChallengeSignature: body.signature.provider.challenge,
 				submittedAnswer: body.answer,
@@ -35,4 +35,5 @@ export default (env: ProviderEnvironment) =>
 				simdReadings: body.simdReadings,
 				clientMetaData: body.clientMetaData,
 			}),
+		}),
 	});

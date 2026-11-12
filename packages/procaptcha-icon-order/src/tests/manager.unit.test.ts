@@ -27,6 +27,7 @@ import {
 	type PackedBehavioralData,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProviderSelectRetryContext,
 	type RandomProvider,
@@ -42,7 +43,7 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { Manager } from "../services/Manager.js";
+import { type IconOrderSubmitOutcome, Manager } from "../services/Manager.js";
 import {
 	OTHER_PROVIDER_URL,
 	PROVIDER_URL,
@@ -201,6 +202,7 @@ interface HarnessOptions {
 	frictionlessState?: FrictionlessState;
 	withFrictionless?: boolean;
 	honeypot?: () => string | undefined;
+	onEscalate?: ProcaptchaEscalationHandler;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -228,6 +230,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		callbackInput,
 		frictionlessState,
 		options.honeypot,
+		options.onEscalate,
 	);
 	return { manager, state: currentState, updates, events, restart };
 };
@@ -248,7 +251,7 @@ const submitArgs = (
 	return call;
 };
 
-const solve = async (harness: Harness): Promise<boolean> => {
+const solve = async (harness: Harness): Promise<IconOrderSubmitOutcome> => {
 	await harness.manager.start(11, 22);
 	return harness.manager.submitSolution(clicks(), iconOrderEvents());
 };
@@ -729,7 +732,7 @@ describe("submitSolution: behavioural data", () => {
 		const encrypt = vi.fn<(data: string) => Promise<string>>();
 		encrypt.mockRejectedValue(new Error("no key"));
 		const harness = build({ frictionlessState: withCollectors(encrypt) });
-		await expect(solve(harness)).resolves.toBe(true);
+		await expect(solve(harness)).resolves.toBe("verified");
 		expect(submitArgs()[6]).toBeUndefined();
 	});
 
@@ -774,10 +777,58 @@ describe("submitSolution: behavioural data", () => {
 	});
 });
 
+describe("submitSolution: an escalated solve", () => {
+	const escalated = (): IconOrderCaptchaSolutionResponse =>
+		solutionResponse({
+			verified: false,
+			escalation: {
+				captchaType: CaptchaType.image,
+				sessionId: "escalated-session",
+			},
+		});
+
+	test("hands the follow-up challenge to the wrapper instead of a token", async () => {
+		mocks.submitIconOrderCaptchaSolution.mockResolvedValue(escalated());
+		const onEscalate = vi.fn<ProcaptchaEscalationHandler>();
+		const harness = build({ onEscalate });
+		await expect(solve(harness)).resolves.toBe("escalated");
+		expect(onEscalate).toHaveBeenCalledWith(
+			CaptchaType.image,
+			"escalated-session",
+			{ x: 11, y: 22 },
+		);
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
+		expect(lastUpdate(harness, "loading")).toBe(false);
+	});
+
+	test("does not pass on a (0, 0) checkbox click", async () => {
+		mocks.submitIconOrderCaptchaSolution.mockResolvedValue(escalated());
+		const onEscalate = vi.fn<ProcaptchaEscalationHandler>();
+		const harness = build({ onEscalate });
+		await harness.manager.start(0, 0);
+		await harness.manager.submitSolution(clicks(), iconOrderEvents());
+		expect(onEscalate).toHaveBeenCalledWith(
+			CaptchaType.image,
+			"escalated-session",
+			undefined,
+		);
+	});
+
+	test("without a wrapper to hand it to, fails like a rejected solve", async () => {
+		mocks.submitIconOrderCaptchaSolution.mockResolvedValue(escalated());
+		const harness = build();
+		await expect(solve(harness)).resolves.toBe("failed");
+		expect(harness.events.onFailed).toHaveBeenCalled();
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+	});
+});
+
 describe("submitSolution: the verdict", () => {
 	test("marks the user human and emits a token the provider can verify", async () => {
 		const harness = build();
-		await expect(solve(harness)).resolves.toBe(true);
+		await expect(solve(harness)).resolves.toBe("verified");
 		expect(lastUpdate(harness, "isHuman")).toBe(true);
 		const token = harness.events.onHuman.mock.calls[0]?.[0];
 		if (!token) throw new Error("expected a token");
@@ -822,7 +873,7 @@ describe("submitSolution: the verdict", () => {
 			solutionResponse({ verified: false }),
 		);
 		const harness = build();
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(harness.events.onFailed).toHaveBeenCalled();
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalled();
@@ -834,7 +885,7 @@ describe("submitSolution: the verdict", () => {
 			solutionResponse({ verified: false }),
 		);
 		const harness = build({ withFrictionless: false });
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(harness.events.onReset).toHaveBeenCalled();
 	});
 });
