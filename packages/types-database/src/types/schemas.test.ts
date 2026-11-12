@@ -514,6 +514,11 @@ describe("UserSettingsSchema", () => {
 		expect(doc.clientUrl).toBe("/robots.txt");
 	});
 
+	it("keeps datasetId on write", () => {
+		const datasetId = `0x${"ab".repeat(32)}`;
+		expect(settings({ datasetId }).datasetId).toBe(datasetId);
+	});
+
 	it("rejects a captcha type outside the enum", () => {
 		expect(
 			errorPaths(settings({ captchaType: "sudoku" }).validateSync()),
