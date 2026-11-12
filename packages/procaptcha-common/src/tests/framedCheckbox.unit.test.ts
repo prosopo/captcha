@@ -18,11 +18,16 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { CheckboxProps } from "../components/checkbox.js";
 import {
 	type CheckboxFrameMessage,
-	FLUSH_MS,
 	FRAME_READY_TIMEOUT_MS,
 	mountFramedCheckbox,
 } from "../components/framedCheckbox.js";
 import type { Component } from "../dom/component.js";
+import {
+	type PageBehaviour,
+	getPageBehaviour,
+	startPageBehaviourCapture,
+	stopPageBehaviourCapture,
+} from "../pageBehaviour.js";
 import { type Mounted, mount } from "./domHarness.js";
 
 const FRAME_URL = new URL("https://js.example.test/js/checkbox-frame.html");
@@ -234,21 +239,79 @@ describe("talking to the frame", () => {
 	});
 });
 
-describe("tearing down", () => {
-	test("asks a ready frame to send its input again, then removes it once that has had time", () => {
-		const post = vi.spyOn(frame().contentWindow as Window, "postMessage");
+describe("forwarded input", () => {
+	const captureHost: Record<symbol, unknown> = globalThis as unknown as Record<
+		symbol,
+		unknown
+	>;
+
+	const captured = (): PageBehaviour => {
+		const behaviour = getPageBehaviour();
+		if (!behaviour) throw new Error("capture not started");
+		return behaviour;
+	};
+
+	const tap = (): void => {
+		const touch = { x: 40, y: 360, id: 0, force: 1 };
+		fromFrame({
+			t: "input",
+			type: "touchstart",
+			touches: [touch],
+			changed: [touch],
+		});
+		fromFrame({ t: "input", type: "touchend", touches: [], changed: [touch] });
+		fromFrame({
+			t: "input",
+			type: "click",
+			x: 40,
+			y: 360,
+			button: 0,
+			ctrlKey: false,
+			shiftKey: false,
+			altKey: false,
+		});
+	};
+
+	beforeEach(() => {
+		startPageBehaviourCapture();
+	});
+
+	afterEach(() => {
+		stopPageBehaviourCapture();
+		delete captureHost[Symbol.for("prosopo.pageBehaviour")];
+	});
+
+	test("keeps a tap made before the detector is listening, after the frame is gone", () => {
 		fromFrame({ t: "ready" });
-		fromFrame({ t: "drawn" });
+		tap();
 		checkbox?.destroy();
 		checkbox = undefined;
 
-		expect(post.mock.calls.at(-1)?.[0]).toMatchObject({ t: "flush" });
-		expect(mounted.container.querySelector("iframe")).not.toBeNull();
-
-		vi.advanceTimersByTime(FLUSH_MS);
-		expect(mounted.container.querySelector("iframe")).toBeNull();
+		expect(captured().touch.map((point) => point.eventType)).toEqual([
+			"touchstart",
+			"touchend",
+		]);
+		expect(captured().touch[0]).toMatchObject({ x: 40, y: 360, touchCount: 1 });
+		expect(captured().press).toEqual([
+			expect.objectContaining({
+				eventType: "click",
+				x: 40,
+				y: 360,
+				targetElement: "IFRAME",
+			}),
+		]);
 	});
 
+	test("leaves later input to the detector", () => {
+		stopPageBehaviourCapture();
+		tap();
+
+		expect(captured().touch).toEqual([]);
+		expect(captured().press).toEqual([]);
+	});
+});
+
+describe("tearing down", () => {
 	test("removes the frame and stops listening", () => {
 		const contentWindow = frame().contentWindow;
 		checkbox?.destroy();

@@ -16,6 +16,7 @@ import { type Component, Teardown } from "../dom/component.js";
 import { applyStyles } from "../dom/element.js";
 import type { Activation } from "../events/activation.js";
 import { noteInputMethod, watchInputMethod } from "../events/inputModality.js";
+import { addPageBehaviour } from "../pageBehaviour.js";
 import { type CheckboxProps, mountCheckbox } from "./checkbox.js";
 
 /** The page the bundle ships beside its chunks to host the checkbox. */
@@ -29,12 +30,6 @@ export const CHECKBOX_FRAME_FILE = "checkbox-frame.html";
 export const FRAME_READY_TIMEOUT_MS = 3000;
 
 const FRAME_WIDTH_PX = 300;
-
-/** How long a removed frame is kept, hidden, to send its input again. */
-export const FLUSH_MS = 250;
-
-/** How much forwarded input a frame keeps to send again. */
-const MAX_BUFFERED_INPUT = 300;
 const FRAME_HEIGHT_PX = 58;
 
 /** Everything the frame needs to draw the checkbox. Functions do not cross. */
@@ -42,8 +37,7 @@ export type CheckboxFrameProps = Omit<CheckboxProps, "onChange">;
 
 export type CheckboxFrameParentMessage =
 	| { pf: string; t: "props"; props: CheckboxFrameProps }
-	| { pf: string; t: "offset"; left: number; top: number }
-	| { pf: string; t: "flush" };
+	| { pf: string; t: "offset"; left: number; top: number };
 
 /** A touch the frame forwards, already in the page's coordinates. */
 export type ForwardedTouch = {
@@ -56,25 +50,30 @@ export type ForwardedTouch = {
 	rot?: number;
 };
 
+type ForwardedMouseInput = {
+	type: (typeof MOUSE_INPUT)[number];
+	x: number;
+	y: number;
+	button: number;
+	ctrlKey: boolean;
+	shiftKey: boolean;
+	altKey: boolean;
+};
+
+type ForwardedTouchInput = {
+	type: (typeof TOUCH_INPUT)[number];
+	touches: ForwardedTouch[];
+	changed: ForwardedTouch[];
+};
+
 /**
  * Input inside the frame never reaches the page's own behaviour collection, so
  * the frame forwards it in page coordinates.
  */
-export type CheckboxFrameInputMessage = {
-	pf: string;
-	t: "input";
-	/** Counts up per frame, so input sent again on a flush is recorded once. */
-	seq: number;
-	type: string;
-	x?: number;
-	y?: number;
-	button?: number;
-	ctrlKey?: boolean;
-	shiftKey?: boolean;
-	altKey?: boolean;
-	touches?: ForwardedTouch[];
-	changed?: ForwardedTouch[];
-};
+export type CheckboxFrameInputMessage = { pf: string; t: "input" } & (
+	| ForwardedMouseInput
+	| ForwardedTouchInput
+);
 
 export type CheckboxFrameMessage =
 	| { pf: string; t: "ready" }
@@ -248,6 +247,8 @@ export const mountFramedCheckbox = (
 			showFrame();
 		} else if ("activate" === data.t && shown) {
 			activate(data);
+		} else if ("input" === data.t) {
+			recordForwardedInput(data);
 		}
 	});
 
@@ -262,18 +263,51 @@ export const mountFramedCheckbox = (
 			}
 		},
 		destroy(): void {
-			// Input forwarded before the page's collector was listening would go
-			// with the frame, so the frame sends it again before it is removed.
-			if (!ready || !frame.isConnected) {
-				teardown.run();
-				return;
-			}
-			applyStyles(host, { display: "none" });
-			const flush: CheckboxFrameParentMessage = { pf: nonce, t: "flush" };
-			frame.contentWindow?.postMessage(flush, src.origin);
-			setTimeout(() => teardown.run(), FLUSH_MS);
+			teardown.run();
 		},
 	};
+};
+
+/**
+ * The detector only starts listening for the frame's input once it has loaded,
+ * and a tap before then would be lost with the frame when the widget next
+ * redraws, so the page's early capture keeps it.
+ */
+const recordForwardedInput = (input: CheckboxFrameInputMessage): void => {
+	const timestamp = Date.now();
+	if ("touches" in input) {
+		const touch = input.touches[0] ?? input.changed[0];
+		if (touch) {
+			addPageBehaviour("touch", {
+				x: touch.x,
+				y: touch.y,
+				timestamp,
+				eventType: input.type,
+				touchCount: input.touches.length,
+				force: touch.force,
+				touchId: touch.id,
+				radiusX: touch.rx,
+				radiusY: touch.ry,
+				rotationAngle: touch.rot,
+			});
+		}
+		return;
+	}
+	if ("mousemove" === input.type) {
+		addPageBehaviour("mouse", { x: input.x, y: input.y, timestamp });
+		return;
+	}
+	addPageBehaviour("press", {
+		x: input.x,
+		y: input.y,
+		timestamp,
+		eventType: input.type,
+		button: input.button,
+		targetElement: "IFRAME",
+		ctrlKey: input.ctrlKey,
+		shiftKey: input.shiftKey,
+		altKey: input.altKey,
+	});
 };
 
 const MOUSE_INPUT = [
@@ -330,23 +364,6 @@ export const runCheckboxFrame = (): void => {
 
 	let checkbox: Component<CheckboxProps> | undefined;
 	let offset = { left: 0, top: 0 };
-	const forwarded: CheckboxFrameInputMessage[] = [];
-	let nextSeq = 0;
-	const forward = (
-		input: Omit<CheckboxFrameInputMessage, "pf" | "t" | "seq">,
-	): void => {
-		const message: CheckboxFrameInputMessage = {
-			pf: nonce,
-			t: "input",
-			seq: nextSeq++,
-			...input,
-		};
-		forwarded.push(message);
-		if (forwarded.length > MAX_BUFFERED_INPUT) {
-			forwarded.shift();
-		}
-		post(message);
-	};
 
 	// The frame page lays its body out inline-block, so the body's box is the
 	// checkbox's size rather than the frame's.
@@ -363,12 +380,6 @@ export const runCheckboxFrame = (): void => {
 			}
 			if ("offset" === event.data.t) {
 				offset = { left: event.data.left, top: event.data.top };
-				return;
-			}
-			if ("flush" === event.data.t) {
-				for (const message of forwarded) {
-					post(message);
-				}
 				return;
 			}
 			if ("props" !== event.data.t) {
@@ -431,7 +442,9 @@ export const runCheckboxFrame = (): void => {
 			type,
 			(event: MouseEvent) => {
 				if (event.isTrusted) {
-					forward({
+					post({
+						pf: nonce,
+						t: "input",
 						type,
 						x: event.clientX + offset.left,
 						y: event.clientY + offset.top,
@@ -450,7 +463,9 @@ export const runCheckboxFrame = (): void => {
 			type,
 			(event: TouchEvent) => {
 				if (event.isTrusted) {
-					forward({
+					post({
+						pf: nonce,
+						t: "input",
 						type,
 						touches: Array.from(event.touches, forwardTouch),
 						changed: Array.from(event.changedTouches, forwardTouch),
