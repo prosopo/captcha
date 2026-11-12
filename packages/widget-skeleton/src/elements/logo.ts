@@ -14,36 +14,7 @@
 
 import { WIDGET_LINK_PATH, WIDGET_URL } from "../constants.js";
 import type { Theme } from "../theme.js";
-
-/** What the logo link tells the page about the widget the visitor clicked. */
-export interface WidgetLinkContext {
-	/** The site's chosen widget language, else the browser's. */
-	readonly language?: string;
-	readonly siteKey?: string;
-}
-
-/**
- * The logo's destination, told which site the visitor came from, which site
- * key it uses and which language they were reading. The page is for the
- * person who was shown the widget, not for someone shopping for a captcha.
- */
-export function widgetLinkUrl(
-	host: string,
-	{ language, siteKey }: WidgetLinkContext = {},
-): string {
-	const url = new URL(WIDGET_LINK_PATH, WIDGET_URL);
-	if (host) {
-		url.searchParams.set("ref", host);
-	}
-	if (siteKey) {
-		url.searchParams.set("utm_campaign", siteKey);
-	}
-	url.searchParams.set("utm_medium", "checkbox");
-	if (language) {
-		url.searchParams.set("hl", language);
-	}
-	return url.href;
-}
+import { type WidgetLinkContext, widgetLinkUrl } from "../widgetLink.js";
 
 /**
  * Creates a logo element with appropriate styling
@@ -60,7 +31,8 @@ export function createLogoElement(
 	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
 	widgetLogo.querySelector("a")?.setAttribute(
 		"href",
-		widgetLinkUrl(window.location.hostname, {
+		widgetLinkUrl(`${WIDGET_URL}${WIDGET_LINK_PATH}`, "logo", {
+			host: window.location.hostname,
 			...link,
 			language: link.language ?? navigator.language,
 		}),

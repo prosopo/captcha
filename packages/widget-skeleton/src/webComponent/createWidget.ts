@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { WidgetLinkContext } from "../elements/logo.js";
 import { createWidgetSkeletonElement } from "../elements/skeleton.js";
 import type { Theme } from "../theme.js";
+import type { WidgetLinkContext } from "../widgetLink.js";
 import { applyDefaultStyles } from "./createWebComponent.js";
 
 /**

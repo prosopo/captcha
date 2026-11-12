@@ -23,8 +23,9 @@ import {
 	WIDGET_PADDING,
 } from "../constants.js";
 import { type Theme, withAlpha } from "../theme.js";
+import type { WidgetLinkContext } from "../widgetLink.js";
 import { createCheckboxElement } from "./checkbox.js";
-import { type WidgetLinkContext, createLogoElement } from "./logo.js";
+import { createLogoElement } from "./logo.js";
 
 // The widget ignores the page's direction and follows only a `dir` set on its
 // own host, which the bundle derives from the widget language.

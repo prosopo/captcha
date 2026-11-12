@@ -19,6 +19,7 @@ import {
 	type CheckboxProps,
 	mountCheckbox,
 	splitErrorCode,
+	widgetLinkContext,
 } from "../components/checkbox.js";
 import type { Component } from "../dom/component.js";
 import {
@@ -298,6 +299,34 @@ describe("the error state", () => {
 		expect(code?.tagName).toBe("A");
 		expect(code?.textContent).toBe("SITE_KEY_NOT_REGISTERED:PROV-30");
 		expect(code?.getAttribute("href")).toContain("faq");
+	});
+
+	test("tells the FAQ which site, site key and language the visitor came from", () => {
+		render({
+			error: CODED_ERROR,
+			link: { host: "pimeyes.com", siteKey: "5Fsite", language: "de" },
+		});
+		const href: string = label().querySelector("a")?.getAttribute("href") ?? "";
+		const params: URLSearchParams = new URL(href).searchParams;
+		expect(params.get("ref")).toBe("pimeyes.com");
+		expect(params.get("utm_campaign")).toBe("5Fsite");
+		expect(params.get("utm_medium")).toBe("error");
+		expect(params.get("hl")).toBe("de");
+	});
+
+	test("says the error text was clicked, even with no site named", () => {
+		render({ error: "Cannot load CAPTCHA" });
+		const href: string = label().querySelector("a")?.getAttribute("href") ?? "";
+		expect(new URL(href).searchParams.get("utm_medium")).toBe("error");
+	});
+
+	test("cannot be handed a script link through the site name", () => {
+		render({
+			error: "Cannot load CAPTCHA",
+			link: { host: "javascript:alert(1)" },
+		});
+		const href: string = label().querySelector("a")?.getAttribute("href") ?? "";
+		expect(new URL(href).protocol).toBe("https:");
 	});
 
 	test("lets the code wrap anywhere so it stays inside the widget", () => {
@@ -728,5 +757,23 @@ describe("handing focus across the loading swap", () => {
 
 		expect(document.activeElement).toBe(elsewhere);
 		elsewhere.remove();
+	});
+});
+
+describe("widgetLinkContext", () => {
+	test("names the page the widget is on, not the frame it may be drawn in", () => {
+		expect(widgetLinkContext("5Fsite", "fr")).toEqual({
+			host: window.location.hostname,
+			siteKey: "5Fsite",
+			language: "fr",
+		});
+	});
+
+	test("falls back to the browser's language and leaves out an empty site key", () => {
+		expect(widgetLinkContext("", undefined)).toEqual({
+			host: window.location.hostname,
+			siteKey: undefined,
+			language: navigator.language,
+		});
 	});
 });

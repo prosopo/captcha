@@ -60,7 +60,8 @@ describe("error FAQ link", () => {
 		"https://docs.example.com/",
 		"https://docs.example.com//",
 	])("points at one FAQ page for PROSOPO_DOCS_URL=%s", async (docsUrl) => {
-		expect(await faqHref(docsUrl)).toBe(
+		const href: URL = new URL((await faqHref(docsUrl)) ?? "");
+		expect(`${href.origin}${href.pathname}`).toBe(
 			"https://docs.example.com/en/basics/faq/",
 		);
 	});

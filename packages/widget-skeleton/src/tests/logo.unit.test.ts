@@ -15,7 +15,7 @@
 
 import { describe, expect, test } from "vitest";
 import { WIDGET_LINK_PATH, WIDGET_URL } from "../constants.js";
-import { createLogoElement, widgetLinkUrl } from "../elements/logo.js";
+import { createLogoElement } from "../elements/logo.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
 
 const logoAnchor = (theme: Theme): HTMLAnchorElement => {
@@ -62,7 +62,7 @@ describe("createLogoElement", () => {
 		expect(new URL(anchor?.href ?? "").searchParams.get("hl")).toBe("pt-BR");
 	});
 
-	test("carries the site key as the campaign, like hCaptcha", () => {
+	test("carries the site key as the campaign and says the logo was clicked", () => {
 		const anchor = createLogoElement(lightTheme, {
 			siteKey: "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw",
 		}).querySelector("a");
@@ -70,7 +70,7 @@ describe("createLogoElement", () => {
 		expect(params.get("utm_campaign")).toBe(
 			"5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw",
 		);
-		expect(params.get("utm_medium")).toBe("checkbox");
+		expect(params.get("utm_medium")).toBe("logo");
 	});
 
 	test("falls back to the browser's language", () => {
@@ -133,29 +133,5 @@ describe("createLogoElement", () => {
 		expect(light.split(lightTheme.palette.logoFill).join("X")).toBe(
 			dark.split(darkTheme.palette.logoFill).join("X"),
 		);
-	});
-});
-
-describe("widgetLinkUrl", () => {
-	test("carries the host, site key and language as query parameters", () => {
-		expect(
-			widgetLinkUrl("pimeyes.com", { siteKey: "5Fsite", language: "de" }),
-		).toBe(
-			`${WIDGET_URL}${WIDGET_LINK_PATH}?ref=pimeyes.com&utm_campaign=5Fsite&utm_medium=checkbox&hl=de`,
-		);
-	});
-
-	test("leaves out what it was not given", () => {
-		expect(widgetLinkUrl("")).toBe(
-			`${WIDGET_URL}${WIDGET_LINK_PATH}?utm_medium=checkbox`,
-		);
-	});
-
-	test("keeps a hostile language inside its own parameter", () => {
-		const url: URL = new URL(
-			widgetLinkUrl("example.com", { language: "en&ref=evil.com" }),
-		);
-		expect(url.searchParams.getAll("ref")).toEqual(["example.com"]);
-		expect(url.searchParams.get("hl")).toBe("en&ref=evil.com");
 	});
 });
