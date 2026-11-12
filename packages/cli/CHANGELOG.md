@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.11.3
+### Patch Changes
+
+- fe8c938: Release alongside the framed checkbox input fix in the widget.
+
 ## 3.11.2
 ### Patch Changes
 

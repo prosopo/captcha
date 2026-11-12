@@ -1,5 +1,11 @@
 # @prosopo/procaptcha
 
+## 2.12.12
+### Patch Changes
+
+- Updated dependencies [aa3afc2]
+  - @prosopo/procaptcha-common@2.23.12
+
 ## 2.12.11
 ### Patch Changes
 
