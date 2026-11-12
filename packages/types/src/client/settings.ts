@@ -1045,6 +1045,15 @@ export const ClientSettingsSchema = object({
 	clientUrl: string()
 		.regex(/^\/(?!\/)/, "clientUrl must be a root-relative path")
 		.optional(),
+	// Image dataset this site key is served instead of the provider default,
+	// which an empty string also selects. A provider that does not hold the
+	// dataset falls back to its default.
+	datasetId: string()
+		.regex(
+			/^(0x[0-9a-fA-F]{64})?$/,
+			"datasetId must be a 32-byte hex hash or empty",
+		)
+		.optional(),
 }).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {
 	message: "imageMinRounds must be <= imageMaxRounds",
 	path: ["imageMinRounds"],

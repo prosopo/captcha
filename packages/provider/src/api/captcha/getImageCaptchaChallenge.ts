@@ -1,5 +1,4 @@
-import { isHex } from "@polkadot/util/is";
-import { ProsopoError, isProsopoError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
 import { Languages, isLanguage } from "@prosopo/locale";
 import {
@@ -44,32 +43,12 @@ import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { isPuzzleImageSwitchAvailable } from "./getFrictionlessCaptchaChallenge/constants.js";
 import { isPuzzleSwitchBackAvailable } from "./getFrictionlessCaptchaChallenge/refreshLineage.js";
+import { isStoredDataset, resolveSiteDatasetId } from "./imageDataset.js";
 import { localiseTarget } from "./localiseTarget.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { getSealedAssetsResolver } from "./sealedAssetsResolver.js";
 import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
-
-// A client-supplied datasetId that is not a stored dataset is bad input, not a
-// server fault. Any other lookup failure (e.g. the database being down) is
-// rethrown so it still surfaces as a 500.
-const clientDatasetExists = async (
-	tasks: Tasks,
-	datasetId: string | number[],
-): Promise<boolean> => {
-	if (typeof datasetId !== "string" || !isHex(datasetId)) {
-		return false;
-	}
-	try {
-		await tasks.db.getDatasetDetails(datasetId);
-		return true;
-	} catch (err) {
-		if (isProsopoError(err, "RECORD_NOT_FOUND")) {
-			return false;
-		}
-		throw err;
-	}
-};
 
 export default (
 	env: ProviderEnvironment,
@@ -119,11 +98,11 @@ export default (
 
 		// Clients no longer send datasetId (DNS routes them to an arbitrary
 		// pronode; they can't know in advance which dataset to pin). Fall back
-		// to the env's default — populated from the most-recently-uploaded
-		// dataset at startup, see `Environment.isReady` in packages/env.
-		const datasetId = clientDatasetId ?? env.datasetId;
+		// to the env's default — resolved at startup, see `Environment.isReady`
+		// in packages/env — unless the site key's settings name a dataset.
+		const fallbackDatasetId = clientDatasetId ?? env.datasetId;
 
-		if (!datasetId) {
+		if (!fallbackDatasetId) {
 			return next(
 				new ProsopoError({
 					code: "INVALID_REQUEST",
@@ -260,7 +239,7 @@ export default (
 			// relies on that to tell which type a key serves.
 			if (
 				clientDatasetId !== undefined &&
-				!(await clientDatasetExists(tasks, clientDatasetId))
+				!(await isStoredDataset(tasks.db, clientDatasetId))
 			) {
 				return next(
 					new ProsopoError({
@@ -271,6 +250,16 @@ export default (
 					}),
 				);
 			}
+
+			const datasetId =
+				clientDatasetId ??
+				(await resolveSiteDatasetId({
+					db: tasks.db,
+					siteDatasetId: clientRecord.settings.datasetId,
+					defaultDatasetId: fallbackDatasetId,
+					siteKey: dapp,
+					logger: req.logger,
+				}));
 
 			// Evaluate the site's trafficFilter against the connecting IP.
 			// Only `challenge` policies affect the request-time gate — they

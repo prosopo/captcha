@@ -428,6 +428,7 @@ export const UserSettingsSchema = new Schema({
 	allowAgents: { type: Boolean, required: false },
 	assetOrigin: { type: String, required: false },
 	clientUrl: { type: String, required: false },
+	datasetId: { type: String, required: false },
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({

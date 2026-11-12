@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoError } from "@prosopo/common";
+import { ProsopoError, isProsopoError } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
 import { DEFAULT_LOOKUP_CACHE, IpInfoService } from "@prosopo/ipinfo";
 import { Keyring, getPair } from "@prosopo/keyring";
@@ -180,7 +180,7 @@ export class Environment implements ProsopoEnvironment {
 			// background and this is a DB read we don't want to gate boot on.
 			if (!maintenanceMode && this.db && !this.datasetId) {
 				try {
-					this.datasetId = await this.db.getMostRecentDatasetId();
+					this.datasetId = await resolveDefaultDatasetId(this.db);
 					if (this.datasetId) {
 						this.logger.info(() => ({
 							msg: "Default dataset ID set",
@@ -188,12 +188,15 @@ export class Environment implements ProsopoEnvironment {
 						}));
 					} else {
 						this.logger.warn(() => ({
-							msg: "No datasets found in database. Image captchas will not work until a dataset is uploaded.",
+							msg: "No default dataset found in database. Image captchas will not work until it is uploaded.",
+							data: {
+								pinnedDatasetId: process.env.PROSOPO_DEFAULT_DATASET_ID,
+							},
 						}));
 					}
 				} catch (err) {
 					this.logger.warn(() => ({
-						msg: "Failed to get most recent dataset ID",
+						msg: "Failed to get default dataset ID",
 						data: { error: err },
 					}));
 				}
@@ -286,6 +289,28 @@ export class Environment implements ProsopoEnvironment {
 		}
 	}
 }
+
+// The most recent upload is the default unless one is pinned, so loading a
+// dataset meant for one site key does not move every other key onto it at the
+// next restart. A pinned dataset that is not stored serves nothing rather than
+// silently falling back to whatever was uploaded last.
+const resolveDefaultDatasetId = async (
+	db: Pick<ProviderDatabase, "getMostRecentDatasetId" | "getDatasetDetails">,
+): Promise<string | undefined> => {
+	const pinned = process.env.PROSOPO_DEFAULT_DATASET_ID;
+	if (!pinned) {
+		return db.getMostRecentDatasetId();
+	}
+	try {
+		await db.getDatasetDetails(pinned);
+		return pinned;
+	} catch (err) {
+		if (isProsopoError(err, "RECORD_NOT_FOUND")) {
+			return undefined;
+		}
+		throw err;
+	}
+};
 
 // Read directly from process.env to avoid a cyclic dep on the provider
 // package (which owns the runtime toggle endpoint). Same env var name.
