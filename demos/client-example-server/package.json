@@ -59,7 +59,7 @@
 		"express": "4.22.3",
 		"jsonwebtoken": "9.0.3",
 		"mongodb-memory-server": "10.3.0",
-		"mongoose": "9.11.2",
+		"mongoose": "9.11.4",
 		"zod": "3.25.76"
 	},
 	"devDependencies": {

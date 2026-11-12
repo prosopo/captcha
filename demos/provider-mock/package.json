@@ -42,7 +42,7 @@
 		"cors": "2.8.6",
 		"express": "4.22.3",
 		"express-rate-limit": "7.4.0",
-		"mongoose": "9.11.2"
+		"mongoose": "9.11.4"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
