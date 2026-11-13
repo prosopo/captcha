@@ -41,7 +41,7 @@
 		"@prosopo/types": "workspace:*",
 		"@prosopo/user-access-policy": "workspace:*",
 		"bson": "7.3.3",
-		"mongoose": "9.11.2",
+		"mongoose": "9.11.4",
 		"zod": "3.25.76"
 	},
 	"devDependencies": {
