@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 5.32.1
+### Patch Changes
+
+- a06ca60: Decision machines can now read the session's WebRTC signal: routing machines as `raw.webrtc`, and verify-time decide rules as `webrtc`. The post-solve routing pass and escalated sessions carry it from the session where it was gathered.
+
 ## 5.32.0
 ### Minor Changes
 
