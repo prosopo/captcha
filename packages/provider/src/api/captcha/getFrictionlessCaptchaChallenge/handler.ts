@@ -470,6 +470,11 @@ export default (
 										chelloToHandshakeUs: req.chelloToHandshakeUs,
 									}),
 									...rawTlsSignalsForSession(req),
+									// The replayed session may predate the probe, so this
+									// request's own report is preferred.
+									...((webrtc ?? dedup.session.webrtc) && {
+										webrtc: webrtc ?? dedup.session.webrtc,
+									}),
 									// req.ipInfo is the per-request ipapi lookup. Only
 									// surface it into `raw` when the lookup succeeded —
 									// an `isValid:false` payload just means the middleware
@@ -1072,6 +1077,7 @@ export default (
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 					...rawTlsSignalsForSession(req),
+					...(webrtc && { webrtc }),
 					// req.ipInfo is the per-request ipapi lookup; only surface
 					// on the successful branch of the discriminated union.
 					// See the dedup replay path above for the full comment.

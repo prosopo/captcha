@@ -28,6 +28,9 @@ import {
 	type RequestHeaders,
 	ResultReason,
 	type Session,
+	WebRtcClientStatus,
+	WebRtcOutcome,
+	type WebRtcSignal,
 	encodeCounterKey,
 } from "@prosopo/types";
 import type {
@@ -47,6 +50,17 @@ import {
 	type CounterIncrement,
 	UsageCounters,
 } from "../../../../util/usageCounters.js";
+
+const WEBRTC_MISMATCH: WebRtcSignal = {
+	outcome: WebRtcOutcome.mismatch,
+	clientStatus: WebRtcClientStatus.gathered,
+	gatherMs: 120,
+	srflxCount: 1,
+	hostMdnsCount: 1,
+	hostRawCount: 0,
+	requestIpSeen: false,
+	leaked: { asnNumber: 5089, countryCode: "GB", isProxy: false },
+};
 
 type DecideFn = DecisionMachineRunner["decide"];
 
@@ -1560,6 +1574,7 @@ describe("PuzzleCaptchaManager", () => {
 				iFrame: true,
 				currentUrl: "https://example.com/checkout",
 				iframeUrl: "https://embed.example.org/captcha/abc",
+				webrtc: WEBRTC_MISMATCH,
 				decryptedHeadHash: "h".repeat(16),
 				userSitekeyIpHash: "ush",
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
@@ -1603,6 +1618,7 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.iFrame).toBe(sessionRecord.iFrame);
 			expect(input.currentUrl).toBe(sessionRecord.currentUrl);
 			expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
+			expect(input.webrtc).toEqual(sessionRecord.webrtc);
 			expect(typeof input.score).toBe("number");
 		});
 
