@@ -44,7 +44,12 @@ export interface PostSolveRouting {
 export const sessionRoutingSignals = (
 	session: Pick<
 		Session,
-		"mode" | "simdReadings" | "currentUrl" | "iframeUrl" | "scoreComponents"
+		| "mode"
+		| "simdReadings"
+		| "currentUrl"
+		| "iframeUrl"
+		| "scoreComponents"
+		| "webrtc"
 	>,
 ): Partial<RoutingMachineRawSignals> => ({
 	...(session.mode && { mode: session.mode }),
@@ -54,6 +59,8 @@ export const sessionRoutingSignals = (
 	// host page. iframeUrl is only present when the widget was embedded.
 	...(session.currentUrl && { currentUrl: session.currentUrl }),
 	...(session.iframeUrl && { iframeUrl: session.iframeUrl }),
+	// Gathered at frictionless time; a submit request sends no report.
+	...(session.webrtc && { webrtc: session.webrtc }),
 	...(session.scoreComponents?.triggeredDetectors?.length
 		? { triggeredDetectors: session.scoreComponents.triggeredDetectors }
 		: {}),

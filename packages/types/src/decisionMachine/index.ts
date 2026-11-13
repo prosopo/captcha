@@ -44,6 +44,7 @@ import type {
 } from "../provider/database.js";
 import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
+import type { WebRtcSignal } from "../provider/webrtc.js";
 
 export type EnrichedDnsEvent = {
 	peerIp?: string;
@@ -243,6 +244,12 @@ export type DecisionMachineInput = {
 	tcpOptsOrder?: number;
 	// See Session.tlsHandshakeRttUs.
 	tlsHandshakeRttUs?: number;
+	// How the browser's WebRTC STUN traffic compared with its HTTP address, as
+	// stored on the frictionless session. A `mismatch` means the UDP left by a
+	// different network than the HTTP, as when only the browser's HTTP goes
+	// through a proxy. Undefined when the widget sent no report or the
+	// provider has no stun-probe.
+	webrtc?: WebRtcSignal;
 	// The site's per-category traffic-filter policies. Gates the
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
@@ -458,6 +465,12 @@ export interface RoutingMachineRawSignals {
 	tcpOptsOrder?: number;
 	// See Session.tlsHandshakeRttUs.
 	tlsHandshakeRttUs?: number;
+	// How the browser's WebRTC STUN traffic compared with its HTTP address, as
+	// stored on the frictionless session. A `mismatch` means the UDP left by a
+	// different network than the HTTP, as when only the browser's HTTP goes
+	// through a proxy. Undefined when the widget sent no report or the
+	// provider has no stun-probe.
+	webrtc?: WebRtcSignal;
 	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
 	// ipapi/isp mirror at request time. Undefined when the lookup failed
 	// or the middleware wasn't reached (dev requests bypassing the

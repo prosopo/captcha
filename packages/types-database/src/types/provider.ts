@@ -1350,6 +1350,8 @@ export const SESSION_PROJECTION = {
 	createdAt: 1,
 	currentUrl: 1,
 	iframeUrl: 1,
+	// Passed to decision machines at verify.
+	webrtc: 1,
 	// Mirrored up from the captcha record at solve time. Projected
 	// so session-level readers see the same clientSessionId the
 	// captcha record carries.

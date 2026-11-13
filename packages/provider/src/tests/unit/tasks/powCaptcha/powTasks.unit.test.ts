@@ -29,6 +29,9 @@ import {
 	type RequestHeaders,
 	ResultReason,
 	type Session,
+	WebRtcClientStatus,
+	WebRtcOutcome,
+	type WebRtcSignal,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -50,6 +53,17 @@ import {
 	checkPowSignature,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
+
+const WEBRTC_MISMATCH: WebRtcSignal = {
+	outcome: WebRtcOutcome.mismatch,
+	clientStatus: WebRtcClientStatus.gathered,
+	gatherMs: 120,
+	srflxCount: 1,
+	hostMdnsCount: 1,
+	hostRawCount: 0,
+	requestIpSeen: false,
+	leaked: { asnNumber: 5089, countryCode: "GB", isProxy: false },
+};
 
 vi.mock("@prosopo/util-crypto", () => ({
 	signatureVerify: vi.fn(),
@@ -1665,6 +1679,7 @@ describe("PowCaptchaManager", () => {
 				iFrame: true,
 				currentUrl: "https://example.com/checkout",
 				iframeUrl: "https://embed.example.org/captcha/abc",
+				webrtc: WEBRTC_MISMATCH,
 				decryptedHeadHash: "h".repeat(16),
 				userSitekeyIpHash: "ush",
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
@@ -1714,6 +1729,7 @@ describe("PowCaptchaManager", () => {
 				expect(input.iFrame).toBe(sessionRecord.iFrame);
 				expect(input.currentUrl).toBe(sessionRecord.currentUrl);
 				expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
+				expect(input.webrtc).toEqual(sessionRecord.webrtc);
 				expect(typeof input.score).toBe("number");
 			} finally {
 				restoreDecisionMachine();
