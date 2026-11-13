@@ -1,5 +1,25 @@
 # @prosopo/provider
 
+## 5.33.2
+### Patch Changes
+
+- da603f4: Extend the WebRTC session signal.
+- Updated dependencies [da603f4]
+  - @prosopo/types@5.32.2
+  - @prosopo/types-database@5.20.4
+  - @prosopo/api@4.11.4
+  - @prosopo/api-express-router@3.3.25
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.13
+  - @prosopo/datasets@3.2.33
+  - @prosopo/env@3.7.2
+  - @prosopo/fingerprint@2.8.24
+  - @prosopo/ipinfo@0.7.11
+  - @prosopo/keyring@2.10.33
+  - @prosopo/load-balancer@2.11.37
+  - @prosopo/types-env@2.12.12
+  - @prosopo/user-access-policy@3.17.6
+
 ## 5.33.1
 ### Patch Changes
 

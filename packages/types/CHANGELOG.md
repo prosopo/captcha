@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 5.32.2
+### Patch Changes
+
+- da603f4: Extend the WebRTC session signal.
+
 ## 5.32.1
 ### Patch Changes
 
