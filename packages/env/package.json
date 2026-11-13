@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "3.7.0",
+	"version": "3.7.1",
 	"description": "Path env prosopo environment",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
