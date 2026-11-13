@@ -53,8 +53,8 @@ export const WebRtcProbeReportSchema = z.object({
 
 export type WebRtcProbeReport = z.infer<typeof WebRtcProbeReportSchema>;
 
-// Stored on the session. Holds no raw address: a mismatch records the leaked
-// address's network, not the address.
+// Stored on the session. A mismatch records the leaked address and its
+// network, so a site can block the machine behind the proxy, not only the exit.
 export const WebRtcSignalSchema = z.object({
 	outcome: z.nativeEnum(WebRtcOutcome),
 	clientStatus: z.nativeEnum(WebRtcClientStatus),
@@ -68,6 +68,7 @@ export const WebRtcSignalSchema = z.object({
 	requestIpSeen: z.boolean().optional(),
 	leaked: z
 		.object({
+			ip: z.string().max(45).optional(),
 			asnNumber: z.number().int().optional(),
 			countryCode: z.string().max(8).optional(),
 			isProxy: z.boolean().optional(),
