@@ -905,6 +905,7 @@ const WebRtcSignalRecordSchema = new Schema<WebRtcSignal>(
 		leaked: {
 			type: new Schema(
 				{
+					ip: { type: String, required: false },
 					asnNumber: { type: Number, required: false },
 					countryCode: { type: String, required: false },
 					isProxy: { type: Boolean, required: false },

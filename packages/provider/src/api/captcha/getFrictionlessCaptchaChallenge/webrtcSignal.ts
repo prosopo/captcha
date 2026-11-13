@@ -184,10 +184,10 @@ export const evaluateWebRtc = async ({
 	}
 
 	const leakedIp = comparable[0]?.address;
-	let leaked: WebRtcSignal["leaked"];
+	let network: WebRtcSignal["leaked"];
 	if (leakedIp) {
 		try {
-			leaked = await leakedNetwork(leakedIp, ipInfoService);
+			network = await leakedNetwork(leakedIp, ipInfoService);
 		} catch (err) {
 			logger.debug(() => ({ msg: "leaked address lookup failed", err }));
 		}
@@ -195,6 +195,6 @@ export const evaluateWebRtc = async ({
 	return {
 		...withSeen,
 		outcome: WebRtcOutcome.mismatch,
-		...(leaked && { leaked }),
+		...(leakedIp && { leaked: { ip: leakedIp, ...network } }),
 	};
 };
