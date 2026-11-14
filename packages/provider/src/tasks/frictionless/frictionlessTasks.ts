@@ -68,6 +68,7 @@ import {
 } from "../detection/getBotScore.js";
 import { decodeOpenPayload } from "../detection/openPayload.js";
 import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
+import { MAX_TIMESTAMP_CLOCK_SKEW_MS } from "./frictionlessTasksUtils.js";
 import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
@@ -890,7 +891,13 @@ export class FrictionlessManager extends CaptchaManager {
 	static timestampTooOld(timestamp: number): boolean {
 		const now = Date.now();
 		const diff = now - timestamp;
-		return diff > DEFAULT_MAX_TIMESTAMP_AGE;
+		// A future timestamp would otherwise never age out, and NaN fails every
+		// comparison, so both count as stale.
+		return (
+			!Number.isFinite(diff) ||
+			diff < -MAX_TIMESTAMP_CLOCK_SKEW_MS ||
+			diff > DEFAULT_MAX_TIMESTAMP_AGE
+		);
 	}
 
 	private redactKeyForLogging(key: string | undefined | null): string {

@@ -39,6 +39,7 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 		BOT_SCORE_ABOVE_THRESHOLD: "BOT_SCORE_ABOVE_THRESHOLD",
 		BOT_SCORE_PUZZLE_BAND: "BOT_SCORE_PUZZLE_BAND",
 		AUTO_BAN_SCORE: "AUTO_BAN_SCORE",
+		INVALID_SCORE: "INVALID_SCORE",
 		MISSING_CURRENT_URL: "MISSING_CURRENT_URL",
 		DECRYPTION_FAILED: "DECRYPTION_FAILED",
 		MISSING_TOKEN: "MISSING_TOKEN",
@@ -764,6 +765,69 @@ describe("runDecisionMachine", () => {
 			expect(
 				input.tasks.frictionlessManager.sendImageCaptcha,
 			).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("non-finite scores", () => {
+		const expectDenied = async (
+			overrides: Partial<Record<string, unknown>>,
+		): Promise<void> => {
+			const input = buildInput(overrides);
+			const { res, handle } = buildHandle();
+			await runDecisionMachine(input as never, handle as never);
+			expect(
+				input.tasks.frictionlessManager.registerBlockedSession,
+			).toHaveBeenCalledWith(
+				CaptchaType.image,
+				expect.objectContaining({ reason: "INVALID_SCORE" }),
+			);
+			expect(res.status).toHaveBeenCalledWith(401);
+			expect(input.tasks.frictionlessManager.sendPowCaptcha).not.toHaveBeenCalled();
+		};
+
+		it.each<[string, number]>([
+			["NaN", Number.NaN],
+			["Infinity", Number.POSITIVE_INFINITY],
+			["-Infinity", Number.NEGATIVE_INFINITY],
+		])("denies a %s bot score", async (_, botScore: number) => {
+			await expectDenied({ botScore });
+		});
+
+		it("denies a NaN bot threshold", async () => {
+			await expectDenied({ botThreshold: Number.NaN });
+		});
+
+		it("denies a NaN image threshold", async () => {
+			await expectDenied({ botImageThreshold: Number.NaN });
+		});
+
+		it("denies a NaN score even without an auto-ban threshold", async () => {
+			await expectDenied({
+				botScore: Number.NaN,
+				clientRecord: { settings: { imageMaxRounds: 8 } },
+			});
+		});
+
+		it("denies when IP risk turns the score into NaN", async () => {
+			await expectDenied({
+				botScore: 0.1,
+				ipInfo: {
+					ip: "203.0.113.7",
+					isValid: true,
+					isVPN: false,
+					isTor: false,
+					isProxy: false,
+					isDatacenter: false,
+					isAbuser: false,
+					isMobile: false,
+					isSatellite: false,
+					isCrawler: false,
+					detectorRisk: Number.NaN,
+				},
+				clientRecord: {
+					settings: { imageMaxRounds: 8, ipDetectorRiskWeight: 1 },
+				},
+			});
 		});
 	});
 });

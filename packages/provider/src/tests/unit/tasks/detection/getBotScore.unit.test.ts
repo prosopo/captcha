@@ -92,6 +92,33 @@ describe("getBotScore", () => {
 		});
 	});
 
+	it.each<[string, number]>([
+		["NaN", Number.NaN],
+		["Infinity", Number.POSITIVE_INFINITY],
+		["-Infinity", Number.NEGATIVE_INFINITY],
+	])("treats a %s score as the worst score", async (_, score: number) => {
+		vi.mocked(decoderPool.decode).mockResolvedValue({
+			score,
+			timestamp: 1234567890,
+		} as unknown as DetectorResult);
+		const result = await getBotScore("payload", "headHash");
+		expect(result.baseBotScore).toBe(1);
+		expect(result.timestamp).toBe(0);
+	});
+
+	it.each<[number, number]>([
+		[-0.5, 0],
+		[1.7, 1],
+	])("clamps score %s to %s", async (score: number, expected: number) => {
+		vi.mocked(decoderPool.decode).mockResolvedValue({
+			score,
+			timestamp: 1234567890,
+		} as unknown as DetectorResult);
+		const result = await getBotScore("payload", "headHash");
+		expect(result.baseBotScore).toBe(expected);
+		expect(result.timestamp).toBe(1234567890);
+	});
+
 	it("handles missing optional fields", async () => {
 		const mockResult: DetectorResult = {
 			score: 0.5,

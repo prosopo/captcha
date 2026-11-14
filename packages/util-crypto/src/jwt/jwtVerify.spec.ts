@@ -261,6 +261,36 @@ describe("jwtVerify time and payload claims", (): void => {
 		expect(result.isValid).toBe(false);
 	});
 
+	it("rejects a token issued an hour in the future", (): void => {
+		const later = Math.floor(Date.now() / 1000) + 3600;
+		const result = jwtVerify(
+			signRawPayload(
+				claimsJson({
+					iat: String(later),
+					nbf: String(later - 3600),
+					exp: String(later + 300),
+				}),
+			),
+			claimsPair.publicKey,
+			{ maxLifetimeSeconds: 600 },
+		);
+		expect(result).toMatchObject({
+			isValid: false,
+			error: "JWT issued in the future",
+		});
+	});
+
+	it("tolerates an iat a few seconds ahead from clock drift", (): void => {
+		const now = Math.floor(Date.now() / 1000);
+		const result = jwtVerify(
+			signRawPayload(
+				claimsJson({ iat: String(now + 5), nbf: String(now) }),
+			),
+			claimsPair.publicKey,
+		);
+		expect(result.isValid).toBe(true);
+	});
+
 	it.each<[string, string]>([
 		["null", "null"],
 		["an array", "[]"],

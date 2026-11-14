@@ -59,16 +59,24 @@ export const computeFrictionlessScore = (
 	);
 };
 
+export const MAX_TIMESTAMP_CLOCK_SKEW_MS = 30_000;
+
 export const timestampDecayFunction = (
 	timestamp: number,
 	imageMaxRounds: number,
 ): number => {
 	const max = new Date().getTime();
-	if (max - timestamp > 3600000) {
+	const sinceTimestamp = max - timestamp;
+	// Future-dated or NaN timestamps get the longest challenge, not the shortest.
+	if (
+		!Number.isFinite(sinceTimestamp) ||
+		sinceTimestamp < -MAX_TIMESTAMP_CLOCK_SKEW_MS ||
+		sinceTimestamp > 3600000
+	) {
 		return Math.min(imageMaxRounds, 12);
 	}
 	const min = 1000;
-	const age = max - timestamp;
+	const age = Math.max(0, sinceTimestamp);
 	const decay = Math.log10(2000) / max;
 	const bigScore = max * (1 - (1 - Math.exp(decay * age) ** 24));
 
