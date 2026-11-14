@@ -103,7 +103,8 @@ graph TB
 
         subgraph Storage["Storage"]
             MongoDB[(MongoDB<br/>captchas, commitments,<br/>clients, sessions)]
-            Redis[(Redis<br/>session cache)]
+            Redis[(Redis<br/>access rules,<br/>usage counters)]
+            RedisMem[(redis-mem<br/>session cache,<br/>not persisted)]
             Dataset[(Dataset<br/>labelled + unlabelled<br/>captcha images)]
         end
     end
@@ -146,7 +147,7 @@ graph TB
     Frictionless -->|request session| FrictionlessEP
 
     FrictionlessEP --> FrictionlessTasks
-    FrictionlessTasks -->|"session dedup,<br/>honeypot"| Redis
+    FrictionlessTasks -->|"session dedup,<br/>honeypot"| RedisMem
     FrictionlessTasks -->|"verifyWebBotAuth"| WebBotAuth
     WebBotAuth -.->|"fetch JWKS<br/>(no timeout)"| AgentJwks["Agent JWKS host<br/>(external, caller-named)"]
     FrictionlessTasks --> Redis
@@ -324,10 +325,10 @@ graph TB
     TrafficFilter -.->|"loaded from<br/>clientRecord.settings"| MongoDB
     SpamFilter -.->|"loaded from<br/>clientRecord.settings"| MongoDB
     DecisionMachine --> MongoDB
-    ImgTasks --> Redis
+    ImgTasks --> RedisMem
     Middleware -.->|"gates"| ClientAPI
     Middleware -.->|"gates"| AdminAPI
-    PowTasks --> Redis
+    PowTasks --> RedisMem
 
     %% ===== ERRORS =====
     %% packages/common/src/error.ts + errorCodes.ts. Every throw is a ProsopoError with a code and
@@ -350,6 +351,6 @@ graph TB
     class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW,PuzzleCaptcha,IconOrderCaptcha,AudioCaptcha browser
     class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,IconOrderChallengeEP,IconOrderSolutionEP,AudioChallengeEP,AudioSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,IconOrderVerifyEP,AudioVerifyEP,ErrorEdge,SpamEmailEP,DetectorAssignEP,AuthVerifyEP,UnroutedEP,MetricsEP,Middleware,VerifyChecks,SessionGetEP,CountersClearEP,SiteKeyMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
     class ImgTasks,PowTasks,PuzzleTasks,IconOrderTasks,AudioTasks,InteractiveBase,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter,WebBotAuth provider
-    class MongoDB,Redis,Dataset storage
+    class MongoDB,Redis,RedisMem,Dataset storage
     class ServerPkg,DappBackend backend
     class ProviderList,AgentJwks,OtherProvider,Scraper external
