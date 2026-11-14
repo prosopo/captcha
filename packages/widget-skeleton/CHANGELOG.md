@@ -1,5 +1,10 @@
 # @prosopo/widget-skeleton
 
+## 2.10.6
+### Patch Changes
+
+- b818c48: The widget logo links to prosopo.io/captcha-help/, and the logo and error links carry the site's hostname, site key, language and which one was clicked.
+
 ## 2.10.5
 ### Patch Changes
 
