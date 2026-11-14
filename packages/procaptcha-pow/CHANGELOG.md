@@ -1,5 +1,13 @@
 # @prosopo/procaptcha-pow
 
+## 2.14.23
+### Patch Changes
+
+- b818c48: The widget logo links to prosopo.io/captcha-help/, and the logo and error links carry the site's hostname, site key, language and which one was clicked.
+- Updated dependencies [b818c48]
+  - @prosopo/widget-skeleton@2.10.6
+  - @prosopo/procaptcha-common@2.23.15
+
 ## 2.14.22
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.11.6
+### Patch Changes
+
+- fccb9d9: Release the widget logo link change.
+
 ## 3.11.5
 ### Patch Changes
 
