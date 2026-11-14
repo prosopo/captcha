@@ -26,6 +26,7 @@ import {
 	createRenderScheduler,
 	mountHoneypot,
 	mountWidgetCheckbox,
+	widgetLinkContext,
 } from "@prosopo/procaptcha-common";
 import {
 	ModeEnum,
@@ -156,6 +157,7 @@ export const mountProcaptchaPowWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading,
+		link: widgetLinkContext(config.account.address, config.language),
 		onChange: async ({ x, y }: Activation): Promise<void> => {
 			if (loading) {
 				return;

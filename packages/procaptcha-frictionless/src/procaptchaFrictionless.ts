@@ -31,6 +31,7 @@ import {
 	mountTestModeBanner,
 	mountWidgetCheckbox,
 	providerRetry,
+	widgetLinkContext,
 } from "@prosopo/procaptcha-common";
 import {
 	CaptchaType,
@@ -256,6 +257,7 @@ export const mountProcaptchaFrictionless = (
 			error: errorMessage,
 			loadingText: i18n.isInitialized ? i18n.t("WIDGET.CHECKING") : undefined,
 			loading,
+			link: widgetLinkContext(siteKey, config.language),
 		};
 
 		// A checkbox drawn in a frame reloads the frame when it is remounted,

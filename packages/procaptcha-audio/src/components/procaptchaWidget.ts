@@ -34,6 +34,7 @@ import {
 	createRenderScheduler,
 	mountHoneypot,
 	mountWidgetCheckbox,
+	widgetLinkContext,
 } from "@prosopo/procaptcha-common";
 import {
 	type AudioEvent,
@@ -288,6 +289,7 @@ export const mountProcaptchaAudioWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading: loading || "submitting" === audioPhase,
+		link: widgetLinkContext(config.account.address, config.language),
 		onChange: (activation: Activation) => beginChallenge(activation),
 	});
 

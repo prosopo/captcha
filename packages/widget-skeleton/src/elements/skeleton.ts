@@ -23,6 +23,7 @@ import {
 	WIDGET_PADDING,
 } from "../constants.js";
 import { type Theme, withAlpha } from "../theme.js";
+import type { WidgetLinkContext } from "../widgetLink.js";
 import { createCheckboxElement } from "./checkbox.js";
 import { createLogoElement } from "./logo.js";
 
@@ -42,16 +43,18 @@ export interface WidgetSkeletonElement {
  *
  * @param theme - The theme to apply to the widget
  * @param loadingLabel - What the spinner is announced as, in the widget's language
+ * @param link - What the logo link tells the page it opens
  */
 export function createWidgetSkeletonElement(
 	theme: Theme,
 	loadingLabel?: string,
+	link?: WidgetLinkContext,
 ): WidgetSkeletonElement {
 	const widgetElement = document.createElement("div");
 	widgetElement.className = "prosopo-widget";
 
 	const checkbox = createCheckboxElement(theme, loadingLabel);
-	const logoElement = createLogoElement(theme);
+	const logoElement = createLogoElement(theme, link);
 
 	widgetElement.innerHTML =
 		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());

@@ -28,6 +28,7 @@ import {
 	mountHoneypot,
 	mountTestModeBanner,
 	mountWidgetCheckbox,
+	widgetLinkContext,
 } from "@prosopo/procaptcha-common";
 import {
 	ProcaptchaConfigSchema,
@@ -229,6 +230,7 @@ export const mountProcaptchaImageWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading,
+		link: widgetLinkContext(config.account.address, config.language),
 		onChange: async ({ x, y, inputMethod }: Activation): Promise<void> => {
 			if (loading) {
 				return;

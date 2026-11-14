@@ -15,9 +15,11 @@
 import { joinUrl } from "@prosopo/util";
 import {
 	type Theme,
+	type WidgetLinkContext,
 	canHover,
 	isDevMode,
 	randomToken,
+	widgetLinkUrl,
 	withAlpha,
 } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
@@ -55,7 +57,27 @@ export interface CheckboxProps {
 	loading: boolean;
 	/** Name for the spinner that stands in for the box while it is working. */
 	loadingText?: string;
+	/**
+	 * Who the error links say the visitor came from. Values, not a URL: the
+	 * checkbox may be drawn in our own frame, and a URL from the embedding page
+	 * would let that page put a `javascript:` link on our origin.
+	 */
+	link?: WidgetLinkContext;
 }
+
+/**
+ * The link context for a widget on this page, in the site's chosen language
+ * else the browser's. Built here in the page, because a checkbox drawn in our
+ * frame would otherwise name our own host.
+ */
+export const widgetLinkContext = (
+	siteKey: string | undefined,
+	language: string | undefined,
+): WidgetLinkContext => ({
+	host: window.location.hostname,
+	siteKey: siteKey || undefined,
+	language: language || navigator.language,
+});
 
 const DEFAULT_LOADING_TEXT = "Checking that you are human";
 
@@ -411,11 +433,12 @@ export const mountCheckbox = (
 			// the label's `user-select: none` is overridden for this state only.
 			applyStyles(label, { userSelect: "text", cursor: "text" });
 			const { message, code } = splitErrorCode(props.error);
+			const helpLink = widgetLinkUrl(FAQ_LINK, "error", props.link);
 			// With no code to carry the FAQ link, the message itself carries it.
 			const text =
 				undefined === code
 					? createElement("a", {
-							attributes: { href: FAQ_LINK },
+							attributes: { href: helpLink },
 							text: message,
 						})
 					: createElement("span", { text: message });
@@ -428,7 +451,7 @@ export const mountCheckbox = (
 			if (undefined !== code) {
 				// The code is one unbreakable token as long as the widget, so it
 				// sits on its own smaller line and may break anywhere.
-				const link = createElement("a", { attributes: { href: FAQ_LINK } });
+				const link = createElement("a", { attributes: { href: helpLink } });
 				// Prefer breaking after the colon, between the code and its site.
 				code.split(":").forEach((part: string, index: number) => {
 					if (index > 0) {

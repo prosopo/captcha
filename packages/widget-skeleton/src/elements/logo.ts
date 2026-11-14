@@ -12,18 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { WIDGET_URL } from "../constants.js";
+import { WIDGET_LINK_PATH, WIDGET_URL } from "../constants.js";
 import type { Theme } from "../theme.js";
+import { type WidgetLinkContext, widgetLinkUrl } from "../widgetLink.js";
 
 /**
  * Creates a logo element with appropriate styling
  * @param theme - The theme to apply to the logo
+ * @param link - What the logo link tells the page it opens
  * @returns An HTMLElement representing the logo
  */
-export function createLogoElement(theme: Theme): HTMLElement {
+export function createLogoElement(
+	theme: Theme,
+	link: WidgetLinkContext = {},
+): HTMLElement {
 	const widgetLogo = document.createElement("div");
 	widgetLogo.className = "prosopo-logo-container";
 	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
+	widgetLogo.querySelector("a")?.setAttribute(
+		"href",
+		widgetLinkUrl(`${WIDGET_URL}${WIDGET_LINK_PATH}`, "logo", {
+			host: window.location.hostname,
+			...link,
+			language: link.language ?? navigator.language,
+		}),
+	);
 	return widgetLogo;
 }
 
@@ -72,7 +85,7 @@ const LOGO_STYLES = `
  */
 function getLogoMarkup(theme: Theme): string {
 	return `
-<a href="${WIDGET_URL}/" target="_blank" rel="noopener" style="color: ${theme.palette.logoFill};">
+<a href="${WIDGET_URL}${WIDGET_LINK_PATH}" target="_blank" rel="noopener" style="color: ${theme.palette.logoFill};">
     <svg id="prosopo-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49.010001 49.009997" style="fill: ${theme.palette.logoFill};" aria-hidden="true">
         <g transform="matrix(0.11319331,0,0,0.11319331,6.504999,-2.2052113e-4)">
             <g>

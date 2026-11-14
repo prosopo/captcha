@@ -14,7 +14,7 @@
 // @vitest-environment jsdom
 
 import { describe, expect, test } from "vitest";
-import { WIDGET_URL } from "../constants.js";
+import { WIDGET_LINK_PATH, WIDGET_URL } from "../constants.js";
 import { createLogoElement } from "../elements/logo.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
 
@@ -35,13 +35,48 @@ describe("createLogoElement", () => {
 		expect(logo.isConnected).toBe(false);
 	});
 
-	test("links to the marketing site in a new tab without leaking the opener", () => {
+	test("opens in a new tab without leaking the opener", () => {
 		const anchor: HTMLAnchorElement = logoAnchor(lightTheme);
 		// rel=noopener matters: the widget is embedded in third party pages, and
 		// without it the opened tab can navigate the embedder.
 		expect(anchor.getAttribute("rel")).toBe("noopener");
 		expect(anchor.getAttribute("target")).toBe("_blank");
-		expect(anchor.getAttribute("href")).toBe(`${WIDGET_URL}/`);
+	});
+
+	test("links to the explainer page, not the homepage", () => {
+		expect(new URL(logoAnchor(lightTheme).href).pathname).toBe(
+			WIDGET_LINK_PATH,
+		);
+	});
+
+	test("names the site the widget is on", () => {
+		expect(new URL(logoAnchor(lightTheme).href).searchParams.get("ref")).toBe(
+			window.location.hostname,
+		);
+	});
+
+	test("passes on the site's chosen language", () => {
+		const anchor = createLogoElement(lightTheme, {
+			language: "pt-BR",
+		}).querySelector("a");
+		expect(new URL(anchor?.href ?? "").searchParams.get("hl")).toBe("pt-BR");
+	});
+
+	test("carries the site key as the campaign and says the logo was clicked", () => {
+		const anchor = createLogoElement(lightTheme, {
+			siteKey: "5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw",
+		}).querySelector("a");
+		const params: URLSearchParams = new URL(anchor?.href ?? "").searchParams;
+		expect(params.get("utm_campaign")).toBe(
+			"5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw",
+		);
+		expect(params.get("utm_medium")).toBe("logo");
+	});
+
+	test("falls back to the browser's language", () => {
+		expect(new URL(logoAnchor(lightTheme).href).searchParams.get("hl")).toBe(
+			navigator.language,
+		);
 	});
 
 	test("the resolved href stays on the prosopo origin", () => {
