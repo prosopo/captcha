@@ -1,5 +1,12 @@
 # @prosopo/procaptcha-icon-order
 
+## 0.4.5
+### Patch Changes
+
+- Updated dependencies [b818c48]
+  - @prosopo/widget-skeleton@2.10.6
+  - @prosopo/procaptcha-common@2.23.15
+
 ## 0.4.4
 ### Patch Changes
 
