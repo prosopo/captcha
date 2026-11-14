@@ -1,5 +1,46 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.26.5
+### Patch Changes
+
+- Updated dependencies [da603f4]
+  - @prosopo/types@5.32.2
+  - @prosopo/api@4.11.4
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.24
+  - @prosopo/procaptcha-audio@0.3.14
+  - @prosopo/procaptcha-common@2.23.14
+  - @prosopo/procaptcha-icon-order@0.4.4
+  - @prosopo/procaptcha-pow@2.14.22
+  - @prosopo/procaptcha-puzzle@2.18.14
+  - @prosopo/procaptcha-react@2.14.33
+
+## 2.26.4
+### Patch Changes
+
+- Updated dependencies [a06ca60]
+  - @prosopo/types@5.32.1
+  - @prosopo/api@4.11.3
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.23
+  - @prosopo/procaptcha-audio@0.3.13
+  - @prosopo/procaptcha-common@2.23.13
+  - @prosopo/procaptcha-icon-order@0.4.3
+  - @prosopo/procaptcha-pow@2.14.21
+  - @prosopo/procaptcha-puzzle@2.18.13
+  - @prosopo/procaptcha-react@2.14.32
+
+## 2.26.3
+### Patch Changes
+
+- Updated dependencies [aa3afc2]
+  - @prosopo/procaptcha-common@2.23.12
+  - @prosopo/procaptcha-audio@0.3.12
+  - @prosopo/procaptcha-icon-order@0.4.2
+  - @prosopo/procaptcha-pow@2.14.20
+  - @prosopo/procaptcha-puzzle@2.18.12
+  - @prosopo/procaptcha-react@2.14.31
+
 ## 2.26.2
 ### Patch Changes
 

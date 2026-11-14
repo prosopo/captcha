@@ -991,6 +991,7 @@ export abstract class InteractiveCaptchaManager<
 				...this.decisionMachineEventFields(challengeRecord),
 				// tcp-probe fields — see powTasks.ts for the reasoning.
 				...rawTlsSignalsFromRecord(sessionRecord),
+				webrtc: sessionRecord?.webrtc,
 				// Which egress categories this site blocks. Gates the
 				// egress-sensitive TCP-stack deny rules — a VPN
 				// concentrator legitimately terminates the handshake, so

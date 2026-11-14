@@ -34,6 +34,9 @@ import {
 	ResultReason,
 	type Session,
 	type UserCommitment,
+	WebRtcClientStatus,
+	WebRtcOutcome,
+	type WebRtcSignal,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -44,6 +47,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
 import { shuffleArray } from "../../../../util.js";
+
+const WEBRTC_MISMATCH: WebRtcSignal = {
+	outcome: WebRtcOutcome.mismatch,
+	clientStatus: WebRtcClientStatus.gathered,
+	gatherMs: 120,
+	srflxCount: 1,
+	hostMdnsCount: 1,
+	hostRawCount: 0,
+	requestIpSeen: false,
+	leaked: { asnNumber: 5089, countryCode: "GB", isProxy: false },
+};
 
 const loggerOuter = getLogger("info", "test:img-captcha-tasks");
 
@@ -1260,6 +1274,7 @@ describe("ImgCaptchaManager", () => {
 				iFrame: true,
 				currentUrl: "https://example.com/checkout",
 				iframeUrl: "https://embed.example.org/captcha/abc",
+				webrtc: WEBRTC_MISMATCH,
 				decryptedHeadHash: "h".repeat(16),
 				userSitekeyIpHash: "ush",
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
@@ -1313,6 +1328,7 @@ describe("ImgCaptchaManager", () => {
 				expect(input.iFrame).toBe(sessionRecord.iFrame);
 				expect(input.currentUrl).toBe(sessionRecord.currentUrl);
 				expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
+				expect(input.webrtc).toEqual(sessionRecord.webrtc);
 				expect(typeof input.score).toBe("number");
 			} finally {
 				// biome-ignore lint/suspicious/noExplicitAny: tests

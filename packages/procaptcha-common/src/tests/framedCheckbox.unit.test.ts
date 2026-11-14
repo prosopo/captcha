@@ -22,6 +22,12 @@ import {
 	mountFramedCheckbox,
 } from "../components/framedCheckbox.js";
 import type { Component } from "../dom/component.js";
+import {
+	type PageBehaviour,
+	getPageBehaviour,
+	startPageBehaviourCapture,
+	stopPageBehaviourCapture,
+} from "../pageBehaviour.js";
 import { type Mounted, mount } from "./domHarness.js";
 
 const FRAME_URL = new URL("https://js.example.test/js/checkbox-frame.html");
@@ -119,16 +125,36 @@ describe("talking to the frame", () => {
 		const post = vi.spyOn(frame().contentWindow as Window, "postMessage");
 		fromFrame({ t: "ready" });
 
-		expect(post).toHaveBeenCalledTimes(1);
-		const [message, origin] = post.mock.calls[0] ?? [];
+		const propsCalls = post.mock.calls.filter(([m]) => "props" === m.t);
+		expect(propsCalls).toHaveLength(1);
+		const [message, origin] = propsCalls[0] ?? [];
 		expect(origin).toBe(FRAME_URL.origin);
 		expect(message).toMatchObject({ pf: nonce(), t: "props" });
 		expect(message.props).not.toHaveProperty("onChange");
 
 		checkbox?.update(props({ checked: true, theme: darkTheme }));
-		expect(post).toHaveBeenCalledTimes(2);
-		expect(post.mock.calls[1]?.[0].props.checked).toBe(true);
+		const afterUpdate = post.mock.calls.filter(([m]) => "props" === m.t);
+		expect(afterUpdate).toHaveLength(2);
+		expect(afterUpdate[1]?.[0].props.checked).toBe(true);
 		expect(frame().style.colorScheme).toBe("dark");
+	});
+
+	test("tells the frame where it sits so it can forward input in page coordinates", () => {
+		const post = vi.spyOn(frame().contentWindow as Window, "postMessage");
+		vi.spyOn(frame(), "getBoundingClientRect").mockReturnValue({
+			left: 120,
+			top: 340,
+		} as DOMRect);
+		fromFrame({ t: "ready" });
+
+		expect(post.mock.calls.map(([message]) => message.t)).toEqual([
+			"offset",
+			"props",
+		]);
+		expect(post.mock.calls[0]?.[0]).toMatchObject({ left: 120, top: 340 });
+
+		fromFrame({ t: "drawn" });
+		expect(post.mock.calls.at(-1)?.[0]).toMatchObject({ t: "offset" });
 	});
 
 	test("reports a pointer activation at its position in the page", () => {
@@ -210,6 +236,78 @@ describe("talking to the frame", () => {
 		);
 
 		expect(onChange).not.toHaveBeenCalled();
+	});
+});
+
+describe("forwarded input", () => {
+	const captureHost: Record<symbol, unknown> = globalThis as unknown as Record<
+		symbol,
+		unknown
+	>;
+
+	const captured = (): PageBehaviour => {
+		const behaviour = getPageBehaviour();
+		if (!behaviour) throw new Error("capture not started");
+		return behaviour;
+	};
+
+	const tap = (): void => {
+		const touch = { x: 40, y: 360, id: 0, force: 1 };
+		fromFrame({
+			t: "input",
+			type: "touchstart",
+			touches: [touch],
+			changed: [touch],
+		});
+		fromFrame({ t: "input", type: "touchend", touches: [], changed: [touch] });
+		fromFrame({
+			t: "input",
+			type: "click",
+			x: 40,
+			y: 360,
+			button: 0,
+			ctrlKey: false,
+			shiftKey: false,
+			altKey: false,
+		});
+	};
+
+	beforeEach(() => {
+		startPageBehaviourCapture();
+	});
+
+	afterEach(() => {
+		stopPageBehaviourCapture();
+		delete captureHost[Symbol.for("prosopo.pageBehaviour")];
+	});
+
+	test("keeps a tap made before the detector is listening, after the frame is gone", () => {
+		fromFrame({ t: "ready" });
+		tap();
+		checkbox?.destroy();
+		checkbox = undefined;
+
+		expect(captured().touch.map((point) => point.eventType)).toEqual([
+			"touchstart",
+			"touchend",
+		]);
+		expect(captured().touch[0]).toMatchObject({ x: 40, y: 360, touchCount: 1 });
+		expect(captured().press).toEqual([
+			expect.objectContaining({
+				eventType: "click",
+				x: 40,
+				y: 360,
+				targetElement: "IFRAME",
+			}),
+		]);
+	});
+
+	test("leaves later input to the detector", () => {
+		stopPageBehaviourCapture();
+		tap();
+
+		expect(captured().touch).toEqual([]);
+		expect(captured().press).toEqual([]);
 	});
 });
 

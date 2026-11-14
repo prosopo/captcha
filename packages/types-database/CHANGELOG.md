@@ -1,5 +1,23 @@
 # @prosopo/types-database
 
+## 5.20.4
+### Patch Changes
+
+- da603f4: Extend the WebRTC session signal.
+- Updated dependencies [da603f4]
+  - @prosopo/types@5.32.2
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.17.6
+
+## 5.20.3
+### Patch Changes
+
+- a06ca60: Decision machines can now read the session's WebRTC signal: routing machines as `raw.webrtc`, and verify-time decide rules as `webrtc`. The post-solve routing pass and escalated sessions carry it from the session where it was gathered.
+- Updated dependencies [a06ca60]
+  - @prosopo/types@5.32.1
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.17.5
+
 ## 5.20.2
 ### Patch Changes
 

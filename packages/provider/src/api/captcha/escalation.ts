@@ -253,6 +253,7 @@ export const mintEscalation = async ({
 		bundleId: originSession.bundleId,
 		currentUrl: originSession.currentUrl,
 		iframeUrl: originSession.iframeUrl,
+		webrtc: originSession.webrtc,
 		isProtect: originSession.isProtect,
 		isEscalation: true,
 		// The DM-input read path (captchaManager.getSessionRecordWithOriginFallback)

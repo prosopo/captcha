@@ -177,20 +177,45 @@ describe("evaluateWebRtc", () => {
 		});
 	});
 
-	it("is a mismatch behind a proxy, recording the leaked network but not the address", async () => {
+	it("is a mismatch behind a proxy, recording the leaked address and its network", async () => {
 		const signal = await evaluate(
 			report([mdnsHost, srflx(REAL_IP, 49637)]),
 			PROXY_IP,
 		);
 		expect(signal?.outcome).toBe(WebRtcOutcome.mismatch);
 		expect(signal?.leaked).toEqual({
+			ip: REAL_IP,
 			asnNumber: 5089,
 			countryCode: "GB",
 			isProxy: false,
 			isVPN: false,
 			isDatacenter: false,
 		});
-		expect(JSON.stringify(signal)).not.toContain(REAL_IP);
+	});
+
+	it("records the leaked address even when its network cannot be looked up", async () => {
+		const unavailable: IIpInfoService = {
+			...ipInfoService,
+			isAvailable: (): boolean => false,
+		};
+		const signal = await evaluateWebRtc({
+			report: report([mdnsHost, srflx(REAL_IP, 49637)]),
+			requestIp: PROXY_IP,
+			socketPath,
+			ipInfoService: unavailable,
+			logger,
+		});
+		expect(signal?.outcome).toBe(WebRtcOutcome.mismatch);
+		expect(signal?.leaked).toEqual({ ip: REAL_IP });
+	});
+
+	it("does not record an address on a match", async () => {
+		const signal = await evaluate(
+			report([mdnsHost, srflx(REAL_IP, 49637)]),
+			REAL_IP,
+		);
+		expect(signal?.outcome).toBe(WebRtcOutcome.match);
+		expect(signal?.leaked).toBeUndefined();
 	});
 
 	it("flags a candidate no STUN request matches", async () => {

@@ -1,5 +1,26 @@
 # @prosopo/procaptcha-common
 
+## 2.23.14
+### Patch Changes
+
+- Updated dependencies [da603f4]
+  - @prosopo/types@5.32.2
+  - @prosopo/account@2.8.136
+  - @prosopo/load-balancer@2.11.37
+
+## 2.23.13
+### Patch Changes
+
+- Updated dependencies [a06ca60]
+  - @prosopo/types@5.32.1
+  - @prosopo/account@2.8.135
+  - @prosopo/load-balancer@2.11.36
+
+## 2.23.12
+### Patch Changes
+
+- aa3afc2: The framed checkbox forwards its mouse, press and touch input to the host page. Input that arrives before the detector is listening, such as a tap the moment the page loads, is kept in the page's early behaviour capture so it is not lost when the frame is redrawn.
+
 ## 2.23.11
 ### Patch Changes
 

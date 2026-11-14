@@ -1109,6 +1109,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					// middleware persists them at entry, verify surfaces them
 					// so decide rules can gate on the raw TCP fingerprint.
 					...rawTlsSignalsFromRecord(sessionRecord),
+					webrtc: sessionRecord?.webrtc,
 					// Which egress categories this site blocks. Gates the
 					// egress-sensitive TCP-stack deny rules — a VPN
 					// concentrator legitimately terminates the handshake, so
