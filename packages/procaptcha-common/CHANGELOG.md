@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-common
 
+## 2.23.16
+### Patch Changes
+
+- b0d6c75: The checkbox frame includes each event's time in the pointer and mouse messages it posts to the page.
+
 ## 2.23.15
 ### Patch Changes
 
