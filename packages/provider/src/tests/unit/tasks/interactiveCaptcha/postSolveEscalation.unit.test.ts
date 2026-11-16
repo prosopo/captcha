@@ -29,6 +29,7 @@ import type {
 	PuzzleCaptchaRecord,
 	SessionRecord,
 } from "@prosopo/types-database";
+import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress, verifyRecency } from "@prosopo/util";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
@@ -58,6 +59,7 @@ vi.mock("../../../../tasks/frictionless/routingMachine.js", () => ({
 	applyRouter: vi.fn(),
 }));
 
+const config = {} as unknown as ProviderEnvironment["config"];
 const SESSION_ID = "session-1";
 const CHALLENGE: PoWChallengeId = `${Date.now()}___user___dapp___1`;
 const IP = getIPAddress("1.1.1.1");
@@ -140,7 +142,7 @@ describe("post-solve routing of puzzle and audio solves", () => {
 		let manager: PuzzleCaptchaManager;
 
 		beforeEach(() => {
-			manager = new PuzzleCaptchaManager({ db, pair, config: {} });
+			manager = new PuzzleCaptchaManager({ db, pair, config });
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
 				asPuzzleRecord({
 					challenge: CHALLENGE,
@@ -225,7 +227,7 @@ describe("post-solve routing of puzzle and audio solves", () => {
 		let manager: AudioCaptchaManager;
 
 		beforeEach(() => {
-			manager = new AudioCaptchaManager({ db, pair, config: {} });
+			manager = new AudioCaptchaManager({ db, pair, config });
 			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
 				asAudioRecord({
 					challenge: CHALLENGE,
