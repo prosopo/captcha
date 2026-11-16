@@ -53,6 +53,12 @@ const frame = (): HTMLIFrameElement => {
 
 const nonce = (): string => new URL(frame().src).hash.replace("#n=", "");
 
+const spinner = (): Element | null =>
+	mounted.container.querySelector('[role="status"]');
+
+const inPageBox = (): HTMLInputElement | null =>
+	mounted.container.querySelector("input");
+
 /** Delivers a message to the page as if the frame had posted it. */
 const fromFrame = (
 	data: Partial<CheckboxFrameMessage> & { t: string },
@@ -85,21 +91,30 @@ afterEach(() => {
 });
 
 describe("mounting", () => {
-	test("draws the checkbox in the page at once, with the frame loading hidden over it", () => {
+	test("shows the spinner in the page at once, with the frame loading hidden over it", () => {
 		expect(frame().src.startsWith(FRAME_URL.href)).toBe(true);
 		expect(nonce()).toMatch(/^[0-9a-f]{32}$/);
 		expect(frame().style.opacity).toBe("0");
 		expect(frame().style.pointerEvents).toBe("none");
 		expect(frame().title).toBe("I am human");
-		expect(mounted.container.querySelector("input")).not.toBeNull();
+		expect(spinner()).not.toBeNull();
+		expect(inPageBox()).toBeNull();
 	});
 
-	test("keeps the in-page checkbox while the frame is ready but has not drawn", () => {
+	test("keeps the spinner while the frame is ready but has not drawn", () => {
 		fromFrame({ t: "ready" });
 		fromFrame({ t: "size", w: 240, h: 60 });
 
 		expect(frame().style.opacity).toBe("0");
-		expect(mounted.container.querySelector("input")).not.toBeNull();
+		expect(spinner()).not.toBeNull();
+		expect(inPageBox()).toBeNull();
+	});
+
+	test("keeps the spinner when the page updates the props before the frame draws", () => {
+		checkbox?.update(props({ labelText: "Still human" }));
+
+		expect(spinner()).not.toBeNull();
+		expect(inPageBox()).toBeNull();
 	});
 
 	test("swaps to the frame once it has drawn, and keeps it past the timeout", () => {
@@ -112,11 +127,27 @@ describe("mounting", () => {
 		expect(mounted.container.querySelector("input")).toBeNull();
 	});
 
-	test("drops the frame and keeps the in-page checkbox when the frame never draws", () => {
+	test("drops the frame and shows a working in-page checkbox when the frame never draws", () => {
 		vi.advanceTimersByTime(FRAME_READY_TIMEOUT_MS);
 
 		expect(mounted.container.querySelector("iframe")).toBeNull();
-		expect(mounted.container.querySelector("input")).not.toBeNull();
+		expect(spinner()).toBeNull();
+		expect(inPageBox()).not.toBeNull();
+	});
+
+	test("shows a working in-page checkbox when the frame fails to load", () => {
+		frame().dispatchEvent(new Event("error"));
+
+		expect(mounted.container.querySelector("iframe")).toBeNull();
+		expect(inPageBox()).not.toBeNull();
+	});
+
+	test("keeps the spinner off once the frame is dropped, through later updates", () => {
+		vi.advanceTimersByTime(FRAME_READY_TIMEOUT_MS);
+		checkbox?.update(props({ labelText: "Still human" }));
+
+		expect(spinner()).toBeNull();
+		expect(inPageBox()).not.toBeNull();
 	});
 });
 

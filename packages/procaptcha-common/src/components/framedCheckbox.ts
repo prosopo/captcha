@@ -103,11 +103,11 @@ const frameProps = ({
  * a trusted event in its own document. Messages are only accepted from this
  * frame's window, at the frame's origin, carrying the nonce it was given.
  *
- * The frame takes a moment to load and draw, so the checkbox is drawn in the
- * page straight away and the frame loads invisibly on top of it. The two swap
- * once the frame reports it has painted the checkbox; until then,
- * and for good if the frame never arrives, the in-page checkbox is the one in
- * use.
+ * The frame takes a moment to load and draw, so a checkbox is drawn in the
+ * page straight away, showing the spinner, and the frame loads invisibly on top
+ * of it. The two swap once the frame reports it has painted the checkbox. If
+ * the frame never arrives, the in-page checkbox stops spinning and is the one
+ * in use.
  */
 export const mountFramedCheckbox = (
 	container: HTMLElement,
@@ -118,6 +118,7 @@ export const mountFramedCheckbox = (
 	let props = initialProps;
 	let ready = false;
 	let shown = false;
+	let dropped = false;
 	watchInputMethod();
 
 	const host = document.createElement("div");
@@ -125,9 +126,12 @@ export const mountFramedCheckbox = (
 	container.appendChild(host);
 	teardown.add(() => host.remove());
 
+	const standInProps = (next: CheckboxProps): CheckboxProps =>
+		dropped ? next : { ...next, loading: true };
+
 	let standIn: Component<CheckboxProps> | undefined = mountCheckbox(
 		host,
-		props,
+		standInProps(props),
 	);
 	teardown.add(() => standIn?.destroy());
 
@@ -155,9 +159,12 @@ export const mountFramedCheckbox = (
 	host.appendChild(frame);
 
 	const dropFrame = (): void => {
-		if (!shown) {
-			frame.remove();
+		if (shown || dropped) {
+			return;
 		}
+		dropped = true;
+		frame.remove();
+		standIn?.update(props);
 	};
 	const timer = setTimeout(dropFrame, FRAME_READY_TIMEOUT_MS);
 	teardown.add(() => clearTimeout(timer));
@@ -256,7 +263,7 @@ export const mountFramedCheckbox = (
 	return {
 		update(next: CheckboxProps): void {
 			props = next;
-			standIn?.update(next);
+			standIn?.update(standInProps(next));
 			frame.title = next.labelText;
 			frame.style.colorScheme = next.theme.palette.mode;
 			if (ready) {
