@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.11.7
+### Patch Changes
+
+- b0d6c75: The checkbox frame includes each event's time in the pointer and mouse messages it posts to the page.
+
 ## 3.11.6
 ### Patch Changes
 
