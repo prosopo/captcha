@@ -28,6 +28,7 @@ import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js
 import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { postSolveRequest } from "./escalation.js";
 
 export default (env: ProviderEnvironment) =>
 	async (
@@ -131,6 +132,7 @@ export default (env: ProviderEnvironment) =>
 					ipInfo: req.ipInfo,
 					simdReadings: parsed[ApiParams.simdReadings],
 					clientMetaData: parsed[ApiParams.clientMetaData],
+					postSolve: postSolveRequest(tasks, req, clientRecord),
 				});
 
 			const returnValue: CaptchaSolutionResponse = {

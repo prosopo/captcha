@@ -27,6 +27,7 @@ import {
 	type HoneypotComponent,
 	PROCAPTCHA_EXECUTE_EVENT,
 	type ProcaptchaStateHandle,
+	type SolutionSubmitOutcome,
 	Teardown,
 	buildUpdateState,
 	createElement,
@@ -95,6 +96,7 @@ export const mountProcaptchaAudioWidget = (
 		onReload
 			? (x?: number, y?: number) => onReload(x, y, { showRetry: true })
 			: undefined,
+		props.onEscalate,
 	);
 
 	const root = createElement("div");
@@ -134,14 +136,17 @@ export const mountProcaptchaAudioWidget = (
 		audioPhase = "submitting";
 		scheduler.schedule();
 
-		let verified = false;
+		let outcome: SolutionSubmitOutcome = "failed";
 		try {
-			verified = await manager.submitSolution(answer, replays, audioEvents);
+			outcome = await manager.submitSolution(answer, replays, audioEvents);
 		} catch (error) {
 			reportError(error);
 		}
 
-		if (verified) {
+		// The wrapper is mounting the follow-up challenge in our place.
+		if (outcome === "escalated") return;
+
+		if (outcome === "verified") {
 			returnToCheckbox();
 			loading = false;
 			scheduler.schedule();

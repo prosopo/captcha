@@ -562,6 +562,9 @@ export const SessionSchema = object({
 	// to the origin for fields the escalation doesn't carry itself
 	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
 	originSessionId: string().optional(),
+	// How many escalations in a row led to this session: 1 for one minted
+	// from an ordinary session. Absent on non-escalation sessions.
+	escalationDepth: number().int().positive().optional(),
 	solveDevice: object({
 		deviceCapability: string().optional(),
 		touchEventCount: number().optional(),
@@ -745,6 +748,8 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
+	// How many escalations in a row led to this session.
+	escalationDepth?: number;
 	// What the solve this session follows said about the input device, so a
 	// challenge issued for it judges the same device: the PoW solve on an
 	// escalation, or the failed puzzle named by `retryOf`.

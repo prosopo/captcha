@@ -36,7 +36,7 @@ import {
 	type InteractiveSubmissionOutcome,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
-import type { PostSolveRouting } from "../postSolveRouting.js";
+import type { PostSolveRequest } from "../postSolveRouting.js";
 
 /** `targets` is the answer: persist it, never put it in a response. */
 export interface IconOrderCaptchaChallenge extends MintedChallenge {
@@ -131,7 +131,7 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 	}: InteractiveSolutionSubmission & {
 		clicks: IconClick[];
 		iconOrderEvents: IconOrderEvent[];
-		postSolve?: Pick<PostSolveRouting, "context" | "escalate">;
+		postSolve?: PostSolveRequest;
 	}): Promise<InteractiveSubmissionOutcome> {
 		return this.submitInteractiveCaptchaSolution({
 			...submission,
@@ -146,8 +146,8 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 				postSolve: {
 					...postSolve,
 					phase: "postIconOrder",
-					baseline: { captchaType: CaptchaType.iconOrder },
-					raw: { iconOrderEvents, iconOrderClicks: clicks },
+					baselineFor: () => ({ captchaType: CaptchaType.iconOrder }),
+					rawFor: () => ({ iconOrderEvents, iconOrderClicks: clicks }),
 				},
 			}),
 		});

@@ -33,6 +33,7 @@ import type { ClientRecord } from "@prosopo/types-database";
 import type { Request } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { coerceToEnabledCaptchaType } from "../../tasks/captchaTypeSelection.js";
+import type { PostSolveRequest } from "../../tasks/postSolveRouting.js";
 import { samplePuzzleDifficulty } from "../../tasks/puzzle/puzzleDifficulty.js";
 import type { Tasks } from "../../tasks/tasks.js";
 import {
@@ -45,6 +46,14 @@ import {
 	rawTlsSignalsForSession,
 	rawTlsSignalsFromRecord,
 } from "../rawTlsSignalsMiddleware.js";
+import { buildPostSolveRoutingContext } from "./postSolveRoutingContext.js";
+
+/**
+ * How many escalations in a row one visit may take. Each must change type, so
+ * without a ceiling a machine could bounce a user between two of them for as
+ * long as they kept solving.
+ */
+export const MAX_ESCALATION_DEPTH = 2;
 
 type EscalationConnectionSignals = RawTlsSignals & {
 	tcpToChelloUs?: number;
@@ -124,6 +133,9 @@ export const mintEscalation = async ({
 		origin.sessionId,
 	);
 	if (!originSession) return undefined;
+
+	const escalationDepth = (originSession.escalationDepth ?? 0) + 1;
+	if (escalationDepth > MAX_ESCALATION_DEPTH) return undefined;
 
 	const solveDevice = solveDeviceSignals(origin.behavioralDataPacked);
 	// Routing judged the device already; size the escalation on that same
@@ -256,6 +268,7 @@ export const mintEscalation = async ({
 		webrtc: originSession.webrtc,
 		isProtect: originSession.isProtect,
 		isEscalation: true,
+		escalationDepth,
 		// The DM-input read path (captchaManager.getSessionRecordWithOriginFallback)
 		// uses this to fall back to the origin session for fields the escalation
 		// doesn't carry itself — simdReadings (attached by pow-submit
@@ -300,3 +313,20 @@ export const mintEscalation = async ({
 		sessionId: newSession.sessionId,
 	};
 };
+
+export const postSolveRequest = (
+	tasks: Tasks,
+	req: Request & AugmentedRequest,
+	clientRecord: Pick<ClientRecord, "tier" | "settings">,
+): PostSolveRequest => ({
+	context: buildPostSolveRoutingContext(req, clientRecord),
+	escalate: ({ routingOutput, device, origin }) =>
+		mintEscalation({
+			tasks,
+			routingOutput,
+			origin,
+			device,
+			perConnectionSignals: escalationConnectionSignals(req),
+			siteConstraints: escalationSiteConstraints(clientRecord),
+		}),
+});

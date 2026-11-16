@@ -979,6 +979,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// gap only for fields that are inherently origin-populated; escalation-
 	// owned fields (captchaType, sessionId, score, etc.) are never overridden.
 	originSessionId: { type: String, required: false },
+	escalationDepth: { type: Number, required: false },
 	solveDevice: {
 		type: new Schema(
 			{ deviceCapability: String, touchEventCount: Number },
@@ -1304,6 +1305,7 @@ export const SESSION_PROJECTION = {
 	webView: 1,
 	iFrame: 1,
 	isEscalation: 1,
+	escalationDepth: 1,
 	decryptedHeadHash: 1,
 	siteKey: 1,
 	reason: 1,

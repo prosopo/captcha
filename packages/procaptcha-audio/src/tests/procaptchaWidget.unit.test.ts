@@ -17,7 +17,10 @@ import {
 	type TranslateOptions,
 	createUntranslatedI18n,
 } from "@prosopo/locale";
-import type { Component } from "@prosopo/procaptcha-common";
+import type {
+	Component,
+	SolutionSubmitOutcome,
+} from "@prosopo/procaptcha-common";
 import {
 	type AudioEvent,
 	type GetAudioCaptchaResponse,
@@ -58,7 +61,7 @@ const mocks = vi.hoisted(() => {
 				answer: string,
 				replays: number,
 				events: AudioEvent[],
-			) => Promise<boolean>
+			) => Promise<SolutionSubmitOutcome>
 		>();
 	const resetState = vi.fn<() => void>();
 	const dispose = vi.fn<() => void>();
@@ -194,7 +197,7 @@ beforeEach(() => {
 	mocks.translatorI18n.current = undefined;
 	mocks.playerProps.current = undefined;
 	mocks.start.mockResolvedValue(challengeResponse());
-	mocks.submitSolution.mockResolvedValue(true);
+	mocks.submitSolution.mockResolvedValue("verified");
 	mocks.loadI18next.mockResolvedValue(undefined);
 	widget = undefined;
 	mounted = mount();
@@ -499,7 +502,7 @@ describe("answering the challenge", () => {
 	});
 
 	test("a wrong answer gets a fresh clip rather than the one just spent", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		const retryChallenge = challengeResponse({
 			clip: "data:audio/wav;base64,cmV0cnk=",
 			characterCount: 6,
@@ -520,7 +523,7 @@ describe("answering the challenge", () => {
 
 	test("delegates the retry to the wrapper when it offered one", async () => {
 		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		await openPlayer(props({ onReload }));
 		await complete();
 		expect(mocks.start).toHaveBeenCalledTimes(1);
@@ -529,7 +532,7 @@ describe("answering the challenge", () => {
 
 	test("keeps the spent clip frozen while the wrapper re-mints", async () => {
 		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		await openPlayer(props({ onReload }));
 		await complete();
 		expect(mocks.playerProps.current).toMatchObject({
@@ -557,7 +560,7 @@ describe("answering the challenge", () => {
 	});
 
 	test("a wrong answer with no replacement challenge closes the player", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockResolvedValue(undefined);
@@ -567,7 +570,7 @@ describe("answering the challenge", () => {
 	});
 
 	test("a wrong answer whose retry throws closes the player", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockRejectedValue(new Error("provider down"));
@@ -594,14 +597,14 @@ describe("answering the challenge", () => {
 	});
 
 	test("the player is frozen while the answer is in flight", async () => {
-		const { promise, release } = deferred<boolean>();
+		const { promise, release } = deferred<SolutionSubmitOutcome>();
 		mocks.submitSolution.mockReturnValue(promise);
 		await openPlayer();
 		void mocks.playerProps.current?.onComplete("96475", 0, []);
 		await settle();
 		expect(mocks.playerProps.current?.submitting).toBe(true);
 		expect(spinner()).not.toBeNull();
-		release(true);
+		release("verified");
 		await settle();
 	});
 

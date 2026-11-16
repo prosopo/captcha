@@ -26,6 +26,7 @@ import {
 	type HoneypotComponent,
 	PROCAPTCHA_EXECUTE_EVENT,
 	type ProcaptchaStateHandle,
+	type SolutionSubmitOutcome,
 	Teardown,
 	audioAlternativeOffer,
 	buildUpdateState,
@@ -102,7 +103,7 @@ export const mountProcaptchaPuzzleWidget = (
 		callbacks,
 		frictionlessState,
 		() => honeypot?.getValue(),
-		{ widgetReloadsOnFailure: remintsSession },
+		{ widgetReloadsOnFailure: remintsSession, onEscalate: props.onEscalate },
 	);
 
 	const root = createElement("div");
@@ -120,9 +121,9 @@ export const mountProcaptchaPuzzleWidget = (
 		puzzlePhase = "submitting";
 		scheduler.schedule();
 
-		let verified = false;
+		let outcome: SolutionSubmitOutcome = "failed";
 		try {
-			verified = await manager.submitSolution(finalX, finalY, puzzleEvents);
+			outcome = await manager.submitSolution(finalX, finalY, puzzleEvents);
 		} catch (error) {
 			callbacks.onError?.(
 				toCallbackError(
@@ -132,7 +133,10 @@ export const mountProcaptchaPuzzleWidget = (
 			);
 		}
 
-		if (verified) {
+		// The wrapper is mounting the follow-up challenge in our place.
+		if (outcome === "escalated") return;
+
+		if (outcome === "verified") {
 			puzzlePhase = "checkbox";
 			challengeData = null;
 			showRetry = false;

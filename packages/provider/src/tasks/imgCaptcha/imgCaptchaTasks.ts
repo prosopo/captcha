@@ -82,6 +82,11 @@ import {
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import {
+	ESCALATED_RESULT,
+	type PostSolveRequest,
+	runPostSolveRouting,
+} from "../postSolveRouting.js";
 import type { VerifyImageCaptchaSolutionArgs } from "../serverVerifyArgs.js";
 import { isSignatureValid } from "../signatureCheck.js";
 import {
@@ -106,6 +111,8 @@ export interface ImageSolutionSubmission {
 	ipInfo?: IPInfoResponse;
 	simdReadings?: string;
 	clientMetaData?: ClientMetaData;
+	/** Set to have the routing machine judge a correct solve again. */
+	postSolve?: PostSolveRequest;
 }
 
 export class ImgCaptchaManager extends CaptchaManager {
@@ -264,6 +271,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		ipInfo,
 		simdReadings,
 		clientMetaData,
+		postSolve,
 	}: ImageSolutionSubmission): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
 		if (
@@ -547,14 +555,72 @@ export class ImgCaptchaManager extends CaptchaManager {
 				return response;
 			}
 
-			if (
-				compareCaptchaSolutions(
-					receivedCaptchas,
-					solutionRecords,
-					totalImages,
-					pendingRecord.threshold,
-				)
-			) {
+			const correct = compareCaptchaSolutions(
+				receivedCaptchas,
+				solutionRecords,
+				totalImages,
+				pendingRecord.threshold,
+			);
+			const escalation =
+				correct && postSolve
+					? await runPostSolveRouting({
+							db: this.db,
+							runner: this.decisionMachineRunner,
+							counters: this.usageCounters,
+							logger: this.logger,
+							label: "image",
+							postSolve: {
+								...postSolve,
+								phase: "postImage",
+								baselineFor: (session) => ({
+									captchaType: CaptchaType.image,
+									...(session.solvedImagesCount !== undefined && {
+										solvedImagesCount: session.solvedImagesCount,
+									}),
+								}),
+								raw: { coords: pairs },
+							},
+							subject: {
+								challenge: requestHash,
+								sessionId: pendingRecord.sessionId,
+								dappAccount,
+								userAccount,
+								solvedType: CaptchaType.image,
+								behavioralDataPacked,
+							},
+						})
+					: undefined;
+
+			if (escalation) {
+				const writePromises: Promise<void>[] = [
+					this.db.disapproveDappUserCommitment({
+						commitmentId,
+						reason: ESCALATED_RESULT.reason,
+						coords: pairs,
+					}),
+				];
+				if (pendingRecord.sessionId) {
+					writePromises.push(
+						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
+							userSubmitted: true,
+							result: ESCALATED_RESULT,
+							...(storedClientMetaData && {
+								clientMetaData: storedClientMetaData,
+							}),
+						}),
+					);
+					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
+				}
+				await Promise.all(writePromises);
+				response = {
+					captchas: captchaIds.map((id) => ({
+						captchaId: id,
+						proof: [[]],
+					})),
+					verified: false,
+					escalation,
+				};
+			} else if (correct) {
 				response = {
 					captchas: captchaIds.map((id, index) => ({
 						captchaId: id,

@@ -329,10 +329,15 @@ export const ApiPathRateLimits = createRateLimitSchemaWithDefaults(
 	ProviderDefaultRateLimits,
 );
 
+/**
+ * On escalation `verified` is false and the user must clear the escalated
+ * challenge before a token is issued.
+ */
 export interface DappUserSolutionResult {
 	[ApiParams.captchas]: CaptchaIdAndProof[];
 	partialFee?: string;
 	[ApiParams.verified]: boolean;
+	[ApiParams.escalation]?: CaptchaSolutionEscalation;
 }
 
 export interface CaptchaSolutionResponse
@@ -566,9 +571,14 @@ export interface GetPuzzleCaptchaResponse extends ApiResponse {
 	[ApiParams.imageSwitchAvailable]?: boolean;
 }
 
+/**
+ * On escalation `verified` is false and the user must clear the escalated
+ * challenge before a token is issued.
+ */
 export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.error]?: ApiJsonError;
+	[ApiParams.escalation]?: CaptchaSolutionEscalation;
 }
 
 /**
@@ -607,14 +617,7 @@ export interface GetIconOrderCaptchaResponse extends ApiResponse {
 
 export type AudioCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 
-/**
- * On escalation `verified` is false and the user must clear the escalated
- * challenge before a token is issued.
- */
-export interface IconOrderCaptchaSolutionResponse
-	extends PuzzleCaptchaSolutionResponse {
-	[ApiParams.escalation]?: CaptchaSolutionEscalation;
-}
+export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]: ConcreteCaptchaType | CaptchaType.authenticated;

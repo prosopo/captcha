@@ -25,8 +25,10 @@ import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
 	type InteractiveSolutionSubmission,
+	type InteractiveSubmissionOutcome,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
+import type { PostSolveRequest } from "../postSolveRouting.js";
 import {
 	isFarPuzzleMiss,
 	puzzleDropDistance,
@@ -148,13 +150,15 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 		finalX,
 		finalY,
 		puzzleEvents,
+		postSolve,
 		...submission
 	}: InteractiveSolutionSubmission & {
 		finalX: number;
 		finalY: number;
 		puzzleEvents: PuzzleEvent[];
-	}): Promise<boolean> {
-		const { verified } = await this.submitInteractiveCaptchaSolution({
+		postSolve?: PostSolveRequest;
+	}): Promise<InteractiveSubmissionOutcome> {
+		return this.submitInteractiveCaptchaSolution({
 			...submission,
 			isCorrect: (record) =>
 				validatePuzzleSolution({
@@ -178,7 +182,18 @@ export class PuzzleCaptchaManager extends InteractiveCaptchaManager<PuzzleCaptch
 						record.targetY,
 					),
 				}),
+			...(postSolve && {
+				postSolve: {
+					...postSolve,
+					phase: "postPuzzle",
+					baselineFor: () => ({ captchaType: CaptchaType.puzzle }),
+					rawFor: (record) => ({
+						puzzleEvents,
+						puzzleOrigin: { x: record.originX, y: record.originY },
+						puzzleTarget: { x: record.targetX, y: record.targetY },
+					}),
+				},
+			}),
 		});
-		return verified;
 	}
 }

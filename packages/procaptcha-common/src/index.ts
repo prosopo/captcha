@@ -22,6 +22,7 @@ export * from "./events/inputModality.js";
 export * from "./events/trust.js";
 export * from "./events/execute.js";
 export * from "./state/builder.js";
+export * from "./state/escalation.js";
 export * from "./callbacks/defaultCallbacks.js";
 export * from "./callbacks/defaultEvents.js";
 export * from "./extensionLoader.js";

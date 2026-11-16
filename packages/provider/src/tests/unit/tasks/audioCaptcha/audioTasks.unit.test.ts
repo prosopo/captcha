@@ -217,16 +217,18 @@ describe("AudioCaptchaManager", () => {
 			a: ReturnType<typeof buildArgs>,
 			answer: string,
 		): Promise<boolean> =>
-			audioCaptchaManager.verifyAudioCaptchaSolution({
-				challenge: a.challenge,
-				providerChallengeSignature: a.providerSignature,
-				submittedAnswer: answer,
-				replays: 2,
-				audioEvents: [{ kind: "play", t: 1 }],
-				timeout: 1000,
-				userTimestampSignature: a.userSignature,
-				ipAddress: a.ipAddress,
-			});
+			audioCaptchaManager
+				.verifyAudioCaptchaSolution({
+					challenge: a.challenge,
+					providerChallengeSignature: a.providerSignature,
+					submittedAnswer: answer,
+					replays: 2,
+					audioEvents: [{ kind: "play", t: 1 }],
+					timeout: 1000,
+					userTimestampSignature: a.userSignature,
+					ipAddress: a.ipAddress,
+				})
+				.then(({ verified }) => verified);
 
 		it("checks both signatures before it touches the database", async () => {
 			const a = buildArgs();

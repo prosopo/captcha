@@ -44,8 +44,13 @@ import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { embedData, getIPAddress } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { applyRouter } from "../../../../tasks/frictionless/routingMachine.js";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
+import type {
+	PostSolveRequest,
+	PostSolveRouting,
+} from "../../../../tasks/postSolveRouting.js";
 import { shuffleArray } from "../../../../util.js";
 
 const WEBRTC_MISMATCH: WebRtcSignal = {
@@ -83,6 +88,9 @@ vi.mock("../../../../util.js", async (importOriginal) => {
 });
 vi.mock("../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js", () => ({
 	buildTreeAndGetCommitmentId: vi.fn(),
+}));
+vi.mock("../../../../tasks/frictionless/routingMachine.js", () => ({
+	applyRouter: vi.fn(),
 }));
 
 const mockCaptchas = [
@@ -958,6 +966,155 @@ describe("ImgCaptchaManager", () => {
 				{ captchaId: "captcha1", proof: [["leaf1"], ["root"]] },
 				{ captchaId: "captcha2", proof: [["leaf2"], ["root"]] },
 			]);
+		});
+	});
+
+	describe("dappUserSolution — post-solve routing", () => {
+		const SESSION_ID = "session-1";
+		const ESCALATION = {
+			captchaType: CaptchaType.puzzle,
+			sessionId: "escalated-session",
+		} as const;
+		const escalate = vi.fn<PostSolveRouting["escalate"]>();
+		const postSolve: PostSolveRequest = {
+			context: {
+				ip: "1.1.1.1",
+				device: { userAgent: "Mozilla/5.0", headers: {} },
+				raw: { headers: {}, userAgent: "Mozilla/5.0" },
+			},
+			escalate,
+		};
+
+		const submit = async (correct: boolean) => {
+			const captchas = [
+				{ captchaId: "captcha1", solution: ["a"], salt: "0x00" },
+			] as unknown as CaptchaSolution[];
+			const timestamp = Date.now();
+			vi.mocked(signatureVerify).mockReturnValue({
+				crypto: "sr25519",
+				isValid: true,
+				isWrapped: false,
+				publicKey: new Uint8Array(),
+			});
+			vi.mocked(db.getPendingImageCommitment).mockResolvedValue({
+				requestHash: "requestHash",
+				salt: "0x00",
+				threshold: 0.8,
+				deadlineTimestamp: new Date(timestamp + 10_000),
+				sessionId: SESSION_ID,
+			} as unknown as PendingImageCaptchaRequest);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue({
+				sessionId: SESSION_ID,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 2,
+				scoreComponents: { baseScore: 0 },
+				webView: false,
+			} as unknown as Awaited<
+				ReturnType<typeof db.getSessionRecordBySessionId>
+			>);
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateDappUserSolutionRequestIsPending",
+			).mockResolvedValue(true);
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateReceivedCaptchasAgainstStoredCaptchas",
+			).mockResolvedValue({
+				storedCaptchas: [
+					{ captchaId: "captcha1", datasetId: "datasetId", items: [{}, {}] },
+				] as unknown as Captcha[],
+				receivedCaptchas: captchas,
+				captchaIds: ["captcha1"],
+			});
+			vi.mocked(buildTreeAndGetCommitmentId).mockReturnValue({
+				tree: {
+					leaves: [{ hash: "leaf1" }],
+					proof: vi.fn((): string[][] => [["leaf1"]]),
+				},
+				commitmentId: "commitmentId",
+			} as unknown as ReturnType<typeof buildTreeAndGetCommitmentId>);
+			vi.mocked(db.getSolutionByCaptchaId).mockResolvedValue({
+				captchaId: "captcha1",
+				solution: ["a"],
+			} as unknown as Awaited<ReturnType<typeof db.getSolutionByCaptchaId>>);
+			vi.mocked(compareCaptchaSolutions).mockReturnValue(correct);
+
+			return imgCaptchaManager.dappUserSolution({
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				requestHash: "requestHash",
+				captchas,
+				userTimestampSignature: "userTimestampSignature",
+				timestamp,
+				providerRequestHashSignature: "providerRequestHashSignature",
+				ipAddress: getIPAddress("1.1.1.1"),
+				headers: { a: "1" },
+				ja4: "ja4",
+				postSolve,
+			});
+		};
+
+		beforeEach(() => {
+			escalate.mockResolvedValue(ESCALATION);
+		});
+
+		it("escalates a correct solve the routing machine sends on, and never approves its commitment", async () => {
+			vi.mocked(applyRouter).mockResolvedValue({
+				captchaType: CaptchaType.puzzle,
+			});
+
+			const result = await submit(true);
+
+			expect(result.verified).toBe(false);
+			expect(result.escalation).toEqual(ESCALATION);
+			expect(vi.mocked(applyRouter).mock.calls[0]?.[0]).toMatchObject({
+				phase: "postImage",
+				baseline: { captchaType: CaptchaType.image, solvedImagesCount: 2 },
+				ctx: { dappAccount: "dappAccount", userAccount: "userAccount" },
+			});
+			expect(escalate.mock.calls[0]?.[0].origin).toMatchObject({
+				sessionId: SESSION_ID,
+				captchaType: CaptchaType.image,
+			});
+			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+				expect.objectContaining({
+					commitmentId: "commitmentId",
+					reason: ResultReason.CAPTCHA_DECISION_MACHINE_DENIED,
+				}),
+			);
+		});
+
+		it("approves a correct solve the machine keeps on image", async () => {
+			vi.mocked(applyRouter).mockResolvedValue({
+				captchaType: CaptchaType.image,
+			});
+
+			const result = await submit(true);
+
+			expect(result.verified).toBe(true);
+			expect(result.escalation).toBeUndefined();
+			expect(escalate).not.toHaveBeenCalled();
+			expect(db.approveDappUserCommitment).toHaveBeenCalled();
+		});
+
+		it("approves the solve when the site cannot serve the escalation", async () => {
+			vi.mocked(applyRouter).mockResolvedValue({
+				captchaType: CaptchaType.puzzle,
+			});
+			escalate.mockResolvedValue(undefined);
+
+			const result = await submit(true);
+
+			expect(result.verified).toBe(true);
+			expect(db.approveDappUserCommitment).toHaveBeenCalled();
+		});
+
+		it("never asks the machine about a wrong answer", async () => {
+			const result = await submit(false);
+
+			expect(result.verified).toBe(false);
+			expect(applyRouter).not.toHaveBeenCalled();
 		});
 	});
 

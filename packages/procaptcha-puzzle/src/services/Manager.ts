@@ -18,6 +18,7 @@ import { ProsopoError, toPublicError } from "@prosopo/common";
 import { toCallbackError } from "@prosopo/locale";
 import {
 	ExtensionLoader,
+	type SolutionSubmitOutcome,
 	buildClientMetaData,
 	buildUpdateState,
 	createManagerLifecycle,
@@ -26,6 +27,7 @@ import {
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
 	getSimdReadingsForSubmit,
+	handOffEscalation,
 	pickIpMode,
 	providerRetry,
 	widgetRequestHeaders,
@@ -38,6 +40,7 @@ import {
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	type PuzzleEvent,
@@ -59,7 +62,7 @@ interface PuzzleManagerHandle {
 		finalX: number,
 		finalY: number,
 		puzzleEvents: PuzzleEvent[],
-	) => Promise<boolean>;
+	) => Promise<SolutionSubmitOutcome>;
 	resetState: (frictionlessRestart?: () => void) => void;
 	dispose: () => void;
 }
@@ -76,7 +79,10 @@ export const Manager = (
 	// Set when the widget re-mints the session itself after a wrong answer.
 	// Restarting the whole frictionless flow as well would tear that widget
 	// down before it can, losing the retry prompt and its count of misses.
-	options: { widgetReloadsOnFailure?: boolean } = {},
+	options: {
+		widgetReloadsOnFailure?: boolean;
+		onEscalate?: ProcaptchaEscalationHandler;
+	} = {},
 ): PuzzleManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
@@ -377,7 +383,7 @@ export const Manager = (
 		finalX: number,
 		finalY: number,
 		puzzleEvents: PuzzleEvent[],
-	): Promise<boolean> => {
+	): Promise<SolutionSubmitOutcome> => {
 		if (
 			!storedChallengeResponse ||
 			!storedProviderApi ||
@@ -456,7 +462,19 @@ export const Manager = (
 				simdReadings,
 				clientMetaData,
 			);
-			if (lifecycle.isDisposed()) return false;
+			if (lifecycle.isDisposed()) return "failed";
+
+			if (
+				handOffEscalation(
+					verifiedSolution[ApiParams.escalation],
+					options.onEscalate,
+					storedClickX,
+					storedClickY,
+				)
+			) {
+				updateState({ loading: false });
+				return "escalated";
+			}
 
 			if (verifiedSolution[ApiParams.verified]) {
 				updateState({
@@ -482,10 +500,10 @@ export const Manager = (
 					}),
 				);
 				setValidChallengeTimeout();
-				return true;
+				return "verified";
 			}
 			onFailed();
-			return false;
+			return "failed";
 		} catch (error) {
 			updateState({ loading: false });
 			throw error;

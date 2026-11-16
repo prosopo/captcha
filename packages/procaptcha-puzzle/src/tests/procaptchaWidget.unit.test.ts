@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import { createUntranslatedI18n } from "@prosopo/locale";
-import type { Component } from "@prosopo/procaptcha-common";
+import type {
+	Component,
+	SolutionSubmitOutcome,
+} from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
@@ -49,7 +52,13 @@ const mocks = vi.hoisted(() => {
 			(x?: number, y?: number) => Promise<GetPuzzleCaptchaResponse | undefined>
 		>();
 	const submitSolution =
-		vi.fn<(x: number, y: number, events: PuzzleEvent[]) => Promise<boolean>>();
+		vi.fn<
+			(
+				x: number,
+				y: number,
+				events: PuzzleEvent[],
+			) => Promise<SolutionSubmitOutcome>
+		>();
 	const resetState = vi.fn<() => void>();
 	const dispose = vi.fn<() => void>();
 	const constructions: {
@@ -164,7 +173,7 @@ beforeEach(() => {
 	mocks.translationsReady.current = true;
 	mocks.canvasProps.current = undefined;
 	mocks.start.mockResolvedValue(challengeResponse());
-	mocks.submitSolution.mockResolvedValue(true);
+	mocks.submitSolution.mockResolvedValue("verified");
 	mocks.loadI18next.mockResolvedValue(undefined);
 	widget = undefined;
 	mounted = mount();
@@ -487,7 +496,7 @@ describe("finishing the drag", () => {
 	});
 
 	test("a rejected solution asks for another go on a fresh challenge", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		const retryChallenge = challengeResponse({
 			originX: 40,
 			piece: "data:image/webp;base64,cmV0cnk=",
@@ -511,7 +520,7 @@ describe("finishing the drag", () => {
 	// NO_SESSION_FOUND. The widget must hand back to the wrapper for a
 	// re-mint instead of making that request.
 	test("a rejected solution on a frictionless session re-mints rather than re-requesting", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		await openPuzzle(
 			props({
@@ -533,7 +542,7 @@ describe("finishing the drag", () => {
 	});
 
 	test("a rejected solution still re-requests when there is no session to re-mint", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		await openPuzzle(props({ frictionlessState: frictionless(), onReload }));
 		await complete();
@@ -548,7 +557,7 @@ describe("finishing the drag", () => {
 	});
 
 	test("a rejected solution with no replacement challenge closes the puzzle", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockResolvedValue(undefined);
@@ -558,7 +567,7 @@ describe("finishing the drag", () => {
 	});
 
 	test("a rejected solution whose retry throws closes the puzzle", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockRejectedValue(new Error("provider down"));
@@ -587,13 +596,15 @@ describe("finishing the drag", () => {
 	});
 
 	test("the puzzle is frozen while the solution is in flight", async () => {
-		let release: (verified: boolean) => void = () => {
+		let release: (outcome: SolutionSubmitOutcome) => void = () => {
 			// replaced synchronously by the promise executor below
 		};
 		mocks.submitSolution.mockReturnValue(
-			new Promise<boolean>((resolve: (verified: boolean) => void) => {
-				release = resolve;
-			}),
+			new Promise<SolutionSubmitOutcome>(
+				(resolve: (outcome: SolutionSubmitOutcome) => void) => {
+					release = resolve;
+				},
+			),
 		);
 		await openPuzzle();
 		// Not awaited: the handler cannot settle until the verdict is released.
@@ -601,7 +612,7 @@ describe("finishing the drag", () => {
 		await settle();
 		expect(mocks.canvasProps.current?.submitting).toBe(true);
 		expect(spinner()).not.toBeNull();
-		release(true);
+		release("verified");
 		await settle();
 	});
 });
@@ -658,7 +669,7 @@ describe("refreshing the puzzle", () => {
 	});
 
 	test("clears a retry prompt, since a refresh is not a wrong answer", async () => {
-		mocks.submitSolution.mockResolvedValue(false);
+		mocks.submitSolution.mockResolvedValue("failed");
 		await openPuzzle();
 		await complete();
 		expect(mocks.canvasProps.current?.showRetry).toBe(true);
@@ -675,7 +686,7 @@ describe("refreshing the puzzle", () => {
 
 	test("is ignored while a solution is being checked", async () => {
 		mocks.submitSolution.mockReturnValue(
-			new Promise<boolean>(() => {
+			new Promise<SolutionSubmitOutcome>(() => {
 				// never settles: the check stays in flight for the whole test
 			}),
 		);

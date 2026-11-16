@@ -319,7 +319,7 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: a.ipAddress,
 			});
 
-			expect(result).toBe(false);
+			expect(result).toEqual({ verified: false });
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
@@ -378,7 +378,7 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: a.ipAddress,
 			});
 
-			expect(result).toBe(false);
+			expect(result).toEqual({ verified: false });
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
 		});
@@ -412,7 +412,7 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: a.ipAddress,
 			});
 
-			expect(result).toBe(false);
+			expect(result).toEqual({ verified: false });
 			expect(db.claimPuzzleCaptchaSubmission).toHaveBeenCalledWith(a.challenge);
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
 			expect(db.updatePuzzleCaptchaRecordResult).not.toHaveBeenCalled();
@@ -452,7 +452,7 @@ describe("PuzzleCaptchaManager", () => {
 				salt: malformedSalt,
 			});
 
-			expect(result).toBe(false);
+			expect(result).toEqual({ verified: false });
 			expect(validatePuzzleSolution).not.toHaveBeenCalled();
 			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge: a.challenge,
@@ -495,7 +495,7 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: a.ipAddress,
 			});
 
-			expect(result).toBe(false);
+			expect(result).toEqual({ verified: false });
 			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge: a.challenge,
 				result: expect.objectContaining({
@@ -582,7 +582,7 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: a.ipAddress,
 			});
 
-			expect(result).toBe(true);
+			expect(result).toEqual({ verified: true });
 			expect(checkPowSignature).toHaveBeenCalled();
 			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge: a.challenge,
@@ -668,7 +668,7 @@ describe("PuzzleCaptchaManager", () => {
 				behavioralData: "encrypted-blob",
 			});
 
-			expect(result).toBe(true);
+			expect(result).toEqual({ verified: true });
 
 			const calls = vi.mocked(db.updatePuzzleCaptchaRecord).mock.calls;
 
@@ -756,7 +756,7 @@ describe("PuzzleCaptchaManager", () => {
 				behavioralData: "encrypted-blob",
 			});
 
-			expect(result).toBe(true);
+			expect(result).toEqual({ verified: true });
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
 				a.challenge,
 				expect.objectContaining({ puzzleEvents: trail }),
@@ -813,7 +813,7 @@ describe("PuzzleCaptchaManager", () => {
 				behavioralData: "encrypted-blob",
 			});
 
-			expect(result).toBe(true);
+			expect(result).toEqual({ verified: true });
 			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
 				a.challenge,
 				expect.objectContaining({ puzzleEvents: trail }),
@@ -870,7 +870,7 @@ describe("PuzzleCaptchaManager", () => {
 				salt,
 			});
 
-			expect(result).toBe(true);
+			expect(result).toEqual({ verified: true });
 			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge: a.challenge,
 				result: { status: CaptchaStatus.approved },
@@ -911,7 +911,7 @@ describe("PuzzleCaptchaManager", () => {
 				ipAddress: a.ipAddress,
 			});
 
-			expect(result).toBe(false);
+			expect(result).toEqual({ verified: false });
 			expect(db.updatePuzzleCaptchaRecordResult).toHaveBeenCalledWith({
 				challenge: a.challenge,
 				result: expect.objectContaining({
@@ -966,7 +966,7 @@ describe("PuzzleCaptchaManager", () => {
 					result: { status: CaptchaStatus.pending },
 				}),
 			);
-			return manager.verifyPuzzleCaptchaSolution({
+			const { verified } = await manager.verifyPuzzleCaptchaSolution({
 				challenge,
 				providerChallengeSignature: "0xprov",
 				finalX: x,
@@ -976,6 +976,7 @@ describe("PuzzleCaptchaManager", () => {
 				userTimestampSignature: "0xuser",
 				ipAddress,
 			});
+			return verified;
 		};
 
 		const count = (

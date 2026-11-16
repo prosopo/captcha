@@ -280,6 +280,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iconOrder,
 			isEscalation,
 			originSessionId,
+			escalationDepth,
 			refreshOf,
 			refreshCount,
 			refreshedAfterMs,
@@ -327,6 +328,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame,
 			...(isEscalation && { isEscalation: true }),
 			...(originSessionId && { originSessionId }),
+			...(escalationDepth !== undefined && { escalationDepth }),
 			...(refreshOf && { refreshOf }),
 			...(refreshCount !== undefined && { refreshCount }),
 			...(refreshedAfterMs !== undefined && { refreshedAfterMs }),
@@ -759,6 +761,7 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted: undefined,
 			isEscalation: undefined,
 			originSessionId: undefined,
+			escalationDepth: undefined,
 		});
 
 		// Fire-and-forget served-counter writes, only useful when a router is in
@@ -827,6 +830,7 @@ export class FrictionlessManager extends CaptchaManager {
 			iconOrder: undefined,
 			isEscalation: undefined,
 			originSessionId: undefined,
+			escalationDepth: undefined,
 		});
 	}
 

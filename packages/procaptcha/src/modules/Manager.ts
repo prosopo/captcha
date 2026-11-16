@@ -22,6 +22,7 @@ import {
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
 	getSimdReadingsForSubmit,
+	handOffEscalation,
 	pickIpMode,
 	providerRetry,
 	toCallbackError,
@@ -39,6 +40,7 @@ import {
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	type ReloadOptions,
@@ -87,6 +89,7 @@ export function Manager(
 		y?: number,
 		options?: Pick<ReloadOptions, "switchToPuzzle">,
 	) => void,
+	onEscalate?: ProcaptchaEscalationHandler,
 ) {
 	const events = getDefaultEvents(callbacks);
 
@@ -443,6 +446,18 @@ export function Manager(
 					);
 				// A solve that lands after destroy must not reach the site.
 				if (disposed) return;
+
+				if (
+					handOffEscalation(
+						submission[0][ApiParams.escalation],
+						onEscalate,
+						checkboxClickX,
+						checkboxClickY,
+					)
+				) {
+					updateState({ loading: false });
+					return;
+				}
 
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;

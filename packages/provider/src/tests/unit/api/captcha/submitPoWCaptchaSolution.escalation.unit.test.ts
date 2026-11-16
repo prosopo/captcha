@@ -21,6 +21,7 @@ import {
 	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MAX_ESCALATION_DEPTH } from "../../../../api/captcha/escalation.js";
 import { buildEscalation } from "../../../../api/captcha/submitPoWCaptchaSolution.js";
 import type { CreateSessionInput } from "../../../../tasks/frictionless/frictionlessTasks.js";
 import {
@@ -347,6 +348,46 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		// siteKey resolves from the origin session, not from the pow record's
 		// dappAccount (the origin's siteKey is the source of truth if set).
 		expect(input.siteKey).toBe("site");
+	});
+
+	describe("escalation depth", () => {
+		const escalateFrom = async (originDepth?: number) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue({
+				...makeOriginSession(),
+				...(originDepth !== undefined && {
+					isEscalation: true,
+					escalationDepth: originDepth,
+				}),
+			});
+			return buildEscalation({
+				tasks: env.tasks,
+				result: {
+					verified: true,
+					routingOutput: { captchaType: CaptchaType.image },
+				},
+				challenge: "challenge",
+			});
+		};
+
+		it("records an escalation from an ordinary session as the first", async () => {
+			await escalateFrom();
+			expect(createSessionInput().escalationDepth).toBe(1);
+		});
+
+		it("counts an escalation of an escalation as the next one", async () => {
+			await escalateFrom(1);
+			expect(createSessionInput().escalationDepth).toBe(2);
+		});
+
+		it("lets the solve stand once the chain reaches its ceiling", async () => {
+			await expect(escalateFrom(MAX_ESCALATION_DEPTH)).resolves.toBeUndefined();
+			expect(env.spies.createSession).not.toHaveBeenCalled();
+			expect(env.spies.cacheSessionEscalation).not.toHaveBeenCalled();
+		});
 	});
 
 	it("passes captchaType=puzzle and the origin sessionId when escalating to puzzle", async () => {

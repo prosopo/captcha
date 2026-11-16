@@ -17,6 +17,7 @@ import {
 	type Translator,
 	createUntranslatedI18n,
 } from "@prosopo/locale";
+import type { SolutionSubmitOutcome } from "@prosopo/procaptcha-common";
 import type {
 	AudioEvent,
 	FrictionlessState,
@@ -125,7 +126,7 @@ describe("Manager's types", () => {
 		>();
 		expectTypeOf<
 			ReturnType<ReturnType<typeof Manager>["submitSolution"]>
-		>().toEqualTypeOf<Promise<boolean>>();
+		>().toEqualTypeOf<Promise<SolutionSubmitOutcome>>();
 	});
 
 	test("resetState takes the frictionless restart callback and nothing else", () => {
