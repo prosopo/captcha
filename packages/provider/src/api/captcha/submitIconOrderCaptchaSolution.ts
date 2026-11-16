@@ -14,13 +14,8 @@
 import { SubmitIconOrderCaptchaSolutionBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
-import {
-	escalationConnectionSignals,
-	escalationSiteConstraints,
-	mintEscalation,
-} from "./escalation.js";
+import { postSolveRequest } from "./escalation.js";
 import { interactiveSolutionHandler } from "./interactiveCaptchaSolution.js";
-import { buildPostSolveRoutingContext } from "./postSolveRoutingContext.js";
 
 export default (env: ProviderEnvironment) =>
 	interactiveSolutionHandler(env, {
@@ -39,17 +34,6 @@ export default (env: ProviderEnvironment) =>
 				salt: body.salt,
 				simdReadings: body.simdReadings,
 				clientMetaData: body.clientMetaData,
-				postSolve: {
-					context: buildPostSolveRoutingContext(req, clientRecord),
-					escalate: ({ routingOutput, device, origin }) =>
-						mintEscalation({
-							tasks,
-							routingOutput,
-							origin,
-							device,
-							perConnectionSignals: escalationConnectionSignals(req),
-							siteConstraints: escalationSiteConstraints(clientRecord),
-						}),
-				},
+				postSolve: postSolveRequest(tasks, req, clientRecord),
 			}),
 	});

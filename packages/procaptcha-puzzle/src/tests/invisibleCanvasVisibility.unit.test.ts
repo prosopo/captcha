@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { createUntranslatedI18n } from "@prosopo/locale";
+import type { SolutionSubmitOutcome } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
@@ -38,7 +39,13 @@ const mocks = vi.hoisted(() => {
 			(x?: number, y?: number) => Promise<GetPuzzleCaptchaResponse | undefined>
 		>();
 	const submitSolution =
-		vi.fn<(x: number, y: number, events: PuzzleEvent[]) => Promise<boolean>>();
+		vi.fn<
+			(
+				x: number,
+				y: number,
+				events: PuzzleEvent[],
+			) => Promise<SolutionSubmitOutcome>
+		>();
 	const resetState = vi.fn<() => void>();
 	const dispose = vi.fn<() => void>();
 	return { start, submitSolution, resetState, dispose };

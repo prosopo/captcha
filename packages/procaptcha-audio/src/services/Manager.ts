@@ -18,6 +18,7 @@ import { ProsopoError, toPublicError } from "@prosopo/common";
 import { toCallbackError } from "@prosopo/locale";
 import {
 	ExtensionLoader,
+	type SolutionSubmitOutcome,
 	buildClientMetaData,
 	buildUpdateState,
 	createManagerLifecycle,
@@ -26,6 +27,7 @@ import {
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
 	getSimdReadingsForSubmit,
+	handOffEscalation,
 	pickIpMode,
 	providerRetry,
 	widgetRequestHeaders,
@@ -40,6 +42,7 @@ import {
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 	encodeProcaptchaOutput,
@@ -56,7 +59,7 @@ interface AudioManagerHandle {
 		answer: string,
 		replays: number,
 		audioEvents: AudioEvent[],
-	) => Promise<boolean>;
+	) => Promise<SolutionSubmitOutcome>;
 	resetState: (frictionlessRestart?: () => void) => void;
 	dispose: () => void;
 }
@@ -70,6 +73,7 @@ export const Manager = (
 	getHoneypotValue?: () => string | undefined,
 	/** Asks the frictionless wrapper to mint a fresh session and re-mount the widget. */
 	onReloadRequest?: (x?: number, y?: number) => void,
+	onEscalate?: ProcaptchaEscalationHandler,
 ): AudioManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
@@ -318,7 +322,7 @@ export const Manager = (
 		answer: string,
 		replays: number,
 		audioEvents: AudioEvent[],
-	): Promise<boolean> => {
+	): Promise<SolutionSubmitOutcome> => {
 		if (
 			!storedChallengeResponse ||
 			!storedProviderApi ||
@@ -392,7 +396,19 @@ export const Manager = (
 				simdReadings,
 				clientMetaData,
 			);
-			if (lifecycle.isDisposed()) return false;
+			if (lifecycle.isDisposed()) return "failed";
+
+			if (
+				handOffEscalation(
+					verifiedSolution[ApiParams.escalation],
+					onEscalate,
+					storedClickX,
+					storedClickY,
+				)
+			) {
+				updateState({ loading: false });
+				return "escalated";
+			}
 
 			if (verifiedSolution[ApiParams.verified]) {
 				updateState({
@@ -418,7 +434,7 @@ export const Manager = (
 					}),
 				);
 				setValidChallengeTimeout();
-				return true;
+				return "verified";
 			}
 			if (onReloadRequest) {
 				// The provider consumed the session when it issued this clip, so
@@ -430,10 +446,10 @@ export const Manager = (
 				const retryY = storedClickY;
 				resetState();
 				onReloadRequest(retryX, retryY);
-				return false;
+				return "failed";
 			}
 			onFailed();
-			return false;
+			return "failed";
 		} catch (error) {
 			updateState({ loading: false });
 			throw error;

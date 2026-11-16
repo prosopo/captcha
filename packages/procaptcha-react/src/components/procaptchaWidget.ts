@@ -95,6 +95,7 @@ export const mountProcaptchaImageWidget = (
 		delegatesReload
 			? (x, y, options) => props.onReload?.(x, y, { refresh: true, ...options })
 			: undefined,
+		props.onEscalate,
 	);
 
 	const root = createElement("div", {

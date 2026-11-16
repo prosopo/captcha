@@ -30,10 +30,10 @@ import {
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	ResultReason,
+	type RoutingMachineRawSignals,
 	type Session,
 	SimdReadingsStage,
 	isBlockingCaptchaResult,
-	isInteractiveCaptchaType,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { describeMatchedRule } from "@prosopo/user-access-policy";
@@ -59,11 +59,7 @@ import {
 	isClientSessionMismatch,
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
-import {
-	deriveDevice,
-	deriveTrafficPolicies,
-	solveDeviceSignals,
-} from "../../utils/devicePlatform.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -72,10 +68,10 @@ import {
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
-import { applyRouter } from "../frictionless/routingMachine.js";
 import {
+	ESCALATED_RESULT,
 	type PostSolveRouting,
-	sessionRoutingSignals,
+	runPostSolveRouting,
 } from "../postSolveRouting.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
@@ -129,21 +125,19 @@ export interface InteractiveSubmission<TRecord>
 	/** Persists the raw interaction trail, whatever the verdict. */
 	persistInteraction: (record: TRecord) => Promise<void>;
 	/** Set for a type whose correct solves the routing machine judges again. */
-	postSolve?: PostSolveRouting;
+	postSolve?: InteractivePostSolve<TRecord>;
 }
+
+/** A post-solve pass whose solve signals may read the challenge record. */
+export type InteractivePostSolve<TRecord> = Omit<PostSolveRouting, "raw"> & {
+	rawFor: (record: TRecord) => Partial<RoutingMachineRawSignals>;
+};
 
 /** `verified` is false on an escalation: the follow-up must be cleared first. */
 export interface InteractiveSubmissionOutcome {
 	verified: boolean;
 	escalation?: CaptchaSolutionEscalation;
 }
-
-// Recorded on a correct solve the routing machine escalated, so its token can
-// never verify. The user's outcome lives on the escalated session.
-const ESCALATED_RESULT: CaptchaResult = {
-	status: CaptchaStatus.disapproved,
-	reason: ResultReason.CAPTCHA_DECISION_MACHINE_DENIED,
-};
 
 /**
  * Shared pipeline for the captcha types a human solves on screen (puzzle,
@@ -400,11 +394,31 @@ export abstract class InteractiveCaptchaManager<
 
 		const escalation =
 			correct && submission.postSolve
-				? await this.escalateSolve(
-						challengeRecord,
-						submission.postSolve,
-						behavioralDataPacked,
-					)
+				? await runPostSolveRouting({
+						db: this.db,
+						runner: this.decisionMachineRunner,
+						counters: this.usageCounters,
+						logger: this.logger,
+						label: this.logLabel,
+						postSolve: {
+							phase: submission.postSolve.phase,
+							baselineFor: submission.postSolve.baselineFor,
+							context: submission.postSolve.context,
+							escalate: submission.postSolve.escalate,
+							raw: {
+								...(coords && { coords }),
+								...submission.postSolve.rawFor(challengeRecord),
+							},
+						},
+						subject: {
+							challenge,
+							sessionId: challengeRecord.sessionId,
+							dappAccount: challengeRecord.dappAccount,
+							userAccount: challengeRecord.userAccount,
+							solvedType: this.captchaType,
+							behavioralDataPacked,
+						},
+					})
 				: undefined;
 
 		await this.recordSubmissionResult({
@@ -425,88 +439,6 @@ export abstract class InteractiveCaptchaManager<
 		}
 
 		return escalation ? { verified: false, escalation } : { verified: correct };
-	}
-
-	/**
-	 * Runs the post-solve routing pass over a correct solve and mints the
-	 * follow-up session when the machine escalates it. Any failure leaves the
-	 * solve standing, as if no machine had fired.
-	 */
-	private async escalateSolve(
-		challengeRecord: TRecord,
-		postSolve: PostSolveRouting,
-		behavioralDataPacked: BehavioralDataPacked | undefined,
-	): Promise<CaptchaSolutionEscalation | undefined> {
-		if (!challengeRecord.sessionId) return undefined;
-		try {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
-			);
-			if (!sessionRecord) return undefined;
-			const { context } = postSolve;
-			const device = deriveDevice({
-				...context.device,
-				webView: sessionRecord.webView,
-				solve: solveDeviceSignals(behavioralDataPacked),
-			});
-			const routingOutput = await applyRouter({
-				runner: this.decisionMachineRunner,
-				counters: this.usageCounters,
-				baseline: postSolve.baseline,
-				ctx: {
-					dappAccount: challengeRecord.dappAccount,
-					userAccount: challengeRecord.userAccount,
-					...(context.tier !== undefined && { tier: context.tier }),
-					ip: context.ip,
-					countryCode: context.countryCode,
-					score: computeFrictionlessScore(sessionRecord.scoreComponents),
-					platform: device.platform,
-					...(sessionRecord.d !== undefined && { d: sessionRecord.d }),
-					raw: {
-						...context.raw,
-						...sessionRoutingSignals(sessionRecord),
-						...postSolve.raw,
-						...(behavioralDataPacked && { behavioralDataPacked }),
-						...(behavioralDataPacked?.d && {
-							deviceCapability: behavioralDataPacked.d,
-						}),
-					},
-				},
-				logger: this.logger,
-				phase: postSolve.phase,
-			});
-			if (
-				!isInteractiveCaptchaType(routingOutput.captchaType) ||
-				routingOutput.captchaType === postSolve.baseline.captchaType
-			) {
-				return undefined;
-			}
-			this.logger.info(() => ({
-				msg: `Routing machine escalated a ${this.logLabel} solve`,
-				data: {
-					challenge: challengeRecord.challenge,
-					routedCaptchaType: routingOutput.captchaType,
-					routingReason: routingOutput.reason,
-				},
-			}));
-			return await postSolve.escalate({
-				routingOutput,
-				device,
-				origin: {
-					sessionId: challengeRecord.sessionId,
-					dappAccount: challengeRecord.dappAccount,
-					captchaType: postSolve.baseline.captchaType,
-					behavioralDataPacked,
-				},
-			});
-		} catch (error) {
-			this.logger.error(() => ({
-				msg: `Post-solve routing failed for a ${this.logLabel} solve`,
-				err: error,
-				data: { challenge: challengeRecord.challenge },
-			}));
-			return undefined;
-		}
 	}
 
 	/**

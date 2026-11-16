@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { pickIpMode } from "@prosopo/procaptcha-common";
+import type {
+	SolutionSubmitOutcome,
+	pickIpMode,
+} from "@prosopo/procaptcha-common";
 import {
 	ApiParams,
 	BUNDLE_VERSION_HEADER,
@@ -258,7 +261,7 @@ const submitArgs = (
 };
 
 /** Drives a full solve: start, then submit the piece at the target. */
-const solve = async (harness: Harness): Promise<boolean> => {
+const solve = async (harness: Harness): Promise<SolutionSubmitOutcome> => {
 	await harness.manager.start(11, 22);
 	return harness.manager.submitSolution(200, 80, puzzleEvents());
 };
@@ -744,7 +747,7 @@ describe("submitSolution: behavioural data", () => {
 		const encrypt = vi.fn<(data: string) => Promise<string>>();
 		encrypt.mockRejectedValue(new Error("no key"));
 		const harness = build({ frictionlessState: withCollectors(encrypt) });
-		await expect(solve(harness)).resolves.toBe(true);
+		await expect(solve(harness)).resolves.toBe("verified");
 		expect(submitArgs()[7]).toBeUndefined();
 	});
 
@@ -792,7 +795,7 @@ describe("submitSolution: behavioural data", () => {
 describe("submitSolution: the verdict", () => {
 	test("marks the user human and emits a token the provider can verify", async () => {
 		const harness = build();
-		await expect(solve(harness)).resolves.toBe(true);
+		await expect(solve(harness)).resolves.toBe("verified");
 		expect(lastUpdate(harness, "isHuman")).toBe(true);
 		const token = harness.events.onHuman.mock.calls[0]?.[0];
 		if (!token) throw new Error("expected a token");
@@ -837,7 +840,7 @@ describe("submitSolution: the verdict", () => {
 			solutionResponse({ verified: false }),
 		);
 		const harness = build();
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(harness.events.onFailed).toHaveBeenCalled();
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalled();
@@ -849,7 +852,7 @@ describe("submitSolution: the verdict", () => {
 			solutionResponse({ verified: false }),
 		);
 		const harness = build({ widgetReloadsOnFailure: true });
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(harness.events.onFailed).toHaveBeenCalled();
 		expect(harness.restart).not.toHaveBeenCalled();
 	});
@@ -859,7 +862,7 @@ describe("submitSolution: the verdict", () => {
 			solutionResponse({ verified: false }),
 		);
 		const harness = build({ withFrictionless: false });
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(harness.events.onReset).toHaveBeenCalled();
 	});
 });

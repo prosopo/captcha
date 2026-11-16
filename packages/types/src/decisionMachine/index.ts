@@ -520,11 +520,30 @@ export interface RoutingMachineRawSignals {
 	iconOrderEvents?: IconOrderEvent[];
 	iconOrderClicks?: IconClick[];
 	deviceCapability?: string;
+	// Every post-solve phase but `postPow`: the solve's click coordinates, in
+	// the shape `DecisionMachineInput.coords` documents.
+	coords?: [number, number][][];
+	// `postPuzzle` only: the drag trail, and where the piece started and the
+	// notch was cut. Same values as the `DecisionMachineInput` fields.
+	puzzleEvents?: PuzzleEvent[];
+	puzzleOrigin?: { x: number; y: number };
+	puzzleTarget?: { x: number; y: number };
+	// `postAudio` only: playback and typing events, and how many times the
+	// clip was played.
+	audioEvents?: AudioEvent[];
+	audioReplays?: number;
 }
 
-// `postPow` runs after a correct PoW solve and `postIconOrder` after a correct
-// icon order solve. Either may escalate the user to another challenge.
-export type RoutingMachinePhase = "route" | "postPow" | "postIconOrder";
+// Each `post*` phase runs after a correct solve of that challenge, and may
+// escalate the user to another one. Audio is judged on the session's visual
+// type as its baseline, since an audio clip is served against that session.
+export type RoutingMachinePhase =
+	| "route"
+	| "postPow"
+	| "postImage"
+	| "postPuzzle"
+	| "postIconOrder"
+	| "postAudio";
 
 export interface RoutingMachineInputBase {
 	phase: RoutingMachinePhase;

@@ -14,14 +14,15 @@
 import { SubmitAudioCaptchaSolutionBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
+import { postSolveRequest } from "./escalation.js";
 import { interactiveSolutionHandler } from "./interactiveCaptchaSolution.js";
 
 export default (env: ProviderEnvironment) =>
 	interactiveSolutionHandler(env, {
 		label: "audio",
 		parse: (body) => SubmitAudioCaptchaSolutionBody.parse(body),
-		verify: async (tasks, body, submitWindowMs, req) => ({
-			verified: await tasks.audioCaptchaManager.verifyAudioCaptchaSolution({
+		verify: (tasks, body, submitWindowMs, req, clientRecord) =>
+			tasks.audioCaptchaManager.verifyAudioCaptchaSolution({
 				challenge: body.challenge,
 				providerChallengeSignature: body.signature.provider.challenge,
 				submittedAnswer: body.answer,
@@ -34,6 +35,6 @@ export default (env: ProviderEnvironment) =>
 				salt: body.salt,
 				simdReadings: body.simdReadings,
 				clientMetaData: body.clientMetaData,
+				postSolve: postSolveRequest(tasks, req, clientRecord),
 			}),
-		}),
 	});

@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { pickIpMode } from "@prosopo/procaptcha-common";
+import type {
+	SolutionSubmitOutcome,
+	pickIpMode,
+} from "@prosopo/procaptcha-common";
 import {
 	ApiParams,
 	type AudioCaptchaSolutionResponse,
@@ -249,7 +252,7 @@ const submitArgs = (
 	return call;
 };
 
-const solve = async (harness: Harness): Promise<boolean> => {
+const solve = async (harness: Harness): Promise<SolutionSubmitOutcome> => {
 	await harness.manager.start(11, 22);
 	return harness.manager.submitSolution("96475", 2, audioEvents());
 };
@@ -762,7 +765,7 @@ describe("submitSolution: behavioural data", () => {
 		const encrypt = vi.fn<(data: string) => Promise<string>>();
 		encrypt.mockRejectedValue(new Error("no key"));
 		const harness = build({ frictionlessState: withCollectors(encrypt) });
-		await expect(solve(harness)).resolves.toBe(true);
+		await expect(solve(harness)).resolves.toBe("verified");
 		expect(submitArgs()[7]).toBeUndefined();
 	});
 
@@ -810,7 +813,7 @@ describe("submitSolution: behavioural data", () => {
 describe("submitSolution: the verdict", () => {
 	test("marks the user human and emits a token the provider can verify", async () => {
 		const harness = build();
-		await expect(solve(harness)).resolves.toBe(true);
+		await expect(solve(harness)).resolves.toBe("verified");
 		expect(lastUpdate(harness, "isHuman")).toBe(true);
 		const token = harness.events.onHuman.mock.calls[0]?.[0];
 		if (!token) throw new Error("expected a token");
@@ -868,7 +871,7 @@ describe("submitSolution: the verdict", () => {
 			solutionResponse({ verified: false }),
 		);
 		const harness = build();
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(harness.events.onFailed).toHaveBeenCalled();
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalled();
@@ -881,7 +884,7 @@ describe("submitSolution: the verdict", () => {
 		);
 		const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
 		const harness = build({ onReloadRequest });
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(onReloadRequest).toHaveBeenCalledWith(11, 22);
 		expect(harness.restart).not.toHaveBeenCalled();
 		expect(harness.events.onFailed).toHaveBeenCalled();
@@ -892,7 +895,7 @@ describe("submitSolution: the verdict", () => {
 			solutionResponse({ verified: false }),
 		);
 		const harness = build({ withFrictionless: false });
-		await expect(solve(harness)).resolves.toBe(false);
+		await expect(solve(harness)).resolves.toBe("failed");
 		expect(harness.events.onReset).toHaveBeenCalled();
 	});
 

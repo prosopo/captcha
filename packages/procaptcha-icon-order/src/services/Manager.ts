@@ -18,6 +18,7 @@ import { ProsopoError, toPublicError } from "@prosopo/common";
 import { toCallbackError } from "@prosopo/locale";
 import {
 	ExtensionLoader,
+	type SolutionSubmitOutcome,
 	buildClientMetaData,
 	buildUpdateState,
 	createManagerLifecycle,
@@ -26,6 +27,7 @@ import {
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
 	getSimdReadingsForSubmit,
+	handOffEscalation,
 	pickIpMode,
 	providerRetry,
 	widgetRequestHeaders,
@@ -49,11 +51,7 @@ import {
 import { embedData, sleep } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 
-/**
- * `escalated`: the provider accepted the clicks but wants a follow-up
- * challenge, which the frictionless wrapper mounts in this widget's place.
- */
-export type IconOrderSubmitOutcome = "verified" | "escalated" | "failed";
+export type IconOrderSubmitOutcome = SolutionSubmitOutcome;
 
 interface IconOrderManagerHandle {
 	start: (
@@ -399,22 +397,15 @@ export const Manager = (
 			);
 			if (lifecycle.isDisposed()) return "failed";
 
-			const escalation = verifiedSolution[ApiParams.escalation];
-			if (escalation && onEscalate) {
+			if (
+				handOffEscalation(
+					verifiedSolution[ApiParams.escalation],
+					onEscalate,
+					storedClickX,
+					storedClickY,
+				)
+			) {
 				updateState({ loading: false });
-				// (0, 0) is the untrusted-event / autoStart default, so it is not
-				// passed on as a click the escalated widget should re-encode.
-				const checkboxClick =
-					storedClickX !== undefined &&
-					storedClickY !== undefined &&
-					(storedClickX !== 0 || storedClickY !== 0)
-						? { x: storedClickX, y: storedClickY }
-						: undefined;
-				onEscalate(
-					escalation[ApiParams.captchaType],
-					escalation[ApiParams.sessionId],
-					checkboxClick,
-				);
 				return "escalated";
 			}
 

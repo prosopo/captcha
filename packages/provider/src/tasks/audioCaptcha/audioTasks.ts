@@ -19,6 +19,7 @@ import {
 	CaptchaType,
 	type DecisionMachineInput,
 	type PoWChallengeId,
+	isConcreteCaptchaType,
 } from "@prosopo/types";
 import type { AudioCaptchaRecord } from "@prosopo/types-database";
 import {
@@ -29,8 +30,10 @@ import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
 	type InteractiveSolutionSubmission,
+	type InteractiveSubmissionOutcome,
 	type MintedChallenge,
 } from "../interactiveCaptcha/interactiveCaptchaManager.js";
+import type { PostSolveRequest } from "../postSolveRouting.js";
 import {
 	normaliseAudioAnswer,
 	validateAudioSolution,
@@ -105,13 +108,15 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 		submittedAnswer,
 		replays,
 		audioEvents,
+		postSolve,
 		...submission
 	}: InteractiveSolutionSubmission & {
 		submittedAnswer: string;
 		replays: number;
 		audioEvents: AudioEvent[];
-	}): Promise<boolean> {
-		const { verified } = await this.submitInteractiveCaptchaSolution({
+		postSolve?: PostSolveRequest;
+	}): Promise<InteractiveSubmissionOutcome> {
+		return this.submitInteractiveCaptchaSolution({
 			...submission,
 			isCorrect: (record) =>
 				validateAudioSolution(submittedAnswer, record.answer),
@@ -123,7 +128,17 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 					replays,
 					submittedAnswer: normaliseAudioAnswer(submittedAnswer),
 				}),
+			...(postSolve && {
+				postSolve: {
+					...postSolve,
+					phase: "postAudio",
+					baselineFor: (session) =>
+						isConcreteCaptchaType(session.captchaType)
+							? { captchaType: session.captchaType }
+							: undefined,
+					rawFor: () => ({ audioEvents, audioReplays: replays }),
+				},
+			}),
 		});
-		return verified;
 	}
 }
