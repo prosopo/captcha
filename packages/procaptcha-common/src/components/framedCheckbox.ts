@@ -58,6 +58,7 @@ type ForwardedMouseInput = {
 	ctrlKey: boolean;
 	shiftKey: boolean;
 	altKey: boolean;
+	ts: number;
 };
 
 type ForwardedTouchInput = {
@@ -80,7 +81,7 @@ export type CheckboxFrameMessage =
 	| { pf: string; t: "size"; w: number; h: number }
 	| { pf: string; t: "drawn" }
 	| ({ pf: string; t: "activate" } & Activation)
-	| { pf: string; t: "pointer"; type: string; pointerType: string }
+	| { pf: string; t: "pointer"; type: string; pointerType: string; ts: number }
 	| CheckboxFrameInputMessage;
 
 const createNonce = (): string =>
@@ -421,6 +422,7 @@ export const runCheckboxFrame = (): void => {
 						t: "pointer",
 						type,
 						pointerType: event.pointerType,
+						ts: performance.timeOrigin + event.timeStamp,
 					});
 				}
 			},
@@ -452,6 +454,7 @@ export const runCheckboxFrame = (): void => {
 						ctrlKey: event.ctrlKey,
 						shiftKey: event.shiftKey,
 						altKey: event.altKey,
+						ts: performance.timeOrigin + event.timeStamp,
 					});
 				}
 			},
