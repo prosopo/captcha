@@ -214,6 +214,7 @@ describe("layoutInjector", () => {
 		expect(tracker).toMatchObject({
 			defer: true,
 			"data-domain": DEMO_HOSTNAME,
+			"data-api": "https://prosopo.io/k/nawwIDqpWXow",
 			src: "https://prosopo.io/js/script.kairee5buy1chae8eit0so8ahphae9Oo.js",
 		});
 	});
