@@ -1,5 +1,11 @@
 # @prosopo/procaptcha-icon-order
 
+## 0.4.8
+### Patch Changes
+
+- Updated dependencies [b4e427e]
+  - @prosopo/procaptcha-common@2.23.18
+
 ## 0.4.7
 ### Patch Changes
 

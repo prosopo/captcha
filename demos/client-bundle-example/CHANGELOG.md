@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.11.11
+### Patch Changes
+
+- f0d9aa6: The demo sends analytics events to `prosopo.io/k/nawwIDqpWXow`.
+
 ## 2.11.10
 ### Patch Changes
 
