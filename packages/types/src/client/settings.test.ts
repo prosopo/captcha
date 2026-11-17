@@ -453,8 +453,18 @@ describe("IPValidationRulesSchema", () => {
 		).toBe(true);
 	});
 
-	it("requires the actions object, even when empty", () => {
-		expect(IPValidationRulesSchema.safeParse({}).success).toBe(false);
+	it("fills in the default actions when a stored record has none", () => {
+		const rules = IPValidationRulesSchema.parse({ enabled: false });
+		expect(rules.actions).toEqual(
+			IPValidationRulesSchema.parse({ actions: {} }).actions,
+		);
+	});
+
+	it("gives a country override without actions an empty set", () => {
+		const rules = IPValidationRulesSchema.parse({
+			countryOverrides: { GB: { distanceThresholdKm: 500 } },
+		});
+		expect(rules.countryOverrides?.GB?.actions).toEqual({});
 	});
 
 	it("rejects a non-positive threshold", () => {
