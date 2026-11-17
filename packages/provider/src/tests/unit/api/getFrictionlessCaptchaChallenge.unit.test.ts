@@ -24,6 +24,7 @@ import {
 	CaptchaType,
 	type IPInfoResult,
 	MAX_WIDGET_SLOT,
+	ModeEnum,
 	TrafficFilterAction,
 } from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
@@ -1315,6 +1316,63 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					-1,
 				)?.[0];
 			expect(ctx.raw.triggeredDetectors).toEqual(expected);
+		},
+	);
+
+	it.each([
+		{ mode: undefined, siteMode: undefined, raw: { mode: ModeEnum.visible } },
+		{
+			mode: ModeEnum.invisible,
+			siteMode: ModeEnum.visible,
+			raw: { mode: ModeEnum.invisible, siteMode: ModeEnum.visible },
+		},
+		{
+			mode: ModeEnum.visible,
+			siteMode: ModeEnum.invisible,
+			raw: { mode: ModeEnum.visible, siteMode: ModeEnum.invisible },
+		},
+	])(
+		"gives the routing machine the request's mode $mode and the site's $siteMode",
+		async ({
+			mode,
+			siteMode,
+			raw,
+		}: {
+			mode: ModeEnum | undefined;
+			siteMode: ModeEnum | undefined;
+			raw: { mode: ModeEnum; siteMode?: ModeEnum };
+		}) => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteRoutingMode",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					...(siteMode && { mode: siteMode }),
+				},
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+				payload(false),
+			);
+
+			const { req, res, next } = buildReqRes({
+				token: "tRoutingMode",
+				headHash: "hhRoutingMode",
+				dapp: "siteRoutingMode",
+				user: "u",
+				...(mode && { mode }),
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).not.toHaveBeenCalled();
+			const ctx: RoutingContext =
+				tasksInstance.frictionlessManager.setRoutingContext.mock.calls.at(
+					-1,
+				)?.[0];
+			expect(ctx.raw.mode).toBe(raw.mode);
+			expect(ctx.raw.siteMode).toBe(raw.siteMode);
 		},
 	);
 

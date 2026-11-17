@@ -11,7 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { array, boolean, number, object, type output, string, z } from "zod";
+import {
+	array,
+	boolean,
+	nativeEnum,
+	number,
+	object,
+	type output,
+	string,
+	z,
+} from "zod";
+import { ModeEnum } from "../config/mode.js";
 import {
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
@@ -1042,6 +1052,8 @@ export const ClientSettingsSchema = object({
 	// explicitly rather than get it as a default.
 	allowAgents: boolean().optional(),
 	assetOrigin: string().url().optional(),
+	// The widget mode the site renders, visible or invisible.
+	mode: nativeEnum(ModeEnum).optional(),
 	clientUrl: string()
 		.regex(/^\/(?!\/)/, "clientUrl must be a root-relative path")
 		.optional(),
