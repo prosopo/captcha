@@ -41,8 +41,9 @@ const ariaCurrent = (isCurrent: boolean): string =>
 	isCurrent ? ' aria-current="page"' : "";
 
 export const DEMO_HOSTNAME = "demo.prosopo.io";
-const PLAUSIBLE_SCRIPT_URL =
+const PL_SCRIPT_URL =
 	"https://prosopo.io/js/script.kairee5buy1chae8eit0so8ahphae9Oo.js";
+const PL_EVENT_URL = "https://prosopo.io/k/nawwIDqpWXow";
 
 // Only the public demo reports to Plausible: local runs and the Cypress suite
 // serve these same pages.
@@ -53,7 +54,8 @@ const analyticsTag = `
         var tracker = document.createElement("script");
         tracker.defer = true;
         tracker.setAttribute("data-domain", "${DEMO_HOSTNAME}");
-        tracker.src = "${PLAUSIBLE_SCRIPT_URL}";
+        tracker.setAttribute("data-api", "${PL_EVENT_URL}");
+        tracker.src = "${PL_SCRIPT_URL}";
         document.head.appendChild(tracker);
       })();
     </script>`;
