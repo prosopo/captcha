@@ -1,5 +1,10 @@
 # @prosopo/procaptcha-common
 
+## 2.23.18
+### Patch Changes
+
+- b4e427e: The checkbox frame also posts its pointer moves to the page, with the moves each event merged.
+
 ## 2.23.17
 ### Patch Changes
 

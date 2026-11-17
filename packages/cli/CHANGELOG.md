@@ -1,5 +1,10 @@
 # @prosopo/cli
 
+## 3.11.9
+### Patch Changes
+
+- b4e427e: The checkbox frame also posts its pointer moves to the page, with the moves each event merged.
+
 ## 3.11.8
 ### Patch Changes
 
