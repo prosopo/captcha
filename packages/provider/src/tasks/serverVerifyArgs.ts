@@ -24,6 +24,7 @@ export type ServerVerifySiteSettings = Pick<
 	| "trafficFilter"
 	| "storeMetadata"
 	| "ipValidationRules"
+	| "siteProfile"
 >;
 
 export type ServerVerifyCaptchaSolutionArgs = {
