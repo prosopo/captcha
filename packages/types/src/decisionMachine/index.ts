@@ -502,9 +502,12 @@ export interface RoutingMachineRawSignals {
 	// egress-sensitive middlebox route rules and supplies the challenge
 	// policy they inherit — see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
-	// Widget mode persisted on the originating Session. `postPow` only;
-	// undefined when the session pre-dates the field.
+	// Widget mode the request came in. On `route` it is this request's; on
+	// `postPow` it is the one persisted on the originating Session, undefined
+	// when the session pre-dates the field.
 	mode?: ModeEnum;
+	// The widget mode the site's settings say it renders. `route` only.
+	siteMode?: ModeEnum;
 	// True when the PoW salt carried click coords and every pair was (0,0).
 	// The widget reports (0,0) for a keyboard activation as well as for the
 	// frictionless auto-start. `postPow` only.

@@ -498,6 +498,10 @@ export default (
 									...(dedupTrafficPolicies && {
 										trafficPolicies: dedupTrafficPolicies,
 									}),
+									mode: dedup.session.mode ?? sessionMode,
+									...(clientRecord.settings?.mode && {
+										siteMode: clientRecord.settings.mode,
+									}),
 									...(dedup.session.scoreComponents?.triggeredDetectors?.length
 										? {
 												triggeredDetectors:
@@ -1091,6 +1095,10 @@ export default (
 					...(trafficPolicies && { trafficPolicies }),
 					...(triggeredDetectors &&
 						triggeredDetectors.length > 0 && { triggeredDetectors }),
+					mode: sessionMode,
+					...(clientRecord.settings?.mode && {
+						siteMode: clientRecord.settings.mode,
+					}),
 				},
 			});
 
