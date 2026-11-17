@@ -1,5 +1,18 @@
 # @prosopo/types-database
 
+## 5.20.5
+### Patch Changes
+
+- 2fa0548: Client settings can record the widget mode a site renders, and routing receives it with the request's mode.
+- 1a51d8b: A correct image, puzzle or audio solve can now be escalated to another captcha type by the routing machine, as PoW and icon order solves already could. The provider runs a second routing pass on the new `postImage`, `postPuzzle` and `postAudio` phases, and the widget hands the user on to the follow-up challenge instead of issuing a token. Audio is judged against the visual type of the session it was served on.
+  
+  Escalations are capped at two in a row per visit (`escalationDepth` on the session), so a machine cannot bounce a user between two types for as long as they keep solving.
+- Updated dependencies [2fa0548]
+- Updated dependencies [1a51d8b]
+  - @prosopo/types@5.32.3
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.17.7
+
 ## 5.20.4
 ### Patch Changes
 

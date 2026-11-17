@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-common
 
+## 2.23.17
+### Patch Changes
+
+- 3162109: The checkbox shows the spinner until its frame has drawn, and a plain checkbox if the frame fails to load.
+- 1a51d8b: A correct image, puzzle or audio solve can now be escalated to another captcha type by the routing machine, as PoW and icon order solves already could. The provider runs a second routing pass on the new `postImage`, `postPuzzle` and `postAudio` phases, and the widget hands the user on to the follow-up challenge instead of issuing a token. Audio is judged against the visual type of the session it was served on.
+  
+  Escalations are capped at two in a row per visit (`escalationDepth` on the session), so a machine cannot bounce a user between two types for as long as they keep solving.
+- Updated dependencies [2fa0548]
+- Updated dependencies [1a51d8b]
+  - @prosopo/types@5.32.3
+  - @prosopo/account@2.8.137
+  - @prosopo/load-balancer@2.11.38
+
 ## 2.23.16
 ### Patch Changes
 

@@ -1,5 +1,21 @@
 # @prosopo/procaptcha
 
+## 2.12.17
+### Patch Changes
+
+- 1a51d8b: A correct image, puzzle or audio solve can now be escalated to another captcha type by the routing machine, as PoW and icon order solves already could. The provider runs a second routing pass on the new `postImage`, `postPuzzle` and `postAudio` phases, and the widget hands the user on to the follow-up challenge instead of issuing a token. Audio is judged against the visual type of the session it was served on.
+  
+  Escalations are capped at two in a row per visit (`escalationDepth` on the session), so a machine cannot bounce a user between two types for as long as they keep solving.
+- Updated dependencies [3162109]
+- Updated dependencies [2fa0548]
+- Updated dependencies [1a51d8b]
+  - @prosopo/procaptcha-common@2.23.17
+  - @prosopo/types@5.32.3
+  - @prosopo/api@4.11.5
+  - @prosopo/common@3.3.2
+  - @prosopo/datasets@3.2.34
+  - @prosopo/load-balancer@2.11.38
+
 ## 2.12.16
 ### Patch Changes
 
