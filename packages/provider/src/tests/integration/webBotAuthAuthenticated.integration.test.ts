@@ -53,8 +53,8 @@ import {
 	DatabaseTypes,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type IIPValidationRules,
-	IPValidationRulesSchema,
 	type IPInfoResult,
+	IPValidationRulesSchema,
 	ProsopoConfigSchema,
 	Tier,
 	type VerifySolutionBodyTypeInput,
@@ -837,8 +837,9 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		});
 
 		it("refuses a forwarded IP that fails the site's IP validation", async () => {
-			const { siteKey, siteKeyMnemonic, userId, sessionId } =
-				await mintSession({ ipValidationRules: STRICT_IP_VALIDATION });
+			const { siteKey, siteKeyMnemonic, userId, sessionId } = await mintSession(
+				{ ipValidationRules: STRICT_IP_VALIDATION },
+			);
 
 			const result = await authenticatedVerify(
 				siteKey,
@@ -852,8 +853,9 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		});
 
 		it("leaves the session redeemable after a rejected verify", async () => {
-			const { siteKey, siteKeyMnemonic, userId, sessionId } =
-				await mintSession({ ipValidationRules: STRICT_IP_VALIDATION });
+			const { siteKey, siteKeyMnemonic, userId, sessionId } = await mintSession(
+				{ ipValidationRules: STRICT_IP_VALIDATION },
+			);
 
 			// A rejected attempt must not consume the session — otherwise one
 			// misconfigured operator call would burn a legitimate pass.
@@ -871,8 +873,9 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		});
 
 		it("refuses when the forwarded clientSessionId is not the one the session was minted with", async () => {
-			const { siteKey, siteKeyMnemonic, userId, sessionId } =
-				await mintSession({ clientSessionId: "render-session-a" });
+			const { siteKey, siteKeyMnemonic, userId, sessionId } = await mintSession(
+				{ clientSessionId: "render-session-a" },
+			);
 
 			const result = await authenticatedVerify(
 				siteKey,
@@ -886,8 +889,9 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		});
 
 		it("verifies when the forwarded clientSessionId matches", async () => {
-			const { siteKey, siteKeyMnemonic, userId, sessionId } =
-				await mintSession({ clientSessionId: "render-session-a" });
+			const { siteKey, siteKeyMnemonic, userId, sessionId } = await mintSession(
+				{ clientSessionId: "render-session-a" },
+			);
 
 			const result = await authenticatedVerify(
 				siteKey,

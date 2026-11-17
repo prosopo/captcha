@@ -813,9 +813,12 @@ describe("Frictionless Task Manager", () => {
 			isAvailable: vi.fn<IIpInfoService["isAvailable"]>(),
 		};
 
-		const strictIpValidation: IIPValidationRules = IPValidationRulesSchema.parse(
-			{ enabled: true, forceConsistentIp: true, actions: {} },
-		);
+		const strictIpValidation: IIPValidationRules =
+			IPValidationRulesSchema.parse({
+				enabled: true,
+				forceConsistentIp: true,
+				actions: {},
+			});
 
 		const authenticatedSession = (overrides: Partial<Session> = {}): Session =>
 			SessionSchema.parse({

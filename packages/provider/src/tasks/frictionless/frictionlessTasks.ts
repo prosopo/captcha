@@ -52,11 +52,11 @@ import { recordOutOfRangeDetectorIds } from "../../api/metrics.js";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
 import { checkLangRules } from "../../rules/lang.js";
+import { deepValidateIpAddress } from "../../util.js";
 import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
-import { deepValidateIpAddress } from "../../util.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { offersAudioAlternative } from "../audioAlternative.js";
 import { CaptchaManager, type CaptchaManagerDeps } from "../captchaManager.js";
