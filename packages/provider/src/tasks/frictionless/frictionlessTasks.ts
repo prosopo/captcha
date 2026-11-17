@@ -27,6 +27,7 @@ import {
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
 	type IFrictionlessTypes,
+	type IIPValidationRules,
 	type IPInfoResponse,
 	type ImageRoundsBounds,
 	NO_MEASUREMENT_REASONS,
@@ -43,12 +44,15 @@ import {
 	isConcreteCaptchaType,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
+import type { IIpInfoService } from "@prosopo/types-env";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { dnsBeaconUrls } from "../../api/dnsEventUrl.js";
 import { recordOutOfRangeDetectorIds } from "../../api/metrics.js";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
+import { getIpAddressFromComposite } from "../../compositeIpAddress.js";
 import { checkLangRules } from "../../rules/lang.js";
+import { deepValidateIpAddress } from "../../util.js";
 import {
 	type UsageCounters,
 	buildAllWindowIncrements,
@@ -68,7 +72,6 @@ import {
 } from "../detection/getBotScore.js";
 import { decodeOpenPayload } from "../detection/openPayload.js";
 import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
-import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const getSessionIDPrefix = (host?: string): string => {
@@ -464,22 +467,30 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	/**
-	 * Verify an authenticated (Web Bot Auth) session, called from
+	 * Verify an authenticated session, called from
 	 * `/client/authenticated/verify` after the operator forwards their
 	 * dApp-signed token. Marks serverChecked=true on success so subsequent
 	 * verifies fail loudly.
+	 *
+	 * The forwarded IP is treated exactly as it is for pow / image / puzzle:
+	 * optional, and only compared against the issuing IP when the site has
+	 * IP validation enabled, using that site's rules. Any Allow rule can mint
+	 * one of these sessions, so a stricter contract here would break an
+	 * integration that verifies every other token type fine.
 	 */
-	async verifyAuthenticatedSession(
-		sessionId: string,
-		ip: string | undefined,
-		clientSessionId: string | undefined,
-	): Promise<{ verified: boolean; status: string }> {
-		if (!ip) {
-			return {
-				verified: false,
-				status: "API.AUTHENTICATED_IP_REQUIRED",
-			};
-		}
+	async verifyAuthenticatedSession({
+		sessionId,
+		ip,
+		clientSessionId,
+		ipValidationRules,
+		ipInfoService,
+	}: {
+		sessionId: string;
+		ip: string | undefined;
+		clientSessionId: string | undefined;
+		ipValidationRules: IIPValidationRules | undefined;
+		ipInfoService: IIpInfoService;
+	}): Promise<{ verified: boolean; status: string }> {
 		const session = await this.db.getSessionRecordBySessionId(sessionId);
 		if (!session) {
 			return {
@@ -499,11 +510,24 @@ export class FrictionlessManager extends CaptchaManager {
 				status: "API.USER_ALREADY_VERIFIED",
 			};
 		}
-		if (!ipMatchesSession(ip, session.ipAddress)) {
-			return {
-				verified: false,
-				status: "API.AUTHENTICATED_IP_MISMATCH",
-			};
+		if (ip && ipValidationRules?.enabled === true) {
+			const ipValidation = await deepValidateIpAddress({
+				ip,
+				challengeIpAddress: getIpAddressFromComposite(session.ipAddress),
+				logger: this.logger,
+				ipInfoService,
+				ipValidationRules,
+			});
+			if (!ipValidation.isValid) {
+				this.logger.info(() => ({
+					msg: "IP validation failed for authenticated session",
+					data: { sessionId, ip, error: ipValidation.errorMessage },
+				}));
+				return {
+					verified: false,
+					status: "API.FAILED_IP_VALIDATION",
+				};
+			}
 		}
 		// Shared helper so the authenticated flow can't drift from the other
 		// captcha types: a site that doesn't opt in to correlation is a no-op,

@@ -17,11 +17,14 @@ import { getPair } from "@prosopo/keyring";
 import { LogLevel, getLogger } from "@prosopo/logger";
 import {
 	CaptchaType,
+	type IIPValidationRules,
+	IPValidationRulesSchema,
 	type ProsopoConfigOutput,
 	ProsopoConfigSchema,
 } from "@prosopo/types";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import { FrictionlessManager } from "../../tasks/frictionless/frictionlessTasks.js";
 
@@ -29,6 +32,22 @@ const CONCURRENCY = 16;
 const SESSION_IP = "192.0.2.10";
 const SECRET =
 	"puppy cream effort carbon despair leg pyramid cotton endorse immense drill peasant";
+
+// Lookups are only reached for a differing IP with forceConsistentIp off,
+// which no case here exercises.
+const ipInfoService: IIpInfoService = {
+	initialize: vi.fn<IIpInfoService["initialize"]>(),
+	lookup: vi.fn<IIpInfoService["lookup"]>(),
+	country: vi.fn<IIpInfoService["country"]>(),
+	accountSighting: vi.fn<IIpInfoService["accountSighting"]>(),
+	isAvailable: vi.fn<IIpInfoService["isAvailable"]>(),
+};
+
+const STRICT_IP_VALIDATION: IIPValidationRules = IPValidationRulesSchema.parse({
+	enabled: true,
+	forceConsistentIp: true,
+	actions: {},
+});
 
 class MongoOnlyProviderDatabase extends ProviderDatabase {
 	protected override async setupRedis(): Promise<void> {}
@@ -99,11 +118,13 @@ describe("authenticated session verify is single-use under concurrency", () => {
 
 		const results: { verified: boolean; status: string }[] = await Promise.all(
 			Array.from({ length: CONCURRENCY }, () =>
-				manager.verifyAuthenticatedSession(
-					session.sessionId,
-					SESSION_IP,
-					undefined,
-				),
+				manager.verifyAuthenticatedSession({
+					sessionId: session.sessionId,
+					ip: SESSION_IP,
+					clientSessionId: undefined,
+					ipValidationRules: undefined,
+					ipInfoService,
+				}),
 			),
 		);
 
@@ -127,20 +148,24 @@ describe("authenticated session verify is single-use under concurrency", () => {
 			siteKey: "siteKey",
 		});
 
-		const wrongIp = await manager.verifyAuthenticatedSession(
-			session.sessionId,
-			"192.0.2.99",
-			undefined,
-		);
-		const rightIp = await manager.verifyAuthenticatedSession(
-			session.sessionId,
-			SESSION_IP,
-			undefined,
-		);
+		const wrongIp = await manager.verifyAuthenticatedSession({
+			sessionId: session.sessionId,
+			ip: "192.0.2.99",
+			clientSessionId: undefined,
+			ipValidationRules: STRICT_IP_VALIDATION,
+			ipInfoService,
+		});
+		const rightIp = await manager.verifyAuthenticatedSession({
+			sessionId: session.sessionId,
+			ip: SESSION_IP,
+			clientSessionId: undefined,
+			ipValidationRules: STRICT_IP_VALIDATION,
+			ipInfoService,
+		});
 
 		expect(wrongIp).toEqual({
 			verified: false,
-			status: "API.AUTHENTICATED_IP_MISMATCH",
+			status: "API.FAILED_IP_VALIDATION",
 		});
 		expect(rightIp).toEqual({ verified: true, status: "API.USER_VERIFIED" });
 	});

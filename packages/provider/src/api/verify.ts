@@ -772,11 +772,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	);
 
 	/**
-	 * Verify a Web Bot Auth authenticated session token. Enforces IP binding:
-	 * the operator MUST forward `ip` in the request body, and it must equal
-	 * the client IP captured on the session at frictionless issuance. Only
-	 * tokens minted with captchaType=authenticated are accepted here; a
-	 * regular image/pow/puzzle token routed to this endpoint fails with
+	 * Verify an authenticated session token, minted when an Allow rule matched
+	 * at frictionless entry. A forwarded `ip` is checked against the site's IP
+	 * validation rules, the same as for pow / image / puzzle. Only tokens
+	 * minted with captchaType=authenticated are accepted here; a regular
+	 * image/pow/puzzle token routed to this endpoint fails with
 	 * INCORRECT_CAPTCHA_TYPE.
 	 */
 	router.post(
@@ -886,11 +886,19 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				}
 
 				const outcome =
-					await tasks.frictionlessManager.verifyAuthenticatedSession(
+					await tasks.frictionlessManager.verifyAuthenticatedSession({
 						sessionId,
 						ip,
 						clientSessionId,
-					);
+						ipValidationRules: clientRecord.settings?.ipValidationRules,
+						ipInfoService: env.ipInfoService,
+					});
+				if (!outcome.verified) {
+					req.logger.info(() => ({
+						msg: "Authenticated session not verified",
+						data: { sessionId, siteKey: dapp, status: outcome.status },
+					}));
+				}
 				res.json(outcome);
 			} catch (err) {
 				req.logger.error(() => ({
