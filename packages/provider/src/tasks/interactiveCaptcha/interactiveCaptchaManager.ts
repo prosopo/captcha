@@ -564,6 +564,7 @@ export abstract class InteractiveCaptchaManager<
 			spamFilter,
 			trafficFilter,
 			storeMetadata = false,
+			siteProfile,
 		},
 		ip,
 		email,
@@ -930,6 +931,7 @@ export abstract class InteractiveCaptchaManager<
 				// on a site that accepts VPN users the observed stack
 				// says nothing about the client.
 				trafficPolicies: deriveTrafficPolicies(trafficFilter),
+				siteProfile,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(

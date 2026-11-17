@@ -254,6 +254,8 @@ export type DecisionMachineInput = {
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
+	// The site's `siteProfile` client setting.
+	siteProfile?: Record<string, unknown>;
 	// Everything the detector reported for the session this verify belongs
 	// to, as persisted on the Session record. Keys are whatever the detector
 	// chose to emit: nothing in this repo declares them, and a rule may read
