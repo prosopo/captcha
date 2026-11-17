@@ -429,6 +429,7 @@ export const UserSettingsSchema = new Schema({
 	allowAgents: { type: Boolean, required: false },
 	assetOrigin: { type: String, required: false },
 	mode: { type: String, enum: Object.values(ModeEnum), required: false },
+	widgetLayout: { type: Schema.Types.Mixed, required: false },
 	clientUrl: { type: String, required: false },
 	datasetId: { type: String, required: false },
 });

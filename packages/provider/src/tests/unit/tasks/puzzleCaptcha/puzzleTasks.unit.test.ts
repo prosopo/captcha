@@ -31,6 +31,7 @@ import {
 	WebRtcClientStatus,
 	WebRtcOutcome,
 	type WebRtcSignal,
+	type WidgetLayout,
 	encodeCounterKey,
 } from "@prosopo/types";
 import type {
@@ -1369,6 +1370,41 @@ describe("PuzzleCaptchaManager", () => {
 				const input = decide.mock.lastCall?.[0];
 				expect(input).not.toHaveProperty("counters");
 				expect(input).not.toHaveProperty("accountSighting");
+			});
+
+			it("passes the site's learned widget layout to the machine", async () => {
+				requiring({ counters: [], accountSighting: false });
+				const widgetLayout: WidgetLayout = {
+					pages: [
+						{
+							host: "example.com",
+							path: "/",
+							narrowBelow: 640,
+							narrowLeft: 51,
+							centreOffset: -183,
+							yMin: 300,
+							yMax: 700,
+						},
+					],
+					learnedAt: 1794873600000,
+				};
+
+				await manager.serverVerifyInteractiveCaptchaSolution({
+					dappAccount,
+					challenge,
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000, widgetLayout },
+				});
+
+				expect(decide.mock.lastCall?.[0]?.widgetLayout).toEqual(widgetLayout);
+			});
+
+			it("passes no widget layout when the site has none", async () => {
+				requiring({ counters: [], accountSighting: false });
+
+				await verify();
+
+				expect(decide.mock.lastCall?.[0]?.widgetLayout).toBeUndefined();
 			});
 
 			it("refuses the answer when the machine denies on them", async () => {

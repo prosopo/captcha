@@ -935,6 +935,33 @@ export const HoneypotSettingsSchema = object({
 
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
+/**
+ * Where one of a site's pages draws the widget, learned from its traffic.
+ * `path` is a template in which a `:id` segment stands for any one segment.
+ * Below `narrowBelow` px of window width the checkbox sits `narrowLeft` px
+ * from the window's left edge; from there up it sits `centreOffset` px from
+ * the window's centre. `yMin` and `yMax` bound the height of a normal
+ * checkbox press.
+ */
+export const WidgetLayoutPageSchema = object({
+	host: string().max(253),
+	path: string().max(256),
+	narrowBelow: number().nonnegative(),
+	narrowLeft: number(),
+	centreOffset: number(),
+	yMin: number(),
+	yMax: number(),
+});
+
+export type WidgetLayoutPage = output<typeof WidgetLayoutPageSchema>;
+
+export const WidgetLayoutSchema = object({
+	pages: array(WidgetLayoutPageSchema).max(32),
+	learnedAt: number().int().nonnegative(),
+});
+
+export type WidgetLayout = output<typeof WidgetLayoutSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: SelectableCaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
@@ -1054,6 +1081,8 @@ export const ClientSettingsSchema = object({
 	assetOrigin: string().url().optional(),
 	// The widget mode the site renders, visible or invisible.
 	mode: nativeEnum(ModeEnum).optional(),
+	// Where the site's pages draw the widget, learned from its traffic.
+	widgetLayout: WidgetLayoutSchema.optional(),
 	clientUrl: string()
 		.regex(/^\/(?!\/)/, "clientUrl must be a root-relative path")
 		.optional(),
