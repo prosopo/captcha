@@ -52,6 +52,8 @@ import {
 	ClientSettingsSchema,
 	DatabaseTypes,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
+	type IIPValidationRules,
+	IPValidationRulesSchema,
 	type IPInfoResult,
 	ProsopoConfigSchema,
 	Tier,
@@ -270,6 +272,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 
 	const registerSite = async (
 		captchaType: CaptchaType = CaptchaType.frictionless,
+		ipValidationRules?: IIPValidationRules,
 	): Promise<[string, string]> => {
 		const [mnemonic, siteKey] = await generateMnemonic();
 		await tasks.clientTaskManager.registerSiteKey(
@@ -278,6 +281,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 			ClientSettingsSchema.parse({
 				captchaType,
 				domains: ["localhost", "example.com"],
+				...(ipValidationRules && { ipValidationRules }),
 			}),
 		);
 		return [mnemonic, siteKey];
@@ -734,16 +738,30 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 
 	describe("/client/authenticated/verify", () => {
 		const AGENT_IP = "203.0.113.20";
+		const OTHER_IP = "198.51.100.44";
+		const STRICT_IP_VALIDATION: IIPValidationRules =
+			IPValidationRulesSchema.parse({
+				enabled: true,
+				forceConsistentIp: true,
+				actions: {},
+			});
 
-		const mintSession = async (
-			clientSessionId?: string,
-		): Promise<{
+		const mintSession = async ({
+			clientSessionId,
+			ipValidationRules,
+		}: {
+			clientSessionId?: string;
+			ipValidationRules?: IIPValidationRules;
+		} = {}): Promise<{
 			siteKey: string;
 			siteKeyMnemonic: string;
 			userId: string;
 			sessionId: string;
 		}> => {
-			const [siteKeyMnemonic, siteKey] = await registerSite();
+			const [siteKeyMnemonic, siteKey] = await registerSite(
+				CaptchaType.frictionless,
+				ipValidationRules,
+			);
 			const [, userId] = await generateMnemonic();
 			const userAgent = `TrustedPartnerAgent/${randomAsHex(4)}`;
 			await allowRule(siteKey, { userAgent });
@@ -789,7 +807,9 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 			expect(second.status).toBe("API.USER_ALREADY_VERIFIED");
 		});
 
-		it("refuses when the operator forwards no IP", async () => {
+		// Same contract as pow / image / puzzle: the forwarded IP is only
+		// compared when the site has IP validation on.
+		it("verifies when the operator forwards no IP", async () => {
 			const { siteKey, siteKeyMnemonic, userId, sessionId } =
 				await mintSession();
 
@@ -799,11 +819,10 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 				userId,
 				sessionId,
 			);
-			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.AUTHENTICATED_IP_REQUIRED");
+			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
 		});
 
-		it("refuses when the forwarded IP is not the one the session was issued to", async () => {
+		it("verifies a different forwarded IP when the site has IP validation off", async () => {
 			const { siteKey, siteKeyMnemonic, userId, sessionId } =
 				await mintSession();
 
@@ -812,20 +831,34 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 				siteKeyMnemonic,
 				userId,
 				sessionId,
-				{ ip: "198.51.100.44" },
+				{ ip: OTHER_IP },
+			);
+			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
+		});
+
+		it("refuses a forwarded IP that fails the site's IP validation", async () => {
+			const { siteKey, siteKeyMnemonic, userId, sessionId } =
+				await mintSession({ ipValidationRules: STRICT_IP_VALIDATION });
+
+			const result = await authenticatedVerify(
+				siteKey,
+				siteKeyMnemonic,
+				userId,
+				sessionId,
+				{ ip: OTHER_IP },
 			);
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.AUTHENTICATED_IP_MISMATCH");
+			expect(result.status).toBe("API.FAILED_IP_VALIDATION");
 		});
 
 		it("leaves the session redeemable after a rejected verify", async () => {
 			const { siteKey, siteKeyMnemonic, userId, sessionId } =
-				await mintSession();
+				await mintSession({ ipValidationRules: STRICT_IP_VALIDATION });
 
-			// A wrong-IP attempt must not consume the session — otherwise one
-			// misconfigured operator call would burn a legitimate agent's pass.
+			// A rejected attempt must not consume the session — otherwise one
+			// misconfigured operator call would burn a legitimate pass.
 			await authenticatedVerify(siteKey, siteKeyMnemonic, userId, sessionId, {
-				ip: "198.51.100.44",
+				ip: OTHER_IP,
 			});
 			const result = await authenticatedVerify(
 				siteKey,
@@ -839,7 +872,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 
 		it("refuses when the forwarded clientSessionId is not the one the session was minted with", async () => {
 			const { siteKey, siteKeyMnemonic, userId, sessionId } =
-				await mintSession("render-session-a");
+				await mintSession({ clientSessionId: "render-session-a" });
 
 			const result = await authenticatedVerify(
 				siteKey,
@@ -854,7 +887,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 
 		it("verifies when the forwarded clientSessionId matches", async () => {
 			const { siteKey, siteKeyMnemonic, userId, sessionId } =
-				await mintSession("render-session-a");
+				await mintSession({ clientSessionId: "render-session-a" });
 
 			const result = await authenticatedVerify(
 				siteKey,

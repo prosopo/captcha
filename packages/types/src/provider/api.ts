@@ -112,10 +112,10 @@ export enum ClientApiPaths {
 	GetIconOrderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/icon-order",
 	SubmitIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/solution",
 	VerifyIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/verify",
-	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
-	// minted with captchaType=authenticated. Requires the operator to forward
-	// the client IP so the session's `ipAddress` binding can be enforced;
-	// a leaked authenticated token cannot be replayed from a different IP.
+	// Verify path for authenticated sessions (minted when an Allow rule
+	// matched). Only accepts tokens minted with captchaType=authenticated. A
+	// forwarded client IP is checked against the site's IP validation rules,
+	// the same as for the other captcha types.
 	VerifyAuthenticatedSession = "/v1/prosopo/provider/client/authenticated/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
