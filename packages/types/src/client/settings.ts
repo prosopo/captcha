@@ -18,7 +18,9 @@ import {
 	number,
 	object,
 	type output,
+	record,
 	string,
+	unknown,
 	z,
 } from "zod";
 import { ModeEnum } from "../config/mode.js";
@@ -1054,6 +1056,8 @@ export const ClientSettingsSchema = object({
 	assetOrigin: string().url().optional(),
 	// The widget mode the site renders, visible or invisible.
 	mode: nativeEnum(ModeEnum).optional(),
+	// Learned about the site by the job runner, for its decision machines.
+	siteProfile: record(string(), unknown()).optional(),
 	clientUrl: string()
 		.regex(/^\/(?!\/)/, "clientUrl must be a root-relative path")
 		.optional(),

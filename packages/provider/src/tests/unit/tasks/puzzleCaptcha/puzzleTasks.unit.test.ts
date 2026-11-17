@@ -1371,6 +1371,28 @@ describe("PuzzleCaptchaManager", () => {
 				expect(input).not.toHaveProperty("accountSighting");
 			});
 
+			it("passes the site's profile to the machine", async () => {
+				requiring({ counters: [], accountSighting: false });
+				const siteProfile = { a: { b: 1 } };
+
+				await manager.serverVerifyInteractiveCaptchaSolution({
+					dappAccount,
+					challenge,
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000, siteProfile },
+				});
+
+				expect(decide.mock.lastCall?.[0]?.siteProfile).toEqual(siteProfile);
+			});
+
+			it("passes no profile when the site has none", async () => {
+				requiring({ counters: [], accountSighting: false });
+
+				await verify();
+
+				expect(decide.mock.lastCall?.[0]?.siteProfile).toBeUndefined();
+			});
+
 			it("refuses the answer when the machine denies on them", async () => {
 				requiring({ counters: [farMissesByAccount], accountSighting: true });
 				decide.mockResolvedValue({ decision: DecisionMachineDecision.Deny });
