@@ -182,9 +182,9 @@ export const getBotScore = async ({
 		keyMapEncoded,
 	]);
 
-	const baseBotScore: number = result.score;
+	const rawScore: number = result.score;
 
-	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
+	if (rawScore === undefined || !Number.isFinite(rawScore)) {
 		return {
 			baseBotScore: 1,
 			timestamp: 0,
@@ -193,6 +193,10 @@ export const getBotScore = async ({
 			decryptedHeadHash: "",
 		};
 	}
+
+	// A negative score would offset penalties added later; anything above 1 is
+	// already the worst possible.
+	const baseBotScore = Math.min(1, Math.max(0, rawScore));
 
 	return {
 		baseBotScore,

@@ -237,8 +237,11 @@ export const runDecisionMachine = async (
 		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 	}
 
+	const invalidScoreResponse = await denyInvalidScore(input, handle, botScore);
+	if (invalidScoreResponse) return invalidScoreResponse;
+
 	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
-	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
+	if (autoBanThreshold !== undefined && botScore >= autoBanThreshold) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
 			data: {
@@ -332,6 +335,12 @@ export const runDecisionMachine = async (
 		scoreComponents = ipDetectorRiskOutcome.scoreComponents;
 		tasks.frictionlessManager.updateScore(botScore, scoreComponents);
 	}
+	const invalidRiskScoreResponse = await denyInvalidScore(
+		input,
+		handle,
+		botScore,
+	);
+	if (invalidRiskScoreResponse) return invalidRiskScoreResponse;
 	const scoreAudit = {
 		rawBotScore,
 		effectiveBotScore: botScore,
@@ -360,8 +369,8 @@ export const runDecisionMachine = async (
 	const botImageThreshold = input.botImageThreshold;
 	if (
 		botImageThreshold > input.botThreshold &&
-		Number(botScore) > input.botThreshold &&
-		Number(botScore) < botImageThreshold
+		botScore > input.botThreshold &&
+		botScore < botImageThreshold
 	) {
 		req.logger.info(() => ({
 			msg: "Frictionless decision",
@@ -391,7 +400,7 @@ export const runDecisionMachine = async (
 		);
 	}
 
-	if (Number(botScore) > input.botThreshold) {
+	if (botScore > input.botThreshold) {
 		req.logger.info(() => ({
 			msg: "Bot score is greater than threshold",
 			data: {
@@ -526,5 +535,49 @@ const runUserAgentMismatchCheck = async (
 			ipInfo: input.ipInfo,
 			headers: input.flatHeaders,
 		}),
+	);
+};
+
+// Every comparison against NaN is false, so a non-finite score or threshold
+// would slip past each gate below and land on the default PoW pass.
+const denyInvalidScore = async (
+	input: DecisionMachineInput,
+	handle: ExpressHandle,
+	botScore: number,
+): Promise<Response | null> => {
+	if (
+		Number.isFinite(botScore) &&
+		Number.isFinite(input.botThreshold) &&
+		Number.isFinite(input.botImageThreshold)
+	) {
+		return null;
+	}
+	const { req, res } = handle;
+	req.logger.info(() => ({
+		msg: "Frictionless decision",
+		data: {
+			decision: "non_finite_score",
+			botScore: String(botScore),
+			botThreshold: String(input.botThreshold),
+			botImageThreshold: String(input.botImageThreshold),
+			token: input.token,
+		},
+	}));
+	recordFrictionlessDecision("non_finite_score");
+	await input.tasks.frictionlessManager.registerBlockedSession(
+		CaptchaType.image,
+		{
+			solvedImagesCount: resolveImageRoundsBounds(input.clientRecord.settings)
+				.max,
+			userSitekeyIpHash: input.userSitekeyIpHash,
+			reason: FrictionlessReason.INVALID_SCORE,
+			siteKey: input.dapp,
+			ipInfo: input.ipInfo,
+			headers: input.flatHeaders,
+		},
+	);
+	return sendProsopoError(
+		res,
+		new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-88" }),
 	);
 };

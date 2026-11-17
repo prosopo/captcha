@@ -14,6 +14,8 @@
 
 import { parseInteger } from "./parse.js";
 
+const MAX_CLOCK_SKEW_MS = 30_000;
+
 /**
  * Verify the time since the blockNumber is equal to or less than the maxVerifiedTime.
  * @param challenge
@@ -32,5 +34,7 @@ export const verifyRecency = (challenge: string, maxVerifiedTime: number) => {
 	if (!challengeTimestamp.ok) {
 		return false;
 	}
-	return Date.now() - challengeTimestamp.value <= maxVerifiedTime;
+	const age = Date.now() - challengeTimestamp.value;
+	// A future timestamp would otherwise stay "recent" until that time arrives.
+	return age >= -MAX_CLOCK_SKEW_MS && age <= maxVerifiedTime;
 };

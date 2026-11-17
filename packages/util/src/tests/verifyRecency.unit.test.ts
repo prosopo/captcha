@@ -32,6 +32,14 @@ describe("verifyRecency", () => {
 		expect(verifyRecency("990000___acct", 5000)).toBe(false);
 	});
 
+	test("rejects a timestamp in the future", () => {
+		expect(verifyRecency("4600000___acct", 5000)).toBe(false);
+	});
+
+	test("tolerates a timestamp slightly ahead from clock drift", () => {
+		expect(verifyRecency("1005000___acct", 5000)).toBe(true);
+	});
+
 	test("rejects a missing timestamp", () => {
 		expect(verifyRecency("___acct", 5000)).toBe(false);
 	});

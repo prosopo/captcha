@@ -201,17 +201,22 @@ describe("frictionlessTasksUtils", () => {
 			expect(result).toBe(12);
 		});
 
-		it("should handle future timestamps", () => {
-			const futureTimestamp = mockNow + 10000; // 10 seconds in future
-			const result = timestampDecayFunction(futureTimestamp, 12);
-			expect(typeof result).toBe("number");
+		it("tolerates a timestamp a few seconds ahead from clock drift", () => {
+			const result = timestampDecayFunction(mockNow + 10000, 12);
 			expect(result).toBeGreaterThanOrEqual(2);
-			expect(result).toBeLessThanOrEqual(12);
+			expect(result).toBeLessThan(12);
 		});
 
-		it("should return NaN when timestamp is NaN", () => {
-			const result = timestampDecayFunction(Number.NaN, 12);
-			expect(result).toBeNaN();
+		it("gives the longest challenge to a timestamp far in the future", () => {
+			expect(timestampDecayFunction(mockNow + 3600000, 12)).toBe(12);
+		});
+
+		it("gives the longest challenge to a NaN timestamp", () => {
+			expect(timestampDecayFunction(Number.NaN, 12)).toBe(12);
+		});
+
+		it("never exceeds imageMaxRounds", () => {
+			expect(timestampDecayFunction(Number.NaN, 5)).toBe(5);
 		});
 	});
 });
