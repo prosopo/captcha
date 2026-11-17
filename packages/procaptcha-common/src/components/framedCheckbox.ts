@@ -50,6 +50,11 @@ export type ForwardedTouch = {
 	rot?: number;
 };
 
+/** One of the moves a pointer event merged, in the page's coordinates. */
+export type ForwardedMove = { ts: number; x: number; y: number };
+
+const MAX_FORWARDED_MOVES = 32;
+
 type ForwardedMouseInput = {
 	type: (typeof MOUSE_INPUT)[number];
 	x: number;
@@ -81,7 +86,14 @@ export type CheckboxFrameMessage =
 	| { pf: string; t: "size"; w: number; h: number }
 	| { pf: string; t: "drawn" }
 	| ({ pf: string; t: "activate" } & Activation)
-	| { pf: string; t: "pointer"; type: string; pointerType: string; ts: number }
+	| {
+			pf: string;
+			t: "pointer";
+			type: string;
+			pointerType: string;
+			ts: number;
+			moves?: ForwardedMove[];
+	  }
 	| CheckboxFrameInputMessage;
 
 const createNonce = (): string =>
@@ -337,6 +349,7 @@ const TOUCH_INPUT = [
 const POINTER_EVENTS = [
 	"pointerover",
 	"pointerout",
+	"pointermove",
 	"pointerleave",
 	"pointerdown",
 	"pointerup",
@@ -419,6 +432,15 @@ export const runCheckboxFrame = (): void => {
 		},
 	);
 
+	const mergedMoves = (event: PointerEvent): ForwardedMove[] =>
+		(event.getCoalescedEvents?.() ?? [event])
+			.slice(-MAX_FORWARDED_MOVES)
+			.map((move) => ({
+				ts: performance.timeOrigin + move.timeStamp,
+				x: move.clientX + offset.left,
+				y: move.clientY + offset.top,
+			}));
+
 	for (const type of POINTER_EVENTS) {
 		addEventListener(
 			type,
@@ -430,6 +452,7 @@ export const runCheckboxFrame = (): void => {
 						type,
 						pointerType: event.pointerType,
 						ts: performance.timeOrigin + event.timeStamp,
+						...("pointermove" === type && { moves: mergedMoves(event) }),
 					});
 				}
 			},
