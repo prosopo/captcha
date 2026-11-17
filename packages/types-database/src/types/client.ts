@@ -19,6 +19,7 @@ import {
 	type IUserData,
 	type IUserSettings,
 	MAX_PAD_BYTES,
+	ModeEnum,
 	type Timestamp,
 	TrafficFilterAction,
 	abuseScoreThresholdDefault,
@@ -427,6 +428,7 @@ export const UserSettingsSchema = new Schema({
 	},
 	allowAgents: { type: Boolean, required: false },
 	assetOrigin: { type: String, required: false },
+	mode: { type: String, enum: Object.values(ModeEnum), required: false },
 	clientUrl: { type: String, required: false },
 	datasetId: { type: String, required: false },
 });
