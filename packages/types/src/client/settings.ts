@@ -532,7 +532,9 @@ const IPValidationSchema = object({
 		ispChangeAction: IPValidationActionSchema.optional(),
 		distanceExceedAction: IPValidationActionSchema.optional(),
 		abuseScoreExceedAction: IPValidationActionSchema.optional(),
-	}).partial(), // all optional, so you can just override what you need
+	})
+		.partial() // all optional, so you can just override what you need
+		.default({}),
 
 	distanceThresholdKm: number().positive().optional(),
 	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
@@ -559,7 +561,7 @@ export const IPValidationRulesSchema = object({
 		abuseScoreExceedAction: IPValidationActionSchema.optional().default(
 			abuseScoreThresholdExceedActionDefault,
 		),
-	}),
+	}).default({}),
 	distanceThresholdKm: number()
 		.positive()
 		.optional()
