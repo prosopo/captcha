@@ -1,5 +1,10 @@
 # @prosopo/provider
 
+## 5.33.5
+### Patch Changes
+
+- 70f698c: A traffic filter category set to challenge with icon order now serves icon order in the frictionless flow. Before, it was ignored and the visitor got whatever the normal scoring picked, which could be an easier PoW.
+
 ## 5.33.4
 ### Patch Changes
 
