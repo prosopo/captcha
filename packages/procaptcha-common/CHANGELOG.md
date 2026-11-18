@@ -1,5 +1,15 @@
 # @prosopo/procaptcha-common
 
+## 2.23.19
+### Patch Changes
+
+- 4d2a7fc: The checkbox frame also posts the frame's own coordinates for each forwarded mouse move.
+- Updated dependencies [84cc501]
+- Updated dependencies [73f2e14]
+  - @prosopo/types@5.32.4
+  - @prosopo/account@2.8.138
+  - @prosopo/load-balancer@2.11.39
+
 ## 2.23.18
 ### Patch Changes
 

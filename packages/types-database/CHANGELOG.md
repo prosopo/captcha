@@ -1,5 +1,15 @@
 # @prosopo/types-database
 
+## 5.20.6
+### Patch Changes
+
+- 84cc501: Client settings can carry a site profile, which decision machines receive at verify.
+- Updated dependencies [84cc501]
+- Updated dependencies [73f2e14]
+  - @prosopo/types@5.32.4
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.17.8
+
 ## 5.20.5
 ### Patch Changes
 

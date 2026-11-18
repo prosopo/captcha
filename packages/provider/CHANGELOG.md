@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 5.33.4
+### Patch Changes
+
+- 50cf56e: Authenticated tokens, minted when an Allow access rule matches, now treat the forwarded IP the same way as pow, image and puzzle tokens. The IP is optional at `/client/authenticated/verify` and is only compared with the issuing IP when the site has IP validation enabled, using that site's rules. Before, the IP was required and had to match exactly whatever the site's settings were. An integration that verified every other token type without problems was rejected as soon as one of its Allow rules matched, and the widget showed "Trusted request" on a form that could not be submitted. A rejected verify on this route is now logged with its status.
+- 84cc501: Client settings can carry a site profile, which decision machines receive at verify.
+- Updated dependencies [84cc501]
+- Updated dependencies [73f2e14]
+  - @prosopo/types@5.32.4
+  - @prosopo/types-database@5.20.6
+  - @prosopo/api@4.11.6
+  - @prosopo/api-express-router@3.3.27
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.15
+  - @prosopo/datasets@3.2.35
+  - @prosopo/env@3.7.4
+  - @prosopo/fingerprint@2.8.26
+  - @prosopo/ipinfo@0.7.13
+  - @prosopo/keyring@2.10.35
+  - @prosopo/load-balancer@2.11.39
+  - @prosopo/types-env@2.12.14
+  - @prosopo/user-access-policy@3.17.8
+
 ## 5.33.3
 ### Patch Changes
 
