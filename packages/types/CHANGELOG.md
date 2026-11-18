@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 5.32.4
+### Patch Changes
+
+- 84cc501: Client settings can carry a site profile, which decision machines receive at verify.
+- 73f2e14: IP validation rules saved without an `actions` block now parse with the default actions, instead of failing validation and breaking the whole account in the portal.
+
 ## 5.32.3
 ### Patch Changes
 

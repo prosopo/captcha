@@ -1,5 +1,20 @@
 # @prosopo/cli
 
+## 3.11.10
+### Patch Changes
+
+- 4d2a7fc: The checkbox frame also posts the frame's own coordinates for each forwarded mouse move.
+- 84cc501: Client settings can carry a site profile, which decision machines receive at verify.
+- Updated dependencies [50cf56e]
+- Updated dependencies [84cc501]
+- Updated dependencies [73f2e14]
+  - @prosopo/provider@5.33.4
+  - @prosopo/types@5.32.4
+  - @prosopo/api@4.11.6
+  - @prosopo/common@3.3.2
+  - @prosopo/env@3.7.4
+  - @prosopo/keyring@2.10.35
+
 ## 3.11.9
 ### Patch Changes
 
