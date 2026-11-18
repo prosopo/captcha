@@ -227,10 +227,12 @@ const makeFrictionlessManagerMock = () => {
 		sendImageCaptcha: vi.fn(async () => okResponse),
 		sendPowCaptcha: vi.fn(async () => okResponse),
 		sendPuzzleCaptcha: vi.fn(async () => okResponse),
+		sendIconOrderCaptcha: vi.fn(async () => okResponse),
 	} as unknown as FrictionlessManager & {
 		sendImageCaptcha: ReturnType<typeof vi.fn>;
 		sendPowCaptcha: ReturnType<typeof vi.fn>;
 		sendPuzzleCaptcha: ReturnType<typeof vi.fn>;
+		sendIconOrderCaptcha: ReturnType<typeof vi.fn>;
 	};
 };
 
@@ -362,6 +364,34 @@ describe("handleFrictionlessTrafficFilter", () => {
 		expect(fm.sendImageCaptcha).not.toHaveBeenCalled();
 	});
 
+	it("dispatches to sendIconOrderCaptcha when verdict names iconOrder", async () => {
+		const fm = makeFrictionlessManagerMock();
+		const { res } = makeResMock();
+		const outcome = await handleFrictionlessTrafficFilter(
+			{
+				verdict: {
+					kind: "challenge",
+					captchaType: CaptchaType.iconOrder,
+					iconOrderSettings: { targetCount: 4, decoyCount: 5 },
+					sourceCategories: ["proxy"],
+				},
+				frictionlessManager: fm,
+				clientRecord: clientRecord(),
+				userSitekeyIpHash,
+				dapp,
+				ipInfo: ipInfo({ isProxy: true }),
+				flatHeaders,
+				logger,
+			},
+			res,
+		);
+		expect(outcome.handled).toBe(true);
+		expect(fm.sendIconOrderCaptcha).toHaveBeenCalledTimes(1);
+		expect(fm.sendPuzzleCaptcha).not.toHaveBeenCalled();
+		expect(fm.sendPowCaptcha).not.toHaveBeenCalled();
+		expect(fm.sendImageCaptcha).not.toHaveBeenCalled();
+	});
+
 	it("falls through when verdict is challenge without a captchaType (decision machine decides)", async () => {
 		const fm = makeFrictionlessManagerMock();
 		const { res } = makeResMock();
@@ -387,5 +417,6 @@ describe("handleFrictionlessTrafficFilter", () => {
 		expect(fm.sendImageCaptcha).not.toHaveBeenCalled();
 		expect(fm.sendPowCaptcha).not.toHaveBeenCalled();
 		expect(fm.sendPuzzleCaptcha).not.toHaveBeenCalled();
+		expect(fm.sendIconOrderCaptcha).not.toHaveBeenCalled();
 	});
 });
