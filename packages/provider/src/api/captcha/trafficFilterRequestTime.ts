@@ -134,7 +134,7 @@ export type FrictionlessTrafficFilterInput = {
 /**
  * Frictionless-flow companion to `applyTrafficFilterAtRequestTime`. When the
  * verdict is `challenge` and names a concrete captchaType, dispatch to the
- * matching `send{Image,Pow,Puzzle}Captcha` helper with the resolved
+ * matching `send{Image,Pow,Puzzle,IconOrder}Captcha` helper with the resolved
  * parameter overrides. Otherwise returns `{ handled: false }` so the
  * caller falls through to the normal decision machine. Block matches are
  * not represented in the verdict at all — they're enforced at submit /
@@ -188,6 +188,10 @@ export const handleFrictionlessTrafficFilter = async (
 	} else if (verdict.captchaType === CaptchaType.puzzle) {
 		logDispatch(CaptchaType.puzzle);
 		response = await input.frictionlessManager.sendPuzzleCaptcha(baseParams);
+	} else if (verdict.captchaType === CaptchaType.iconOrder) {
+		logDispatch(CaptchaType.iconOrder);
+		response =
+			await input.frictionlessManager.sendIconOrderCaptcha(baseParams);
 	}
 
 	if (response) {
