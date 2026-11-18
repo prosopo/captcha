@@ -768,13 +768,13 @@ export default class ProviderApi
 	}
 
 	/**
-	 * Verify an authenticated (Web Bot Auth fast-path) session token. Wire
-	 * shape matches the pow/image/puzzle verify calls — same `ip` binding, same
-	 * optional `clientSessionId` correlation, so `@prosopo/server` can dispatch
-	 * without a token-shape branch. Provider-side the router routes to
-	 * `verifyAuthenticatedSession`, which additionally requires `ip` (a token
-	 * minted for a signed request is meaningless without the IP it was issued
-	 * to) and flips `serverChecked=true` on first use for single-consumption.
+	 * Verify an authenticated (Allow-rule fast-path) session token. Wire shape
+	 * matches the pow/image/puzzle verify calls — same optional `ip`, checked
+	 * against the site's IP validation rules, and same optional
+	 * `clientSessionId` correlation, so `@prosopo/server` can dispatch without
+	 * a token-shape branch. Provider-side the router routes to
+	 * `verifyAuthenticatedSession`, which flips `serverChecked=true` on first
+	 * use for single-consumption.
 	 */
 	public submitAuthenticatedCaptchaVerify(
 		token: string,

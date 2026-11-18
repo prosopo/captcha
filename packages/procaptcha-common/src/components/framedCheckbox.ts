@@ -50,8 +50,17 @@ export type ForwardedTouch = {
 	rot?: number;
 };
 
-/** One of the moves a pointer event merged, in the page's coordinates. */
-export type ForwardedMove = { ts: number; x: number; y: number };
+/**
+ * One of the moves a pointer event merged: in the page's coordinates, and in
+ * the frame's own (`lx`, `ly`), which do not depend on the frame's offset.
+ */
+export type ForwardedMove = {
+	ts: number;
+	x: number;
+	y: number;
+	lx: number;
+	ly: number;
+};
 
 const MAX_FORWARDED_MOVES = 32;
 
@@ -64,6 +73,8 @@ type ForwardedMouseInput = {
 	shiftKey: boolean;
 	altKey: boolean;
 	ts: number;
+	lx: number;
+	ly: number;
 };
 
 type ForwardedTouchInput = {
@@ -439,6 +450,8 @@ export const runCheckboxFrame = (): void => {
 				ts: performance.timeOrigin + move.timeStamp,
 				x: move.clientX + offset.left,
 				y: move.clientY + offset.top,
+				lx: move.clientX,
+				ly: move.clientY,
 			}));
 
 	for (const type of POINTER_EVENTS) {
@@ -480,6 +493,8 @@ export const runCheckboxFrame = (): void => {
 						type,
 						x: event.clientX + offset.left,
 						y: event.clientY + offset.top,
+						lx: event.clientX,
+						ly: event.clientY,
 						button: event.button,
 						ctrlKey: event.ctrlKey,
 						shiftKey: event.shiftKey,

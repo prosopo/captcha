@@ -232,14 +232,12 @@ export class ProsopoServer {
 		}
 
 		if (captchaType === CaptchaType.authenticated) {
-			// Web Bot Auth fast-path — the token was minted for a request that
-			// already cleared cryptographic signer verification, so there is no
-			// captcha to solve and no bot score to reason about. Freshness
-			// piggybacks on the PoW timeout (same order of magnitude, no need
-			// for a separate config value). `ip` is mandatory server-side and
-			// enforced there; passed through here as-is so the provider can
-			// return API.AUTHENTICATED_IP_REQUIRED with a real error label
-			// rather than a generic "verify failed".
+			// Allow-rule fast-path — the token was minted for a request that
+			// matched one of the site's Allow rules, so there is no captcha to
+			// solve and no bot score to reason about. Freshness piggybacks on
+			// the PoW timeout (same order of magnitude, no need for a separate
+			// config value). `ip` is optional, as for the other types, and the
+			// provider checks it against the site's IP validation rules.
 			const authenticatedTimeout = this.config.timeouts.pow.cachedTimeout;
 			if (!this.isRecent(timestamp, authenticatedTimeout, "Authenticated")) {
 				return this.notRecentResponse();
