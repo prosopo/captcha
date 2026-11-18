@@ -190,8 +190,7 @@ export const handleFrictionlessTrafficFilter = async (
 		response = await input.frictionlessManager.sendPuzzleCaptcha(baseParams);
 	} else if (verdict.captchaType === CaptchaType.iconOrder) {
 		logDispatch(CaptchaType.iconOrder);
-		response =
-			await input.frictionlessManager.sendIconOrderCaptcha(baseParams);
+		response = await input.frictionlessManager.sendIconOrderCaptcha(baseParams);
 	}
 
 	if (response) {
