@@ -17,9 +17,11 @@ import { ProsopoError } from "@prosopo/common";
 import { mergeSubmitDetectorData } from "@prosopo/database";
 import {
 	CaptchaType,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
 	isInteractiveCaptchaType,
+	resolveVerifiedTimeout,
 } from "@prosopo/types";
 import {
 	ApiParams,
@@ -683,7 +685,8 @@ export class PowCaptchaManager extends CaptchaManager {
 		challenge,
 		env,
 		settings: {
-			verifiedTimeout: timeout,
+			verifiedTimeout,
+			captchaTimeouts,
 			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
 			spamFilter,
 			trafficFilter,
@@ -700,6 +703,11 @@ export class PowCaptchaManager extends CaptchaManager {
 		reason?: string;
 		sessionId?: string;
 	}> {
+		const timeout =
+			resolveVerifiedTimeout(
+				{ verifiedTimeout, captchaTimeouts },
+				CaptchaType.pow,
+			) ?? DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT;
 		const notVerified = (
 			reason: string,
 			sessionId?: string,

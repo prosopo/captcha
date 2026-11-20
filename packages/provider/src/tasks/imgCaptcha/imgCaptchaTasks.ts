@@ -161,6 +161,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		threshold,
 		sessionId,
 		ipInfo,
+		solutionTimeout,
 	}: {
 		datasetId: Hash;
 		userAccount: string;
@@ -169,6 +170,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 		threshold: number;
 		sessionId?: string;
 		ipInfo?: IPInfoResponse;
+		/** The site's image `solutionTimeout`, which caps the summed per-image limits. */
+		solutionTimeout?: number;
 	}): Promise<{
 		captchas: Captcha[];
 		requestHash: string;
@@ -232,7 +235,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 			// if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
 			.map((captcha) => captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
 			.reduce((a, b) => a + b, 0);
-		const deadlineDate = new Date(timeLimit + currentTime);
+		const deadlineDate = new Date(
+			Math.min(timeLimit, solutionTimeout ?? timeLimit) + currentTime,
+		);
 
 		await this.db.storePendingImageCommitment({
 			userAccount,
@@ -778,6 +783,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 		env,
 		maxVerifiedTime,
 		settings: {
+			captchaTimeouts,
 			disallowWebView,
 			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
 			spamFilter,
@@ -868,7 +874,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		maxVerifiedTime = maxVerifiedTime || 60 * 1000; // Default to 1 minute
+		// The site server's own window, default 1 minute, capped by the site's
+		// image `verifiedTimeout`.
+		maxVerifiedTime = Math.min(
+			maxVerifiedTime || 60 * 1000,
+			captchaTimeouts?.image?.verifiedTimeout ?? Number.POSITIVE_INFINITY,
+		);
 
 		const currentTime = Date.now();
 		const submittedAt = solution.submittedAtTimestamp;

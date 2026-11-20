@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
-import type { IconOrderCaptchaSolutionResponse } from "@prosopo/types";
+import {
+	type ChallengeCaptchaType,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	type IconOrderCaptchaSolutionResponse,
+	resolveSolutionTimeout,
+} from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
@@ -27,6 +32,7 @@ import { validateAddr, validateSiteKey } from "../validateAddress.js";
 export interface InteractiveSolutionSpec<TBody> {
 	/** Lower-case type name used in log messages. */
 	label: string;
+	captchaType: ChallengeCaptchaType;
 	parse: (body: unknown) => TBody;
 	/** Grades the submission; `submitWindowMs` bounds issuance to submit. */
 	verify: (
@@ -109,16 +115,9 @@ export const interactiveSolutionHandler =
 				);
 			}
 
-			// `solutionTimeout` gates issuance → submit; falls back to
-			// `verifiedTimeout` for records that pre-date the field, since
-			// historically that value covered both windows. Mongoose `default`
-			// doesn't fire on reads, so the runtime value can be undefined
-			// even though the parsed schema type says `number`.
-			const persistedSolutionTimeout = clientRecord.settings.solutionTimeout as
-				| number
-				| undefined;
 			const submitWindowMs: number =
-				persistedSolutionTimeout ?? clientRecord.settings.verifiedTimeout;
+				resolveSolutionTimeout(clientRecord.settings, spec.captchaType) ??
+				DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT;
 			const { verified, escalation } = await spec.verify(
 				tasks,
 				parsed,

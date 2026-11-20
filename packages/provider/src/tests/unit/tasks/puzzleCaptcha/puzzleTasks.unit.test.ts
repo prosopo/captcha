@@ -1166,6 +1166,45 @@ describe("PuzzleCaptchaManager", () => {
 			expect(db.markPuzzleCaptchaRecordChecked).toHaveBeenCalledWith(challenge);
 		});
 
+		it.each([
+			[
+				"expires on the puzzle's own verify window",
+				{ puzzle: { verifiedTimeout: 5_000 } },
+				false,
+			],
+			[
+				"ignores another type's verify window",
+				{ iconOrder: { verifiedTimeout: 5_000 } },
+				true,
+			],
+		])("%s", async (_label, captchaTimeouts, verified) => {
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					submittedAtTimestamp: new Date(Date.now() - 10_000),
+				}),
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({ decision: "allow" } as const),
+			);
+
+			const result =
+				await puzzleCaptchaManager.serverVerifyInteractiveCaptchaSolution({
+					dappAccount,
+					challenge,
+					env: mockEnv,
+					settings: { verifiedTimeout: 120_000, captchaTimeouts },
+				});
+
+			expect(result.verified).toBe(verified);
+		});
+
 		it("returns a score of exactly 0 rather than dropping it", async () => {
 			const sessionId = "zero-score-session";
 			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(

@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { SubmitIconOrderCaptchaSolutionBody } from "@prosopo/types";
+import {
+	CaptchaType,
+	SubmitIconOrderCaptchaSolutionBody,
+} from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
 import { postSolveRequest } from "./escalation.js";
@@ -20,6 +23,7 @@ import { interactiveSolutionHandler } from "./interactiveCaptchaSolution.js";
 export default (env: ProviderEnvironment) =>
 	interactiveSolutionHandler(env, {
 		label: "icon-order",
+		captchaType: CaptchaType.iconOrder,
 		parse: (body) => SubmitIconOrderCaptchaSolutionBody.parse(body),
 		verify: (tasks, body, submitWindowMs, req, clientRecord) =>
 			tasks.iconOrderCaptchaManager.verifyIconOrderCaptchaSolution({
