@@ -1,5 +1,15 @@
 # @prosopo/types-database
 
+## 5.20.7
+### Patch Changes
+
+- 72a65e0: A site can now set its own `solutionTimeout` and `verifiedTimeout` for each captcha type, under the new `captchaTimeouts` setting (keys `pow`, `image`, `puzzle`, `iconOrder`, `audio`). A type left out keeps the site-wide values, so existing sites behave as before. For image, which has no site-wide window today, the values cap the time allowed by the images themselves and by the `maxVerifiedTime` the site's server sends.
+- Updated dependencies [39f7f5d]
+- Updated dependencies [72a65e0]
+  - @prosopo/types@5.32.5
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.17.9
+
 ## 5.20.6
 ### Patch Changes
 

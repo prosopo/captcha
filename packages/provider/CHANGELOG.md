@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 5.33.6
+### Patch Changes
+
+- 39f7f5d: Decision machines now receive an icon-order solve's clicks at verify time.
+- 72a65e0: A site can now set its own `solutionTimeout` and `verifiedTimeout` for each captcha type, under the new `captchaTimeouts` setting (keys `pow`, `image`, `puzzle`, `iconOrder`, `audio`). A type left out keeps the site-wide values, so existing sites behave as before. For image, which has no site-wide window today, the values cap the time allowed by the images themselves and by the `maxVerifiedTime` the site's server sends.
+- Updated dependencies [39f7f5d]
+- Updated dependencies [72a65e0]
+  - @prosopo/types@5.32.5
+  - @prosopo/types-database@5.20.7
+  - @prosopo/api@4.11.7
+  - @prosopo/api-express-router@3.3.28
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.16
+  - @prosopo/datasets@3.2.36
+  - @prosopo/env@3.7.5
+  - @prosopo/fingerprint@2.8.27
+  - @prosopo/ipinfo@0.7.14
+  - @prosopo/keyring@2.10.36
+  - @prosopo/load-balancer@2.11.40
+  - @prosopo/types-env@2.12.15
+  - @prosopo/user-access-policy@3.17.9
+
 ## 5.33.5
 ### Patch Changes
 
