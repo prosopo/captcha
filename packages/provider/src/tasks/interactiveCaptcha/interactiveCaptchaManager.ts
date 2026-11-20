@@ -22,6 +22,7 @@ import {
 	type CaptchaSolutionEscalation,
 	CaptchaStatus,
 	type ClientMetaData,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type DecisionMachineCaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
@@ -34,6 +35,7 @@ import {
 	type Session,
 	SimdReadingsStage,
 	isBlockingCaptchaResult,
+	resolveVerifiedTimeout,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { describeMatchedRule } from "@prosopo/user-access-policy";
@@ -559,7 +561,8 @@ export abstract class InteractiveCaptchaManager<
 		challenge,
 		env,
 		settings: {
-			verifiedTimeout: timeout,
+			verifiedTimeout,
+			captchaTimeouts,
 			spamEmailDomainCheckEnabled: spamEmailDomainCheckingEnabled = false,
 			spamFilter,
 			trafficFilter,
@@ -575,6 +578,12 @@ export abstract class InteractiveCaptchaManager<
 		score?: number;
 		sessionId?: string;
 	}> {
+		const timeout =
+			resolveVerifiedTimeout(
+				{ verifiedTimeout, captchaTimeouts },
+				this.captchaType,
+			) ?? DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT;
+
 		// Shared by every not-verified exit; sessionId is stamped on below
 		// once the record is loaded, so each exit needn't repeat it.
 		const notVerifiedResponse: {

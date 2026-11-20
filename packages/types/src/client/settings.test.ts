@@ -20,6 +20,7 @@ import {
 import { CaptchaType } from "./captchaType/captchaType.js";
 import {
 	AudioSettingsSchema,
+	type CaptchaTimeoutSettings,
 	ClientSettingsSchema,
 	ContextType,
 	DeviceType,
@@ -58,6 +59,8 @@ import {
 	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 	resolveImageRoundsBounds,
+	resolveSolutionTimeout,
+	resolveVerifiedTimeout,
 	trafficFilterAbuserScoreThresholdDefault,
 	trafficFilterReputationScoreThresholdDefault,
 	widgetFeatureFlagDefaults,
@@ -871,6 +874,56 @@ describe("HoneypotSettingsSchema", () => {
 		expect(
 			HoneypotSettingsSchema.safeParse({ encodingType: "rot13" }).success,
 		).toBe(false);
+	});
+});
+
+describe("per-type captcha timeouts", () => {
+	const site: CaptchaTimeoutSettings = {
+		solutionTimeout: 60000,
+		verifiedTimeout: 120000,
+		captchaTimeouts: {
+			puzzle: { solutionTimeout: 20000, verifiedTimeout: 45000 },
+			iconOrder: { solutionTimeout: 30000 },
+		},
+	};
+
+	it("uses a type's own windows", () => {
+		expect(resolveSolutionTimeout(site, CaptchaType.puzzle)).toBe(20000);
+		expect(resolveVerifiedTimeout(site, CaptchaType.puzzle)).toBe(45000);
+	});
+
+	it("keeps the site-wide window a type leaves unset", () => {
+		expect(resolveSolutionTimeout(site, CaptchaType.iconOrder)).toBe(30000);
+		expect(resolveVerifiedTimeout(site, CaptchaType.iconOrder)).toBe(120000);
+	});
+
+	it("keeps both site-wide windows for a type with no entry", () => {
+		expect(resolveSolutionTimeout(site, CaptchaType.pow)).toBe(60000);
+		expect(resolveVerifiedTimeout(site, CaptchaType.pow)).toBe(120000);
+	});
+
+	it("falls back to verifiedTimeout on a record with no solutionTimeout", () => {
+		expect(
+			resolveSolutionTimeout({ verifiedTimeout: 90000 }, CaptchaType.audio),
+		).toBe(90000);
+	});
+
+	it.each([999, 600001, 1500.5])("rejects a %d ms window", (ms) => {
+		expect(
+			ClientSettingsSchema.safeParse({
+				domains: ["example.com"],
+				captchaTimeouts: { puzzle: { solutionTimeout: ms } },
+			}).success,
+		).toBe(false);
+	});
+
+	it("parses per-type windows on the site settings", () => {
+		expect(
+			ClientSettingsSchema.parse({
+				domains: ["example.com"],
+				captchaTimeouts: { iconOrder: { verifiedTimeout: 30000 } },
+			}).captchaTimeouts,
+		).toEqual({ iconOrder: { verifiedTimeout: 30000 } });
 	});
 });
 

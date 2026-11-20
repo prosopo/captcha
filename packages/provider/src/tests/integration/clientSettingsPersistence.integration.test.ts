@@ -64,6 +64,10 @@ const FULLY_POPULATED_SETTINGS = {
 	autoBanScoreThreshold: 0.95,
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
+	captchaTimeouts: {
+		puzzle: { solutionTimeout: 30000, verifiedTimeout: 90000 },
+		iconOrder: { solutionTimeout: 40000 },
+	},
 	puzzleTolerance: 20,
 	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
@@ -415,6 +419,9 @@ describe("Client settings Mongo persistence", () => {
 		);
 		expect(stored.solutionTimeout).toBe(
 			FULLY_POPULATED_SETTINGS.solutionTimeout,
+		);
+		expect(stored.captchaTimeouts).toEqual(
+			FULLY_POPULATED_SETTINGS.captchaTimeouts,
 		);
 	}, 60_000);
 });
