@@ -322,6 +322,8 @@ export default (
 					threshold: clientRecord.settings.imageThreshold ?? 0.8,
 					sessionId: validSessionId,
 					ipInfo: req.ipInfo,
+					solutionTimeout:
+						clientRecord.settings.captchaTimeouts?.image?.solutionTimeout,
 				});
 			const assetsResolver =
 				getSealedAssetsResolver() ??

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { SubmitAudioCaptchaSolutionBody } from "@prosopo/types";
+import { CaptchaType, SubmitAudioCaptchaSolutionBody } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
 import { postSolveRequest } from "./escalation.js";
@@ -20,6 +20,7 @@ import { interactiveSolutionHandler } from "./interactiveCaptchaSolution.js";
 export default (env: ProviderEnvironment) =>
 	interactiveSolutionHandler(env, {
 		label: "audio",
+		captchaType: CaptchaType.audio,
 		parse: (body) => SubmitAudioCaptchaSolutionBody.parse(body),
 		verify: (tasks, body, submitWindowMs, req, clientRecord) =>
 			tasks.audioCaptchaManager.verifyAudioCaptchaSolution({

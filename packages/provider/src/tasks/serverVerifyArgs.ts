@@ -19,6 +19,7 @@ import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 export type ServerVerifySiteSettings = Pick<
 	IUserSettings,
 	| "verifiedTimeout"
+	| "captchaTimeouts"
 	| "spamEmailDomainCheckEnabled"
 	| "spamFilter"
 	| "trafficFilter"
@@ -52,6 +53,7 @@ export type VerifyImageCaptchaSolutionArgs = Omit<
 	settings: Partial<
 		Pick<
 			IUserSettings,
+			| "captchaTimeouts"
 			| "disallowWebView"
 			| "spamEmailDomainCheckEnabled"
 			| "spamFilter"

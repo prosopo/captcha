@@ -233,6 +233,14 @@ export const TrafficCategoryPolicySchema =
 		nameDenylist: { type: [String], default: undefined, required: false },
 	});
 
+const CaptchaTypeTimeoutsSchema = new Schema(
+	{
+		solutionTimeout: { type: Number, required: false },
+		verifiedTimeout: { type: Number, required: false },
+	},
+	{ _id: false },
+);
+
 export const UserSettingsSchema = new Schema({
 	captchaType: {
 		type: String,
@@ -246,6 +254,21 @@ export const UserSettingsSchema = new Schema({
 	solutionTimeout: {
 		type: Number,
 		default: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	},
+	// Declared for the same reason as `frictionlessTypes` below: mongoose is
+	// strict, so an undeclared field is dropped on write.
+	captchaTimeouts: {
+		type: new Schema(
+			{
+				pow: { type: CaptchaTypeTimeoutsSchema, required: false },
+				image: { type: CaptchaTypeTimeoutsSchema, required: false },
+				puzzle: { type: CaptchaTypeTimeoutsSchema, required: false },
+				iconOrder: { type: CaptchaTypeTimeoutsSchema, required: false },
+				audio: { type: CaptchaTypeTimeoutsSchema, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
 	},
 	// The score ladder. Declared `Mixed` rather than as a nested schema
 	// because the field used to hold a bare number and unmigrated documents

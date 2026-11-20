@@ -28,7 +28,10 @@ import {
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "../config/timeouts.js";
-import { CaptchaType } from "./captchaType/captchaType.js";
+import {
+	CaptchaType,
+	type ChallengeCaptchaType,
+} from "./captchaType/captchaType.js";
 import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 import { Tier } from "./user.js";
 
@@ -939,6 +942,29 @@ export const HoneypotSettingsSchema = object({
 
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
+const captchaTimeoutFieldSchema = number().int().min(1000).max(600000);
+
+/**
+ * One captcha type's own `solutionTimeout` and `verifiedTimeout`, in ms.
+ * Either may be left unset, and the type then keeps the site-wide value.
+ */
+export const CaptchaTypeTimeoutsSchema = object({
+	solutionTimeout: captchaTimeoutFieldSchema.optional(),
+	verifiedTimeout: captchaTimeoutFieldSchema.optional(),
+});
+
+export type ICaptchaTypeTimeouts = output<typeof CaptchaTypeTimeoutsSchema>;
+
+export const CaptchaTimeoutsSchema = object({
+	[CaptchaType.pow]: CaptchaTypeTimeoutsSchema.optional(),
+	[CaptchaType.image]: CaptchaTypeTimeoutsSchema.optional(),
+	[CaptchaType.puzzle]: CaptchaTypeTimeoutsSchema.optional(),
+	[CaptchaType.iconOrder]: CaptchaTypeTimeoutsSchema.optional(),
+	[CaptchaType.audio]: CaptchaTypeTimeoutsSchema.optional(),
+});
+
+export type ICaptchaTimeouts = output<typeof CaptchaTimeoutsSchema>;
+
 export const ClientSettingsSchema = object({
 	captchaType: SelectableCaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
@@ -959,6 +985,8 @@ export const ClientSettingsSchema = object({
 		.max(600000)
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
+	// Per-type overrides of the two windows above.
+	captchaTimeouts: CaptchaTimeoutsSchema.optional(),
 	// The score ladder. Was a bare number meaning "above this, image captcha";
 	// now an object carrying both rungs so the flow can put the middle band on
 	// a puzzle. A legacy number is lifted into the puzzle rung on parse.
@@ -1096,6 +1124,32 @@ export const withMarketCountries = (
 				: trafficFilter,
 	};
 };
+
+export type CaptchaTimeoutSettings = Partial<
+	Pick<IUserSettings, "solutionTimeout" | "verifiedTimeout" | "captchaTimeouts">
+>;
+
+/**
+ * How long a user has from issuance to submit a `captchaType` challenge. A
+ * record that pre-dates `solutionTimeout` falls back to `verifiedTimeout`,
+ * which historically covered both windows. Mongoose defaults don't fire on
+ * reads, so either site-wide value can be undefined at runtime.
+ */
+export const resolveSolutionTimeout = (
+	settings: CaptchaTimeoutSettings,
+	captchaType: ChallengeCaptchaType,
+): number | undefined =>
+	settings.captchaTimeouts?.[captchaType]?.solutionTimeout ??
+	settings.solutionTimeout ??
+	settings.verifiedTimeout;
+
+/** How long a submitted `captchaType` solution stays verifiable by the site's server. */
+export const resolveVerifiedTimeout = (
+	settings: CaptchaTimeoutSettings,
+	captchaType: ChallengeCaptchaType,
+): number | undefined =>
+	settings.captchaTimeouts?.[captchaType]?.verifiedTimeout ??
+	settings.verifiedTimeout;
 
 /**
  * The subset of a client record's settings that bounds how many image rounds
