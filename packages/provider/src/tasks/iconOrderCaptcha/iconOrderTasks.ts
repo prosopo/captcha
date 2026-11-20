@@ -95,7 +95,10 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager<IconOrder
 	protected decisionMachineEventFields(
 		record: IconOrderCaptchaRecord,
 	): Partial<DecisionMachineInput> {
-		return { iconOrderEvents: record.iconOrderEvents };
+		return {
+			iconOrderEvents: record.iconOrderEvents,
+			iconOrderClicks: record.clicks,
+		};
 	}
 
 	/**
