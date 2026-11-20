@@ -209,6 +209,10 @@ export type DecisionMachineInput = {
 	audioReplays?: number;
 	// Icon-order-only equivalent of `puzzleEvents`.
 	iconOrderEvents?: IconOrderEvent[];
+	// Icon-order-only: the clicks the user submitted, in order. Each is also
+	// recorded in `iconOrderEvents` at its own coordinates, which is how a rule
+	// tells when each one landed.
+	iconOrderClicks?: IconClick[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
 	// so verify-time decide rules can gate on the raw TCP fingerprint

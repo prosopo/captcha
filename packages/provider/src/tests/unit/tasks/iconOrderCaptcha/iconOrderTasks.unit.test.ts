@@ -18,6 +18,7 @@ import {
 	type CaptchaSolutionEscalation,
 	CaptchaStatus,
 	CaptchaType,
+	type DecisionMachineInput,
 	type IconOrderCaptchaStored,
 	type KeyringPair,
 	type PoWChallengeId,
@@ -104,6 +105,12 @@ const renderedImages = (): RenderedIconOrderImages => ({
 		seed: "00112233445566778899aabbccddeeff",
 	},
 });
+
+class DecideFieldsProbe extends IconOrderCaptchaManager {
+	fieldsFor(record: IconOrderCaptchaRecord): Partial<DecisionMachineInput> {
+		return this.decisionMachineEventFields(record);
+	}
+}
 
 describe("IconOrderCaptchaManager", () => {
 	let db: IProviderDatabase;
@@ -549,6 +556,28 @@ describe("IconOrderCaptchaManager", () => {
 				.mocked(db.getIconOrderCaptchaRecordByChallenge)
 				.mock.invocationCallOrder.at(0);
 			expect(order).toBeLessThan(dbOrder ?? Number.POSITIVE_INFINITY);
+		});
+	});
+
+	describe("decide input", () => {
+		it("carries the submitted clicks alongside the pointer trail", () => {
+			const clicks = [
+				{ x: 60, y: 50 },
+				{ x: 180, y: 90 },
+			];
+			const iconOrderEvents = [
+				{ x: 60, y: 50, t: 9000 },
+				{ x: 180, y: 90, t: 9200 },
+			];
+			const probe = new DecideFieldsProbe({
+				db,
+				pair,
+				config: mockEnv.config,
+			});
+			expect(probe.fieldsFor(asRecord({ clicks, iconOrderEvents }))).toEqual({
+				iconOrderEvents,
+				iconOrderClicks: clicks,
+			});
 		});
 	});
 });
