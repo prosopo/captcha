@@ -13,13 +13,48 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/logger";
-import { describe, expect, it } from "vitest";
+import type { RedisConnection, connectToRedis } from "@prosopo/redis-client";
+import { describe, expect, it, vi } from "vitest";
 import { ProviderDatabase } from "../../../databases/provider.js";
+
+vi.mock("@prosopo/redis-client", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@prosopo/redis-client")>();
+	return {
+		...actual,
+		connectToRedis: (
+			_options: Parameters<typeof connectToRedis>[0],
+		): RedisConnection => ({
+			isReady: () => false,
+			getClient: () => new Promise(() => {}),
+			getAwaitingTimeMs: () => 0,
+		}),
+		setupRedisIndex: (connection: RedisConnection): RedisConnection =>
+			connection,
+	};
+});
+
+const logger = getLogger(LogLevel.enum.error, "providerRedisConnection.test");
 
 const unconnectedProviderDatabase = (): ProviderDatabase =>
 	new ProviderDatabase({
 		mongo: { url: "mongodb://127.0.0.1:27017", dbname: "prosopo" },
-		logger: getLogger(LogLevel.enum.error, "providerRedisConnection.test"),
+		logger,
+	});
+
+class RedisOnlyProviderDatabase extends ProviderDatabase {
+	async connectRedisOnly(): Promise<void> {
+		await this.setupRedis();
+	}
+}
+
+const redisOnlyProviderDatabase = (
+	redisMemUrl?: string,
+): RedisOnlyProviderDatabase =>
+	new RedisOnlyProviderDatabase({
+		mongo: { url: "mongodb://127.0.0.1:27017", dbname: "prosopo" },
+		redis: { url: "redis://redis-disk:6379", password: "" },
+		redisMem: redisMemUrl ? { url: redisMemUrl, password: "" } : undefined,
+		logger,
 	});
 
 describe("ProviderDatabase Redis connection getters", () => {
@@ -33,5 +68,25 @@ describe("ProviderDatabase Redis connection getters", () => {
 		expect(() =>
 			unconnectedProviderDatabase().getRedisAccessRulesConnection(),
 		).toThrow("Redis access rules connection undefined");
+	});
+
+	it("names the mem connection when it is missing", () => {
+		expect(() => unconnectedProviderDatabase().getRedisMemConnection()).toThrow(
+			"Redis mem connection undefined",
+		);
+	});
+
+	it("uses the general connection as the mem one when none is configured", async () => {
+		const db = redisOnlyProviderDatabase();
+		await db.connectRedisOnly();
+
+		expect(db.getRedisMemConnection()).toBe(db.getRedisConnection());
+	});
+
+	it("opens a separate mem connection when one is configured", async () => {
+		const db = redisOnlyProviderDatabase("redis://redis-mem:6379");
+		await db.connectRedisOnly();
+
+		expect(db.getRedisMemConnection()).not.toBe(db.getRedisConnection());
 	});
 });

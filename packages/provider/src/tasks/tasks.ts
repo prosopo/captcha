@@ -176,7 +176,7 @@ export class Tasks {
 		}
 
 		try {
-			const redisConnection = this.db.getRedisConnection();
+			const redisConnection = this.db.getRedisMemConnection();
 			globalWriteQueue = new RedisWriteQueue(redisConnection, this.logger);
 
 			return globalWriteQueue;

@@ -257,6 +257,10 @@ type ProviderDatabaseOptions = {
 		password: string;
 		indexName?: string;
 	};
+	redisMem?: {
+		url: string;
+		password: string;
+	};
 	logger?: Logger;
 };
 
@@ -267,6 +271,7 @@ export class ProviderDatabase
 	tables = {} as Tables<TableNames>;
 	private centralStreamer: CentralDbStreamer | undefined;
 	private redisConnection: RedisConnection | null;
+	private redisMemConnection: RedisConnection | null;
 	private redisAccessRulesConnection: RedisConnection | null;
 	private userAccessRulesStorage: AccessRulesStorage | null;
 	private indexesEnsured = false;
@@ -282,6 +287,7 @@ export class ProviderDatabase
 
 		this.redisAccessRulesConnection = null;
 		this.redisConnection = null;
+		this.redisMemConnection = null;
 		this.userAccessRulesStorage = null;
 	}
 
@@ -307,6 +313,14 @@ export class ProviderDatabase
 			password: this.options.redis?.password,
 			logger: this.logger,
 		});
+
+		this.redisMemConnection = this.options.redisMem?.url
+			? connectToRedis({
+					url: this.options.redisMem.url,
+					password: this.options.redisMem.password,
+					logger: this.logger,
+				})
+			: this.redisConnection;
 
 		this.redisAccessRulesConnection = setupRedisIndex(
 			this.redisConnection,
@@ -367,6 +381,22 @@ export class ProviderDatabase
 		}
 
 		return this.redisConnection;
+	}
+
+	/**
+	 * The Redis that persists nothing, for caches the provider can rebuild from
+	 * Mongo. The main connection when no separate one is configured.
+	 */
+	public getRedisMemConnection(): RedisConnection {
+		if (null === this.redisMemConnection) {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-52",
+				message: "Redis mem connection undefined",
+			});
+		}
+
+		return this.redisMemConnection;
 	}
 
 	async ensureIndexes(): Promise<void> {

@@ -420,6 +420,10 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 			url: "redis://localhost:6379",
 			password: "root",
 		}),
+		redisMemConnection: object({
+			url: string(),
+			password: string(),
+		}).optional(),
 		rateLimits: ApiPathRateLimits.default(ProviderDefaultRateLimits),
 		proxyCount: number().optional().default(0),
 		lRules: record(string(), number()).optional(),
