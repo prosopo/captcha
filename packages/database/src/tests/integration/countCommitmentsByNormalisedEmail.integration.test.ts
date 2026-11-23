@@ -69,6 +69,7 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 			dappAccount,
 			serverChecked: true,
 			"metadata.emailNormalised": emailNormalised,
+			"result.status": CaptchaStatus.approved,
 		};
 		const [img, pow, puzzle] = await Promise.all([
 			CommitmentModel.countDocuments(filter),
@@ -359,6 +360,49 @@ describe("ProviderDatabase.countCommitmentsByNormalisedEmail", () => {
 
 		expect(
 			await db.countCommitmentsByNormalisedEmail("dapp-A", "alice@gmail.com"),
+		).toBe(1);
+	});
+
+	it("does not count refused verifications towards the per-email limit", async () => {
+		const record = (
+			challenge: string,
+			status: CaptchaStatus,
+		): Partial<PoWCaptchaRecord> => ({
+			challenge: challenge as PoWChallengeId,
+			userAccount: "u1",
+			dappAccount: "dapp-C",
+			requestedAtTimestamp: new Date(),
+			ipAddress: ipv4Composite(1n),
+			headers: { host: "example.com" },
+			ja4: "j",
+			result: { status },
+			userSubmitted: true,
+			serverChecked: true,
+			difficulty: 4,
+			providerSignature: "sig",
+			metadata: {
+				email: "bob@example.com",
+				emailNormalised: "bob@example.com",
+			},
+		});
+		await db
+			.getTables()
+			.powcaptcha.create(
+				record("1___u1___dapp-C___ok", CaptchaStatus.approved),
+			);
+		await db
+			.getTables()
+			.powcaptcha.create(
+				record("2___u1___dapp-C___no", CaptchaStatus.disapproved),
+			);
+		await db
+			.getTables()
+			.powcaptcha.create(
+				record("3___u1___dapp-C___no", CaptchaStatus.disapproved),
+			);
+
+		expect(
+			await db.countCommitmentsByNormalisedEmail("dapp-C", "bob@example.com"),
 		).toBe(1);
 	});
 
