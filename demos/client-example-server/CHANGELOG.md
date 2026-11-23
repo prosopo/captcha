@@ -1,5 +1,11 @@
 # @prosopo/client-example-server
 
+## 2.7.210
+### Patch Changes
+
+- Updated dependencies [4cea38c]
+  - @prosopo/database@4.6.17
+
 ## 2.7.209
 ### Patch Changes
 
