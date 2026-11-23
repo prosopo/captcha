@@ -1954,13 +1954,16 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Counts server-checked captcha records across the image (`commitment`),
-	 * PoW, puzzle and icon-order collections whose `metadata.emailNormalised`
-	 * matches. Each collection carries the same partial index
-	 * (`spamEmailCount_partial`) so every count hits an index-only scan. The
-	 * counts are summed — one dapp can mix captcha types over time, and
-	 * per-email rate limits should apply across the whole verified surface,
-	 * not per-type.
+	 * Counts approved, server-checked captcha records across the image
+	 * (`commitment`), PoW, puzzle and icon-order collections whose
+	 * `metadata.emailNormalised` matches. Only approved records count: a
+	 * refused verification backed no submission, and counting it would let
+	 * every refusal (including this limit's own) use up the address's
+	 * allowance. Each collection carries the same partial index
+	 * (`spamEmailCount_partial`), which narrows the count to the address's
+	 * records before the status is read. The counts are summed — one dapp can
+	 * mix captcha types over time, and per-email rate limits should apply
+	 * across the whole verified surface, not per-type.
 	 */
 	async countCommitmentsByNormalisedEmail(
 		dappAccount: string,
@@ -1972,6 +1975,7 @@ export class ProviderDatabase
 			dappAccount,
 			serverChecked: true,
 			"metadata.emailNormalised": emailNormalised,
+			"result.status": CaptchaStatus.approved,
 		};
 		const counts = await Promise.all([
 			tables.commitment.countDocuments(filter),
