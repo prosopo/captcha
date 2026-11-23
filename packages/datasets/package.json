@@ -34,12 +34,8 @@
 	},
 	"typesVersions": {
 		"*": {
-			"types": [
-				"dist/types/types"
-			],
-			"captcha": [
-				"dist/types/captcha"
-			]
+			"types": ["dist/types/types"],
+			"captcha": ["dist/types/captcha"]
 		}
 	},
 	"dependencies": {
