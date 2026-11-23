@@ -841,33 +841,41 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
+		const belongsToCaller =
+			solution.dappAccount === dapp && solution.userAccount === user;
+		const notVerifiedForCaller: ImageVerificationResponse = {
+			status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+			verified: false,
+		};
+		// Another site or user gets the same answer whether or not the token has
+		// been used, so it cannot learn anything about the token's state.
+		const alreadyVerified: ImageVerificationResponse = belongsToCaller
+			? {
+					status: "API.USER_ALREADY_VERIFIED",
+					verified: false,
+					...(solution.sessionId && { sessionId: solution.sessionId }),
+				}
+			: notVerifiedForCaller;
+
 		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
 		if (solution.serverChecked) {
-			return {
-				status: "API.USER_ALREADY_VERIFIED",
-				verified: false,
-				...(solution.sessionId && { sessionId: solution.sessionId }),
-			};
+			return alreadyVerified;
 		}
 
 		// The claim is conditional on the commitment not being checked yet, so
 		// of several concurrent verifies of one token only one gets past here.
 		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
 		if (claimed === 0) {
-			return {
-				status: "API.USER_ALREADY_VERIFIED",
-				verified: false,
-				...(solution.sessionId && { sessionId: solution.sessionId }),
-			};
+			return alreadyVerified;
 		}
 		// -- END WARNING --
 
 		// Any verify consumes the commitment, so a token cannot be tried against
 		// other sites or users after its first presentation.
-		if (solution.dappAccount !== dapp || solution.userAccount !== user) {
+		if (!belongsToCaller) {
 			logger.debug(() => ({
 				msg: "Not verified - commitment belongs to another site or user",
 				data: {
@@ -876,10 +884,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					user,
 				},
 			}));
-			return {
-				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
-				verified: false,
-			};
+			return notVerifiedForCaller;
 		}
 
 		// A solution exists but is disapproved

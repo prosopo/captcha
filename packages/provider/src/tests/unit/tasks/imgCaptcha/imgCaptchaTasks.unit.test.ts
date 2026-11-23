@@ -711,6 +711,37 @@ describe("ImgCaptchaManager", () => {
 			},
 		);
 
+		it.each([
+			{ name: "already checked", serverChecked: true, claimed: 0 },
+			{ name: "claimed concurrently", serverChecked: false, claimed: 0 },
+		])(
+			"gives another site the same answer for a commitment $name",
+			async ({
+				serverChecked,
+				claimed,
+			}: { serverChecked: boolean; claimed: number }) => {
+				vi.mocked(db.getDappUserCommitmentById).mockResolvedValue({
+					...approvedCommitment(),
+					serverChecked,
+					sessionId: "sessionId",
+				});
+				vi.mocked(db.markDappUserCommitmentsChecked).mockResolvedValue(claimed);
+
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					settings: {},
+					user: "userAccount",
+					dappAccount: "otherDapp",
+					commitmentId: "commitmentIdBound",
+					env: mockEnv,
+				});
+
+				expect(result).toEqual({
+					status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+					verified: false,
+				});
+			},
+		);
+
 		it("claims the commitment when the site and user match", async () => {
 			vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(
 				approvedCommitment(),
