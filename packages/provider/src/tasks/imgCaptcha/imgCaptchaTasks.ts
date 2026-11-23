@@ -853,6 +853,23 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
+		// Checked before the claim so a token presented at the wrong site cannot
+		// use up the commitment for the site it was solved for.
+		if (solution.dappAccount !== dapp || solution.userAccount !== user) {
+			logger.debug(() => ({
+				msg: "Not verified - commitment belongs to another site or user",
+				data: {
+					commitmentDapp: solution.dappAccount,
+					commitmentUser: solution.userAccount,
+					user,
+				},
+			}));
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
+		}
+
 		// The claim is conditional on the commitment not being checked yet, so
 		// of several concurrent verifies of one token only one gets past here.
 		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
