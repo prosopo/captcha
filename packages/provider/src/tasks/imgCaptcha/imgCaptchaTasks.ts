@@ -853,8 +853,20 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		// Checked before the claim so a token presented at the wrong site cannot
-		// use up the commitment for the site it was solved for.
+		// The claim is conditional on the commitment not being checked yet, so
+		// of several concurrent verifies of one token only one gets past here.
+		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
+		if (claimed === 0) {
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
+			};
+		}
+		// -- END WARNING --
+
+		// Any verify consumes the commitment, so a token cannot be tried against
+		// other sites or users after its first presentation.
 		if (solution.dappAccount !== dapp || solution.userAccount !== user) {
 			logger.debug(() => ({
 				msg: "Not verified - commitment belongs to another site or user",
@@ -869,18 +881,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				verified: false,
 			};
 		}
-
-		// The claim is conditional on the commitment not being checked yet, so
-		// of several concurrent verifies of one token only one gets past here.
-		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
-		if (claimed === 0) {
-			return {
-				status: "API.USER_ALREADY_VERIFIED",
-				verified: false,
-				...(solution.sessionId && { sessionId: solution.sessionId }),
-			};
-		}
-		// -- END WARNING --
 
 		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {

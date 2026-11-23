@@ -685,11 +685,12 @@ describe("ImgCaptchaManager", () => {
 			{ name: "site", user: "userAccount", dappAccount: "otherDapp" },
 			{ name: "user", user: "otherUser", dappAccount: "dappAccount" },
 		])(
-			"refuses a commitment solved for another $name without claiming it",
+			"consumes and refuses a commitment solved for another $name",
 			async ({ user, dappAccount }: { user: string; dappAccount: string }) => {
 				vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(
 					approvedCommitment(),
 				);
+				vi.mocked(db.markDappUserCommitmentsChecked).mockResolvedValue(1);
 
 				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
 					settings: {},
@@ -703,7 +704,10 @@ describe("ImgCaptchaManager", () => {
 					status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
 					verified: false,
 				});
-				expect(db.markDappUserCommitmentsChecked).not.toHaveBeenCalled();
+				expect(db.markDappUserCommitmentsChecked).toHaveBeenCalledWith([
+					"commitmentIdBound",
+				]);
+				expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
 			},
 		);
 
