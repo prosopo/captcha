@@ -42,6 +42,7 @@ export const buildPostSolveRoutingContext = (
 		clientRecord.settings?.trafficFilter,
 	);
 	const tier: Tier | undefined = clientRecord.tier;
+	const siteProfile = clientRecord.settings?.siteProfile;
 	return {
 		tier,
 		ip: req.ip || "",
@@ -78,6 +79,7 @@ export const buildPostSolveRoutingContext = (
 			// Which egress categories this site blocks, so egress-sensitive
 			// route rules can skip sites that accept VPN / proxy / DC users.
 			...(trafficPolicies && { trafficPolicies }),
+			...(siteProfile && { siteProfile }),
 		},
 	};
 };

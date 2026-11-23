@@ -653,6 +653,7 @@ export class PowCaptchaManager extends CaptchaManager {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
 				coordsAllZero: isCoordsAllZero(coords),
+				...(coords && { coords }),
 				// SIMD readings are decrypted and attached to the session above
 				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
 				// they are available here in decoded form for the routing machine.
@@ -692,6 +693,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			trafficFilter,
 			storeMetadata = false,
 			ipValidationRules,
+			siteProfile,
 		},
 		ip,
 		email,
@@ -1124,6 +1126,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					// on a site that accepts VPN users the observed stack
 					// says nothing about the client.
 					trafficPolicies: deriveTrafficPolicies(trafficFilter),
+					siteProfile,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(

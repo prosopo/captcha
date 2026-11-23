@@ -35,6 +35,7 @@ type RoutingSession = Parameters<typeof sessionRoutingSignals>[0];
 
 const session = (extra: Partial<RoutingSession> = {}): RoutingSession => ({
 	scoreComponents: { baseScore: 0 },
+	iFrame: false,
 	...extra,
 });
 
@@ -45,5 +46,12 @@ describe("sessionRoutingSignals", () => {
 
 	it("leaves the signal out when the session has none", () => {
 		expect(sessionRoutingSignals(session())).not.toHaveProperty("webrtc");
+	});
+
+	it("tells the routing pass whether the widget was framed", () => {
+		expect(sessionRoutingSignals(session({ iFrame: true })).iFrame).toBe(true);
+		expect(sessionRoutingSignals(session({ iFrame: false })).iFrame).toBe(
+			false,
+		);
 	});
 });
