@@ -75,6 +75,7 @@ export const sessionRoutingSignals = (
 		| "simdReadings"
 		| "currentUrl"
 		| "iframeUrl"
+		| "iFrame"
 		| "scoreComponents"
 		| "webrtc"
 	>,
@@ -86,6 +87,7 @@ export const sessionRoutingSignals = (
 	// host page. iframeUrl is only present when the widget was embedded.
 	...(session.currentUrl && { currentUrl: session.currentUrl }),
 	...(session.iframeUrl && { iframeUrl: session.iframeUrl }),
+	...(session.iFrame !== undefined && { iFrame: session.iFrame }),
 	// Gathered at frictionless time; a submit request sends no report.
 	...(session.webrtc && { webrtc: session.webrtc }),
 	...(session.scoreComponents?.triggeredDetectors?.length
