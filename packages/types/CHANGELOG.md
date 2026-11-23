@@ -1,5 +1,10 @@
 # @prosopo/types
 
+## 5.32.6
+### Patch Changes
+
+- 869afe9: Decision machines now receive the site's profile when a PoW solve is verified, and the routing pass after a PoW solve now receives the solve's clicks, whether the widget was framed, and the site's profile.
+
 ## 5.32.5
 ### Patch Changes
 
