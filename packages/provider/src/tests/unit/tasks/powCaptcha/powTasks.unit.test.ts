@@ -19,6 +19,7 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type ClientMetaData,
+	DecisionMachineDecision,
 	FrictionlessReason,
 	type IIPValidationRules,
 	IPValidationAction,
@@ -898,6 +899,75 @@ describe("PowCaptchaManager", () => {
 				ctx: { d: { b: { first: ["x"], second: ["y"] } } },
 			});
 		});
+
+		it("hands the router the solve's coords, the frame flag and the site's profile", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const providerSignature = "testSignature";
+			const headers: RequestHeaders = { a: "1" };
+			const ipAddress = getIPAddress("1.1.1.1");
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.pending },
+				userSubmitted: false,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature,
+				lastUpdatedTimestamp: new Date(),
+				sessionId: "linked-session-id",
+			};
+			const sessionRecord: Partial<Session> = {
+				sessionId: "linked-session-id",
+				scoreComponents: { baseScore: 0.5 },
+				iFrame: false,
+			};
+			const siteProfile: Record<string, unknown> = { a: { b: 1 } };
+			vi.mocked(verifyRecency).mockReturnValue(true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockReturnValue(true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as unknown as PoWCaptchaRecord,
+			);
+			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(
+				sessionRecord as Session,
+			);
+			vi.mocked(applyRouter).mockResolvedValueOnce({
+				captchaType: CaptchaType.pow,
+			});
+			powCaptchaManager.setPostPowContext({
+				ip: "1.1.1.1",
+				device: { userAgent: "", headers },
+				raw: { headers, userAgent: "", siteProfile },
+			});
+
+			await powCaptchaManager.verifyPowCaptchaSolution({
+				challenge,
+				providerChallengeSignature: providerSignature,
+				nonce: 12345,
+				timeout: 1000,
+				userTimestampSignature: "testTimestampSignature",
+				ipAddress,
+				salt: embedData(
+					"0x0101010101010101010101010101010101010101010101010101010101010101",
+					[120, 45],
+				),
+			});
+
+			expect(vi.mocked(applyRouter).mock.lastCall?.[0]).toMatchObject({
+				ctx: {
+					raw: { coords: [[[120, 45]]], iFrame: false, siteProfile },
+				},
+			});
+		});
 	});
 
 	describe("serverVerifyPowCaptchaSolution", () => {
@@ -1393,6 +1463,53 @@ describe("PowCaptchaManager", () => {
 	});
 
 	describe("serverVerifyPowCaptchaSolution with decision machine", () => {
+		it("passes the site's profile to the machine", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+			};
+			const siteProfile: Record<string, unknown> = { a: { b: 1 } };
+			const decide = vi.fn().mockResolvedValue({
+				decision: DecisionMachineDecision.Allow,
+			});
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			mockDecisionMachine(decide);
+
+			try {
+				await powCaptchaManager.serverVerifyPowCaptchaSolution({
+					dappAccount,
+					challenge,
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000, siteProfile },
+				});
+			} finally {
+				restoreDecisionMachine();
+			}
+
+			expect(decide.mock.lastCall?.[0]?.siteProfile).toEqual(siteProfile);
+		});
+
 		it("should allow when decision machine returns allow", async () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456789;

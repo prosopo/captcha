@@ -527,9 +527,14 @@ export interface RoutingMachineRawSignals {
 	iconOrderEvents?: IconOrderEvent[];
 	iconOrderClicks?: IconClick[];
 	deviceCapability?: string;
-	// Every post-solve phase but `postPow`: the solve's click coordinates, in
-	// the shape `DecisionMachineInput.coords` documents.
+	// Every post-solve phase: the solve's click coordinates, in the shape
+	// `DecisionMachineInput.coords` documents.
 	coords?: [number, number][][];
+	// Post-solve phases: whether the widget was embedded in a frame, from the
+	// originating Session.
+	iFrame?: boolean;
+	// Post-solve phases: the site's `siteProfile` client setting.
+	siteProfile?: Record<string, unknown>;
 	// `postPuzzle` only: the drag trail, and where the piece started and the
 	// notch was cut. Same values as the `DecisionMachineInput` fields.
 	puzzleEvents?: PuzzleEvent[];
