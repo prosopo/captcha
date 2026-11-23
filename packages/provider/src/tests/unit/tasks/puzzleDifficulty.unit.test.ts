@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+	MAX_HOLE_DARKEN,
 	MIN_DECOY_HOLE_DARKEN_MARGIN,
 	PUZZLE_DIFFICULTY_LEVELS,
 } from "@prosopo/captcha-severity";
@@ -146,6 +147,18 @@ describe("resolvePuzzleRenderSettings invariant enforcement", () => {
 		expect(resolved.decoyHoleDarken).toBeGreaterThanOrEqual(
 			resolved.holeDarken + MIN_DECOY_HOLE_DARKEN_MARGIN,
 		);
+	});
+
+	it("keeps the margin when holeDarken leaves no room above it", () => {
+		const resolved: PuzzleRenderSettings = resolvePuzzleRenderSettings({
+			holeDarken: 1,
+			decoyHoleDarken: 0.8,
+		});
+		expect(resolved.holeDarken).toBe(MAX_HOLE_DARKEN);
+		expect(resolved.decoyHoleDarken).toBeLessThanOrEqual(1);
+		expect(
+			resolved.decoyHoleDarken - resolved.holeDarken,
+		).toBeGreaterThanOrEqual(MIN_DECOY_HOLE_DARKEN_MARGIN - 1e-9);
 	});
 
 	it("leaves a valid pair untouched", () => {
