@@ -1,5 +1,25 @@
 # @prosopo/provider
 
+## 5.33.9
+### Patch Changes
+
+- 78b2cf1: Image captcha verification now refuses a token whose solved captcha belongs to a different site or user than the one asking. Before, a captcha solved on one site could be verified on any other site. The token is marked as used on its first verify whatever the outcome, so it cannot be tried at one site after another.
+- Updated dependencies [820cfb4]
+  - @prosopo/types@5.32.7
+  - @prosopo/api@4.11.9
+  - @prosopo/api-express-router@3.3.31
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.19
+  - @prosopo/datasets@3.2.38
+  - @prosopo/env@3.7.8
+  - @prosopo/fingerprint@2.8.29
+  - @prosopo/ipinfo@0.7.16
+  - @prosopo/keyring@2.10.38
+  - @prosopo/load-balancer@2.11.42
+  - @prosopo/types-database@5.20.9
+  - @prosopo/types-env@2.12.17
+  - @prosopo/user-access-policy@3.17.11
+
 ## 5.33.8
 ### Patch Changes
 
