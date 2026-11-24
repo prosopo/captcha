@@ -44,6 +44,8 @@ export interface AudioPlayerProps {
 	placement?: PlacementType;
 	anchor?: HTMLElement | null;
 	onDismiss?: () => void;
+	/** The page's CSP nonce, for the component's stylesheet. */
+	nonce?: string;
 }
 
 const CONTAINER_WIDTH = 320;
@@ -104,7 +106,10 @@ export const mountAudioPlayer = (
 		events.push({ kind, t: Date.now() - startedAt });
 	};
 
-	const style = createElement("style", { text: SHAKE_KEYFRAMES });
+	const style = createElement("style", {
+		text: SHAKE_KEYFRAMES,
+		attributes: { nonce: props.nonce },
+	});
 
 	const instruction = createElement("p", {
 		style: { margin: 0, fontSize: "14px" },

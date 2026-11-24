@@ -63,6 +63,8 @@ export interface PuzzleCanvasProps {
 	// Shows the switch's tooltip without a hover, for a user who looks to be
 	// struggling: a touch screen has no hover to reveal it.
 	imageSwitchHighlighted?: boolean;
+	/** The page's CSP nonce, for the component's stylesheet. */
+	nonce?: string;
 }
 
 const CONTAINER_WIDTH = 300;
@@ -157,6 +159,7 @@ export const mountPuzzleCanvas = (
 
 	const style = createElement("style", {
 		text: stylesheet(props.theme.palette.primary.main),
+		attributes: { nonce: props.nonce },
 	});
 
 	// Progress the piece cannot show a screen reader: where it has got to, that

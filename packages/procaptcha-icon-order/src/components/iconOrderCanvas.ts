@@ -46,6 +46,8 @@ export interface IconOrderCanvasProps {
 	onDismiss?: () => void;
 	/** Renders "use audio instead" below the controls. Absent hides it. */
 	audioAlternative?: AudioAlternativeOffer;
+	/** The page's CSP nonce, for the component's stylesheet. */
+	nonce?: string;
 }
 
 /**
@@ -87,7 +89,10 @@ export const mountIconOrderCanvas = (
 		options?: Record<string, unknown>,
 	): string => props.translator.t(key, options);
 
-	const style = createElement("style", { text: SHAKE_KEYFRAMES });
+	const style = createElement("style", {
+		text: SHAKE_KEYFRAMES,
+		attributes: { nonce: props.nonce },
+	});
 
 	const instruction = createElement("span");
 

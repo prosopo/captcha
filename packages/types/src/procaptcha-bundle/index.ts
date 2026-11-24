@@ -57,5 +57,10 @@ export interface ProcaptchaRenderOptions {
 	// `data-integration` attribute. Sent to the provider in the
 	// x-prosopo-integration header.
 	integration?: string;
+	// The page's Content Security Policy nonce, stamped on every stylesheet the
+	// widget adds so a policy restricting `style-src` to a nonce applies them.
+	// Equivalent to the `data-nonce` attribute; when neither is set, the nonce
+	// of a nonced script on the page is used.
+	nonce?: string;
 }
 export * from "./headers.js";

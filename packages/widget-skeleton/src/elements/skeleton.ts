@@ -26,6 +26,7 @@ import { type Theme, withAlpha } from "../theme.js";
 import type { WidgetLinkContext } from "../widgetLink.js";
 import { createCheckboxElement } from "./checkbox.js";
 import { createLogoElement } from "./logo.js";
+import { createStyleElement } from "./style.js";
 
 // The widget ignores the page's direction and follows only a `dir` set on its
 // own host, which the bundle derives from the widget language.
@@ -44,20 +45,22 @@ export interface WidgetSkeletonElement {
  * @param theme - The theme to apply to the widget
  * @param loadingLabel - What the spinner is announced as, in the widget's language
  * @param link - What the logo link tells the page it opens
+ * @param nonce - The page's CSP nonce, for the widget's stylesheets
  */
 export function createWidgetSkeletonElement(
 	theme: Theme,
 	loadingLabel?: string,
 	link?: WidgetLinkContext,
+	nonce?: string,
 ): WidgetSkeletonElement {
 	const widgetElement = document.createElement("div");
 	widgetElement.className = "prosopo-widget";
 
-	const checkbox = createCheckboxElement(theme, loadingLabel);
-	const logoElement = createLogoElement(theme, link);
+	const checkbox = createCheckboxElement(theme, loadingLabel, nonce);
+	const logoElement = createLogoElement(theme, link, nonce);
 
-	widgetElement.innerHTML =
-		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());
+	widgetElement.innerHTML = getWidgetMarkup(isDevMode());
+	widgetElement.prepend(createStyleElement(getWidgetStyles(theme), nonce));
 
 	replacePlaceholder(widgetElement, ".prosopo-widget__checkbox", checkbox.host);
 	replacePlaceholder(widgetElement, ".prosopo-widget__logo", logoElement);
@@ -119,7 +122,6 @@ function getWidgetMarkup(isDevelopmentMode: boolean): string {
  */
 function getWidgetStyles(theme: Theme): string {
 	return `
-<style>
 .prosopo-widget {
     width: 100%;
     min-height: ${WIDGET_MIN_HEIGHT}
@@ -243,7 +245,6 @@ ${RTL_CONTENT_SELECTOR} {
         );
     }
 }
-</style>
 `;
 }
 

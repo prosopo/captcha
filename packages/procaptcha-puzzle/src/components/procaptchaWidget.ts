@@ -231,6 +231,7 @@ export const mountProcaptchaPuzzleWidget = (
 	const puzzleProps = (
 		challenge: PuzzleChallengeWithPiece,
 	): PuzzleCanvasProps => ({
+		nonce: config.nonce,
 		originX: challenge.originX,
 		originY: challenge.originY,
 		background: challenge.background,
@@ -325,6 +326,7 @@ export const mountProcaptchaPuzzleWidget = (
 	const scheduler = createRenderScheduler(render);
 
 	const checkboxProps = (): CheckboxProps => ({
+		nonce: config.nonce,
 		checked: store.state.isHuman,
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",

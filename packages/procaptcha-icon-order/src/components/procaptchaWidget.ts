@@ -191,6 +191,7 @@ export const mountProcaptchaIconOrderWidget = (
 	const canvasProps = (
 		challenge: GetIconOrderCaptchaResponse,
 	): IconOrderCanvasProps => ({
+		nonce: config.nonce,
 		background: challenge.background,
 		legend: challenge.legend,
 		legendIconSize: challenge.legendIconSize,
@@ -291,6 +292,7 @@ export const mountProcaptchaIconOrderWidget = (
 	};
 
 	const checkboxProps = (): CheckboxProps => ({
+		nonce: config.nonce,
 		checked: store.state.isHuman,
 		theme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",

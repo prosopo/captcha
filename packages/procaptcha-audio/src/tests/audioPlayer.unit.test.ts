@@ -134,6 +134,17 @@ afterEach(() => {
 });
 
 describe("what it renders", () => {
+	test("stamps the page's CSP nonce on its stylesheet", () => {
+		render(props({ nonce: "page-nonce" }));
+		const styles: HTMLStyleElement[] = Array.from(
+			document.querySelectorAll("style"),
+		);
+		expect(styles.length).toBeGreaterThan(0);
+		for (const style of styles) {
+			expect(style.getAttribute("nonce")).toBe("page-nonce");
+		}
+	});
+
 	test("asks for the number of characters the challenge carries", () => {
 		render(props({ characterCount: 6 }));
 		expect(overlay().textContent).toContain("WIDGET.AUDIO_INSTRUCTIONS");

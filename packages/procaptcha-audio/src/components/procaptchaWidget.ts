@@ -189,6 +189,7 @@ export const mountProcaptchaAudioWidget = (
 	const playerProps = (
 		challenge: GetAudioCaptchaResponse,
 	): AudioPlayerProps => ({
+		nonce: config.nonce,
 		clip: challenge.clip,
 		characterCount: challenge.characterCount,
 		onComplete: (answer: string, replays: number, events: AudioEvent[]) => {
@@ -284,6 +285,7 @@ export const mountProcaptchaAudioWidget = (
 	};
 
 	const checkboxProps = (): CheckboxProps => ({
+		nonce: config.nonce,
 		checked: store.state.isHuman,
 		theme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",

@@ -33,7 +33,7 @@ const FRAME_WIDTH_PX = 300;
 const FRAME_HEIGHT_PX = 58;
 
 /** Everything the frame needs to draw the checkbox. Functions do not cross. */
-export type CheckboxFrameProps = Omit<CheckboxProps, "onChange">;
+export type CheckboxFrameProps = Omit<CheckboxProps, "onChange" | "nonce">;
 
 export type CheckboxFrameParentMessage =
 	| { pf: string; t: "props"; props: CheckboxFrameProps }
@@ -114,6 +114,7 @@ const createNonce = (): string =>
 
 const frameProps = ({
 	onChange: _,
+	nonce: __,
 	...rest
 }: CheckboxProps): CheckboxFrameProps => rest;
 

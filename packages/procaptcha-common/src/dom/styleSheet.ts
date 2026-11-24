@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createStyleElement } from "@prosopo/widget-skeleton";
+
 const STYLE_MARKER = "data-prosopo-style";
 const REF_COUNT_MARKER = "data-prosopo-style-refs";
 
@@ -29,21 +31,24 @@ const REF_COUNT_MARKER = "data-prosopo-style-refs";
  * disposed. Without the count, the first component to be destroyed would strip
  * the CSS out from under its still-mounted siblings. Each disposer is
  * idempotent, so a double `destroy` cannot decrement someone else's claim.
+ *
+ * `nonce` is the page's CSP nonce, without which a nonce-restricted `style-src`
+ * blocks the tag.
  */
 export const injectStyle = (
 	container: HTMLElement,
 	id: string,
 	css: string,
+	nonce?: string,
 ): (() => void) => {
 	const readRefCount = (element: Element): number =>
 		Number(element.getAttribute(REF_COUNT_MARKER) ?? "0");
 
 	const existing = container.querySelector(`style[${STYLE_MARKER}="${id}"]`);
-	const style = null !== existing ? existing : document.createElement("style");
+	const style = null !== existing ? existing : createStyleElement(css, nonce);
 
 	if (null === existing) {
 		style.setAttribute(STYLE_MARKER, id);
-		style.textContent = css;
 		// Prepend so component rules lose to anything the skeleton set later,
 		// which is the ordering Emotion's `prepend: true` gave us.
 		container.insertBefore(style, container.firstChild);

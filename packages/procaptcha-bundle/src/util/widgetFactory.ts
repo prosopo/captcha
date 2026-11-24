@@ -29,6 +29,7 @@ import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
 import type { BundleCaptchaHandle } from "./captcha/components/bundleCaptcha.js";
 import { EXPIRED_NOTICE_KEY, FAILED_NOTICE_KEY } from "./failedNoticeKey.js";
 import { resolveLanguage } from "./language.js";
+import { resolveNonce } from "./nonce.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
 /** A mounted widget and the element it listens on for `procaptcha:execute`. */
@@ -116,6 +117,7 @@ class WidgetFactory {
 				"prosopo-procaptcha",
 				this.loadingLabel(language),
 				{ language, siteKey: renderOptions.siteKey },
+				resolveNonce(renderOptions, container),
 			);
 			widgetInteractiveArea = widgetResult.widgetInteractiveArea;
 			widgetContainer = widgetResult.webComponent;
