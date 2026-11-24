@@ -15,20 +15,24 @@
 import { WIDGET_LINK_PATH, WIDGET_URL } from "../constants.js";
 import type { Theme } from "../theme.js";
 import { type WidgetLinkContext, widgetLinkUrl } from "../widgetLink.js";
+import { createStyleElement } from "./style.js";
 
 /**
  * Creates a logo element with appropriate styling
  * @param theme - The theme to apply to the logo
  * @param link - What the logo link tells the page it opens
+ * @param nonce - The page's CSP nonce, for the logo's stylesheet
  * @returns An HTMLElement representing the logo
  */
 export function createLogoElement(
 	theme: Theme,
 	link: WidgetLinkContext = {},
+	nonce?: string,
 ): HTMLElement {
 	const widgetLogo = document.createElement("div");
 	widgetLogo.className = "prosopo-logo-container";
-	widgetLogo.innerHTML = LOGO_STYLES + getLogoMarkup(theme);
+	widgetLogo.innerHTML = getLogoMarkup(theme);
+	widgetLogo.prepend(createStyleElement(LOGO_STYLES, nonce));
 	widgetLogo.querySelector("a")?.setAttribute(
 		"href",
 		widgetLinkUrl(`${WIDGET_URL}${WIDGET_LINK_PATH}`, "logo", {
@@ -41,7 +45,6 @@ export function createLogoElement(
 }
 
 const LOGO_STYLES = `
-<style>
 .prosopo-logo-container {
     display: flex !important;
     width: auto !important;
@@ -76,7 +79,6 @@ const LOGO_STYLES = `
     height: 28px !important;
     display: block !important;
 }
-</style>
 `;
 
 /**

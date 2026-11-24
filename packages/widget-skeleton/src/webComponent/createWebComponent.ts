@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { WIDGET_MAX_WIDTH } from "../constants.js";
+import { createStyleElement } from "../elements/style.js";
 
 const FONT_FAMILY =
 	'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
@@ -22,30 +23,24 @@ const FONT_FAMILY =
  *
  * @param webComponentTag - The tag name for the web component
  * @param customCss - Optional custom CSS to apply
+ * @param nonce - The page's CSP nonce, for the component's stylesheets
  */
 export function createWebComponent(
 	webComponentTag: string,
 	customCss = "",
+	nonce?: string,
 ): HTMLElement {
 	const webComponent = document.createElement(webComponentTag);
 	applyDefaultStyles(webComponent);
 
 	const shadowRoot = webComponent.attachShadow({ mode: "open" });
-	shadowRoot.innerHTML = getStyles(customCss);
+	shadowRoot.append(
+		createStyleElement(`*{font-family: ${FONT_FAMILY};}`, nonce),
+		createStyleElement(customCss, nonce),
+	);
 
 	return webComponent;
 }
-
-const getStyles = (customCss: string) =>
-	`
-<style>
-	*{font-family: ${FONT_FAMILY};}
-</style>
-
-<style>
-	${customCss}
-</style>
-`;
 
 const applyDefaultStyles = (webComponent: HTMLElement) => {
 	webComponent.style.display = "flex";

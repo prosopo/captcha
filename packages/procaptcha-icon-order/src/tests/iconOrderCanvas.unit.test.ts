@@ -169,6 +169,17 @@ afterEach(() => {
 });
 
 describe("what it puts on screen", () => {
+	test("stamps the page's CSP nonce on its stylesheet", () => {
+		render(props({ nonce: "page-nonce" }));
+		const styles: HTMLStyleElement[] = Array.from(
+			document.querySelectorAll("style"),
+		);
+		expect(styles.length).toBeGreaterThan(0);
+		for (const style of styles) {
+			expect(style.getAttribute("nonce")).toBe("page-nonce");
+		}
+	});
+
 	test("shows the legend so the user knows which icons to click", () => {
 		render(props());
 		const legend = overlay().querySelector<HTMLImageElement>(

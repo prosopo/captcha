@@ -147,6 +147,7 @@ export const mountProcaptchaPowWidget = (
 	const scheduler = createRenderScheduler(render);
 
 	const checkboxProps = (): CheckboxProps => ({
+		nonce: config.nonce,
 		checked: store.state.isHuman,
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",

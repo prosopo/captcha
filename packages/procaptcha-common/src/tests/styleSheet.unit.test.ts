@@ -38,6 +38,18 @@ describe("injectStyle", () => {
 		expect(document.head.querySelectorAll("style")).toHaveLength(headBefore);
 	});
 
+	test("carries the page's CSP nonce", () => {
+		const host = container();
+		injectStyle(host, "checkbox", ".a {}", "page-nonce");
+		expect(styleTags(host)[0]?.getAttribute("nonce")).toBe("page-nonce");
+	});
+
+	test("has no nonce attribute when given none", () => {
+		const host = container();
+		injectStyle(host, "checkbox", ".a {}");
+		expect(styleTags(host)[0]?.hasAttribute("nonce")).toBe(false);
+	});
+
 	test("tags the style with its id so a repeat call can find it", () => {
 		const host = container();
 		injectStyle(host, "checkbox", ".a {}");

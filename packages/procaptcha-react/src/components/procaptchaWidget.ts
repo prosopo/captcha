@@ -218,6 +218,7 @@ export const mountProcaptchaImageWidget = (
 	const scheduler = createRenderScheduler(render);
 
 	const checkboxProps = (): CheckboxProps => ({
+		nonce: config.nonce,
 		theme: "light" === props.config.theme ? lightTheme : darkTheme,
 		checked: store.state.isHuman,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",

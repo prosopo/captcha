@@ -19,6 +19,7 @@ import {
 	randomWrapperTag,
 } from "../obfuscation.js";
 import type { Theme } from "../theme.js";
+import { createStyleElement } from "./style.js";
 
 /**
  * The class on the element the widget markup swaps its placeholder for. It is
@@ -55,6 +56,7 @@ export const DEFAULT_LOADING_LABEL = "Loading";
 export function createCheckboxElement(
 	theme: Theme,
 	loadingLabel: string = DEFAULT_LOADING_LABEL,
+	nonce?: string,
 ): CheckboxElement {
 	const names: CheckboxNames = {
 		content: randomToken(),
@@ -66,8 +68,7 @@ export function createCheckboxElement(
 	const host = document.createElement("div");
 	host.className = CHECKBOX_HOST_CSS_CLASS;
 
-	const style = document.createElement("style");
-	style.textContent = getCheckboxStyles(theme, names);
+	const style = createStyleElement(getCheckboxStyles(theme, names), nonce);
 
 	const interactiveArea = document.createElement(randomWrapperTag());
 	interactiveArea.className = names.content;

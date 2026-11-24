@@ -25,6 +25,7 @@ import { setClientSessionId } from "../clientSession.js";
 import { createConfig } from "../configCreator.js";
 import { setIntegration } from "../integration.js";
 import { resolveLanguage, setLanguage } from "../language.js";
+import { setNonce } from "../nonce.js";
 import { setStartMode } from "../startMode.js";
 import { setValidChallengeLength } from "../timeout.js";
 import {
@@ -101,6 +102,7 @@ class CaptchaRenderer {
 		setClientSessionId(renderOptions, element, config);
 		setIntegration(renderOptions, element, config);
 		setStartMode(renderOptions, element, config);
+		setNonce(renderOptions, element, config);
 	}
 }
 

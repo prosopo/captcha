@@ -25,6 +25,7 @@ import { applyDefaultStyles } from "./createWebComponent.js";
  * @param webComponentTag - The tag name for the web component
  * @param loadingLabel - What the spinner is announced as, in the widget's language
  * @param link - What the logo link tells the page it opens
+ * @param nonce - The page's CSP nonce, for the widget's stylesheets
  * @returns The interactive area of the widget as an HTMLElement
  */
 export function createWidgetSkeleton(
@@ -33,6 +34,7 @@ export function createWidgetSkeleton(
 	webComponentTag: string,
 	loadingLabel?: string,
 	link?: WidgetLinkContext,
+	nonce?: string,
 ): { widgetInteractiveArea: HTMLElement; webComponent: HTMLElement } {
 	const host = document.createElement(webComponentTag);
 	applyDefaultStyles(host);
@@ -41,6 +43,7 @@ export function createWidgetSkeleton(
 		theme,
 		loadingLabel,
 		link,
+		nonce,
 	);
 	host.appendChild(element);
 

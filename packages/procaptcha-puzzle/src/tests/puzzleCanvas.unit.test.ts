@@ -217,6 +217,17 @@ afterEach(() => {
 });
 
 describe("what it puts on screen", () => {
+	test("stamps the page's CSP nonce on its stylesheet", () => {
+		render(props({ nonce: "page-nonce" }));
+		const styles: HTMLStyleElement[] = Array.from(
+			document.querySelectorAll("style"),
+		);
+		expect(styles.length).toBeGreaterThan(0);
+		for (const style of styles) {
+			expect(style.getAttribute("nonce")).toBe("page-nonce");
+		}
+	});
+
 	test("the piece starts at the origin the challenge named", () => {
 		render(props());
 		expect(piecePosition()).toEqual({ x: 20, y: 100 });

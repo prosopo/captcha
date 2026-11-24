@@ -63,6 +63,8 @@ export interface CheckboxProps {
 	 * would let that page put a `javascript:` link on our origin.
 	 */
 	link?: WidgetLinkContext;
+	/** The page's CSP nonce, for the checkbox's stylesheet. */
+	nonce?: string;
 }
 
 /**
@@ -279,6 +281,7 @@ export const mountCheckbox = (
 		container,
 		styleIdFor(props.theme),
 		checkboxCss(props.theme, names),
+		props.nonce,
 	);
 	teardown.add(() => disposeStyle());
 
@@ -553,6 +556,7 @@ export const mountCheckbox = (
 					container,
 					styleIdFor(props.theme),
 					checkboxCss(props.theme, names),
+					props.nonce,
 				);
 			}
 			render();

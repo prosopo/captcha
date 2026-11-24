@@ -365,6 +365,8 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 		// See ProcaptchaRenderOptions.integration.
 		integration: string().optional(),
+		// See ProcaptchaRenderOptions.nonce.
+		nonce: string().optional(),
 	}),
 );
 

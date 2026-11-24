@@ -250,6 +250,7 @@ export const mountProcaptchaFrictionless = (
 		onChange?: CheckboxProps["onChange"],
 	) => {
 		const props: CheckboxProps = {
+			nonce: config.nonce,
 			theme: "light" === config.theme ? lightTheme : darkTheme,
 			onChange: onChange ?? (() => undefined),
 			checked: false,
