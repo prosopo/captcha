@@ -409,7 +409,12 @@ describe("POST /siteverify", () => {
 				SITEVERIFY_DEADLINE_MS - 50,
 			);
 			expect(status).toBe(200);
-			expect(body).toEqual({ status: "ok", verified: true, score: 0 });
+			expect(body).toEqual({
+				status: "ok",
+				verified: true,
+				score: 0.5,
+				timedOut: true,
+			});
 			finish({ verified: false });
 		},
 		SITEVERIFY_DEADLINE_MS + 5000,

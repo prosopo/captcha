@@ -288,8 +288,12 @@ describe("getProviders", () => {
 		expect(await getProviders("production", "ipv4")).toBe(v4);
 
 		expect(loadBalancer).toHaveBeenCalledTimes(2);
-		expect(loadBalancer).toHaveBeenCalledWith("production", undefined);
-		expect(loadBalancer).toHaveBeenCalledWith("production", "ipv4");
+		expect(loadBalancer).toHaveBeenCalledWith(
+			"production",
+			undefined,
+			undefined,
+		);
+		expect(loadBalancer).toHaveBeenCalledWith("production", "ipv4", undefined);
 	});
 
 	it("refreshes an expired list in the background while serving the old one", async () => {
@@ -388,6 +392,28 @@ describe("findProvider", () => {
 		await findProvider("production", "https://pronode1.io");
 
 		expect(loadBalancer).toHaveBeenCalledTimes(1);
+	});
+
+	it("bounds the list fetch by the caller's timeout", async () => {
+		loadBalancer.mockResolvedValue(providers);
+
+		await findProvider("production", "https://pronode1.io", undefined, 1_500);
+
+		expect(loadBalancer).toHaveBeenCalledWith("production", undefined, 1_500);
+	});
+
+	it("bounds a miss-triggered reload by the caller's timeout", async () => {
+		loadBalancer.mockResolvedValue(providers);
+		await findProvider("production", "https://pronode1.io");
+		advanceClock(PROVIDER_LIST_MISS_RELOAD_MS);
+
+		await findProvider("production", "https://pronode3.io", undefined, 1_500);
+
+		expect(loadBalancer).toHaveBeenLastCalledWith(
+			"production",
+			undefined,
+			1_500,
+		);
 	});
 
 	it("looks in the ipMode section the token was minted against", async () => {

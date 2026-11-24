@@ -509,7 +509,15 @@ export interface VerificationResponse extends ApiResponse {
 	// For log correlation only. Neither the token nor the verify request
 	// carries it, so the caller cannot know it without us echoing it back.
 	[ApiParams.sessionId]?: string;
+	// Set when the provider did not answer in time, so the verdict was not
+	// the provider's. The hosted siteverify then answers verified, with
+	// TIMED_OUT_VERIFY_SCORE, and leaves the decision to the caller.
+	[ApiParams.timedOut]?: boolean;
 }
+
+// The midpoint of the 0 (human) to 1 (bot) scale: a timed-out verify scored
+// nothing, so it must not read as a confident human.
+export const TIMED_OUT_VERIFY_SCORE = 0.5;
 
 export interface UpdateDecisionMachineResponse extends ApiResponse {
 	data: {

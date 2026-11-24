@@ -141,6 +141,7 @@ describe("ProsopoServer against a stalled provider", () => {
 			const elapsed = Date.now() - started;
 
 			expect(response.verified).toBe(false);
+			expect(response.timedOut).toBe(true);
 			const logged = logError.mock.calls.map(([record]) => record());
 			expect(logged).toContainEqual(
 				expect.objectContaining({
@@ -151,4 +152,57 @@ describe("ProsopoServer against a stalled provider", () => {
 			expect(elapsed).toBeLessThan(5_000);
 		}, 15_000);
 	}
+
+	it("flags a provider-list timeout", async () => {
+		const prosopoServer = newServer(TIMEOUT_MS);
+		vi.mocked(loadBalancerModule.findProvider).mockRejectedValueOnce(
+			new DOMException("The operation was aborted", "TimeoutError"),
+		);
+
+		const response = await prosopoServer.isVerified(
+			buildToken(CaptchaType.pow),
+		);
+
+		expect(response.verified).toBe(false);
+		expect(response.timedOut).toBe(true);
+	});
+
+	it("does not flag a failure that is not a timeout", async () => {
+		const prosopoServer = newServer(TIMEOUT_MS);
+		vi.mocked(loadBalancerModule.findProvider).mockRejectedValueOnce(
+			new Error("ECONNREFUSED"),
+		);
+
+		const response = await prosopoServer.isVerified(
+			buildToken(CaptchaType.pow),
+		);
+
+		expect(response.verified).toBe(false);
+		expect(response.timedOut).toBeUndefined();
+	});
+
+	it("passes the provider-list timeout to findProvider", async () => {
+		const pair = new Keyring({ type: "sr25519" }).addFromUri("//Alice");
+		const findProvider = vi
+			.spyOn(loadBalancerModule, "findProvider")
+			.mockResolvedValue(undefined);
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		const prosopoServer = new ProsopoServer(
+			ProsopoServerConfigSchema.parse({
+				defaultEnvironment: "development",
+				account: { address: DAPP },
+				providerListTimeoutMs: 1_500,
+			}),
+			pair,
+		);
+
+		await prosopoServer.isVerified(buildToken(CaptchaType.pow));
+
+		expect(findProvider).toHaveBeenCalledWith(
+			"development",
+			providerUrl,
+			undefined,
+			1_500,
+		);
+	});
 });
