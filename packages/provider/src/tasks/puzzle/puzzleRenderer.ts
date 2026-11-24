@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { MIN_DECOY_HOLE_DARKEN_MARGIN } from "@prosopo/captcha-severity";
+import {
+	MAX_HOLE_DARKEN,
+	MIN_DECOY_HOLE_DARKEN_MARGIN,
+} from "@prosopo/captcha-severity";
 import {
 	DEFAULT_GEOMETRY,
 	DEFAULT_RENDER_SETTINGS,
@@ -92,10 +95,14 @@ export const resolvePuzzleRenderSettings = (
 	// layered sources above (asset defaults, site settings, traffic-filter
 	// policy, session overrides from the difficulty ladder) each set one field
 	// without sight of the other, so any of them can invert the relationship
-	// even when individually valid.
+	// even when individually valid. A `holeDarken` too close to 1 is lowered
+	// rather than letting both meet at 1, which would make them identical.
+	if (resolved.holeDarken > MAX_HOLE_DARKEN) {
+		resolved = { ...resolved, holeDarken: MAX_HOLE_DARKEN };
+	}
 	const floor = resolved.holeDarken + MIN_DECOY_HOLE_DARKEN_MARGIN;
 	if (resolved.decoyHoleDarken < floor) {
-		resolved = { ...resolved, decoyHoleDarken: Math.min(1, floor) };
+		resolved = { ...resolved, decoyHoleDarken: floor };
 	}
 	return resolved;
 };

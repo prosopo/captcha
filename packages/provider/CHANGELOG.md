@@ -1,5 +1,28 @@
 # @prosopo/provider
 
+## 5.33.8
+### Patch Changes
+
+- 869afe9: Decision machines now receive the site's profile when a PoW solve is verified, and the routing pass after a PoW solve now receives the solve's clicks, whether the widget was framed, and the site's profile.
+- 3bf430f: Keep the real puzzle hole darker than the decoys when `holeDarken` is set at or near 1. The provider now lowers `holeDarken` to `MAX_HOLE_DARKEN` (1 minus the decoy margin) instead of letting both values meet at 1, which made the real hole and the decoys look the same.
+- Updated dependencies [869afe9]
+- Updated dependencies [3bf430f]
+  - @prosopo/types@5.32.6
+  - @prosopo/captcha-severity@1.5.2
+  - @prosopo/api@4.11.8
+  - @prosopo/api-express-router@3.3.30
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.18
+  - @prosopo/datasets@3.2.37
+  - @prosopo/env@3.7.7
+  - @prosopo/fingerprint@2.8.28
+  - @prosopo/ipinfo@0.7.15
+  - @prosopo/keyring@2.10.37
+  - @prosopo/load-balancer@2.11.41
+  - @prosopo/types-database@5.20.8
+  - @prosopo/types-env@2.12.16
+  - @prosopo/user-access-policy@3.17.10
+
 ## 5.33.7
 ### Patch Changes
 

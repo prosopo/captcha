@@ -77,6 +77,12 @@ export interface PuzzleDifficultyBand {
 export const MIN_DECOY_HOLE_DARKEN_MARGIN = 0.04;
 
 /**
+ * Highest `holeDarken` that still leaves room for the decoys to sit
+ * `MIN_DECOY_HOLE_DARKEN_MARGIN` above it, since neither can exceed 1.
+ */
+export const MAX_HOLE_DARKEN = 1 - MIN_DECOY_HOLE_DARKEN_MARGIN;
+
+/**
  * Highest level reachable by AUTOMATIC escalation.
  *
  * With image disabled there is no fallback modality: a user who genuinely
