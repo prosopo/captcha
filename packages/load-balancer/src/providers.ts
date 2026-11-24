@@ -197,12 +197,13 @@ const loadProviders = (
 	env: EnvironmentTypes,
 	ipMode: IpMode | undefined,
 	lastGood: HardcodedProvider[] | undefined,
+	timeoutMs?: number,
 ): Promise<HardcodedProvider[]> => {
 	const entry: ProviderListEntry = {
 		loadedAt: Date.now(),
 		lastGood,
 		refreshing: true,
-		providers: loadBalancer(env, ipMode).then(
+		providers: loadBalancer(env, ipMode, timeoutMs).then(
 			(providers) => {
 				entry.lastGood = providers;
 				entry.refreshing = false;
@@ -236,11 +237,12 @@ const loadProviders = (
 export const getProviders = async (
 	env: EnvironmentTypes,
 	ipMode?: IpMode,
+	timeoutMs?: number,
 ): Promise<HardcodedProvider[]> => {
 	const key = cacheKey(env, ipMode);
 	const cached = providerListCache.get(key);
 	if (!cached) {
-		return loadProviders(key, env, ipMode, undefined);
+		return loadProviders(key, env, ipMode, undefined, timeoutMs);
 	}
 	if (!cached.lastGood) {
 		return cached.providers;
@@ -267,10 +269,11 @@ export const findProvider = async (
 	env: EnvironmentTypes,
 	providerUrl: string | undefined,
 	ipMode?: IpMode,
+	timeoutMs?: number,
 ): Promise<HardcodedProvider | undefined> => {
 	if (!providerUrl) return undefined;
 
-	const providers = await getProviders(env, ipMode);
+	const providers = await getProviders(env, ipMode, timeoutMs);
 	const provider = providers.find((p) => p.url === providerUrl);
 	if (provider) return provider;
 
@@ -280,7 +283,13 @@ export const findProvider = async (
 		return undefined;
 	}
 
-	const reloaded = await loadProviders(key, env, ipMode, cached?.lastGood);
+	const reloaded = await loadProviders(
+		key,
+		env,
+		ipMode,
+		cached?.lastGood,
+		timeoutMs,
+	);
 	return reloaded.find((p) => p.url === providerUrl);
 };
 

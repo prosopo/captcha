@@ -24,6 +24,7 @@ import {
 	INPUT_LIMITS,
 	type KeyringPair,
 	type ProcaptchaOutput,
+	TIMED_OUT_VERIFY_SCORE,
 	type VerificationResponse,
 	boundedString,
 	decodeProcaptchaOutput,
@@ -291,7 +292,11 @@ const siteverifyHandler =
 				data: { siteKey: decoded.dapp, deadlineMs: SITEVERIFY_DEADLINE_MS },
 			}));
 			res.status(200);
-			answerOnce({ ...answer(true), [ApiParams.score]: 0 });
+			answerOnce({
+				...answer(true),
+				[ApiParams.score]: TIMED_OUT_VERIFY_SCORE,
+				[ApiParams.timedOut]: true,
+			});
 		}, SITEVERIFY_DEADLINE_MS);
 		res.on("close", () => clearTimeout(deadline));
 

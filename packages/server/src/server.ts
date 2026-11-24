@@ -357,6 +357,7 @@ export class ProsopoServer {
 				this.config.defaultEnvironment,
 				providerUrl,
 				ipMode,
+				this.config.providerListTimeoutMs,
 			);
 
 			// if the provider is not found, return an error
@@ -410,12 +411,15 @@ export class ProsopoServer {
 			// unreachable, signer error) answers "not verified" rather than
 			// throwing: callers that don't catch would otherwise turn a bad
 			// token or a provider outage into a 500 from their own endpoint.
-			const code =
-				err instanceof HttpError ? err.status : isTimeoutError(err) ? 504 : 500;
+			// A timeout is flagged so a caller that fails open on an
+			// unanswered verify can tell it apart from a rejection.
+			const timedOut = isTimeoutError(err);
+			const code = err instanceof HttpError ? err.status : timedOut ? 504 : 500;
 			this.logger.error(() => ({ err, data: { token, code } }));
 			return {
 				verified: false,
 				status: translate("API.USER_NOT_VERIFIED"),
+				...(timedOut && { timedOut: true }),
 			};
 		}
 	}

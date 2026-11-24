@@ -121,4 +121,5 @@ export enum ApiParams {
 	audioEvents = "audioEvents",
 	replays = "replays",
 	characterCount = "characterCount",
+	timedOut = "timedOut",
 }

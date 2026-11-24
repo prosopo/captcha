@@ -49,8 +49,7 @@ const buildChallenge = (user: string, dapp: string): PoWChallengeId =>
 	`${Date.now()}${POW_SEPARATOR}${user}${POW_SEPARATOR}${dapp}${POW_SEPARATOR}0` as PoWChallengeId;
 
 // The score a maintenance-mode verify reports. 0 is the most-human end of the
-// scale, so a caller thresholding on it passes — and it matches what the AWS
-// verify handler already synthesises when the provider call times out.
+// scale, so a caller thresholding on it passes.
 export const MAINTENANCE_VERIFY_SCORE = 0;
 
 // Verify-side maintenance dummy, shared by the image / PoW / puzzle verify

@@ -308,6 +308,9 @@ export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
 			.positive()
 			.optional()
 			.default(DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS),
+		// How long a verify may wait for the provider list when it is not
+		// cached yet. Unset, the load balancer's own default applies.
+		providerListTimeoutMs: number().int().positive().optional(),
 	}),
 );
 
