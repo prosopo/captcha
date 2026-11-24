@@ -66,7 +66,11 @@ import { publicRouter } from "./public.js";
 import { rateLimitHandler } from "./rateLimitHandler.js";
 import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
-import { SITEVERIFY_PATH, isSiteverifyEnabled } from "./siteverify.js";
+import {
+	SITEVERIFY_PATH,
+	isSiteverifyEnabled,
+	siteverifyRateLimit,
+} from "./siteverify.js";
 import { prosopoVerifyRouter } from "./verify.js";
 
 /**
@@ -355,6 +359,10 @@ export async function startProviderApi(
 				);
 			}
 		}
+	}
+
+	if (!isTestOrDevelopmentEnv && isSiteverifyEnabled()) {
+		apiApp.use(SITEVERIFY_PATH, siteverifyRateLimit(env.logger));
 	}
 
 	const i18Middleware = await i18nMiddleware({});

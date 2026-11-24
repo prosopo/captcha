@@ -16,6 +16,8 @@ import type { AddressInfo } from "node:net";
 import { Keyring } from "@prosopo/keyring";
 import { getLogger } from "@prosopo/logger";
 import {
+	ALWAYS_FAIL_SITE_KEY,
+	ALWAYS_PASS_SITE_KEY,
 	CaptchaType,
 	type ProcaptchaToken,
 	type VerificationResponse,
@@ -23,6 +25,7 @@ import {
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import express, {
+	type Express,
 	type NextFunction,
 	type Request,
 	type Response,
@@ -58,11 +61,19 @@ type ImageVerifyArgs = {
 	ip?: string;
 };
 
-type VerifyOutcome = { verified: boolean };
+type VerifyOutcome = { verified: boolean; score?: number };
 
-const verificationResponse = ({
+// What the per-type routes send: a translated status and the provider's own
+// session id, neither of which siteverify passes on.
+const internalResponse = ({
 	verified,
-}: VerifyOutcome): VerificationResponse => ({ status: "ok", verified });
+	score,
+}: VerifyOutcome): VerificationResponse => ({
+	status: verified ? "User verified" : "User not verified",
+	verified,
+	...(score !== undefined && { score }),
+	sessionId: "provider-session",
+});
 
 const powVerify = vi.fn<(args: ServerVerifyArgs) => Promise<VerifyOutcome>>();
 const puzzleVerify =
@@ -77,20 +88,24 @@ vi.mock("../../../tasks/tasks.js", () => ({
 			},
 			powCaptchaManager: {
 				serverVerifyPowCaptchaSolution: powVerify,
-				getVerificationResponse: verificationResponse,
+				getVerificationResponse: internalResponse,
 			},
 			puzzleCaptchaManager: {
 				serverVerifyInteractiveCaptchaSolution: puzzleVerify,
-				getVerificationResponse: verificationResponse,
+				getVerificationResponse: internalResponse,
 			},
 			imgCaptchaManager: {
 				verifyImageCaptchaSolution: imageVerify,
-				getVerificationResponse: verificationResponse,
+				getVerificationResponse: internalResponse,
 			},
 		};
 	}),
 }));
 
+import {
+	SITEVERIFY_DEADLINE_MS,
+	siteverifyRateLimit,
+} from "../../../api/siteverify.js";
 import { prosopoVerifyRouter } from "../../../api/verify.js";
 
 const keyring = new Keyring({ type: "sr25519", ss58Format: 42 });
@@ -105,6 +120,17 @@ const i18n = i18next.createInstance();
 type Running = {
 	baseUrl: string;
 	close: () => Promise<void>;
+};
+
+const listen = async (app: Express): Promise<Running> => {
+	const server = await new Promise<ReturnType<typeof app.listen>>((resolve) => {
+		const listening = app.listen(0, "127.0.0.1", () => resolve(listening));
+	});
+	const address = server.address() as AddressInfo;
+	return {
+		baseUrl: `http://127.0.0.1:${address.port}`,
+		close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+	};
 };
 
 const start = async (siteverifyEnabled: boolean): Promise<Running> => {
@@ -122,29 +148,24 @@ const start = async (siteverifyEnabled: boolean): Promise<Running> => {
 	});
 	app.use(prosopoVerifyRouter(env as ProviderEnvironment));
 	vi.unstubAllEnvs();
-	const server = await new Promise<ReturnType<typeof app.listen>>((resolve) => {
-		const listening = app.listen(0, "127.0.0.1", () => resolve(listening));
-	});
-	const address = server.address() as AddressInfo;
-	return {
-		baseUrl: `http://127.0.0.1:${address.port}`,
-		close: () => new Promise<void>((resolve) => server.close(() => resolve())),
-	};
+	return listen(app);
 };
 
 const makeToken = ({
+	dapp = sitePair.address,
 	captchaType,
 	timestamp = Date.now(),
 	challenge = "challenge",
 	commitmentId,
 }: {
+	dapp?: string;
 	captchaType?: CaptchaType;
 	timestamp?: number;
 	challenge?: string;
 	commitmentId?: string;
 }): ProcaptchaToken =>
 	encodeProcaptchaOutput({
-		dapp: sitePair.address,
+		dapp,
 		user: userPair.address,
 		timestamp: timestamp.toString(),
 		challenge,
@@ -153,14 +174,18 @@ const makeToken = ({
 		signature: { provider: {}, user: {} },
 	});
 
-type SiteverifyResult = {
-	status: number;
-	body: { verified?: boolean; error?: { code?: string } };
+type SiteverifyBody = {
+	verified?: boolean;
+	status?: string;
+	score?: number;
+	error?: { code?: string; errorId?: string };
 };
+
+type SiteverifyResult = { status: number; body: SiteverifyBody };
 
 const postJson = async (
 	baseUrl: string,
-	body: Record<string, string>,
+	body: Record<string, unknown>,
 ): Promise<SiteverifyResult> => {
 	const res = await fetch(`${baseUrl}/siteverify`, {
 		method: "POST",
@@ -220,16 +245,24 @@ describe("POST /siteverify", () => {
 			token: makeToken({ captchaType: CaptchaType.pow }),
 		});
 		expect(status).toBe(400);
-		expect(body.error?.code).toBe("INVALID_REQUEST");
+		expect(body.error?.errorId).toBe("INVALID_REQUEST:PROV-100");
 	});
 
-	it("rejects a malformed token", async () => {
+	it("rejects a request without a token", async () => {
+		const { status, body } = await postJson(enabled.baseUrl, {
+			secret: SITE_SECRET,
+		});
+		expect(status).toBe(400);
+		expect(body.error?.errorId).toBe("INVALID_REQUEST:PROV-99");
+	});
+
+	it("answers an unreadable token as not verified, as the hosted API does", async () => {
 		const { status, body } = await postJson(enabled.baseUrl, {
 			token: "0xnot-a-token",
 			secret: SITE_SECRET,
 		});
-		expect(status).toBe(400);
-		expect(body.error?.code).toBe("INVALID_REQUEST");
+		expect(status).toBe(200);
+		expect(body).toEqual({ status: "ok", verified: false });
 	});
 
 	it("rejects a secret that is not a key", async () => {
@@ -238,7 +271,7 @@ describe("POST /siteverify", () => {
 			secret: "not a secret",
 		});
 		expect(status).toBe(400);
-		expect(body.error?.code).toBe("SITE_KEY_INVALID");
+		expect(body.error?.errorId).toBe("SITE_KEY_INVALID:PROV-101");
 	});
 
 	it("rejects the secret of a different site key", async () => {
@@ -247,12 +280,12 @@ describe("POST /siteverify", () => {
 			secret: OTHER_SECRET,
 		});
 		expect(status).toBe(400);
-		expect(body.error?.code).toBe("SITE_KEY_INVALID");
+		expect(body.error?.errorId).toBe("SITE_KEY_INVALID:PROV-101");
 		expect(powVerify).not.toHaveBeenCalled();
 	});
 
-	it("verifies a pow token through the pow verify route", async () => {
-		powVerify.mockResolvedValue({ verified: true });
+	it("verifies a pow token and answers with the hosted response fields only", async () => {
+		powVerify.mockResolvedValue({ verified: true, score: 0.9 });
 		const { status, body } = await postJson(enabled.baseUrl, {
 			token: makeToken({ captchaType: CaptchaType.pow }),
 			secret: SITE_SECRET,
@@ -261,7 +294,7 @@ describe("POST /siteverify", () => {
 			clientSessionId: "session-1",
 		});
 		expect(status).toBe(200);
-		expect(body.verified).toBe(true);
+		expect(body).toEqual({ status: "ok", verified: true, score: 0.9 });
 		expect(powVerify).toHaveBeenCalledWith(
 			expect.objectContaining({
 				dappAccount: sitePair.address,
@@ -273,6 +306,16 @@ describe("POST /siteverify", () => {
 		);
 	});
 
+	it("accepts the legacy //1 derivation of the site's secret", async () => {
+		powVerify.mockResolvedValue({ verified: true });
+		const { status, body } = await postJson(enabled.baseUrl, {
+			token: makeToken({ captchaType: CaptchaType.pow }),
+			secret: `${SITE_SECRET}//1`,
+		});
+		expect(status).toBe(200);
+		expect(body.verified).toBe(true);
+	});
+
 	it("accepts a form-encoded body", async () => {
 		powVerify.mockResolvedValue({ verified: false });
 		const { status, body } = await postForm(enabled.baseUrl, {
@@ -280,8 +323,26 @@ describe("POST /siteverify", () => {
 			secret: SITE_SECRET,
 		});
 		expect(status).toBe(200);
-		expect(body.verified).toBe(false);
+		expect(body).toEqual({ status: "ok", verified: false });
 		expect(powVerify).toHaveBeenCalledOnce();
+	});
+
+	it("forces the verdict for reserved test site keys without a secret", async () => {
+		const pass = await postJson(enabled.baseUrl, {
+			token: makeToken({
+				dapp: ALWAYS_PASS_SITE_KEY,
+				captchaType: CaptchaType.pow,
+			}),
+		});
+		const fail = await postJson(enabled.baseUrl, {
+			token: makeToken({
+				dapp: ALWAYS_FAIL_SITE_KEY,
+				captchaType: CaptchaType.pow,
+			}),
+		});
+		expect(pass.body).toEqual({ status: "ok", verified: true });
+		expect(fail.body).toEqual({ status: "ok", verified: false });
+		expect(powVerify).not.toHaveBeenCalled();
 	});
 
 	it("dispatches a puzzle token to the puzzle verify route", async () => {
@@ -295,7 +356,7 @@ describe("POST /siteverify", () => {
 		expect(powVerify).not.toHaveBeenCalled();
 	});
 
-	it("dispatches an image token with the image cache timeout", async () => {
+	it("dispatches an image token with the caller's image cache timeout", async () => {
 		imageVerify.mockResolvedValue({ verified: true });
 		const { body } = await postJson(enabled.baseUrl, {
 			token: makeToken({
@@ -304,13 +365,14 @@ describe("POST /siteverify", () => {
 				commitmentId: "0x01",
 			}),
 			secret: SITE_SECRET,
+			timeouts: { image: { cachedTimeout: 123_456 } },
 		});
 		expect(body.verified).toBe(true);
 		expect(imageVerify).toHaveBeenCalledWith(
 			expect.objectContaining({
 				dappAccount: sitePair.address,
 				commitmentId: "0x01",
-				maxVerifiedTime: expect.any(Number),
+				maxVerifiedTime: 123_456,
 			}),
 		);
 	});
@@ -324,7 +386,62 @@ describe("POST /siteverify", () => {
 			secret: SITE_SECRET,
 		});
 		expect(status).toBe(200);
-		expect(body.verified).toBe(false);
+		expect(body).toEqual({ status: "ok", verified: false });
 		expect(powVerify).not.toHaveBeenCalled();
+	});
+
+	it(
+		"answers verified when verification outlasts the deadline, as the hosted API does",
+		async () => {
+			let finish: (outcome: VerifyOutcome) => void = () => {};
+			powVerify.mockImplementationOnce(
+				() =>
+					new Promise<VerifyOutcome>((resolve) => {
+						finish = resolve;
+					}),
+			);
+			const startedAt = Date.now();
+			const { status, body } = await postJson(enabled.baseUrl, {
+				token: makeToken({ captchaType: CaptchaType.pow }),
+				secret: SITE_SECRET,
+			});
+			expect(Date.now() - startedAt).toBeGreaterThanOrEqual(
+				SITEVERIFY_DEADLINE_MS - 50,
+			);
+			expect(status).toBe(200);
+			expect(body).toEqual({ status: "ok", verified: true, score: 0 });
+			finish({ verified: false });
+		},
+		SITEVERIFY_DEADLINE_MS + 5000,
+	);
+});
+
+describe("siteverify rate limit", () => {
+	it("limits per site key, falling back to the caller's IP", async () => {
+		vi.stubEnv("PROSOPO_SITE_VERIFY_LIMIT", "1");
+		const app = express();
+		app.use(siteverifyRateLimit(logger));
+		app.post("/siteverify", (_req: Request, res: Response) => {
+			res.json({ ok: true });
+		});
+		vi.unstubAllEnvs();
+		const running = await listen(app);
+		const call = async (siteKey?: string): Promise<number> => {
+			const res = await fetch(`${running.baseUrl}/siteverify`, {
+				method: "POST",
+				headers: siteKey ? { "prosopo-site-key": siteKey } : {},
+			});
+			await res.text();
+			return res.status;
+		};
+		try {
+			expect(await call("site-a")).toBe(200);
+			expect(await call("site-a")).toBe(429);
+			expect(await call("site-b")).toBe(200);
+			expect(await call()).toBe(200);
+			expect(await call()).toBe(429);
+		} finally {
+			await running.close();
+		}
 	});
 });

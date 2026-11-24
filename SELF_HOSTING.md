@@ -168,9 +168,18 @@ curl -X POST https://captcha.example.com/siteverify \
 {"status":"ok","verified":true}
 ```
 
-Check `verified`. `ip`, `email` and `clientSessionId` are optional, and form-encoded bodies work too. A secret that does
-not belong to the token's site key is rejected with a 400. The self-hosted compose file turns the endpoint on with
-`PROSOPO_SITEVERIFY_ENABLED=1`; it is off on a provider started without it.
+Check `verified`. `ip`, `email` and `clientSessionId` are optional, and form-encoded bodies work too. It behaves like
+the hosted endpoint:
+
+- An unreadable or expired token is answered `"verified":false`.
+- A missing secret, or one that does not belong to the token's site key, is rejected with a 400.
+- If verification has not finished within 5 seconds the answer is `"verified":true`, so a stalled provider cannot hold
+  your logins open.
+
+The self-hosted compose file turns the endpoint on with `PROSOPO_SITEVERIFY_ENABLED=1`; it is off on a provider started
+without it. It allows 15,000 requests a minute per caller IP, or per site key when the
+request carries a `Prosopo-Site-Key` header; change that with `PROSOPO_SITE_VERIFY_LIMIT` and
+`PROSOPO_SITE_VERIFY_WINDOW` (milliseconds).
 
 Anything already built for the hosted siteverify works unchanged by pointing it at your provider. You can still verify
 with [`@prosopo/server`](packages/server) instead.
