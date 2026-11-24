@@ -653,6 +653,115 @@ describe("ImgCaptchaManager", () => {
 		});
 	});
 
+	describe("verifyImageCaptchaSolution binds the commitment to its site and user", () => {
+		const approvedCommitment = (): UserCommitment => ({
+			id: "commitmentIdBound",
+			userAccount: "userAccount",
+			dappAccount: "dappAccount",
+			providerAccount: "providerAccount",
+			datasetId: "datasetId",
+			result: { status: CaptchaStatus.approved },
+			userSignature: "",
+			userSubmitted: true,
+			serverChecked: false,
+			requestedAtTimestamp: new Date(),
+			submittedAtTimestamp: new Date(),
+			ipAddress: {
+				lower: getIPAddress("1.1.1.1").bigInt(),
+				upper: 0n,
+				type: IpAddressType.v4,
+			},
+			headers: { a: "1" },
+			ja4: "ja4",
+			lastUpdatedTimestamp: new Date(),
+			pending: false,
+			salt: "0x00",
+			requestHash: "requestHash",
+			threshold: 0.8,
+			deadlineTimestamp: new Date(),
+		});
+
+		it.each([
+			{ name: "site", user: "userAccount", dappAccount: "otherDapp" },
+			{ name: "user", user: "otherUser", dappAccount: "dappAccount" },
+		])(
+			"consumes and refuses a commitment solved for another $name",
+			async ({ user, dappAccount }: { user: string; dappAccount: string }) => {
+				vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(
+					approvedCommitment(),
+				);
+				vi.mocked(db.markDappUserCommitmentsChecked).mockResolvedValue(1);
+
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					settings: {},
+					user,
+					dappAccount,
+					commitmentId: "commitmentIdBound",
+					env: mockEnv,
+				});
+
+				expect(result).toEqual({
+					status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+					verified: false,
+				});
+				expect(db.markDappUserCommitmentsChecked).toHaveBeenCalledWith([
+					"commitmentIdBound",
+				]);
+				expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+			},
+		);
+
+		it.each([
+			{ name: "already checked", serverChecked: true, claimed: 0 },
+			{ name: "claimed concurrently", serverChecked: false, claimed: 0 },
+		])(
+			"gives another site the same answer for a commitment $name",
+			async ({
+				serverChecked,
+				claimed,
+			}: { serverChecked: boolean; claimed: number }) => {
+				vi.mocked(db.getDappUserCommitmentById).mockResolvedValue({
+					...approvedCommitment(),
+					serverChecked,
+					sessionId: "sessionId",
+				});
+				vi.mocked(db.markDappUserCommitmentsChecked).mockResolvedValue(claimed);
+
+				const result = await imgCaptchaManager.verifyImageCaptchaSolution({
+					settings: {},
+					user: "userAccount",
+					dappAccount: "otherDapp",
+					commitmentId: "commitmentIdBound",
+					env: mockEnv,
+				});
+
+				expect(result).toEqual({
+					status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+					verified: false,
+				});
+			},
+		);
+
+		it("claims the commitment when the site and user match", async () => {
+			vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(
+				approvedCommitment(),
+			);
+			vi.mocked(db.markDappUserCommitmentsChecked).mockResolvedValue(0);
+
+			await imgCaptchaManager.verifyImageCaptchaSolution({
+				settings: {},
+				user: "userAccount",
+				dappAccount: "dappAccount",
+				commitmentId: "commitmentIdBound",
+				env: mockEnv,
+			});
+
+			expect(db.markDappUserCommitmentsChecked).toHaveBeenCalledWith([
+				"commitmentIdBound",
+			]);
+		});
+	});
+
 	describe("dappUserSolution — how selections were made", () => {
 		const saltWith = (coords: number[]): string =>
 			embedData(`0x${"a".repeat(128)}`, coords);
