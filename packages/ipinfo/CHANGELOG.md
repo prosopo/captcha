@@ -1,5 +1,11 @@
 # @prosopo/ipinfo
 
+## 0.7.16
+### Patch Changes
+
+- Updated dependencies [820cfb4]
+  - @prosopo/types@5.32.7
+
 ## 0.7.15
 ### Patch Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/detector
 
+## 3.5.90
+### Patch Changes
+
+- Updated dependencies [820cfb4]
+  - @prosopo/types@5.32.7
+
 ## 3.5.89
 ### Patch Changes
 

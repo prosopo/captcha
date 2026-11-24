@@ -1,5 +1,11 @@
 # @prosopo/api
 
+## 4.11.9
+### Patch Changes
+
+- Updated dependencies [820cfb4]
+  - @prosopo/types@5.32.7
+
 ## 4.11.8
 ### Patch Changes
 

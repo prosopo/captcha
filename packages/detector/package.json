@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/detector",
-	"version": "3.5.89",
+	"version": "3.5.90",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
 	"engines": {

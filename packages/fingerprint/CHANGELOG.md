@@ -1,5 +1,11 @@
 # @prosopo/fingerprint
 
+## 2.8.29
+### Patch Changes
+
+- Updated dependencies [820cfb4]
+  - @prosopo/types@5.32.7
+
 ## 2.8.28
 ### Patch Changes
 

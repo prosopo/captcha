@@ -1,5 +1,22 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.26.13
+### Patch Changes
+
+- 820cfb4: The widget now works on sites whose Content Security Policy only allows stylesheets carrying a nonce. Pass the nonce as `nonce` in the render options or as `data-nonce` on the widget element; if neither is set, the widget uses the nonce from a script on the page. Before, such a policy blocked the widget's styles and it rendered unstyled.
+- Updated dependencies [820cfb4]
+  - @prosopo/types@5.32.7
+  - @prosopo/widget-skeleton@2.10.7
+  - @prosopo/procaptcha-common@2.23.22
+  - @prosopo/procaptcha-pow@2.14.30
+  - @prosopo/procaptcha-react@2.14.41
+  - @prosopo/procaptcha-puzzle@2.18.22
+  - @prosopo/procaptcha-icon-order@0.4.12
+  - @prosopo/procaptcha-audio@0.3.22
+  - @prosopo/api@4.11.9
+  - @prosopo/common@3.3.2
+  - @prosopo/fingerprint@2.8.29
+
 ## 2.26.12
 ### Patch Changes
 
