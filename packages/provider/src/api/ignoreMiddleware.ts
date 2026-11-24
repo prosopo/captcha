@@ -14,10 +14,16 @@
 import { ApiPrefix, PublicApiPaths } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
 
-export function ignoreMiddleware() {
+export function ignoreMiddleware(
+	allowedPaths: ReadonlySet<string> = new Set(),
+) {
 	return (req: Request, res: Response, next: NextFunction) => {
 		if (req.originalUrl.indexOf(PublicApiPaths.Healthz) !== -1) {
 			// If the request is for a health endpoint, we allow it to pass through
+			return next();
+		}
+
+		if (allowedPaths.has(req.originalUrl.split("?")[0] ?? "")) {
 			return next();
 		}
 

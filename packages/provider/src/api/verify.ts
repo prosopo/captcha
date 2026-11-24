@@ -54,6 +54,11 @@ import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
 import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
 import { summariseRequestBody } from "./requestBodySummary.js";
 import {
+	SITEVERIFY_PATH,
+	isSiteverifyEnabled,
+	siteverifyHandlers,
+} from "./siteverify.js";
+import {
 	isReservedTestSiteKey,
 	resolveTestSiteKeyVerdict,
 } from "./testSiteKey.js";
@@ -349,6 +354,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			err,
 		}));
 		userAccessRulesStorage = undefined as never;
+	}
+
+	if (isSiteverifyEnabled()) {
+		router.post(SITEVERIFY_PATH, ...siteverifyHandlers());
 	}
 
 	// Records the outcome of every verify response (type + verified/failed +

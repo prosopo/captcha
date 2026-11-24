@@ -66,6 +66,7 @@ import { publicRouter } from "./public.js";
 import { rateLimitHandler } from "./rateLimitHandler.js";
 import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
+import { SITEVERIFY_PATH, isSiteverifyEnabled } from "./siteverify.js";
 import { prosopoVerifyRouter } from "./verify.js";
 
 /**
@@ -358,7 +359,11 @@ export async function startProviderApi(
 
 	const i18Middleware = await i18nMiddleware({});
 	apiApp.use(robotsMiddleware());
-	apiApp.use(ignoreMiddleware());
+	apiApp.use(
+		ignoreMiddleware(
+			new Set<string>(isSiteverifyEnabled() ? [SITEVERIFY_PATH] : []),
+		),
+	);
 	apiApp.use(requestLoggerMiddleware(env));
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
@@ -367,7 +372,12 @@ export async function startProviderApi(
 	// Verify calls come from the site's backend, not the end user, and every
 	// verify handler reads ip info from the challenge record or the request
 	// body instead, so a sidecar lookup of the caller would be wasted latency.
-	apiApp.use(ipInfoMiddleware(env, new Set(getServerVerifyPaths())));
+	apiApp.use(
+		ipInfoMiddleware(
+			env,
+			new Set<string>([...getServerVerifyPaths(), SITEVERIFY_PATH]),
+		),
+	);
 
 	// Run Header check middleware on all client routes
 	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));

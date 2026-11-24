@@ -62,6 +62,9 @@ services:
       # Lets this node load detectors built outside Prosopo, such as
       # demos/detector-botd. Without a pool it does nothing.
       PROSOPO_DETECTOR_OPEN_FORMAT: '1'
+      # Serves POST /siteverify, so your backend can verify tokens with the
+      # site key's secret instead of signing requests with @prosopo/server.
+      PROSOPO_SITEVERIFY_ENABLED: '1'
     volumes:
       - detector_pool:/usr/src/app/data/detector-pool
     ports:
