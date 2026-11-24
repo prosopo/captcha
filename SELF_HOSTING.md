@@ -153,6 +153,37 @@ The CAPTCHA type comes from the site key record, not the page.
 The bundle is an ES module split into chunks, so `type="module"` is required and the whole `dist/bundle/` directory must
 be hosted together.
 
+## 5. Verify tokens
+
+The provider answers `POST /siteverify`, the same call as Prosopo's hosted `https://api.prosopo.io/siteverify`. Send the
+widget's `procaptcha-response` token and your site key's secret, `PROSOPO_SITE_PRIVATE_KEY` from your `.env`:
+
+```bash
+curl -X POST https://captcha.example.com/siteverify \
+  -H 'Content-Type: application/json' \
+  -d '{"token":"<procaptcha-response>","secret":"<PROSOPO_SITE_PRIVATE_KEY>","ip":"<visitor IP>"}'
+```
+
+```json
+{"status":"ok","verified":true}
+```
+
+Check `verified`. `ip`, `email` and `clientSessionId` are optional, and form-encoded bodies work too. It behaves like
+the hosted endpoint:
+
+- An unreadable or expired token is answered `"verified":false`.
+- A missing secret, or one that does not belong to the token's site key, is rejected with a 400.
+- If verification has not finished within 5 seconds the answer is `"verified":true`, so a stalled provider cannot hold
+  your logins open.
+
+The self-hosted compose file turns the endpoint on with `PROSOPO_SITEVERIFY_ENABLED=1`; it is off on a provider started
+without it. It allows 15,000 requests a minute per caller IP, or per site key when the
+request carries a `Prosopo-Site-Key` header; change that with `PROSOPO_SITE_VERIFY_LIMIT` and
+`PROSOPO_SITE_VERIFY_WINDOW` (milliseconds).
+
+Anything already built for the hosted siteverify works unchanged by pointing it at your provider. You can still verify
+with [`@prosopo/server`](packages/server) instead.
+
 ## No server? Run it on Cloudflare's free plan
 
 Steps 2 and 4 assume a server with a public IP and ports 80 and 443 open. If you don't have one, a machine at home

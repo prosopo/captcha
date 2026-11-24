@@ -67,6 +67,28 @@ describe("ignoreMiddleware", () => {
 		expect(mockRes.send).not.toHaveBeenCalled();
 	});
 
+	it("should allow a non-API path it was told to allow", () => {
+		const middleware = ignoreMiddleware(new Set(["/siteverify"]));
+
+		mockReq.originalUrl = "/siteverify?x=1";
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockNext).toHaveBeenCalledWith();
+		expect(mockRes.send).not.toHaveBeenCalled();
+	});
+
+	it("should still return 404 for other non-API paths when some are allowed", () => {
+		const middleware = ignoreMiddleware(new Set(["/siteverify"]));
+
+		mockReq.originalUrl = "/siteverify-not";
+
+		middleware(mockReq, mockRes, mockNext);
+
+		expect(mockRes.statusCode).toBe(404);
+		expect(mockNext).not.toHaveBeenCalled();
+	});
+
 	it("should return 404 for non-API routes", () => {
 		const middleware = ignoreMiddleware();
 
