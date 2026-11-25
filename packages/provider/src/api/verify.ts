@@ -49,9 +49,14 @@ import {
 	getMaintenanceMode,
 	isSiteKeyInMaintenanceMode,
 } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import { forceAlwaysPass, markAlwaysPassVerify } from "./alwaysPass.js";
 import { buildMaintenanceVerificationResponse } from "./captcha/maintenanceModeResponses.js";
 import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
-import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
+import {
+	type VerifySource,
+	metricsEnabled,
+	recordCaptchaVerify,
+} from "./metrics.js";
 import { summariseRequestBody } from "./requestBodySummary.js";
 import {
 	SITEVERIFY_PATH,
@@ -66,10 +71,9 @@ import {
 // Derives the metrics `source` label for a verify request: maintenance mode and
 // reserved CI test site keys return a verdict without a real verification, so
 // they are labelled separately to keep the real human solve-rate clean.
-const deriveVerifySource = (
-	body: unknown,
-): "real" | "test_key" | "maintenance" => {
+const deriveVerifySource = (body: unknown, res: Response): VerifySource => {
 	if (getMaintenanceMode()) return "maintenance";
+	if (res.locals.verifySource === "always_pass") return "always_pass";
 	try {
 		const token = (body as { token?: string })?.token;
 		if (token) {
@@ -153,6 +157,7 @@ const interactiveVerifyHandler =
 		env,
 		userAccessRulesStorage,
 		path,
+		captchaType,
 		label,
 		handlerName,
 		manager,
@@ -163,6 +168,7 @@ const interactiveVerifyHandler =
 			| ClientApiPaths.VerifyPuzzleCaptchaSolution
 			| ClientApiPaths.VerifyIconOrderCaptchaSolution
 			| ClientApiPaths.VerifyAudioCaptchaSolution;
+		captchaType: CaptchaType;
 		label: string;
 		handlerName: string;
 		manager: (
@@ -308,12 +314,20 @@ const interactiveVerifyHandler =
 					userAccessRulesStorage,
 				});
 
+			const alwaysPass = forceAlwaysPass({
+				clientRecord,
+				logger: req.logger,
+				stage: "verify",
+				captchaType,
+				realVerdict: verified,
+			});
+			if (alwaysPass) markAlwaysPassVerify(res);
 			const verificationResponse: VerificationResponse =
 				captchaManager.getVerificationResponse({
-					verified,
+					verified: alwaysPass || verified,
 					clientRecord,
 					translateFn: req.i18n.t,
-					score,
+					...(!alwaysPass && { score }),
 					sessionId,
 				});
 
@@ -381,7 +395,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				recordCaptchaVerify({
 					type,
 					verified,
-					source: deriveVerifySource(req.body),
+					source: deriveVerifySource(req.body, res),
 				});
 			}
 			return originalJson(body);
@@ -539,15 +553,25 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					});
 
 				req.logger.debug(() => ({ data: { response } }));
+				const alwaysPass = forceAlwaysPass({
+					clientRecord,
+					logger: req.logger,
+					stage: "verify",
+					captchaType: CaptchaType.image,
+					realVerdict: response[ApiParams.verified],
+				});
+				if (alwaysPass) markAlwaysPassVerify(res);
 				const verificationResponse: ImageVerificationResponse =
 					tasks.imgCaptchaManager.getVerificationResponse({
-						verified: response[ApiParams.verified],
+						verified: alwaysPass || response[ApiParams.verified],
 						clientRecord,
 						translateFn: req.i18n.t,
-						score: response[ApiParams.score],
 						commitmentId: response[ApiParams.commitmentId],
-						reason: response[ApiParams.status],
 						sessionId: response[ApiParams.sessionId],
+						...(!alwaysPass && {
+							score: response[ApiParams.score],
+							reason: response[ApiParams.status],
+						}),
 					});
 				res.json(verificationResponse);
 			} catch (err) {
@@ -715,14 +739,21 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						userAccessRulesStorage,
 					});
 
+				const alwaysPass = forceAlwaysPass({
+					clientRecord,
+					logger: req.logger,
+					stage: "verify",
+					captchaType: CaptchaType.pow,
+					realVerdict: verified,
+				});
+				if (alwaysPass) markAlwaysPassVerify(res);
 				const verificationResponse: VerificationResponse =
 					tasks.powCaptchaManager.getVerificationResponse({
-						verified,
+						verified: alwaysPass || verified,
 						clientRecord,
 						translateFn: req.i18n.t,
-						score,
-						reason,
 						sessionId,
+						...(!alwaysPass && { score, reason }),
 					});
 
 				return res.json(verificationResponse);
@@ -750,6 +781,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			env,
 			userAccessRulesStorage,
 			path: ClientApiPaths.VerifyPuzzleCaptchaSolution,
+			captchaType: CaptchaType.puzzle,
 			label: "puzzle",
 			handlerName: "verifyPuzzleCaptchaSolution",
 			manager: (tasks) => tasks.puzzleCaptchaManager,
@@ -762,6 +794,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			env,
 			userAccessRulesStorage,
 			path: ClientApiPaths.VerifyAudioCaptchaSolution,
+			captchaType: CaptchaType.audio,
 			label: "audio",
 			handlerName: "verifyAudioCaptchaSolution",
 			manager: (tasks) => tasks.audioCaptchaManager,
@@ -774,6 +807,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			env,
 			userAccessRulesStorage,
 			path: ClientApiPaths.VerifyIconOrderCaptchaSolution,
+			captchaType: CaptchaType.iconOrder,
 			label: "icon-order",
 			handlerName: "verifyIconOrderCaptchaSolution",
 			manager: (tasks) => tasks.iconOrderCaptchaManager,

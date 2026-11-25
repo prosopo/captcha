@@ -1071,6 +1071,9 @@ export const ClientSettingsSchema = object({
 	// Off by default — opt in to enable downstream analysis (e.g. judging
 	// whether the submitted emails are mostly spam).
 	storeMetadata: boolean().optional(),
+	// Prosopo-only. Every submit and verify for the key reports a pass; the
+	// real verdict is still recorded.
+	alwaysPass: boolean().optional(),
 	honeypot: HoneypotSettingsSchema.optional(),
 	// Web Bot Auth (RFC 9421) verified-agent pass-through. When true, a
 	// request that carries a valid Ed25519 signature and matches no

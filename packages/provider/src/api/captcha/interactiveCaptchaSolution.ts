@@ -25,6 +25,7 @@ import type { AugmentedRequest } from "../../express.js";
 import type { InteractiveSubmissionOutcome } from "../../tasks/interactiveCaptcha/interactiveCaptchaManager.js";
 import { Tasks } from "../../tasks/tasks.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { forceAlwaysPass } from "../alwaysPass.js";
 import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
@@ -125,6 +126,22 @@ export const interactiveSolutionHandler =
 				req,
 				clientRecord,
 			);
+			if (
+				forceAlwaysPass({
+					clientRecord,
+					logger: req.logger,
+					stage: "submit",
+					captchaType: spec.captchaType,
+					realVerdict: verified,
+				})
+			) {
+				const forced: IconOrderCaptchaSolutionResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(forced);
+			}
+
 			const response: IconOrderCaptchaSolutionResponse = {
 				status: "ok",
 				verified,

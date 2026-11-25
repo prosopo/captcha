@@ -31,6 +31,7 @@ import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/tasks.js";
 import type { DeviceVerdict } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { forceAlwaysPass } from "../alwaysPass.js";
 import type { RawTlsSignals } from "../rawTlsSignalsMiddleware.js";
 import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
@@ -175,6 +176,22 @@ export default (env: ProviderEnvironment) =>
 						challenge,
 					},
 				}));
+			}
+
+			if (
+				forceAlwaysPass({
+					clientRecord,
+					logger: req.logger,
+					stage: "submit",
+					captchaType: CaptchaType.pow,
+					realVerdict: result.verified,
+				})
+			) {
+				const forced: PowCaptchaSolutionResponse = {
+					status: "ok",
+					verified: true,
+				};
+				return res.json(forced);
 			}
 
 			const escalation = await buildEscalation({
