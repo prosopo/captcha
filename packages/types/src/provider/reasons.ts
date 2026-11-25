@@ -66,6 +66,10 @@ export enum FrictionlessReason {
 	PUZZLE_REFRESH_LIMIT = "PUZZLE_REFRESH_LIMIT",
 	// The user asked to swap the puzzle for an image challenge.
 	PUZZLE_USER_SWITCH = "PUZZLE_USER_SWITCH",
+	// The Referer is a full Protect challenge page URL. Browsers trim a
+	// cross-site Referer to the origin, so the path only survives when the
+	// header was set by hand, as automation that replays the page does.
+	PROTECT_CHALLENGE_REFERER = "PROTECT_CHALLENGE_REFERER",
 }
 
 /**
