@@ -68,9 +68,10 @@ import {
 	resolveTestSiteKeyVerdict,
 } from "./testSiteKey.js";
 
-// Derives the metrics `source` label for a verify request: maintenance mode and
-// reserved CI test site keys return a verdict without a real verification, so
-// they are labelled separately to keep the real human solve-rate clean.
+// Derives the metrics `source` label for a verify request: maintenance mode,
+// reserved CI test site keys and alwaysPass keys return a verdict that is not
+// the real one, so they are labelled separately to keep the real human
+// solve-rate clean.
 const deriveVerifySource = (body: unknown, res: Response): VerifySource => {
 	if (getMaintenanceMode()) return "maintenance";
 	if (res.locals.verifySource === "always_pass") return "always_pass";
