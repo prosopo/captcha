@@ -56,6 +56,15 @@ afterEach(() => {
 	mounted.unmount();
 });
 
+describe("a malformed question", () => {
+	test("still renders the bait, with an empty label", () => {
+		honeypot = mountHoneypot(mounted.container, {
+			encodedQuestion: "not base64!",
+		});
+		expect(bait().closest("label")?.textContent).toBe("");
+	});
+});
+
 describe("where the bait lives", () => {
 	test("renders into document.body when the widget is not inside a form", () => {
 		honeypot = mountHoneypot(mounted.container, props());
