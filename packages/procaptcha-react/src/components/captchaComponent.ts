@@ -32,12 +32,7 @@ import type {
 	InputMethod,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import {
-	type Theme,
-	darkTheme,
-	lightTheme,
-	randomInt,
-} from "@prosopo/widget-skeleton";
+import { type Theme, randomInt } from "@prosopo/widget-skeleton";
 import addDataAttr from "../util/index.js";
 import { mountButton } from "./button.js";
 import { mountCaptchaWidget } from "./captchaWidget.js";
@@ -58,7 +53,7 @@ export interface CaptchaComponentProps {
 	onReload: () => void;
 	/** Takes the user back to the puzzle they swapped for this image. Absent hides it. */
 	onSwitchToPuzzle?: () => void;
-	themeColor: "light" | "dark";
+	theme: Theme;
 	translator: Translator;
 	/** Renders "use audio instead" under the action row. Absent hides it. */
 	audioAlternative?: AudioAlternativeOffer;
@@ -148,9 +143,6 @@ export const mountCaptchaComponent = (
 ): Component<CaptchaComponentProps> => {
 	let props = initialProps;
 
-	const themeOf = (themeColor: "light" | "dark") =>
-		"light" === themeColor ? lightTheme : darkTheme;
-
 	// `noWrap`, so an out-of-range round throws rather than wrapping round to a
 	// different one: the manager only renders a round it has both a captcha and
 	// a solution slot for, so anything else is a bug worth surfacing rather
@@ -162,7 +154,7 @@ export const mountCaptchaComponent = (
 
 	const isLastRound = () => props.index >= props.challenge.captchas.length - 1;
 
-	const theme = themeOf(props.themeColor);
+	const { theme } = props;
 	const controlGap = randomInt(MIN_CONTROL_GAP, MAX_CONTROL_GAP);
 	const column = columnStyle(controlGap);
 
@@ -273,24 +265,24 @@ export const mountCaptchaComponent = (
 		challenge: currentCaptcha(),
 		solution: currentSolution(),
 		onClick: props.onClick,
-		themeColor: props.themeColor,
+		theme: props.theme,
 	});
 
 	const cancelButton = mountButton(cancelHost, {
-		themeColor: props.themeColor,
+		theme: props.theme,
 		buttonType: "cancel",
 		onClick: () => props.onCancel(),
 		text: props.translator.t("WIDGET.CANCEL"),
 	});
 
 	const reloadButton = mountReloadButton(reloadHost, {
-		themeColor: props.themeColor,
+		theme: props.theme,
 		label: props.translator.t("WIDGET.RELOAD"),
 		onReload: () => props.onReload(),
 	});
 
 	const nextButton = mountButton(nextHost, {
-		themeColor: props.themeColor,
+		theme: props.theme,
 		buttonType: "next",
 		onClick: () => (isLastRound() ? props.onSubmit() : props.onNext()),
 		text: props.translator.t("WIDGET.SUBMIT"),
@@ -303,7 +295,7 @@ export const mountCaptchaComponent = (
 
 	const puzzleSwitchButtonProps = (): ChallengeSwitchButtonProps => ({
 		target: "puzzle",
-		themeColor: props.themeColor,
+		theme: props.theme,
 		label: props.translator.t("WIDGET.SWITCH_TO_PUZZLE"),
 		onSwitch: () => props.onSwitchToPuzzle?.(),
 	});
@@ -327,7 +319,7 @@ export const mountCaptchaComponent = (
 	};
 
 	const render = () => {
-		const activeTheme = themeOf(props.themeColor);
+		const activeTheme = props.theme;
 		applyStyles(root, outerStyle(activeTheme));
 		applyStyles(inner, {
 			backgroundColor: activeTheme.palette.background.default,
@@ -356,24 +348,24 @@ export const mountCaptchaComponent = (
 			challenge: currentCaptcha(),
 			solution: currentSolution(),
 			onClick: props.onClick,
-			themeColor: props.themeColor,
+			theme: props.theme,
 		});
 
 		cancelButton.update({
-			themeColor: props.themeColor,
+			theme: props.theme,
 			buttonType: "cancel",
 			onClick: () => props.onCancel(),
 			text: t("WIDGET.CANCEL"),
 		});
 
 		reloadButton.update({
-			themeColor: props.themeColor,
+			theme: props.theme,
 			label: props.translator.t("WIDGET.RELOAD"),
 			onReload: () => props.onReload(),
 		});
 
 		nextButton.update({
-			themeColor: props.themeColor,
+			theme: props.theme,
 			buttonType: "next",
 			onClick: () => (isLastRound() ? props.onSubmit() : props.onNext()),
 			text: isLastRound() ? t("WIDGET.SUBMIT") : t("WIDGET.NEXT"),

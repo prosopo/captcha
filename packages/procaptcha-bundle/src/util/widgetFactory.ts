@@ -20,11 +20,7 @@ import {
 	setUserCallbacks,
 } from "@prosopo/procaptcha-common";
 import type { Callbacks, ProcaptchaRenderOptions } from "@prosopo/types";
-import {
-	createWidgetSkeleton,
-	darkTheme,
-	lightTheme,
-} from "@prosopo/widget-skeleton";
+import { createTheme, createWidgetSkeleton } from "@prosopo/widget-skeleton";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
 import type { BundleCaptchaHandle } from "./captcha/components/bundleCaptcha.js";
 import { EXPIRED_NOTICE_KEY, FAILED_NOTICE_KEY } from "./failedNoticeKey.js";
@@ -85,13 +81,22 @@ class WidgetFactory {
 		isWeb2 = true,
 		invisible = false,
 	): Promise<CreatedWidget> {
-		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
+		const theme = this.widgetThemeResolver.resolveWidgetTheme(
 			container,
 			renderOptions,
 		);
+		renderOptions.theme = theme;
+		// A copy, not a write-back: one options object is shared by every
+		// element of an implicit render, and each element has its own attributes.
+		renderOptions = {
+			...renderOptions,
+			...this.widgetThemeResolver.resolveWidgetAppearance(
+				container,
+				renderOptions,
+			),
+		};
 
-		const widgetTheme =
-			"light" === renderOptions.theme ? lightTheme : darkTheme;
+		const widgetTheme = createTheme(theme, renderOptions);
 
 		// Resolve the site-owner language BEFORE lazy-loading the renderer so
 		// i18n can boot (or reconcile) with the correct language on first init,

@@ -81,7 +81,7 @@ export const mountAudioAlternativeButton = (
 		applyStyles(button, {
 			border: "none",
 			padding: "6px 10px",
-			borderRadius: "8px",
+			borderRadius: theme.shape.control,
 			cursor: "pointer",
 			fontFamily: theme.font.fontFamily,
 			fontSize: "13px",
@@ -193,7 +193,7 @@ export const mountAudioAlternativeFooter = (
 ): Component<AudioAlternativeFooterProps> => {
 	const footer = createElement("div", {
 		style: {
-			borderRadius: "0 0 20px 20px",
+			borderRadius: `0 0 ${initialProps.theme.shape.panel} ${initialProps.theme.shape.panel}`,
 			padding: "8px",
 			boxSizing: "border-box",
 			textAlign: "center",

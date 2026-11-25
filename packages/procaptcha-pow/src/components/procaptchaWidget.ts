@@ -33,7 +33,7 @@ import {
 	type ProcaptchaProps,
 	type ProcaptchaState,
 } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { createTheme } from "@prosopo/widget-skeleton";
 import { Manager } from "../services/Manager.js";
 
 // Define the same event name as in the bundle for consistency
@@ -149,7 +149,7 @@ export const mountProcaptchaPowWidget = (
 	const checkboxProps = (): CheckboxProps => ({
 		nonce: config.nonce,
 		checked: store.state.isHuman,
-		theme: "light" === config.theme ? lightTheme : darkTheme,
+		theme: createTheme(config.theme, config),
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
 			? localiseError(translator.i18n, store.state.error)

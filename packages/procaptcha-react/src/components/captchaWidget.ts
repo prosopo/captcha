@@ -31,12 +31,7 @@ import type {
 	ImageSelection,
 	InputMethod,
 } from "@prosopo/types";
-import {
-	type Theme,
-	darkTheme,
-	lightTheme,
-	randomInt,
-} from "@prosopo/widget-skeleton";
+import { type Theme, randomInt } from "@prosopo/widget-skeleton";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
@@ -47,7 +42,7 @@ export interface CaptchaWidgetProps {
 		y: number,
 		inputMethod: InputMethod,
 	) => void;
-	themeColor: "light" | "dark";
+	theme: Theme;
 }
 
 // The type promises a hash, but the items arrive over the wire, so a
@@ -93,9 +88,6 @@ const retrySrc = (url: string): string =>
 	url.includes("token=")
 		? url
 		: `${url}${url.includes("?") ? "&" : "?"}retry=${Date.now()}`;
-
-const themeOf = (themeColor: "light" | "dark"): Theme =>
-	"light" === themeColor ? lightTheme : darkTheme;
 
 interface GridMetrics {
 	readonly gap: number;
@@ -165,13 +157,13 @@ export const mountCaptchaWidget = (
 	let tiles: Tile[] = [];
 	let focusedHash: string | null = null;
 
-	const metrics = generateMetrics(themeOf(initialProps.themeColor));
+	const metrics = generateMetrics(initialProps.theme);
 
 	const grid = createElement("div", { style: gridStyle(metrics) });
 
 	const buildTile = (item: HashedItem, index: number): Tile => {
 		const hash = getHash(item);
-		const theme = themeOf(props.themeColor);
+		const { theme } = props;
 
 		const image = createElement("img", {
 			style: {
@@ -301,7 +293,7 @@ export const mountCaptchaWidget = (
 	};
 
 	const applyFocusRing = () => {
-		const theme = themeOf(props.themeColor);
+		const { theme } = props;
 		for (const tile of tiles) {
 			applyStyles(
 				tile.clickable,
@@ -329,7 +321,7 @@ export const mountCaptchaWidget = (
 	};
 
 	const applySelection = () => {
-		const theme = themeOf(props.themeColor);
+		const { theme } = props;
 		for (const tile of tiles) {
 			const selected = props.solution.some(
 				(entry: ImageSelection) => entry[0] === tile.hash,
@@ -351,7 +343,7 @@ export const mountCaptchaWidget = (
 		update: (nextProps: CaptchaWidgetProps) => {
 			const needsRebuild =
 				nextProps.challenge !== renderedChallenge ||
-				nextProps.themeColor !== props.themeColor;
+				nextProps.theme !== props.theme;
 			props = nextProps;
 			if (needsRebuild) {
 				// The tiles that carried focus are gone, so the ring has nothing

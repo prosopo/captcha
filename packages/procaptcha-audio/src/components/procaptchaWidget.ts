@@ -44,7 +44,7 @@ import {
 	type ProcaptchaProps,
 	type ProcaptchaState,
 } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { createTheme } from "@prosopo/widget-skeleton";
 import { Manager } from "../services/Manager.js";
 import { type AudioPlayerProps, mountAudioPlayer } from "./audioPlayer.js";
 
@@ -65,7 +65,7 @@ export const mountProcaptchaAudioWidget = (
 	const callbacks = props.callbacks || {};
 	const translator = createTranslator(i18n);
 	const isInvisible = ModeEnum.invisible === config.mode;
-	const theme = "light" === config.theme ? lightTheme : darkTheme;
+	const theme = createTheme(config.theme, config);
 
 	const store: ProcaptchaStateHandle = createProcaptchaState();
 	let loading = false;

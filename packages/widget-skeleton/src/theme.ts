@@ -12,6 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type {
+	ProcaptchaAppearance,
+	ProcaptchaPalette,
+	ProcaptchaShape,
+} from "@prosopo/types";
+
 // Prosopo brand purple ramp. The widgets are styled in a Material 3 "tonal"
 // key off this single hue — tonal container surfaces + a saturated primary,
 // mirrored into a dark plum scheme for dark mode.
@@ -91,6 +97,9 @@ const elevationDark = elevationNone;
 const shape = {
 	widget: "16px", // large — the on-page "I am human" surface
 	card: "28px", // extra-large — M3 dialog container
+	panel: "20px", // the puzzle, icon and audio challenge panels
+	control: "8px", // small — buttons and fields inside those panels
+	iconButton: "50%", // the round reload and challenge-switch icons
 	header: "12px", // medium — the tonal header "secondary container"
 	button: "100px", // full — pill buttons
 	tile: "12px", // medium — image grid cells
@@ -243,4 +252,226 @@ export const darkTheme = {
 		fontFamily: FONT_FAMILY,
 		color: darkOnSurface,
 	},
+};
+
+const squareShape: typeof shape = {
+	widget: "0px",
+	card: "0px",
+	panel: "0px",
+	control: "0px",
+	iconButton: "0px",
+	header: "0px",
+	button: "0px",
+	tile: "0px",
+	tileSelected: "0px",
+	checkbox: "0px",
+};
+
+const shapes: Record<ProcaptchaShape, typeof shape> = {
+	rounded: shape,
+	square: squareShape,
+};
+
+const HEX_COLOUR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+// The font lands inside a stylesheet, so anything that could close the
+// declaration or pull in a resource (`;`, `{`, `(`, `\`) is refused.
+const FONT_FAMILY_LIST = /^[\w\s,'"-]+$/;
+
+export const isHexColour = (value: string): boolean => HEX_COLOUR.test(value);
+
+export const isSafeFontFamily = (value: string): boolean =>
+	FONT_FAMILY_LIST.test(value.trim());
+
+const toSixDigitHex = (value: string | undefined): string | undefined => {
+	if (!value || !isHexColour(value)) {
+		return undefined;
+	}
+	if (4 === value.length) {
+		const [, r, g, b] = value;
+		return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+	}
+	return value.toLowerCase();
+};
+
+const channels = (hex: string): [number, number, number] => [
+	Number.parseInt(hex.slice(1, 3), 16),
+	Number.parseInt(hex.slice(3, 5), 16),
+	Number.parseInt(hex.slice(5, 7), 16),
+];
+
+// Moves `hex` towards `target` by `amount` (0 = hex, 1 = target).
+export const mix = (hex: string, target: string, amount: number): string => {
+	const from = channels(hex);
+	const to = channels(target);
+	return `#${from
+		.map((channel, i) =>
+			Math.round(channel + ((to[i] ?? channel) - channel) * amount)
+				.toString(16)
+				.padStart(2, "0"),
+		)
+		.join("")}`;
+};
+
+const relativeLuminance = (hex: string): number => {
+	const [r, g, b] = channels(hex).map((channel) => {
+		const c = channel / 255;
+		return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+	}) as [number, number, number];
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+// 0.179 is where black and white text have equal WCAG contrast.
+export const readableTextOn = (hex: string): string =>
+	relativeLuminance(hex) > 0.179 ? "#000000" : "#ffffff";
+
+export const contrastRatio = (a: string, b: string): number => {
+	const [lighter, darker] = [relativeLuminance(a), relativeLuminance(b)].sort(
+		(x, y) => y - x,
+	) as [number, number];
+	return (lighter + 0.05) / (darker + 0.05);
+};
+
+// WCAG AA for normal text: the logo carries the wordmark, not just a glyph.
+const LOGO_MIN_CONTRAST = 4.5;
+
+// Keeps the logo in brand purple where any shade of it reads on the site's
+// surface, and only gives up the brand colour for black or white when none
+// does — a mid-tone purple surface, say.
+export const logoFillOn = (surface: string, preferred: string): string => {
+	if (contrastRatio(preferred, surface) >= LOGO_MIN_CONTRAST) {
+		return preferred;
+	}
+	const [best] = Object.values(purple)
+		.map((shade) => ({ shade, contrast: contrastRatio(shade, surface) }))
+		.sort((x, y) => y.contrast - x.contrast);
+	return best && best.contrast >= LOGO_MIN_CONTRAST
+		? best.shade
+		: readableTextOn(surface);
+};
+
+const validPalette = (palette: ProcaptchaPalette | undefined) => ({
+	primary: toSixDigitHex(palette?.primary),
+	surface: toSixDigitHex(palette?.surface),
+	background: toSixDigitHex(palette?.background),
+	text: toSixDigitHex(palette?.text),
+	textSecondary: toSixDigitHex(palette?.textSecondary),
+	border: toSixDigitHex(palette?.border),
+	error: toSixDigitHex(palette?.error),
+});
+
+const validFont = (font: string | undefined): string | undefined => {
+	const trimmed = font?.trim();
+	return trimmed && isSafeFontFamily(trimmed) ? trimmed : undefined;
+};
+
+const themeWithPalette = (
+	base: Theme,
+	palette: ReturnType<typeof validPalette>,
+): Theme => {
+	const dark = "dark" === base.palette.mode;
+	const surface = palette.surface ?? base.palette.surface;
+	const background = palette.background ?? base.palette.background.default;
+	const text = palette.text ?? base.palette.onSurface;
+	const border = palette.border ?? base.palette.border;
+
+	const accent = (() => {
+		const primary = palette.primary;
+		if (!primary) {
+			return {};
+		}
+		const container = mix(primary, surface, dark ? 0.7 : 0.82);
+		const onContainer = mix(primary, dark ? "#ffffff" : "#000000", 0.6);
+		return {
+			primary: { main: primary, contrastText: readableTextOn(primary) },
+			primaryContainer: {
+				main: container,
+				contrastText: onContainer,
+				hover: mix(container, onContainer, base.stateLayer.hover),
+			},
+			titleAccent: primary,
+			checkbox: {
+				border: primary,
+				fill: primary,
+				tick: readableTextOn(primary),
+			},
+			overlay: withAlpha(primary, dark ? 0.5 : 0.32),
+			puzzle: {
+				targetBorder: withAlpha(primary, dark ? 0.6 : 0.55),
+				targetFill: withAlpha(primary, dark ? 0.12 : 0.1),
+				pieceGradient: `radial-gradient(circle at 40% 40%, ${mix(primary, "#ffffff", 0.35)}, ${primary})`,
+			},
+		};
+	})();
+
+	return {
+		...base,
+		palette: {
+			...base.palette,
+			...accent,
+			background: { default: background, contrastText: text },
+			surface,
+			surfaceContainerHigh: background,
+			onSurface: text,
+			onSurfaceVariant: palette.textSecondary ?? base.palette.onSurfaceVariant,
+			tile: { border: palette.border ?? base.palette.tile.border },
+			border,
+			error: { main: palette.error ?? base.palette.error.main },
+			logoFill: logoFillOn(surface, base.palette.logoFill),
+		},
+		font: { ...base.font, color: text },
+	};
+};
+
+// The base light or dark theme with a site's own colours, corners and font
+// laid over it. Colours a site leaves out keep the base theme's value; the
+// tints the widget needs (hover fills, the selected-tile wash, the puzzle
+// piece) are derived from the primary so a single colour restyles the lot.
+//
+// Components compare themes by identity to decide when to restyle, so the same
+// settings must always give back the same object.
+const themeCache = new Map<string, Theme>();
+
+export const createTheme = (
+	mode: "light" | "dark" | undefined,
+	appearance: ProcaptchaAppearance = {},
+): Theme => {
+	const key = JSON.stringify([
+		mode,
+		appearance.palette ?? {},
+		appearance.shape,
+		appearance.font,
+	]);
+	const cached = themeCache.get(key);
+	if (cached) {
+		return cached;
+	}
+	const theme = buildTheme(mode, appearance);
+	themeCache.set(key, theme);
+	return theme;
+};
+
+const buildTheme = (
+	mode: "light" | "dark" | undefined,
+	appearance: ProcaptchaAppearance,
+): Theme => {
+	const base: Theme = "dark" === mode ? darkTheme : lightTheme;
+	const palette = validPalette(appearance.palette);
+	const font = validFont(appearance.font);
+	const recoloured = Object.values(palette).some(
+		(colour) => undefined !== colour,
+	);
+	const reshaped =
+		undefined !== appearance.shape && "rounded" !== appearance.shape;
+	if (!recoloured && !reshaped && undefined === font) {
+		return base;
+	}
+	const themed = recoloured ? themeWithPalette(base, palette) : base;
+	return {
+		...themed,
+		shape: shapes[appearance.shape ?? "rounded"] ?? shape,
+		font: font
+			? { ...themed.font, fontFamily: `${font}, ${FONT_FAMILY}` }
+			: themed.font,
+	};
 };

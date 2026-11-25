@@ -33,7 +33,7 @@ const render = (
 ): HTMLElement => {
 	const props: ChallengeSwitchButtonProps = {
 		target: "image",
-		themeColor: "light",
+		theme: lightTheme,
 		onSwitch,
 		label: LABEL,
 		...overrides,
@@ -104,7 +104,7 @@ describe("the switch back to a puzzle", () => {
 	test("draws a puzzle piece rather than the image grid", () => {
 		mountChallengeSwitchButton(mounted.container, {
 			target: "puzzle",
-			themeColor: "light",
+			theme: lightTheme,
 			onSwitch,
 			label: "Switch to a puzzle challenge",
 		});
@@ -117,7 +117,7 @@ describe("the switch back to a puzzle", () => {
 	test("asks for the switch when pressed", () => {
 		mountChallengeSwitchButton(mounted.container, {
 			target: "puzzle",
-			themeColor: "light",
+			theme: lightTheme,
 			onSwitch,
 			label: "Switch to a puzzle challenge",
 		});

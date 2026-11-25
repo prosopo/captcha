@@ -45,7 +45,10 @@ const onReload = vi.fn<() => void>();
 const CONTROL_SELECTOR = '[data-cy="reload-button"]';
 
 const render = (themeColor: "light" | "dark" = "light"): HTMLElement => {
-	const props: ReloadButtonProps = { themeColor, onReload };
+	const props: ReloadButtonProps = {
+		theme: "dark" === themeColor ? darkTheme : lightTheme,
+		onReload,
+	};
 	if (reload) {
 		reload.update(props);
 	} else {
@@ -112,7 +115,7 @@ describe("what the button renders", () => {
 			Array.from({ length: 20 }, () => {
 				const container = mount();
 				const control = mountReloadButton(container.container, {
-					themeColor: "light",
+					theme: lightTheme,
 					onReload,
 				});
 				const className =
@@ -131,7 +134,7 @@ describe("what the button renders", () => {
 		process.env.NODE_ENV = "production";
 		try {
 			reload = mountReloadButton(mounted.container, {
-				themeColor: "light",
+				theme: lightTheme,
 				onReload,
 			});
 			expect(mounted.container.querySelector(CONTROL_SELECTOR)).toBeNull();
@@ -304,7 +307,7 @@ describe("clicking", () => {
 		// reload against a challenge that is no longer on screen.
 		const element = render();
 		const replacement = vi.fn<() => void>();
-		reload?.update({ themeColor: "light", onReload: replacement });
+		reload?.update({ theme: lightTheme, onReload: replacement });
 
 		fire(element, "click");
 

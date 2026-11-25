@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import {
+	type Theme,
 	canHover,
-	darkTheme,
 	isDevMode,
-	lightTheme,
 	randomToken,
 } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
@@ -29,7 +28,7 @@ import {
 import { createControl } from "../dom/obfuscation.js";
 
 export interface ReloadButtonProps {
-	themeColor: "light" | "dark";
+	theme: Theme;
 	onReload: () => void;
 	/** Accessible name; the button is icon-only, so this is all a screen reader hears. */
 	label?: string;
@@ -49,7 +48,6 @@ const buttonStyleBase: StyleMap = {
 	cursor: "pointer",
 	height: "44px",
 	width: "44px",
-	borderRadius: "50%",
 	display: "flex",
 };
 
@@ -61,9 +59,6 @@ export const mountReloadButton = (
 	let props = initialProps;
 	let hover = false;
 	let focusVisible = false;
-
-	const themeFor = (themeColor: "light" | "dark") =>
-		"light" === themeColor ? lightTheme : darkTheme;
 
 	const path = createSvgElement("path", {
 		attributes: {
@@ -101,11 +96,12 @@ export const mountReloadButton = (
 	});
 
 	const render = () => {
-		const theme = themeFor(props.themeColor);
+		const { theme } = props;
 		button.setAttribute("aria-label", labelOf(props));
 		title.textContent = labelOf(props);
 		applyStyles(button, {
 			...buttonStyleBase,
+			borderRadius: theme.shape.iconButton,
 			...(props.compact && { padding: "4px", height: "24px", width: "24px" }),
 			// M3 focus indicator: 3dp outline, 2dp offset. Matched imperatively so
 			// the ring stays keyboard-only.

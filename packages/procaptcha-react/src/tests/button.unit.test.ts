@@ -36,7 +36,7 @@ const props = (
 		text?: string;
 	} = {},
 ): ButtonProps => ({
-	themeColor: overrides.themeColor ?? "light",
+	theme: "dark" === overrides.themeColor ? darkTheme : lightTheme,
 	buttonType: overrides.buttonType ?? "next",
 	text: overrides.text ?? "Next",
 	onClick,

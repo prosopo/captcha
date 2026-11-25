@@ -17,11 +17,54 @@ import type { StartMode } from "../config/startMode.js";
 
 export * from "./integration.js";
 
+export type ProcaptchaShape = "rounded" | "square";
+
+// Colours are hex strings ("#4e439f" or "#fff"). Anything else is ignored and
+// the default for the chosen light/dark theme is used instead.
+export interface ProcaptchaPalette {
+	// Buttons, the ticked checkbox, focus rings and selected image tiles.
+	primary?: string;
+	// The widget and the image, puzzle and audio panels.
+	surface?: string;
+	// The challenge dialog.
+	background?: string;
+	text?: string;
+	textSecondary?: string;
+	border?: string;
+	error?: string;
+}
+
+// The `data-*` attribute that sets each palette colour on implicit render.
+export const PALETTE_DATA_ATTRIBUTES: Record<keyof ProcaptchaPalette, string> =
+	{
+		primary: "data-palette-primary",
+		surface: "data-palette-surface",
+		background: "data-palette-background",
+		text: "data-palette-text",
+		textSecondary: "data-palette-text-secondary",
+		border: "data-palette-border",
+		error: "data-palette-error",
+	};
+
+export interface ProcaptchaAppearance {
+	palette?: ProcaptchaPalette;
+	shape?: ProcaptchaShape;
+	// A CSS font-family list. The font must already be loaded on the page.
+	font?: string;
+}
+
 // note: do not use any Zod-related types inside the interface,
 // as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
 export interface ProcaptchaRenderOptions {
 	siteKey: string;
 	theme?: "light" | "dark";
+	// Equivalent to one `data-palette-*` attribute per colour, e.g.
+	// `data-palette-primary` or `data-palette-text-secondary`.
+	palette?: ProcaptchaPalette;
+	// Equivalent to the `data-shape` attribute.
+	shape?: ProcaptchaShape;
+	// Equivalent to the `data-font` attribute.
+	font?: string;
 	callback?: string | ((token: string) => void);
 	"challenge-valid-length"?: string; // seconds for successful challenge to be valid
 	"chalexpired-callback"?: string | (() => void);

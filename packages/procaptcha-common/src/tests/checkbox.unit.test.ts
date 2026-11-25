@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import { InputMethod } from "@prosopo/types";
-import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
+import {
+	createTheme,
+	darkTheme,
+	lightTheme,
+	withAlpha,
+} from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
 	type CheckboxProps,
@@ -172,6 +177,23 @@ describe("what the checkbox renders", () => {
 		const dark = mounted.container.querySelector(STYLE_SELECTOR("dark"));
 		expect(dark).not.toBeNull();
 		expect(dark?.textContent).toContain(darkTheme.palette.onSurface);
+	});
+
+	test("swaps the stylesheet for a new palette in the same mode", () => {
+		// In the checkbox frame the theme arrives through postMessage, so a
+		// site's colours change the sheet without the mode changing.
+		render();
+		render({
+			theme: createTheme("light", {
+				palette: { primary: "#0a7d3b" },
+				font: "Inter",
+			}),
+		});
+
+		const sheets = mounted.container.querySelectorAll(STYLE_SELECTOR("light"));
+		expect(sheets).toHaveLength(1);
+		expect(sheets[0]?.textContent).toContain("#0a7d3b");
+		expect(sheets[0]?.textContent).toContain("Inter");
 	});
 });
 

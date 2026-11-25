@@ -12,6 +12,9 @@
 	],
 	"references": [
 		{
+			"path": "../types/tsconfig.cjs.json"
+		},
+		{
 			"path": "../../dev/config/tsconfig.cjs.json"
 		}
 	]

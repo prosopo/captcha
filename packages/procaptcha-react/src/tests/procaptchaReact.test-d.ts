@@ -18,6 +18,7 @@ import type {
 	InputMethod,
 	ProcaptchaProps,
 } from "@prosopo/types";
+import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
 import { assertType, describe, expectTypeOf, test } from "vitest";
 import type { CaptchaComponentProps } from "../components/captchaComponent.js";
 import type { CaptchaWidgetProps } from "../components/captchaWidget.js";
@@ -52,15 +53,10 @@ describe("CaptchaWidget's props", () => {
 		>();
 	});
 
-	test("accepts only the two themes the palette defines", () => {
-		expectTypeOf<CaptchaWidgetProps["themeColor"]>().toEqualTypeOf<
-			"light" | "dark"
-		>();
-	});
-
-	test("rejects a theme name the palette does not have", () => {
-		// @ts-expect-error a third theme would silently fall back to dark
-		assertType<CaptchaWidgetProps["themeColor"]>("blue");
+	test("takes a built theme, not a theme name", () => {
+		expectTypeOf<CaptchaWidgetProps["theme"]>().toEqualTypeOf<Theme>();
+		// @ts-expect-error a name alone cannot carry a site's palette
+		assertType<CaptchaWidgetProps["theme"]>("light");
 	});
 
 	test("holds the solution as hash, coordinates and input method", () => {
@@ -77,13 +73,13 @@ describe("CaptchaWidget's props", () => {
 			challenge: {} as Captcha,
 			solution: [],
 			onClick: () => undefined,
-			themeColor: "light",
+			theme: lightTheme,
 		});
 		// @ts-expect-error solution is required, not defaulted
 		assertType<CaptchaWidgetProps>({
 			challenge: {} as Captcha,
 			onClick: () => undefined,
-			themeColor: "light",
+			theme: lightTheme,
 		});
 	});
 });
