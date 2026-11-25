@@ -58,6 +58,9 @@ class CaptchaRenderer {
 		const config = createConfig({
 			siteKey: renderOptions.siteKey,
 			theme: renderOptions.theme,
+			palette: renderOptions.palette,
+			shape: renderOptions.shape,
+			font: renderOptions.font,
 			// Validated here, not only in readAndValidateSettings: an unsupported
 			// code (e.g. "he") otherwise fails the config schema and leaves the
 			// skeleton spinning.

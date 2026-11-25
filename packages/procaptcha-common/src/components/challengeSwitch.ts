@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import {
+	type Theme,
 	canHover,
-	darkTheme,
 	isDevMode,
-	lightTheme,
 	randomToken,
 } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
@@ -32,7 +31,7 @@ import { createControl } from "../dom/obfuscation.js";
 export interface ChallengeSwitchButtonProps {
 	/** The kind of challenge the button switches to, which picks its icon. */
 	target: "image" | "puzzle";
-	themeColor: "light" | "dark";
+	theme: Theme;
 	onSwitch: () => void;
 	/** Accessible name, and the tooltip's text. */
 	label: string;
@@ -67,7 +66,6 @@ const buttonStyle: StyleMap = {
 	display: "flex",
 	alignItems: "center",
 	justifyContent: "center",
-	borderRadius: "50%",
 	padding: "4px",
 	height: "24px",
 	width: "24px",
@@ -82,9 +80,6 @@ export const mountChallengeSwitchButton = (
 	let props = initialProps;
 	let hover = false;
 	let focusVisible = false;
-
-	const themeFor = (themeColor: "light" | "dark") =>
-		"light" === themeColor ? lightTheme : darkTheme;
 
 	const shapes =
 		"puzzle" === props.target
@@ -162,7 +157,7 @@ export const mountChallengeSwitchButton = (
 	});
 
 	const render = () => {
-		const theme = themeFor(props.themeColor);
+		const { theme } = props;
 		const pinned = true === props.tooltipPinned;
 		button.setAttribute("aria-label", props.label);
 		const fill = pinned
@@ -173,6 +168,7 @@ export const mountChallengeSwitchButton = (
 		}
 		applyStyles(button, {
 			...buttonStyle,
+			borderRadius: theme.shape.iconButton,
 			outline: focusVisible
 				? `3px solid ${theme.palette.primary.main}`
 				: "none",

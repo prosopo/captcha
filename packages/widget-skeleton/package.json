@@ -37,6 +37,9 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
+	"dependencies": {
+		"@prosopo/types": "workspace:*"
+	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "30.0.0",

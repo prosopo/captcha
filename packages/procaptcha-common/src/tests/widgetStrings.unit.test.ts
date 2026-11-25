@@ -70,7 +70,7 @@ describe("error FAQ link", () => {
 describe("reload button", () => {
 	test("is announced by the label it is given", () => {
 		const reload = mountReloadButton(mounted.container, {
-			themeColor: "light",
+			theme: lightTheme,
 			onReload: () => undefined,
 			label: "Neu laden",
 		});
@@ -81,7 +81,7 @@ describe("reload button", () => {
 
 	test("names its icon with the same label, not a hard-coded English word", () => {
 		const reload = mountReloadButton(mounted.container, {
-			themeColor: "light",
+			theme: lightTheme,
 			onReload: () => undefined,
 			label: "Neu laden",
 		});
@@ -93,13 +93,13 @@ describe("reload button", () => {
 
 	test("follows a label changed after mounting", () => {
 		const reload = mountReloadButton(mounted.container, {
-			themeColor: "light",
+			theme: lightTheme,
 			onReload: () => undefined,
 			label: "Reload",
 		});
 		component = reload;
 		reload.update({
-			themeColor: "light",
+			theme: lightTheme,
 			onReload: () => undefined,
 			label: "إعادة تحميل",
 		});

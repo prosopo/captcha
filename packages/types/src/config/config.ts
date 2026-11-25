@@ -348,9 +348,27 @@ const Placement = zEnum(Placements as [PlacementType, ...PlacementType[]]);
 
 const ThemeType = union([literal("light"), literal("dark")]);
 
+// Values are only checked for type here; the theme builder drops bad colours
+// and fonts so a typo falls back to the default look instead of breaking the
+// widget.
+const PaletteSchema = object({
+	primary: string().optional(),
+	surface: string().optional(),
+	background: string().optional(),
+	text: string().optional(),
+	textSecondary: string().optional(),
+	border: string().optional(),
+	error: string().optional(),
+});
+
+const ShapeSchema = union([literal("rounded"), literal("square")]);
+
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 	object({
 		theme: ThemeType.optional().default("light"),
+		palette: PaletteSchema.optional(),
+		shape: ShapeSchema.optional(),
+		font: string().optional(),
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),

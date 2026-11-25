@@ -12,7 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaRenderOptions } from "@prosopo/types";
+import {
+	PALETTE_DATA_ATTRIBUTES,
+	type ProcaptchaAppearance,
+	type ProcaptchaPalette,
+	type ProcaptchaRenderOptions,
+	type ProcaptchaShape,
+} from "@prosopo/types";
+
+const isShape = (value: string | null | undefined): value is ProcaptchaShape =>
+	"rounded" === value || "square" === value;
 
 class WidgetThemeResolver {
 	private readonly themesSet = new Set(["light", "dark"]);
@@ -28,6 +37,31 @@ class WidgetThemeResolver {
 			this.defaultTheme;
 
 		return this.validateTheme(themeAttribute);
+	}
+
+	// Render options win colour by colour; `data-*` attributes fill the rest.
+	public resolveWidgetAppearance(
+		element: Element,
+		renderOptions: ProcaptchaRenderOptions,
+	): ProcaptchaAppearance {
+		const palette: ProcaptchaPalette = {};
+		for (const [key, attribute] of Object.entries(PALETTE_DATA_ATTRIBUTES) as [
+			keyof ProcaptchaPalette,
+			string,
+		][]) {
+			const colour =
+				renderOptions.palette?.[key] || element.getAttribute(attribute);
+			if (colour) {
+				palette[key] = colour;
+			}
+		}
+		const shape = renderOptions.shape || element.getAttribute("data-shape");
+		const font = renderOptions.font || element.getAttribute("data-font");
+		return {
+			palette,
+			shape: isShape(shape) ? shape : undefined,
+			font: font || undefined,
+		};
 	}
 
 	protected validateTheme(themeAttribute: string): "light" | "dark" {

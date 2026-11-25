@@ -20,16 +20,11 @@ import {
 	createControl,
 	createElement,
 } from "@prosopo/procaptcha-common";
-import {
-	canHover,
-	darkTheme,
-	lightTheme,
-	withAlpha,
-} from "@prosopo/widget-skeleton";
+import { type Theme, canHover, withAlpha } from "@prosopo/widget-skeleton";
 import addDataAttr from "../util/index.js";
 
 export interface ButtonProps {
-	themeColor: "light" | "dark";
+	theme: Theme;
 	buttonType: "cancel" | "next";
 	onClick: () => void;
 	text: string;
@@ -88,7 +83,7 @@ export const mountButton = (
 	button.appendChild(label);
 
 	const buttonStyle = (): StyleMap => {
-		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
+		const { theme } = props;
 		const baseStyle: StyleMap = {
 			...buttonStyleBase,
 			...theme.typography.labelLarge,

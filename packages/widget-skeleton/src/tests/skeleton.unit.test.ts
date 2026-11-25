@@ -28,7 +28,7 @@ import {
 	readEnvironmentSources,
 	replacePlaceholder,
 } from "../elements/skeleton.js";
-import { type Theme, darkTheme, lightTheme } from "../theme.js";
+import { type Theme, createTheme, darkTheme, lightTheme } from "../theme.js";
 
 const skeletonOf = (theme: Theme): HTMLElement =>
 	createWidgetSkeletonElement(theme).element;
@@ -68,12 +68,28 @@ afterEach(() => {
 });
 
 describe("createWidgetSkeletonElement", () => {
+	test("keeps two differently themed widgets on one page apart", () => {
+		// The sheet is global, so unscoped rules would let the second widget's
+		// surface paint the first.
+		document.body.replaceChildren(
+			skeletonOf(createTheme("light", { palette: { surface: "#123456" } })),
+			skeletonOf(createTheme("light", { palette: { surface: "#abcdef" } })),
+		);
+
+		const surfaces = [
+			...document.querySelectorAll<HTMLElement>(".prosopo-widget__content"),
+		].map((content: HTMLElement) => getComputedStyle(content).backgroundColor);
+
+		expect(surfaces).toEqual(["rgb(18, 52, 86)", "rgb(171, 205, 239)"]);
+		document.body.replaceChildren();
+	});
+
 	test("renders the full nesting the styles target", () => {
 		// Each level exists for a specific declaration — the container query, the
 		// overflow clip, the padded content box — so a missing one silently
 		// changes the layout rather than failing.
 		const widget: HTMLElement = skeletonOf(lightTheme);
-		expect(widget.className).toBe("prosopo-widget");
+		expect(widget.classList.contains("prosopo-widget")).toBe(true);
 		for (const selector of [
 			".prosopo-widget__outer",
 			".prosopo-widget__wrapper",

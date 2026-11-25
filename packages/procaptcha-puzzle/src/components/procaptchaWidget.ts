@@ -44,7 +44,7 @@ import {
 	type PuzzleEvent,
 	type ReloadOptions,
 } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { createTheme } from "@prosopo/widget-skeleton";
 import { Manager } from "../services/Manager.js";
 import type { PuzzleChallengeWithPiece } from "../services/pieceMask.js";
 import { type PuzzleCanvasProps, mountPuzzleCanvas } from "./puzzleCanvas.js";
@@ -242,7 +242,7 @@ export const mountProcaptchaPuzzleWidget = (
 		},
 		showRetry,
 		submitting: "submitting" === puzzlePhase,
-		theme: "light" === config.theme ? lightTheme : darkTheme,
+		theme: createTheme(config.theme, config),
 		translator,
 		placement: config.placement,
 		anchor: props.container,
@@ -328,7 +328,7 @@ export const mountProcaptchaPuzzleWidget = (
 	const checkboxProps = (): CheckboxProps => ({
 		nonce: config.nonce,
 		checked: store.state.isHuman,
-		theme: "light" === config.theme ? lightTheme : darkTheme,
+		theme: createTheme(config.theme, config),
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
 			? localiseError(translator.i18n, store.state.error)

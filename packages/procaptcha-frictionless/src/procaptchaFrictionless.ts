@@ -49,7 +49,7 @@ import {
 	StartModeEnum,
 	type WidgetError,
 } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { createTheme } from "@prosopo/widget-skeleton";
 import { mountAuthenticatedBadge } from "./authenticatedBadge.js";
 import customDetectBot from "./customDetectBot.js";
 import { evaluateFrictionlessResult } from "./frictionlessResultGuard.js";
@@ -251,7 +251,7 @@ export const mountProcaptchaFrictionless = (
 	) => {
 		const props: CheckboxProps = {
 			nonce: config.nonce,
-			theme: "light" === config.theme ? lightTheme : darkTheme,
+			theme: createTheme(config.theme, config),
 			onChange: onChange ?? (() => undefined),
 			checked: false,
 			labelText: i18n.isInitialized ? i18n.t("WIDGET.I_AM_HUMAN") : "",
@@ -511,7 +511,7 @@ export const mountProcaptchaFrictionless = (
 				userAccount: frictionlessState.userAccount,
 				provider: frictionlessState.provider,
 				callbacks,
-				theme: "light" === config.theme ? lightTheme : darkTheme,
+				theme: createTheme(config.theme, config),
 				labels: i18n.isInitialized
 					? {
 							verifiedAgent: i18n.t("WIDGET.VERIFIED_AGENT"),

@@ -14,7 +14,6 @@
 
 import {
 	WIDGET_BORDER,
-	WIDGET_BORDER_RADIUS,
 	WIDGET_INNER_HEIGHT,
 	WIDGET_MAX_WIDTH,
 	WIDGET_MIN_HEIGHT,
@@ -22,6 +21,7 @@ import {
 	WIDGET_OUTER_HEIGHT,
 	WIDGET_PADDING,
 } from "../constants.js";
+import { randomToken } from "../obfuscation.js";
 import { type Theme, withAlpha } from "../theme.js";
 import type { WidgetLinkContext } from "../widgetLink.js";
 import { createCheckboxElement } from "./checkbox.js";
@@ -53,14 +53,20 @@ export function createWidgetSkeletonElement(
 	link?: WidgetLinkContext,
 	nonce?: string,
 ): WidgetSkeletonElement {
+	// The sheet is not in a shadow root, so every widget on the page sees every
+	// other widget's rules. Theme-dependent rules hang off this per-widget class,
+	// or two widgets with different looks would both take the last one's.
+	const instance = randomToken();
 	const widgetElement = document.createElement("div");
-	widgetElement.className = "prosopo-widget";
+	widgetElement.className = `prosopo-widget ${instance}`;
 
 	const checkbox = createCheckboxElement(theme, loadingLabel, nonce);
 	const logoElement = createLogoElement(theme, link, nonce);
 
 	widgetElement.innerHTML = getWidgetMarkup(isDevMode());
-	widgetElement.prepend(createStyleElement(getWidgetStyles(theme), nonce));
+	widgetElement.prepend(
+		createStyleElement(getWidgetStyles(theme, instance), nonce),
+	);
 
 	replacePlaceholder(widgetElement, ".prosopo-widget__checkbox", checkbox.host);
 	replacePlaceholder(widgetElement, ".prosopo-widget__logo", logoElement);
@@ -119,8 +125,9 @@ function getWidgetMarkup(isDevelopmentMode: boolean): string {
  * Generates the CSS styles for the widget
  *
  * @param theme - The theme to apply to the styles
+ * @param instance - The class that scopes the theme-dependent rules to this widget
  */
-function getWidgetStyles(theme: Theme): string {
+function getWidgetStyles(theme: Theme, instance: string): string {
 	return `
 .prosopo-widget {
     width: 100%;
@@ -139,8 +146,6 @@ function getWidgetStyles(theme: Theme): string {
     max-width: ${WIDGET_MAX_WIDTH};
     min-height: 100%;
     overflow-x: auto;
-    font-family: ${theme.font.fontFamily};
-    color: ${theme.font.color};
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
@@ -210,9 +215,6 @@ function getWidgetStyles(theme: Theme): string {
 .prosopo-widget__content {
     padding: ${WIDGET_PADDING};
     border: ${WIDGET_BORDER};
-    background-color: ${theme.palette.surface};
-    border-color: ${theme.palette.border};
-    border-radius: ${WIDGET_BORDER_RADIUS};
     transition: background-image 0.15s ease, border-color 0.15s ease;
     display: flex !important;
     flex-direction: row !important;
@@ -224,6 +226,17 @@ function getWidgetStyles(theme: Theme): string {
     min-height: ${WIDGET_INNER_HEIGHT}px;
     height: 100%;
     direction: ltr !important;
+}
+
+.${instance} .prosopo-widget__outer {
+    font-family: ${theme.font.fontFamily};
+    color: ${theme.font.color};
+}
+
+.${instance} .prosopo-widget__content {
+    background-color: ${theme.palette.surface};
+    border-color: ${theme.palette.border};
+    border-radius: ${theme.shape.widget};
 }
 
 ${RTL_CONTENT_SELECTOR} {
@@ -238,7 +251,7 @@ ${RTL_CONTENT_SELECTOR} {
    as a request to show the hover state, and withholds the click, so the
    visitor has to tap twice to tick the box. */
 @media (hover: hover) {
-    .prosopo-widget__content:hover {
+    .${instance} .prosopo-widget__content:hover {
         background-image: linear-gradient(
             ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)},
             ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)}

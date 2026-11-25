@@ -50,7 +50,7 @@ const props = (
 	challenge: captcha(overrides.items ? { items: overrides.items } : {}),
 	solution: overrides.solution ?? [],
 	onClick,
-	themeColor: overrides.themeColor ?? "light",
+	theme: "dark" === overrides.themeColor ? darkTheme : lightTheme,
 });
 
 const render = (overrides: Parameters<typeof props>[0] = {}): void => {

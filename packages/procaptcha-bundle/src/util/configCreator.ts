@@ -16,12 +16,13 @@ import type { Languages } from "@prosopo/locale";
 import {
 	EnvironmentTypesSchema,
 	type PlacementType,
+	type ProcaptchaAppearance,
 	type ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
 	resolvePlacement,
 } from "@prosopo/types";
 
-interface CreateConfigOptions {
+interface CreateConfigOptions extends ProcaptchaAppearance {
 	siteKey?: string;
 	theme?: "light" | "dark";
 	language?: (typeof Languages)[keyof typeof Languages];
@@ -38,6 +39,9 @@ function createConfig(
 ): ProcaptchaClientConfigOutput {
 	const {
 		theme = "light",
+		palette,
+		shape,
+		font,
 		language,
 		web2 = true,
 		invisible = false,
@@ -63,6 +67,9 @@ function createConfig(
 		mode: invisible ? "invisible" : "visible",
 		placement: resolvePlacement(placement, invisible),
 		theme,
+		palette,
+		shape,
+		font,
 		language,
 		ipv4,
 		ipv6,

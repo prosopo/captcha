@@ -103,7 +103,7 @@ export const mountIconOrderCanvas = (
 
 	const header = createElement("div", {
 		style: {
-			borderRadius: "20px 20px 0 0",
+			borderRadius: `${props.theme.shape.panel} ${props.theme.shape.panel} 0 0`,
 			padding: "10px 16px",
 			width: `${CONTAINER_WIDTH}px`,
 			boxSizing: "border-box",
@@ -148,7 +148,7 @@ export const mountIconOrderCanvas = (
 		style: {
 			flex: "0 0 auto",
 			padding: "8px 12px",
-			borderRadius: "10px",
+			borderRadius: props.theme.shape.control,
 			background: "transparent",
 			fontSize: "13px",
 		},
@@ -159,7 +159,7 @@ export const mountIconOrderCanvas = (
 		style: {
 			flex: "1 1 auto",
 			padding: "8px 12px",
-			borderRadius: "10px",
+			borderRadius: props.theme.shape.control,
 			border: "none",
 			fontSize: "14px",
 			fontWeight: 600,
@@ -176,7 +176,7 @@ export const mountIconOrderCanvas = (
 
 	const controls = createElement("div", {
 		style: {
-			borderRadius: "0 0 20px 20px",
+			borderRadius: `0 0 ${props.theme.shape.panel} ${props.theme.shape.panel}`,
 			padding: "10px 16px",
 			width: `${CONTAINER_WIDTH}px`,
 			boxSizing: "border-box",
@@ -313,7 +313,9 @@ export const mountIconOrderCanvas = (
 
 		applyStyles(controls, {
 			backgroundColor: theme.palette.surface,
-			borderRadius: props.audioAlternative ? "0" : "0 0 20px 20px",
+			borderRadius: props.audioAlternative
+				? "0"
+				: `0 0 ${theme.shape.panel} ${theme.shape.panel}`,
 		});
 		audioAlternativeFooter.update(audioAlternativeFooterProps());
 

@@ -276,11 +276,11 @@ export const mountCheckbox = (
 	const styleIdFor = (theme: Theme): string =>
 		`${CHECKBOX_STYLE_ID}-${names.instance}-${theme.palette.mode}`;
 
-	let styleMode = props.theme.palette.mode;
+	let styleCss = checkboxCss(props.theme, names);
 	let disposeStyle = injectStyle(
 		container,
 		styleIdFor(props.theme),
-		checkboxCss(props.theme, names),
+		styleCss,
 		props.nonce,
 	);
 	teardown.add(() => disposeStyle());
@@ -549,13 +549,16 @@ export const mountCheckbox = (
 			// `render` re-applies the inline box styles from the new theme, but the
 			// stylesheet holds the label colour, font and focus ring — it has to be
 			// swapped explicitly, where Emotion used to regenerate it per render.
-			if (props.theme.palette.mode !== styleMode) {
+			// Compared by text: in the checkbox frame the theme arrives through
+			// postMessage, so every update carries a new object.
+			const nextCss = checkboxCss(props.theme, names);
+			if (nextCss !== styleCss) {
 				disposeStyle();
-				styleMode = props.theme.palette.mode;
+				styleCss = nextCss;
 				disposeStyle = injectStyle(
 					container,
 					styleIdFor(props.theme),
-					checkboxCss(props.theme, names),
+					styleCss,
 					props.nonce,
 				);
 			}

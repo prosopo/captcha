@@ -63,7 +63,7 @@ const props = (
 	onNext,
 	onReload,
 	...(overrides.puzzleSwitch && { onSwitchToPuzzle }),
-	themeColor: overrides.themeColor ?? "light",
+	theme: "dark" === overrides.themeColor ? darkTheme : lightTheme,
 	translator: translator(),
 	audioAlternative: overrides.audioAlternative,
 });

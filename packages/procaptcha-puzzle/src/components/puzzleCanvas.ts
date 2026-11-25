@@ -31,7 +31,7 @@ import {
 	mountReloadButton,
 } from "@prosopo/procaptcha-common";
 import type { PlacementType, PuzzleEvent } from "@prosopo/types";
-import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
+import type { Theme } from "@prosopo/widget-skeleton";
 
 export interface PuzzleCanvasProps {
 	originX: number;
@@ -260,7 +260,7 @@ export const mountPuzzleCanvas = (
 			position: "relative",
 			width: `${CONTAINER_WIDTH}px`,
 			height: `${CONTAINER_HEIGHT}px`,
-			borderRadius: "0 0 20px 20px",
+			borderRadius: `0 0 ${props.theme.shape.panel} ${props.theme.shape.panel}`,
 			overflow: "hidden",
 			userSelect: "none",
 			transition: "opacity 0.2s ease",
@@ -295,7 +295,7 @@ export const mountPuzzleCanvas = (
 	const instruction = createElement("div", {
 		style: {
 			position: "relative",
-			borderRadius: "20px 20px 0 0",
+			borderRadius: `${props.theme.shape.panel} ${props.theme.shape.panel} 0 0`,
 			// Wide enough either side for the refresh control to sit in without
 			// pushing the centred text off-centre.
 			padding: "12px 48px",
@@ -323,8 +323,7 @@ export const mountPuzzleCanvas = (
 	});
 
 	const refreshButtonProps = () => ({
-		themeColor:
-			lightTheme === props.theme ? ("light" as const) : ("dark" as const),
+		theme: props.theme,
 		label: t("WIDGET.PUZZLE.REFRESH", {
 			defaultValue: "Show a different puzzle",
 		}),
@@ -341,8 +340,7 @@ export const mountPuzzleCanvas = (
 
 	const imageSwitchButtonProps = (): ChallengeSwitchButtonProps => ({
 		target: "image",
-		themeColor:
-			lightTheme === props.theme ? ("light" as const) : ("dark" as const),
+		theme: props.theme,
 		label: t("WIDGET.PUZZLE.SWITCH_TO_IMAGE", {
 			defaultValue: "Switch to an image challenge",
 		}),
@@ -525,7 +523,9 @@ export const mountPuzzleCanvas = (
 			background: `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`,
 			opacity: props.submitting ? 0.6 : 1,
 			pointerEvents: props.submitting ? "none" : "auto",
-			borderRadius: props.audioAlternative ? "0" : "0 0 20px 20px",
+			borderRadius: props.audioAlternative
+				? "0"
+				: `0 0 ${theme.shape.panel} ${theme.shape.panel}`,
 		});
 		audioAlternativeFooter.update(audioAlternativeFooterProps());
 		for (const tile of backgroundTiles) {

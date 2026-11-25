@@ -35,7 +35,7 @@ import {
 	type ProcaptchaProps,
 	type ProcaptchaState,
 } from "@prosopo/types";
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { createTheme } from "@prosopo/widget-skeleton";
 import {
 	type CaptchaComponentProps,
 	mountCaptchaComponent,
@@ -139,7 +139,7 @@ export const mountProcaptchaImageWidget = (
 			true === challenge.puzzleSwitchAvailable && {
 				onSwitchToPuzzle: () => manager.reload({ switchToPuzzle: true }),
 			}),
-		themeColor: config.theme ?? "light",
+		theme: createTheme(config.theme, config),
 		translator,
 		audioAlternative: audioAlternativeOffer(
 			props,
@@ -219,7 +219,7 @@ export const mountProcaptchaImageWidget = (
 
 	const checkboxProps = (): CheckboxProps => ({
 		nonce: config.nonce,
-		theme: "light" === props.config.theme ? lightTheme : darkTheme,
+		theme: createTheme(props.config.theme, props.config),
 		checked: store.state.isHuman,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
