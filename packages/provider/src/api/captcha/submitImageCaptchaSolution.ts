@@ -17,6 +17,7 @@ import {
 	CaptchaSolutionBody,
 	type CaptchaSolutionBodyType,
 	type CaptchaSolutionResponse,
+	CaptchaType,
 	type DappUserSolutionResult,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -25,6 +26,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { forceAlwaysPass } from "../alwaysPass.js";
 import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
@@ -134,6 +136,26 @@ export default (env: ProviderEnvironment) =>
 					clientMetaData: parsed[ApiParams.clientMetaData],
 					postSolve: postSolveRequest(tasks, req, clientRecord),
 				});
+
+			if (
+				forceAlwaysPass({
+					clientRecord,
+					logger: req.logger,
+					stage: "submit",
+					captchaType: CaptchaType.image,
+					realVerdict: result.verified,
+				})
+			) {
+				const forced: CaptchaSolutionResponse = {
+					status: req.i18n.t("API.CAPTCHA_PASSED"),
+					captchas: result.captchas.map(({ captchaId }) => ({
+						captchaId,
+						proof: [[]],
+					})),
+					verified: true,
+				};
+				return res.json(forced);
+			}
 
 			const returnValue: CaptchaSolutionResponse = {
 				status: req.i18n.t(

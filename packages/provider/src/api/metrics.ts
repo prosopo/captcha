@@ -303,10 +303,17 @@ export const recordCaptchaIssueError = (type: CaptchaType): void => {
 	getMetrics().captchaIssueErrorsTotal.inc({ type });
 };
 
+export type VerifySource =
+	| "real"
+	| "test_key"
+	| "maintenance"
+	| "cached"
+	| "always_pass";
+
 export const recordCaptchaVerify = (args: {
 	type: CaptchaType;
 	verified: boolean;
-	source: "real" | "test_key" | "maintenance" | "cached";
+	source: VerifySource;
 }): void => {
 	if (!metricsEnabled()) return;
 	getMetrics().captchaVerifyTotal.inc({
