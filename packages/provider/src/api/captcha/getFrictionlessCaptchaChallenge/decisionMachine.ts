@@ -35,6 +35,7 @@ import { timestampDecayFunction } from "../../../tasks/frictionless/frictionless
 import type { Tasks } from "../../../tasks/index.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { recordFrictionlessDecision } from "../../metrics.js";
+import { isProtectChallengeReferer } from "./challengeReferer.js";
 import {
 	DECRYPTION_FAILED_IMAGE_ROUNDS,
 	MISSING_HEAD_HASH_IMAGE_ROUNDS,
@@ -92,7 +93,7 @@ type ExpressHandle = {
 	next: NextFunction;
 };
 
-// Post-validation pipeline: payload presence → decrypt → UA → context →
+// Post-validation pipeline: challenge-page referer → payload presence → decrypt → UA → context →
 // webview → timestamp → host → score → default-pow. Runs after the access-rule
 // ladder in the handler. Always terminates the request.
 export const runDecisionMachine = async (
@@ -110,6 +111,29 @@ export const runDecisionMachine = async (
 	} = input;
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
+
+	if (isProtectChallengeReferer(req.headers.referer)) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "protect_challenge_referer",
+				referer: req.headers.referer,
+			},
+		}));
+		recordFrictionlessDecision("protect_challenge_referer");
+		await tasks.frictionlessManager.registerBlockedSession(CaptchaType.image, {
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
+			userSitekeyIpHash,
+			reason: FrictionlessReason.PROTECT_CHALLENGE_REFERER,
+			siteKey: dapp,
+			ipInfo,
+			headers: flatHeaders,
+		});
+		return sendProsopoError(
+			res,
+			new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-102" }),
+		);
+	}
 
 	// An absent payload is never a pass. A client that ran no detector — for any
 	// reason, self-reported or not — has told us nothing about itself, so it

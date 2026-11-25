@@ -43,6 +43,7 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 		DECRYPTION_FAILED: "DECRYPTION_FAILED",
 		MISSING_TOKEN: "MISSING_TOKEN",
 		MISSING_HEAD_HASH: "MISSING_HEAD_HASH",
+		PROTECT_CHALLENGE_REFERER: "PROTECT_CHALLENGE_REFERER",
 	},
 }));
 
@@ -103,9 +104,17 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => ({
 	...overrides,
 });
 
-const buildHandle = (uaHeader = "ua", prosopoUser = "uid") => {
+const buildHandle = (
+	uaHeader = "ua",
+	prosopoUser = "uid",
+	referer?: string,
+) => {
 	const req = {
-		headers: { "user-agent": uaHeader, "prosopo-user": prosopoUser },
+		headers: {
+			"user-agent": uaHeader,
+			"prosopo-user": prosopoUser,
+			...(referer !== undefined && { referer }),
+		},
 		logger: { info: vi.fn() },
 		requestId: "rid",
 		i18n: { t: (s: string): string => s, exists: (): boolean => false },
@@ -124,6 +133,39 @@ describe("runDecisionMachine", () => {
 		timestampTooOldMock.mockReturnValue(false);
 		timestampDecayMock.mockClear();
 		timestampDecayMock.mockReturnValue(2);
+	});
+
+	it("blocks a session whose referer is a full Protect challenge URL", async () => {
+		const input = buildInput({ token: "" });
+		const { res, handle } = buildHandle(
+			"ua",
+			"uid",
+			"https://protect.example.com/api/protect/challenge?jti=abc",
+		);
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.registerBlockedSession,
+		).toHaveBeenCalledWith(
+			CaptchaType.image,
+			expect.objectContaining({ reason: "PROTECT_CHALLENGE_REFERER" }),
+		);
+		expect(res.status).toHaveBeenCalledWith(401);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).not.toHaveBeenCalled();
+		expect(
+			input.tasks.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
+	});
+
+	it("passes a Protect challenge page whose referer is trimmed to the origin", async () => {
+		const input = buildInput();
+		const { handle } = buildHandle("ua", "uid", "https://protect.example.com/");
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.registerBlockedSession,
+		).not.toHaveBeenCalled();
+		expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
 	});
 
 	it("serves a 3-round image captcha when the client sent no token", async () => {
