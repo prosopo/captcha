@@ -26,6 +26,7 @@ import {
 import type { ProviderEnvironment } from "@prosopo/env";
 import { LANGUAGE_HEADER, i18nMiddleware } from "@prosopo/locale";
 import { parseLogLevel } from "@prosopo/logger";
+import type { RedisConnection } from "@prosopo/redis-client";
 import {
 	AdminApiPaths,
 	BUNDLE_ORIGIN_HEADER,
@@ -65,6 +66,7 @@ import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
 import { rateLimitHandler } from "./rateLimitHandler.js";
 import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
+import { RedisRateLimitStore } from "./redisRateLimitStore.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import {
 	SITEVERIFY_PATH,
@@ -321,14 +323,27 @@ export async function startProviderApi(
 		};
 		const adminPaths = Object.values(AdminApiPaths);
 		const adminKey = adminRateLimitKey(env.pair, env.authAccount);
+		const getRedisConnection = (): RedisConnection | undefined => {
+			try {
+				return env.getDb().getRedisConnection();
+			} catch {
+				return undefined;
+			}
+		};
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
+			const store = new RedisRateLimitStore(
+				getRedisConnection,
+				env.logger,
+				enumPath,
+			);
 			if (adminPaths.includes(enumPath as AdminApiPaths)) {
 				apiApp.use(
 					enumPath,
 					rateLimit({
 						...limit,
 						handler: rateLimitHandler(env.logger, enumPath),
+						store,
 						keyGenerator: adminKey,
 					}),
 				);
@@ -342,6 +357,7 @@ export async function startProviderApi(
 					rateLimit({
 						...limit,
 						handler: rateLimitHandler(env.logger, enumPath),
+						store,
 						keyGenerator: (req) => {
 							const siteKey = req.headers["prosopo-site-key"] as string;
 							// Fall back to IP if no site key found (shouldn't happen for verify routes with headerCheckMiddleware)
@@ -355,6 +371,7 @@ export async function startProviderApi(
 					rateLimit({
 						...limit,
 						handler: rateLimitHandler(env.logger, enumPath),
+						store,
 					}),
 				);
 			}
