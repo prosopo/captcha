@@ -1,5 +1,18 @@
 # @prosopo/types
 
+## 5.33.0
+### Minor Changes
+
+- 8ae0d52: Adds an `alwaysPass` client setting. When it is on, every submit and verify for that site key reports a pass, with no score, reason or escalation. The real result is still recorded, and verify only applies the setting after the site key's signature checks out. Forced passes are logged and counted under the `always_pass` verify metrics source.
+- 32fe779: `isVerified` still answers `verified: false` when the provider or the provider list times out, and now also sets `timedOut: true` so a caller that fails open on an unanswered verify can tell a timeout from a rejection. A new optional `providerListTimeoutMs` server setting bounds the provider-list fetch, and `findProvider` / `getProviders` accept a timeout for it.
+  
+  The self-hosted `/siteverify` now answers a timed-out verify with `timedOut: true` and a neutral score of 0.5 (`TIMED_OUT_VERIFY_SCORE`) instead of 0, which read as a confident human.
+- 2d029db: Sites can now style the widget with their own colours, square or rounded corners, and their own font. Set `palette`, `shape` and `font` in the render options, or use the `data-palette-*` (for example `data-palette-primary`), `data-shape` and `data-font` attributes. All the other colours the widget needs are worked out from the primary colour. Colours that are not hex and fonts that could break the stylesheet are ignored, and the default look is used instead. The Prosopo logo changes to a shade of purple that is easy to read on the chosen background, or to black or white if no purple is.
+
+### Patch Changes
+
+- 2259e3a: Blocks frictionless requests whose Referer is a full Protect challenge page URL. They are recorded with the new `PROTECT_CHALLENGE_REFERER` reason.
+
 ## 5.32.7
 ### Patch Changes
 

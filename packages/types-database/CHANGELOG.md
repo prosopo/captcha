@@ -1,5 +1,20 @@
 # @prosopo/types-database
 
+## 5.21.0
+### Minor Changes
+
+- 8ae0d52: Adds an `alwaysPass` client setting. When it is on, every submit and verify for that site key reports a pass, with no score, reason or escalation. The real result is still recorded, and verify only applies the setting after the site key's signature checks out. Forced passes are logged and counted under the `always_pass` verify metrics source.
+
+### Patch Changes
+
+- Updated dependencies [8ae0d52]
+- Updated dependencies [2259e3a]
+- Updated dependencies [32fe779]
+- Updated dependencies [2d029db]
+  - @prosopo/types@5.33.0
+  - @prosopo/common@3.3.2
+  - @prosopo/user-access-policy@3.17.12
+
 ## 5.20.9
 ### Patch Changes
 

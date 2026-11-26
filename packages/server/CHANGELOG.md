@@ -1,5 +1,24 @@
 # @prosopo/server
 
+## 2.15.0
+### Minor Changes
+
+- 32fe779: `isVerified` still answers `verified: false` when the provider or the provider list times out, and now also sets `timedOut: true` so a caller that fails open on an unanswered verify can tell a timeout from a rejection. A new optional `providerListTimeoutMs` server setting bounds the provider-list fetch, and `findProvider` / `getProviders` accept a timeout for it.
+  
+  The self-hosted `/siteverify` now answers a timed-out verify with `timedOut: true` and a neutral score of 0.5 (`TIMED_OUT_VERIFY_SCORE`) instead of 0, which read as a confident human.
+
+### Patch Changes
+
+- Updated dependencies [8ae0d52]
+- Updated dependencies [2259e3a]
+- Updated dependencies [32fe779]
+- Updated dependencies [2d029db]
+  - @prosopo/types@5.33.0
+  - @prosopo/load-balancer@2.12.0
+  - @prosopo/api@4.11.10
+  - @prosopo/common@3.3.2
+  - @prosopo/keyring@2.10.39
+
 ## 2.14.27
 ### Patch Changes
 
