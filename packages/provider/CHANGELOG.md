@@ -1,5 +1,36 @@
 # @prosopo/provider
 
+## 5.35.0
+### Minor Changes
+
+- 8ae0d52: Adds an `alwaysPass` client setting. When it is on, every submit and verify for that site key reports a pass, with no score, reason or escalation. The real result is still recorded, and verify only applies the setting after the site key's signature checks out. Forced passes are logged and counted under the `always_pass` verify metrics source.
+
+### Patch Changes
+
+- 2259e3a: Blocks frictionless requests whose Referer is a full Protect challenge page URL. They are recorded with the new `PROTECT_CHALLENGE_REFERER` reason.
+- 02eed08: API rate limits are now counted in Redis, so containers sharing a Redis share one allowance per client. If Redis is unavailable or slow, each container falls back to counting in memory.
+- 32fe779: `isVerified` still answers `verified: false` when the provider or the provider list times out, and now also sets `timedOut: true` so a caller that fails open on an unanswered verify can tell a timeout from a rejection. A new optional `providerListTimeoutMs` server setting bounds the provider-list fetch, and `findProvider` / `getProviders` accept a timeout for it.
+  
+  The self-hosted `/siteverify` now answers a timed-out verify with `timedOut: true` and a neutral score of 0.5 (`TIMED_OUT_VERIFY_SCORE`) instead of 0, which read as a confident human.
+- Updated dependencies [8ae0d52]
+- Updated dependencies [2259e3a]
+- Updated dependencies [32fe779]
+- Updated dependencies [2d029db]
+  - @prosopo/types@5.33.0
+  - @prosopo/types-database@5.21.0
+  - @prosopo/load-balancer@2.12.0
+  - @prosopo/api@4.11.10
+  - @prosopo/api-express-router@3.3.32
+  - @prosopo/common@3.3.2
+  - @prosopo/database@4.6.20
+  - @prosopo/datasets@3.2.39
+  - @prosopo/env@3.7.9
+  - @prosopo/fingerprint@2.8.30
+  - @prosopo/ipinfo@0.7.17
+  - @prosopo/keyring@2.10.39
+  - @prosopo/types-env@2.12.18
+  - @prosopo/user-access-policy@3.17.12
+
 ## 5.34.0
 ### Minor Changes
 

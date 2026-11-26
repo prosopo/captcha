@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-react
 
+## 2.14.42
+### Patch Changes
+
+- 2d029db: Sites can now style the widget with their own colours, square or rounded corners, and their own font. Set `palette`, `shape` and `font` in the render options, or use the `data-palette-*` (for example `data-palette-primary`), `data-shape` and `data-font` attributes. All the other colours the widget needs are worked out from the primary colour. Colours that are not hex and fonts that could break the stylesheet are ignored, and the default look is used instead. The Prosopo logo changes to a shade of purple that is easy to read on the chosen background, or to black or white if no purple is.
+- Updated dependencies [8ae0d52]
+- Updated dependencies [2259e3a]
+- Updated dependencies [32fe779]
+- Updated dependencies [2d029db]
+  - @prosopo/types@5.33.0
+  - @prosopo/widget-skeleton@2.11.0
+  - @prosopo/procaptcha-common@2.23.23
+  - @prosopo/common@3.3.2
+  - @prosopo/procaptcha@2.12.23
+
 ## 2.14.41
 ### Patch Changes
 
