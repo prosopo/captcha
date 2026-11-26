@@ -60,7 +60,7 @@
 		"mongoose": "9.11.2",
 		"prom-client": "15.1.3",
 		"uuid": "14.0.3",
-		"zod": "3.25.76"
+		"zod": "4.6.6"
 	},
 	"devDependencies": {
 		"@noble/curves": "2.4.0",
