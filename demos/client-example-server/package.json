@@ -60,7 +60,7 @@
 		"jsonwebtoken": "9.0.3",
 		"mongodb-memory-server": "10.3.0",
 		"mongoose": "9.11.2",
-		"zod": "3.25.76"
+		"zod": "4.6.6"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
