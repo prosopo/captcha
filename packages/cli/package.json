@@ -52,6 +52,7 @@
 	"devDependencies": {
 		"@polkadot-api/substrate-client": "0.7.0",
 		"@prosopo/config": "workspace:*",
+		"@prosopo/native-bundle-payload": "0.2.0",
 		"@types/cors": "2.8.19",
 		"@types/express": "4.17.25",
 		"@types/node": "22.10.2",
