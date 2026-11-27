@@ -519,8 +519,6 @@ export const countryChangeActionDefault = IPValidationAction.Allow;
 export const cityChangeActionDefault = IPValidationAction.Allow;
 export const ispChangeActionDefault = IPValidationAction.Allow;
 export const distanceThresholdKmDefault = 1000;
-/** @deprecated Read only for stored records; decisions use `ipValidationReputationScoreThresholdDefault`. */
-export const abuseScoreThresholdDefault = 0.005;
 // Reputation score (0..1) at or above which the IP validation rules treat a
 // changed address as abusive.
 export const ipValidationReputationScoreThresholdDefault = 0.26;
@@ -570,10 +568,7 @@ export const IPValidationRulesSchema = object({
 		.optional()
 		.default(distanceThresholdKmDefault),
 	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
-	abuseScoreThreshold: number()
-		.positive()
-		.optional()
-		.default(abuseScoreThresholdDefault),
+	abuseScoreThreshold: number().positive().optional(),
 	// Compared with the changed address's reputation score. An address
 	// without a score never meets it.
 	reputationScoreThreshold: number()
@@ -757,12 +752,6 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
-/**
- * @deprecated No longer read for decisions; see
- * `trafficFilterReputationScoreThresholdDefault`. Kept so stored records parse.
- */
-export const trafficFilterAbuserScoreThresholdDefault = 0.2;
-
 // Reputation score (0..1) at or above which the `abuser` category applies.
 // An address without a score never meets it.
 export const trafficFilterReputationScoreThresholdDefault = 0.98;
@@ -884,11 +873,7 @@ export const TrafficFilterSchema = object({
 	tor: TrafficCategoryPolicySchema.optional(),
 	abuser: TrafficCategoryPolicySchema.optional(),
 	/** @deprecated No longer read for decisions; see `reputationScoreThreshold`. */
-	abuserScoreThreshold: number()
-		.min(0)
-		.max(1)
-		.optional()
-		.default(trafficFilterAbuserScoreThresholdDefault),
+	abuserScoreThreshold: number().min(0).max(1).optional(),
 	reputationScoreThreshold: number()
 		.min(0)
 		.max(1)

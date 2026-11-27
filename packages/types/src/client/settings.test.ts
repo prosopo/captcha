@@ -34,7 +34,6 @@ import {
 	TrafficCategoryPolicySchema,
 	TrafficFilterAction,
 	TrafficFilterSchema,
-	abuseScoreThresholdDefault,
 	captchaTypeDefault,
 	captchaTypeFeatureFlagDefaults,
 	clampImageRounds,
@@ -61,7 +60,6 @@ import {
 	resolveImageRoundsBounds,
 	resolveSolutionTimeout,
 	resolveVerifiedTimeout,
-	trafficFilterAbuserScoreThresholdDefault,
 	trafficFilterReputationScoreThresholdDefault,
 	widgetFeatureFlagDefaults,
 	withMarketCountries,
@@ -432,7 +430,7 @@ describe("IPValidationRulesSchema", () => {
 	it("defaults the thresholds and the conjunction flag", () => {
 		const rules = IPValidationRulesSchema.parse({ actions: {} });
 		expect(rules.distanceThresholdKm).toBe(distanceThresholdKmDefault);
-		expect(rules.abuseScoreThreshold).toBe(abuseScoreThresholdDefault);
+		expect(rules.abuseScoreThreshold).toBeUndefined();
 		expect(rules.reputationScoreThreshold).toBe(
 			ipValidationReputationScoreThresholdDefault,
 		);
@@ -691,10 +689,8 @@ describe("TrafficFilterSchema", () => {
 		expect(TrafficFilterSchema.parse({}).skipExtrasOnValidDnsPath).toBe(true);
 	});
 
-	it("defaults the abuser score threshold", () => {
-		expect(TrafficFilterSchema.parse({}).abuserScoreThreshold).toBe(
-			trafficFilterAbuserScoreThresholdDefault,
-		);
+	it("leaves the deprecated abuser score threshold unset", () => {
+		expect(TrafficFilterSchema.parse({}).abuserScoreThreshold).toBeUndefined();
 	});
 
 	it("bounds the abuser score threshold to a probability", () => {
