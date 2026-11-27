@@ -2797,8 +2797,8 @@ importers:
         specifier: workspace:*
         version: link:../logger
       '@prosopo/native-bundle-payload':
-        specifier: 0.1.0
-        version: 0.1.0
+        specifier: 0.2.0
+        version: 0.2.0
       '@prosopo/native-ja4':
         specifier: workspace:*
         version: link:../native-ja4
@@ -6002,9 +6002,9 @@ packages:
     resolution: {integrity: sha512-tOPdkMye3iuXnuFtdNg5+iSu7Cz9LRL8z5psMuZpUpThMYChGsS2pDFtNvXOKU8ohhO+frY9VdJ9VBg1WL9Iug==}
     engines: {node: '>=18'}
 
-  '@prosopo/native-bundle-payload@0.1.0':
-    resolution: {integrity: sha512-RcsErHI3g/rI9jsrw7EgRWX/+gv25AaHzO272K4fk8sFr7ix4SOGrYbmROlPoSrkCJp6Xi8hpm2Ev29PJMmGZw==}
-    engines: {node: ^24, npm: ^11}
+  '@prosopo/native-bundle-payload@0.2.0':
+    resolution: {integrity: sha512-l3m6sj7pKrOsUmei4Q7cwf8fysaE7G5KBiawS9KQWMGpSQHjIo3eLnjv8bZJUHsGbaAE+T+kX/JnWcCXYjOHEQ==}
+    engines: {node: ^24}
 
   '@prosopo/result@0.1.0':
     resolution: {integrity: sha512-n1VyAs4n2R0nTJ5V2jzBrXS8L6GeDQTsUy7Ay8AN9Zo9hBmmhST4TrdcFu7rXP99wI8sZV6di9HJaeeFBdq0Cw==}
@@ -14269,7 +14269,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@prosopo/native-bundle-payload@0.1.0': {}
+  '@prosopo/native-bundle-payload@0.2.0': {}
 
   '@prosopo/result@0.1.0': {}
 

@@ -93,7 +93,14 @@ const drawBundle = (): Bundle => ({
 
 const USER_ID = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 
-const decoderArgs = (bundle: Bundle, holder: Bundle = bundle): string[] => {
+const TOKEN_DOMAIN = 0;
+const BEHAVIORAL_DOMAIN = 1;
+
+const decoderArgs = (
+	bundle: Bundle,
+	holder: Bundle = bundle,
+	domain?: number,
+): string[] => {
 	const bag: string = Buffer.from(
 		toWireNames(
 			JSON.stringify({ signal: 7, unmapped: "kept" }),
@@ -105,7 +112,7 @@ const decoderArgs = (bundle: Bundle, holder: Bundle = bundle): string[] => {
 		bundle.payloadLayoutEncoded,
 	);
 	const seal = (plaintext: string): string =>
-		envelope(sealPayload(plaintext, bundle.innerConfigEncoded));
+		envelope(sealPayload(plaintext, bundle.innerConfigEncoded, domain));
 	return [
 		seal(JSON.stringify([Date.now(), wire, 13837])),
 		seal("headhash"),
@@ -156,6 +163,26 @@ describe("sealed detector payload", () => {
 		for (const result of results) {
 			expectDecoded(result);
 		}
+	});
+
+	it("decodes a token sealed in the token domain", async () => {
+		const bundle: Bundle = drawBundle();
+		expectDecoded(
+			await decode<DetectorResult>(
+				"payload",
+				decoderArgs(bundle, bundle, TOKEN_DOMAIN),
+			),
+		);
+	});
+
+	it("rejects behavioural data sent as the token", async () => {
+		const bundle: Bundle = drawBundle();
+		await expect(
+			decode<DetectorResult>(
+				"payload",
+				decoderArgs(bundle, bundle, BEHAVIORAL_DOMAIN),
+			),
+		).rejects.toThrow();
 	});
 
 	it("fails when the provider holds another bundle's config", async () => {
