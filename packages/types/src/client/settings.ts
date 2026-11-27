@@ -385,7 +385,10 @@ export const imageMaxRoundsFieldSchema = number().int().min(2);
 // serve a single round, but no site may cap itself below 2. `min <= max` is
 // enforced across the pair on `ClientSettingsSchema`.
 export const imageMinRoundsFieldSchema = number().int().min(1);
-export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
+// The floor is the hardest band's tightest tolerance in
+// `PUZZLE_DIFFICULTY_LEVELS` (`@prosopo/captcha-severity`); anything lower is
+// off the calibrated ladder.
+export const puzzleToleranceFieldSchema = number().int().min(6).max(1000);
 export const puzzleMaxDifficultyFieldSchema = number()
 	.int()
 	.min(0)

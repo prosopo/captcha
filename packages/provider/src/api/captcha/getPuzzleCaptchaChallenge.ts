@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import {
+	clampToleranceToLadder,
 	easePieceScaleForTouch,
 	easeToleranceForTouch,
+	resolveMaxEscalationLevel,
 } from "@prosopo/captcha-severity";
 import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
 import {
@@ -109,8 +111,18 @@ export const issuePuzzleChallenge = async ({
 	// NOT match (it evaluates after the request-time filter), so in
 	// practice these are mutually exclusive; the live verdict wins if
 	// both are somehow present.
+	const trafficPuzzleTolerance =
+		challengeVerdict?.puzzleTolerance === undefined
+			? undefined
+			: clampToleranceToLadder(
+					challengeVerdict.puzzleTolerance,
+					resolveMaxEscalationLevel(
+						clientSettings?.settings?.puzzleMaxDifficulty,
+						mobileVerdict.isMobile,
+					),
+				);
 	const requestedTolerance =
-		challengeVerdict?.puzzleTolerance ??
+		trafficPuzzleTolerance ??
 		sessionRecord?.puzzleTolerance ??
 		clientSettings?.settings?.puzzleTolerance;
 	// The last point every source of difficulty is known, and so the only
