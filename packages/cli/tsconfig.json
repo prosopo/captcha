@@ -45,6 +45,9 @@
 			"path": "../types"
 		},
 		{
+			"path": "../types-database"
+		},
+		{
 			"path": "../util"
 		},
 		{

@@ -54,11 +54,11 @@ export async function updateSpamEmailDomainsScheduler(
 				}));
 				return;
 			}
-			await updateSpamEmailDomains(
-				env.getDb(),
-				env.logger,
-				spamEmailDomainsUrls,
-			).catch((err) => {
+			await updateSpamEmailDomains(env.getDb(), env.logger, {
+				blocklistUrls: spamEmailDomainsUrls,
+				allowlistUrls: config.spamEmailDomainsAllowlistUrls,
+				expiryDays: config.spamEmailDomainsExpiryDays,
+			}).catch((err) => {
 				env.logger.error(() => ({
 					err,
 					msg: "Error updating spam email domains",
