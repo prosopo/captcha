@@ -34,6 +34,7 @@ import {
 	widgetLinkContext,
 } from "@prosopo/procaptcha-common";
 import {
+	type BotDetectionFunctionResult,
 	CaptchaType,
 	type FrictionlessState,
 	ModeEnum,
@@ -282,6 +283,23 @@ export const mountProcaptchaFrictionless = (
 	// tripped its own `attemptCount >= 5` fall-over after five *cumulative*
 	// runs in a widget lifetime — five reload presses were enough to strand the
 	// user on the error placeholder even though every one of them succeeded.
+	// Every detection loads a fresh detector with its own page listeners. The
+	// previous one's are stopped once its session is replaced, so a page that
+	// keeps resetting the widget does not pile them up.
+	let liveTrackerStops: (() => void)[] = [];
+	const adoptTrackers = (result: BotDetectionFunctionResult): void => {
+		const stops = [
+			result.behaviorCollector1,
+			result.behaviorCollector2,
+			result.behaviorCollector3,
+			result.behaviorCollector4,
+		].flatMap((collector) => (collector ? [collector.stop] : []));
+		for (const stop of liveTrackerStops) {
+			if (!stops.includes(stop)) stop();
+		}
+		liveTrackerStops = stops;
+	};
+
 	const resetState = (attemptCount?: number) => {
 		state = defaultLoadingState(attemptCount ?? state.attemptCount);
 	};
@@ -628,6 +646,7 @@ export const mountProcaptchaFrictionless = (
 				nextRefreshOf = undefined;
 				nextSwitchTo = undefined;
 				nextRetryOf = undefined;
+				adoptTrackers(result);
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,

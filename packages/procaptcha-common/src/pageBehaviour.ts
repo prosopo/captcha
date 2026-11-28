@@ -79,11 +79,12 @@ const pushCapped = <T>(points: T[], point: T, limit: number): void => {
 
 /**
  * Records what the visitor does on the page from the moment the script
- * loads. The detector's trackers only start once a widget renders, and a
- * site may render it late, for example only when Buy is pressed, after the
- * visitor has scrolled the listing, and a quick tap on the checkbox can land
- * before detection finishes. Without this, that whole journey is missing
- * from the solve.
+ * loads, for the life of the page. The detector's trackers only start once a
+ * widget renders, and a site may render it late, for example only when Buy
+ * is pressed, after the visitor has scrolled the listing, and a quick tap on
+ * the checkbox can land before detection finishes. Each reset of the widget
+ * also loads a fresh detector whose trackers start empty. Without this, that
+ * whole journey is missing from the solve.
  */
 export const startPageBehaviourCapture = (): void => {
 	if (captureHost[CAPTURE_KEY] || typeof window === "undefined") {
@@ -203,8 +204,7 @@ export const addPageBehaviour = <K extends keyof PageBehaviour>(
 };
 
 /**
- * Stops recording once the detector's trackers are running; what was
- * captured stays available to every later solve on the page.
+ * Removes the page listeners; what was captured stays readable.
  */
 export const stopPageBehaviourCapture = (): void => {
 	captureHost[CAPTURE_KEY]?.stop();

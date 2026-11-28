@@ -148,8 +148,9 @@ describe("customDetectBot page behaviour", () => {
 		expect(result.behaviorCollector3?.getData()).toEqual([trackedClick]);
 	});
 
-	it("stops the page capture once the detector's trackers are running", async () => {
+	it("leaves out page events recorded after the detector took over", async () => {
 		startPageBehaviourCapture();
+		vi.setSystemTime(100);
 		mocks.detect.mockResolvedValue({
 			token: "TOKEN",
 			encryptHeadHash: "HASH",
@@ -162,8 +163,66 @@ describe("customDetectBot page behaviour", () => {
 			undefined,
 			() => undefined,
 		);
+		vi.setSystemTime(200);
 		window.dispatchEvent(new MouseEvent("mousemove"));
 
 		expect(result.behaviorCollector1?.getData()).toEqual([]);
+	});
+
+	it("keeps taps made between a reset's two detector starts in the next solve", async () => {
+		startPageBehaviourCapture();
+		vi.setSystemTime(100);
+		window.dispatchEvent(new MouseEvent("click", { clientX: 1, clientY: 1 }));
+
+		const firstDetectorClick: ClickEventPoint = {
+			x: 2,
+			y: 2,
+			timestamp: 300,
+			eventType: "click",
+			button: 0,
+			targetElement: "DIV",
+		};
+		vi.setSystemTime(200);
+		mocks.detect.mockResolvedValueOnce({
+			token: "TOKEN",
+			encryptHeadHash: "HASH",
+			userAccount: { account: { address: "5FakeUserAccountAddress" } },
+			clickTracker: tracker([firstDetectorClick]),
+		});
+		await customDetectBot(baseConfig, undefined, () => undefined);
+
+		vi.setSystemTime(300);
+		window.dispatchEvent(new MouseEvent("click", { clientX: 2, clientY: 2 }));
+		vi.setSystemTime(400);
+		window.dispatchEvent(new MouseEvent("click", { clientX: 3, clientY: 3 }));
+
+		const secondDetectorClick: ClickEventPoint = {
+			x: 4,
+			y: 4,
+			timestamp: 600,
+			eventType: "click",
+			button: 0,
+			targetElement: "DIV",
+		};
+		vi.setSystemTime(500);
+		mocks.detect.mockResolvedValueOnce({
+			token: "TOKEN",
+			encryptHeadHash: "HASH",
+			userAccount: { account: { address: "5FakeUserAccountAddress" } },
+			clickTracker: tracker([secondDetectorClick]),
+		});
+		const afterReset = await customDetectBot(
+			baseConfig,
+			undefined,
+			() => undefined,
+		);
+		vi.setSystemTime(600);
+		window.dispatchEvent(new MouseEvent("click", { clientX: 4, clientY: 4 }));
+
+		expect(
+			afterReset.behaviorCollector3
+				?.getData()
+				.map((point: ClickEventPoint) => point.timestamp),
+		).toEqual([100, 300, 400, 600]);
 	});
 });
