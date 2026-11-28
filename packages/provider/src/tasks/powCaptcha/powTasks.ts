@@ -694,6 +694,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			storeMetadata = false,
 			ipValidationRules,
 			siteProfile,
+			detectionRuleActions,
 		},
 		ip,
 		email,
@@ -1084,6 +1085,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			}));
 		}
 
+		let shadowRules: string[] | undefined;
 		// Decision machine evaluation (only if no prior failures)
 		if (!failResult) {
 			try {
@@ -1127,12 +1129,16 @@ export class PowCaptchaManager extends CaptchaManager {
 					// says nothing about the client.
 					trafficPolicies: deriveTrafficPolicies(trafficFilter),
 					siteProfile,
+					detectionRuleActions,
 				};
 
 				const decision = await this.decisionMachineRunner.decide(
 					decisionInput,
 					logger,
 				);
+				shadowRules = decision.shadowRules?.length
+					? decision.shadowRules
+					: undefined;
 
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					logger.info(() => ({
@@ -1213,6 +1219,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							blocked: true,
 						}),
 						...(matchedRule && { matchedRule }),
+						...(shadowRules && { shadowRules }),
 					},
 					true,
 				),

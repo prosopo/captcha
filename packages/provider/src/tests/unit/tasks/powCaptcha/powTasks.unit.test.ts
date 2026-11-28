@@ -20,6 +20,8 @@ import {
 	CaptchaType,
 	type ClientMetaData,
 	DecisionMachineDecision,
+	DetectionRuleAction,
+	type DetectionRuleActions,
 	FrictionlessReason,
 	type IIPValidationRules,
 	IPValidationAction,
@@ -1508,6 +1510,73 @@ describe("PowCaptchaManager", () => {
 			}
 
 			expect(decide.mock.lastCall?.[0]?.siteProfile).toEqual(siteProfile);
+		});
+
+		it("passes the site's rule actions to the machine and records its shadow matches on the session", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const sessionId = "shadow-session";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers: { a: "1" },
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+				sessionId,
+			};
+			const detectionRuleActions: DetectionRuleActions = {
+				webRtcCloudBehindResidential: DetectionRuleAction.Shadow,
+			};
+			const decide = vi.fn().mockResolvedValue({
+				decision: DecisionMachineDecision.Allow,
+				shadowRules: ["webrtc-cloud-behind-residential"],
+			});
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			mockDecisionMachine(decide);
+
+			let result: Awaited<
+				ReturnType<typeof powCaptchaManager.serverVerifyPowCaptchaSolution>
+			>;
+			try {
+				result = await powCaptchaManager.serverVerifyPowCaptchaSolution({
+					dappAccount,
+					challenge,
+					env: mockEnv,
+					settings: { verifiedTimeout: 1000, detectionRuleActions },
+				});
+			} finally {
+				restoreDecisionMachine();
+			}
+
+			expect(result.verified).toBe(true);
+			expect(decide.mock.lastCall?.[0]?.detectionRuleActions).toEqual(
+				detectionRuleActions,
+			);
+			await vi.waitFor(() =>
+				expect(db.updateSessionRecord).toHaveBeenCalledWith(
+					sessionId,
+					expect.objectContaining({
+						result: { status: CaptchaStatus.approved },
+						shadowRules: ["webrtc-cloud-behind-residential"],
+					}),
+					true,
+				),
+			);
 		});
 
 		it("should allow when decision machine returns allow", async () => {

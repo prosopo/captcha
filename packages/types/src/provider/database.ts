@@ -606,6 +606,8 @@ export const SessionSchema = object({
 	ruleDescription: string().optional(),
 	// See Session.matchedRule.
 	matchedRule: MatchedAccessRuleSchema.optional(),
+	// See Session.shadowRules.
+	shadowRules: string().array().optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -804,6 +806,9 @@ export type Session = {
 	// policy that acted on a request rather than just echoing its description.
 	// See MatchedAccessRule for why the rule is copied rather than joined.
 	matchedRule?: MatchedAccessRule;
+	// Decision-machine rules that matched at verify while the site had them
+	// on `shadow`, so changed nothing.
+	shadowRules?: string[];
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;

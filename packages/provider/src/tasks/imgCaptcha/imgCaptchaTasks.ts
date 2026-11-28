@@ -789,6 +789,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			spamFilter,
 			trafficFilter,
 			storeMetadata = false,
+			detectionRuleActions,
 		},
 		ip,
 		email,
@@ -1242,6 +1243,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
+		let shadowRules: string[] | undefined;
 		// Decision machine evaluation (only if still approved)
 		if (isApproved) {
 			const decisionInput: DecisionMachineInput = {
@@ -1281,6 +1283,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				// on a site that accepts VPN users the observed stack
 				// says nothing about the client.
 				trafficPolicies: deriveTrafficPolicies(trafficFilter),
+				detectionRuleActions,
 			};
 
 			try {
@@ -1288,6 +1291,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					decisionInput,
 					logger,
 				);
+				shadowRules = decision.shadowRules?.length
+					? decision.shadowRules
+					: undefined;
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					// Decision machines are operator-authored JS — their `reason`
 					// is just `string | undefined`. Cast to `ResultReason` at the
@@ -1374,6 +1380,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							blocked: true,
 						}),
 						...(matchedRule && { matchedRule }),
+						...(shadowRules && { shadowRules }),
 					},
 					true,
 				),

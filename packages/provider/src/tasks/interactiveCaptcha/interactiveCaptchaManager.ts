@@ -568,6 +568,7 @@ export abstract class InteractiveCaptchaManager<
 			trafficFilter,
 			storeMetadata = false,
 			siteProfile,
+			detectionRuleActions,
 		},
 		ip,
 		email,
@@ -900,6 +901,7 @@ export abstract class InteractiveCaptchaManager<
 			}));
 		}
 
+		let shadowRules: string[] | undefined;
 		// We know solution is correct by this point. Run decision machine evaluation to process additional checks.
 		try {
 			const decisionInput: DecisionMachineInput = {
@@ -941,6 +943,7 @@ export abstract class InteractiveCaptchaManager<
 				// says nothing about the client.
 				trafficPolicies: deriveTrafficPolicies(trafficFilter),
 				siteProfile,
+				detectionRuleActions,
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
@@ -954,6 +957,9 @@ export abstract class InteractiveCaptchaManager<
 				},
 				logger,
 			);
+			shadowRules = decision.shadowRules?.length
+				? decision.shadowRules
+				: undefined;
 
 			if (decision.decision === DecisionMachineDecision.Deny) {
 				logger.info(() => ({
@@ -998,6 +1004,7 @@ export abstract class InteractiveCaptchaManager<
 			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 				serverChecked: true,
 				result: { status: CaptchaStatus.approved },
+				...(shadowRules && { shadowRules }),
 			});
 		}
 

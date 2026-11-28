@@ -498,6 +498,10 @@ export default (
 									...(dedupTrafficPolicies && {
 										trafficPolicies: dedupTrafficPolicies,
 									}),
+									...(clientRecord.settings?.detectionRuleActions && {
+										detectionRuleActions:
+											clientRecord.settings.detectionRuleActions,
+									}),
 									mode: dedup.session.mode ?? sessionMode,
 									...(clientRecord.settings?.mode && {
 										siteMode: clientRecord.settings.mode,
@@ -1093,6 +1097,9 @@ export default (
 					// Which egress categories this site blocks, so egress-sensitive
 					// route rules can skip sites that accept VPN / proxy / DC users.
 					...(trafficPolicies && { trafficPolicies }),
+					...(clientRecord.settings?.detectionRuleActions && {
+						detectionRuleActions: clientRecord.settings.detectionRuleActions,
+					}),
 					...(triggeredDetectors &&
 						triggeredDetectors.length > 0 && { triggeredDetectors }),
 					mode: sessionMode,

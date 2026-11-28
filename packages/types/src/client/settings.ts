@@ -917,6 +917,24 @@ export const EncodingTypeSchema = z.nativeEnum(EncodingType);
 
 export const honeypotEncodingTypeDefault = EncodingType.morse;
 
+// What a site does when an individual detection rule matches. `shadow`
+// records the match on the captcha record and changes nothing; `challenge`
+// serves a captcha before the solve and does not deny after it.
+export enum DetectionRuleAction {
+	Off = "off",
+	Shadow = "shadow",
+	Challenge = "challenge",
+	Deny = "deny",
+}
+
+export const detectionRuleActionDefault = DetectionRuleAction.Shadow;
+
+export const DetectionRuleActionsSchema = object({
+	webRtcCloudBehindResidential: nativeEnum(DetectionRuleAction).optional(),
+});
+
+export type DetectionRuleActions = output<typeof DetectionRuleActionsSchema>;
+
 export const HoneypotSettingsSchema = object({
 	enabled: boolean().optional().default(false),
 	question: string().optional(),
@@ -1051,6 +1069,8 @@ export const ClientSettingsSchema = object({
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
 	trafficFilter: TrafficFilterSchema.optional(),
+	// Per-rule actions; a rule missing here uses `detectionRuleActionDefault`.
+	detectionRuleActions: DetectionRuleActionsSchema.optional(),
 	// When true, the provider persists the metadata (`email`, ...) that
 	// dapp servers attach to `/verify` requests on the captcha record.
 	// Off by default — opt in to enable downstream analysis (e.g. judging
