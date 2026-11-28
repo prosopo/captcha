@@ -806,8 +806,8 @@ export type Session = {
 	// policy that acted on a request rather than just echoing its description.
 	// See MatchedAccessRule for why the rule is copied rather than joined.
 	matchedRule?: MatchedAccessRule;
-	// Decision-machine rules that matched at verify while the site had them
-	// on `shadow`, so changed nothing.
+	// Detection rules that matched, at challenge or verify, while the site had
+	// them on `shadow`, so changed nothing.
 	shadowRules?: string[];
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.

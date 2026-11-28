@@ -16,10 +16,12 @@ import { sendProsopoError } from "@prosopo/api-express-router";
 import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaType,
+	DetectionRuleAction,
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
+	detectionRuleActionDefault,
 	ipDetectorRiskWeightDefault,
 	resolveImageRoundsBounds,
 } from "@prosopo/types";
@@ -112,28 +114,11 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
-	if (isProtectChallengeReferer(req.headers.referer)) {
-		req.logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "protect_challenge_referer",
-				referer: req.headers.referer,
-			},
-		}));
-		recordFrictionlessDecision("protect_challenge_referer");
-		await tasks.frictionlessManager.registerBlockedSession(CaptchaType.image, {
-			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
-			userSitekeyIpHash,
-			reason: FrictionlessReason.PROTECT_CHALLENGE_REFERER,
-			siteKey: dapp,
-			ipInfo,
-			headers: flatHeaders,
-		});
-		return sendProsopoError(
-			res,
-			new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-102" }),
-		);
-	}
+	const challengeRefererResponse = await runProtectChallengeRefererCheck(
+		input,
+		handle,
+	);
+	if (challengeRefererResponse) return challengeRefererResponse;
 
 	// An absent payload is never a pass. A client that ran no detector — for any
 	// reason, self-reported or not — has told us nothing about itself, so it
@@ -494,6 +479,64 @@ export const runDecisionMachine = async (
 			ipInfo,
 			headers: flatHeaders,
 		}),
+	);
+};
+
+// Per site and shadow by default: some older browsers ignore the challenge
+// page's Referrer-Policy and send its full URL.
+const runProtectChallengeRefererCheck = async (
+	input: DecisionMachineInput,
+	handle: ExpressHandle,
+): Promise<unknown> => {
+	const { tasks, clientRecord, dapp, userSitekeyIpHash, flatHeaders, ipInfo } =
+		input;
+	const { req, res } = handle;
+	const action =
+		clientRecord.settings.detectionRuleActions?.protectChallengeReferer ??
+		detectionRuleActionDefault;
+	if (
+		action === DetectionRuleAction.Off ||
+		!isProtectChallengeReferer(req.headers.referer)
+	) {
+		return undefined;
+	}
+	req.logger.info(() => ({
+		msg: "Frictionless decision",
+		data: {
+			decision: "protect_challenge_referer",
+			action,
+			referer: req.headers.referer,
+		},
+	}));
+	if (action === DetectionRuleAction.Shadow) {
+		tasks.frictionlessManager.addShadowRule(
+			FrictionlessReason.PROTECT_CHALLENGE_REFERER,
+		);
+		return undefined;
+	}
+	const sessionParams = {
+		solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
+		userSitekeyIpHash,
+		reason: FrictionlessReason.PROTECT_CHALLENGE_REFERER,
+		siteKey: dapp,
+		ipInfo,
+		headers: flatHeaders,
+	};
+	if (action === DetectionRuleAction.Challenge) {
+		recordFrictionlessDecision("protect_challenge_referer_challenge");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha(sessionParams),
+		);
+	}
+	recordFrictionlessDecision("protect_challenge_referer");
+	await tasks.frictionlessManager.registerBlockedSession(
+		CaptchaType.image,
+		sessionParams,
+	);
+	return sendProsopoError(
+		res,
+		new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-102" }),
 	);
 };
 

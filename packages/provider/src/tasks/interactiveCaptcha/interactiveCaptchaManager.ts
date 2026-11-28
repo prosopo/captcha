@@ -77,6 +77,7 @@ import {
 } from "../postSolveRouting.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
+import { mergeShadowRules } from "../shadowRules.js";
 import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
 
 /** Fields the shared pipeline writes back onto a captcha record. */
@@ -957,9 +958,10 @@ export abstract class InteractiveCaptchaManager<
 				},
 				logger,
 			);
-			shadowRules = decision.shadowRules?.length
-				? decision.shadowRules
-				: undefined;
+			shadowRules = mergeShadowRules(
+				sessionRecord?.shadowRules,
+				decision.shadowRules,
+			);
 
 			if (decision.decision === DecisionMachineDecision.Deny) {
 				logger.info(() => ({

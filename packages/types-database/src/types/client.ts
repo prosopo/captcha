@@ -459,6 +459,11 @@ export const UserSettingsSchema = new Schema({
 					enum: Object.values(DetectionRuleAction),
 					required: false,
 				},
+				protectChallengeReferer: {
+					type: String,
+					enum: Object.values(DetectionRuleAction),
+					required: false,
+				},
 			},
 			{ _id: false },
 		),

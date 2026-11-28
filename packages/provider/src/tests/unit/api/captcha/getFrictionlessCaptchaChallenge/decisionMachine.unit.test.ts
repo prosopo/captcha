@@ -14,6 +14,7 @@
 
 import {
 	CaptchaType,
+	DetectionRuleAction,
 	type IPInfoResult,
 	type ScoreComponents,
 } from "@prosopo/types";
@@ -71,6 +72,7 @@ const buildInput = (overrides: Partial<Record<string, unknown>> = {}) => ({
 			updateScore: vi.fn(),
 			getClientContextEntropy: vi.fn().mockResolvedValue(undefined),
 			registerBlockedSession: vi.fn().mockResolvedValue(undefined),
+			addShadowRule: vi.fn(),
 		},
 	},
 	env: { config: { captchas: { solved: { count: 4 } } } },
@@ -135,13 +137,76 @@ describe("runDecisionMachine", () => {
 		timestampDecayMock.mockReturnValue(2);
 	});
 
-	it("blocks a session whose referer is a full Protect challenge URL", async () => {
-		const input = buildInput({ token: "" });
-		const { res, handle } = buildHandle(
-			"ua",
-			"uid",
-			"https://protect.example.com/api/protect/challenge?jti=abc",
+	const CHALLENGE_PAGE_REFERER =
+		"https://protect.example.com/api/protect/challenge?jti=abc";
+
+	const withRefererAction = (
+		action: DetectionRuleAction | undefined,
+	): ReturnType<typeof buildInput> =>
+		buildInput({
+			clientRecord: {
+				settings: {
+					imageMaxRounds: 8,
+					disallowWebView: false,
+					contextAware: undefined,
+					...(action !== undefined && {
+						detectionRuleActions: { protectChallengeReferer: action },
+					}),
+				},
+			},
+		});
+
+	it("only records a full Protect challenge referer when the site has not chosen an action", async () => {
+		const input = withRefererAction(undefined);
+		const { res, handle } = buildHandle("ua", "uid", CHALLENGE_PAGE_REFERER);
+		await runDecisionMachine(input as never, handle as never);
+		expect(input.tasks.frictionlessManager.addShadowRule).toHaveBeenCalledWith(
+			"PROTECT_CHALLENGE_REFERER",
 		);
+		expect(
+			input.tasks.frictionlessManager.registerBlockedSession,
+		).not.toHaveBeenCalled();
+		expect(res.status).not.toHaveBeenCalled();
+		expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+	});
+
+	it("ignores a full Protect challenge referer when the site turned the rule off", async () => {
+		const input = withRefererAction(DetectionRuleAction.Off);
+		const { handle } = buildHandle("ua", "uid", CHALLENGE_PAGE_REFERER);
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.addShadowRule,
+		).not.toHaveBeenCalled();
+		expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
+	});
+
+	it("serves the site's hardest image captcha for a full Protect challenge referer on challenge", async () => {
+		const input = withRefererAction(DetectionRuleAction.Challenge);
+		const { res, handle } = buildHandle("ua", "uid", CHALLENGE_PAGE_REFERER);
+		await runDecisionMachine(input as never, handle as never);
+		expect(
+			input.tasks.frictionlessManager.sendImageCaptcha,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				solvedImagesCount: 8,
+				reason: "PROTECT_CHALLENGE_REFERER",
+			}),
+		);
+		expect(
+			input.tasks.frictionlessManager.registerBlockedSession,
+		).not.toHaveBeenCalled();
+		expect(res.status).not.toHaveBeenCalled();
+		expect(
+			input.tasks.frictionlessManager.sendPowCaptcha,
+		).not.toHaveBeenCalled();
+	});
+
+	it("blocks a full Protect challenge referer on deny, even with no token", async () => {
+		const input = {
+			...withRefererAction(DetectionRuleAction.Deny),
+			token: "",
+		};
+		const { res, handle } = buildHandle("ua", "uid", CHALLENGE_PAGE_REFERER);
 		await runDecisionMachine(input as never, handle as never);
 		expect(
 			input.tasks.frictionlessManager.registerBlockedSession,
@@ -153,9 +218,6 @@ describe("runDecisionMachine", () => {
 		expect(
 			input.tasks.frictionlessManager.sendImageCaptcha,
 		).not.toHaveBeenCalled();
-		expect(
-			input.tasks.frictionlessManager.sendPowCaptcha,
-		).not.toHaveBeenCalled();
 	});
 
 	it("passes a Protect challenge page whose referer is trimmed to the origin", async () => {
@@ -164,6 +226,9 @@ describe("runDecisionMachine", () => {
 		await runDecisionMachine(input as never, handle as never);
 		expect(
 			input.tasks.frictionlessManager.registerBlockedSession,
+		).not.toHaveBeenCalled();
+		expect(
+			input.tasks.frictionlessManager.addShadowRule,
 		).not.toHaveBeenCalled();
 		expect(input.tasks.frictionlessManager.sendPowCaptcha).toHaveBeenCalled();
 	});

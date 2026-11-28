@@ -1362,6 +1362,8 @@ export const SESSION_PROJECTION = {
 	iframeUrl: 1,
 	// Passed to decision machines at verify.
 	webrtc: 1,
+	// Merged with verify's own shadow matches so they aren't overwritten.
+	shadowRules: 1,
 	// Mirrored up from the captcha record at solve time. Projected
 	// so session-level readers see the same clientSessionId the
 	// captcha record carries.

@@ -237,6 +237,15 @@ export class FrictionlessManager extends CaptchaManager {
 		}
 	}
 
+	addShadowRule(ruleId: string): void {
+		if (this.sessionParams) {
+			this.sessionParams.shadowRules = [
+				...(this.sessionParams.shadowRules ?? []),
+				ruleId,
+			];
+		}
+	}
+
 	updateScore(score: number, scoreComponents: ScoreComponents): void {
 		if (this.sessionParams) {
 			this.sessionParams.score = score;
@@ -291,6 +300,7 @@ export class FrictionlessManager extends CaptchaManager {
 			solveDevice,
 			isProtect,
 			matchedRule,
+			shadowRules,
 			clientMetaData,
 			fingerprintSummary,
 			webrtc,
@@ -361,6 +371,7 @@ export class FrictionlessManager extends CaptchaManager {
 			chelloToHandshakeUs,
 			...rawTlsSignalsFromRecord(input),
 			...(matchedRule && { matchedRule }),
+			...(shadowRules && { shadowRules }),
 			// Stamped at issuance, not only mirrored up at solve time, so a
 			// session that is never solved still correlates back to the render.
 			...(clientMetaData && { clientMetaData }),
