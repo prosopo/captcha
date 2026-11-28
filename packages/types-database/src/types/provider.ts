@@ -912,6 +912,7 @@ const WebRtcSignalRecordSchema = new Schema<WebRtcSignal>(
 				{
 					ip: { type: String, required: false },
 					asnNumber: { type: Number, required: false },
+					asnOrganization: { type: String, required: false },
 					countryCode: { type: String, required: false },
 					isProxy: { type: Boolean, required: false },
 					isVPN: { type: Boolean, required: false },
@@ -1026,6 +1027,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// by MatchedAccessRuleSchema in @prosopo/types, which validates on the
 	// way in, and a second mongoose-side definition would only drift from it.
 	matchedRule: { type: Schema.Types.Mixed, required: false },
+	shadowRules: { type: [String], default: undefined, required: false },
 	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
 	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
 	// UserCommitment).

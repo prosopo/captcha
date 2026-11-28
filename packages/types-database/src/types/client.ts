@@ -16,6 +16,7 @@ import {
 	CaptchaType,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	DetectionRuleAction,
 	type IUserData,
 	type IUserSettings,
 	MAX_PAD_BYTES,
@@ -450,6 +451,19 @@ export const UserSettingsSchema = new Schema({
 	assetOrigin: { type: String, required: false },
 	mode: { type: String, enum: Object.values(ModeEnum), required: false },
 	siteProfile: { type: Schema.Types.Mixed, required: false },
+	detectionRuleActions: {
+		type: new Schema(
+			{
+				webRtcCloudBehindResidential: {
+					type: String,
+					enum: Object.values(DetectionRuleAction),
+					required: false,
+				},
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 	clientUrl: { type: String, required: false },
 	datasetId: { type: String, required: false },
 });

@@ -21,6 +21,7 @@ import {
 	ConcreteCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import {
+	type DetectionRuleActions,
 	type IIconOrderSettings,
 	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
@@ -258,6 +259,8 @@ export type DecisionMachineInput = {
 	trafficPolicies?: TrafficCategoryPolicies;
 	// The site's `siteProfile` client setting.
 	siteProfile?: Record<string, unknown>;
+	// The site's `detectionRuleActions` client setting.
+	detectionRuleActions?: DetectionRuleActions;
 	// Everything the detector reported for the session this verify belongs
 	// to, as persisted on the Session record. Keys are whatever the detector
 	// chose to emit: nothing in this repo declares them, and a rule may read
@@ -287,6 +290,8 @@ export type DecisionMachineOutput = {
 	reason?: string;
 	score?: number;
 	tags?: string[];
+	// Ids of rules that matched while the site had them on `shadow`.
+	shadowRules?: string[];
 };
 
 /** @deprecated Use `ChallengeCaptchaType`. */
@@ -309,6 +314,7 @@ export const DecisionMachineOutputSchema = z.object({
 	reason: z.string().optional(),
 	score: z.number().optional(),
 	tags: z.array(z.string()).optional(),
+	shadowRules: z.array(z.string().max(128)).max(64).optional(),
 });
 
 export const DecisionMachineConfigSchema = z.object({
@@ -506,6 +512,8 @@ export interface RoutingMachineRawSignals {
 	// egress-sensitive middlebox route rules and supplies the challenge
 	// policy they inherit — see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
+	// The site's `detectionRuleActions` client setting. `route` only.
+	detectionRuleActions?: DetectionRuleActions;
 	// Widget mode the request came in. On `route` it is this request's; on
 	// `postPow` it is the one persisted on the originating Session, undefined
 	// when the session pre-dates the field.

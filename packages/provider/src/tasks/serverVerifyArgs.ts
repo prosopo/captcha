@@ -26,6 +26,7 @@ export type ServerVerifySiteSettings = Pick<
 	| "storeMetadata"
 	| "ipValidationRules"
 	| "siteProfile"
+	| "detectionRuleActions"
 >;
 
 export type ServerVerifyCaptchaSolutionArgs = {
@@ -59,6 +60,7 @@ export type VerifyImageCaptchaSolutionArgs = Omit<
 			| "spamFilter"
 			| "trafficFilter"
 			| "storeMetadata"
+			| "detectionRuleActions"
 		>
 	>;
 };

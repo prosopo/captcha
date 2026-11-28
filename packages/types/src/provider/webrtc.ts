@@ -70,6 +70,7 @@ export const WebRtcSignalSchema = z.object({
 		.object({
 			ip: z.string().max(45).optional(),
 			asnNumber: z.number().int().optional(),
+			asnOrganization: z.string().max(256).optional(),
 			countryCode: z.string().max(8).optional(),
 			isProxy: z.boolean().optional(),
 			isVPN: z.boolean().optional(),

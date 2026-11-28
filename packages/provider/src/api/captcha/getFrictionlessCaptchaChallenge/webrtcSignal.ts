@@ -96,6 +96,7 @@ const leakedNetwork = async (
 	if (!info.isValid) return undefined;
 	return {
 		...(info.asnNumber !== undefined && { asnNumber: info.asnNumber }),
+		...(info.asnOrganization && { asnOrganization: info.asnOrganization }),
 		...(info.countryCode && { countryCode: info.countryCode }),
 		isProxy: info.isProxy,
 		isVPN: info.isVPN,

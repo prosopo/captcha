@@ -92,6 +92,7 @@ const leakedInfo: IPInfoResponse = {
 	isSatellite: false,
 	isCrawler: false,
 	asnNumber: 5089,
+	asnOrganization: "Virgin Media Limited",
 	countryCode: "GB",
 };
 
@@ -186,6 +187,7 @@ describe("evaluateWebRtc", () => {
 		expect(signal?.leaked).toEqual({
 			ip: REAL_IP,
 			asnNumber: 5089,
+			asnOrganization: "Virgin Media Limited",
 			countryCode: "GB",
 			isProxy: false,
 			isVPN: false,

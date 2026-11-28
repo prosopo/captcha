@@ -23,6 +23,7 @@ import {
 	type CaptchaTimeoutSettings,
 	ClientSettingsSchema,
 	ContextType,
+	DetectionRuleAction,
 	DeviceType,
 	EmailSpamRulesSchema,
 	EncodingType,
@@ -407,6 +408,29 @@ describe("ClientSettingsSchema", () => {
 			"a.com",
 			"b.com",
 		]);
+	});
+});
+
+describe("detectionRuleActions", () => {
+	it("accepts each action and leaves an unset rule unset", () => {
+		for (const action of Object.values(DetectionRuleAction)) {
+			expect(
+				parse({
+					...minimal,
+					detectionRuleActions: { webRtcCloudBehindResidential: action },
+				}).detectionRuleActions,
+			).toEqual({ webRtcCloudBehindResidential: action });
+		}
+		expect(parse(minimal).detectionRuleActions).toBeUndefined();
+	});
+
+	it("rejects an unknown action", () => {
+		expect(() =>
+			parse({
+				...minimal,
+				detectionRuleActions: { webRtcCloudBehindResidential: "block" },
+			}),
+		).toThrow();
 	});
 });
 
