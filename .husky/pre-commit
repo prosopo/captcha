@@ -1,1 +1,1 @@
-bash -i .husky/check-branch.sh
+bash .husky/check-branch.sh commit
