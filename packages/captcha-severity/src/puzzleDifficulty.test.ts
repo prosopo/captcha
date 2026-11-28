@@ -20,6 +20,7 @@ import {
 	TOUCH_MIN_PIECE_SCALE,
 	TOUCH_MIN_TOLERANCE_PX,
 	clampDifficultyLevel,
+	clampToleranceToLadder,
 	easePieceScaleForTouch,
 	easeToleranceForTouch,
 	puzzleDifficultyToSeverity,
@@ -293,6 +294,31 @@ describe("touch easing", () => {
 		);
 		expect(easePieceScaleForTouch(band.pieceScale).min).toBeGreaterThan(
 			band.pieceScale.min,
+		);
+	});
+});
+
+describe("clampToleranceToLadder", () => {
+	const floorAt = (level: number): number =>
+		PUZZLE_DIFFICULTY_LEVELS[level]?.tolerance.min ?? Number.NaN;
+
+	it("raises a tolerance tighter than the ceiling's band", () => {
+		expect(clampToleranceToLadder(5, MAX_AUTO_ESCALATION_LEVEL)).toBe(
+			floorAt(MAX_AUTO_ESCALATION_LEVEL),
+		);
+		expect(clampToleranceToLadder(5, MAX_AUTO_ESCALATION_LEVEL_TOUCH)).toBe(
+			floorAt(MAX_AUTO_ESCALATION_LEVEL_TOUCH),
+		);
+		expect(clampToleranceToLadder(5, 0)).toBe(floorAt(0));
+	});
+
+	it("leaves a looser tolerance alone", () => {
+		expect(clampToleranceToLadder(40, MAX_AUTO_ESCALATION_LEVEL)).toBe(40);
+	});
+
+	it("never goes past the top of the ladder", () => {
+		expect(clampToleranceToLadder(1, 99)).toBe(
+			floorAt(PUZZLE_DIFFICULTY_LEVELS.length - 1),
 		);
 	});
 });

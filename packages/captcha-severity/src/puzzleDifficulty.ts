@@ -235,6 +235,20 @@ export const clampDifficultyLevel = (
 };
 
 /**
+ * Tightest tolerance the ladder allows at `maxLevel`: the bottom of that
+ * level's tolerance band. A raw tolerance from a policy is raised to this so it
+ * cannot ask for more than automatic escalation is allowed to.
+ */
+export const clampToleranceToLadder = (
+	tolerance: number,
+	maxLevel: number,
+): number => {
+	const band =
+		PUZZLE_DIFFICULTY_LEVELS[clampDifficultyLevel(maxLevel, maxLevel)];
+	return band ? Math.max(tolerance, band.tolerance.min) : tolerance;
+};
+
+/**
  * The escalation ceiling for one session: the stricter of the site's own
  * `puzzleMaxDifficulty` and the device's ceiling.
  */

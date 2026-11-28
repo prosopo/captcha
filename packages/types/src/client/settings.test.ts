@@ -348,12 +348,24 @@ describe("ClientSettingsSchema", () => {
 		).toBe(true);
 	});
 
-	it("bounds puzzleTolerance to [5, 1000]", () => {
+	it("rejects a traffic-filter puzzleTolerance below the ladder", () => {
+		const withProxyTolerance = (
+			puzzleTolerance: number,
+		): ReturnType<typeof ClientSettingsSchema.safeParse> =>
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				trafficFilter: { proxy: { action: "challenge", puzzleTolerance } },
+			});
+		expect(withProxyTolerance(5).success).toBe(false);
+		expect(withProxyTolerance(6).success).toBe(true);
+	});
+
+	it("bounds puzzleTolerance to [6, 1000]", () => {
 		expect(
-			ClientSettingsSchema.safeParse({ ...minimal, puzzleTolerance: 4 })
+			ClientSettingsSchema.safeParse({ ...minimal, puzzleTolerance: 5 })
 				.success,
 		).toBe(false);
-		expect(parse({ ...minimal, puzzleTolerance: 5 }).puzzleTolerance).toBe(5);
+		expect(parse({ ...minimal, puzzleTolerance: 6 }).puzzleTolerance).toBe(6);
 		expect(parse({ ...minimal, puzzleTolerance: 1000 }).puzzleTolerance).toBe(
 			1000,
 		);
