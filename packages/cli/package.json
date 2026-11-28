@@ -42,6 +42,7 @@
 		"@prosopo/locale": "workspace:*",
 		"@prosopo/provider": "workspace:*",
 		"@prosopo/types": "workspace:*",
+		"@prosopo/types-database": "workspace:*",
 		"@prosopo/util": "workspace:*",
 		"@prosopo/workspace": "workspace:*",
 		"cron-parser": "5.10.2",

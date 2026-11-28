@@ -44,7 +44,14 @@ describe("record types", () => {
 
 	it("keep the plain domain shape free of mongoose", () => {
 		expectTypeOf<BannedDomain>().toEqualTypeOf<{ domain: string }>();
-		expectTypeOf<SpamEmailDomain>().toEqualTypeOf<{ domain: string }>();
+		expectTypeOf<SpamEmailDomain>().toEqualTypeOf<{
+			domain: string;
+			sources?: string[];
+			firstSeenAt?: Date;
+			missingSince?: Date;
+			manual?: boolean;
+			allow?: boolean;
+		}>();
 		expectTypeOf<BannedDomainRecord>().toExtend<BannedDomain>();
 	});
 
