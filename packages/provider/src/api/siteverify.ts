@@ -41,6 +41,7 @@ import { number, object } from "zod";
 import { rateLimitHandler } from "./rateLimitHandler.js";
 import { summariseRequestBody } from "./requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "./testSiteKey.js";
+import { siteOrIpRateLimitKey } from "./verifyRateLimitKey.js";
 
 export const SITEVERIFY_PATH = "/siteverify";
 
@@ -328,12 +329,25 @@ const positiveIntegerFromEnv = (name: string, fallback: number): number => {
 	return parsed.ok ? parsed.value : fallback;
 };
 
+const authenticatedSiteKey = (body: unknown): string | undefined => {
+	const parsed = SiteverifyBody.safeParse(body);
+	if (!parsed.success || !parsed.data.secret) return undefined;
+	try {
+		const { dapp } = decodeProcaptchaOutput(parsed.data.token);
+		return pairForSiteKey(parsed.data.secret, dapp) ? dapp : undefined;
+	} catch {
+		return undefined;
+	}
+};
+
 /**
- * Keyed on the `Prosopo-Site-Key` header when present, as the PoW and image
- * verify routes are, so sites behind a shared egress IP are not limited as one
- * caller; otherwise on the caller's IP.
+ * Keyed on the token's site key once the secret proves the caller holds it, so
+ * sites behind a shared egress IP are not limited as one caller; otherwise on
+ * the caller's IP. Parses form bodies itself because it runs ahead of the
+ * route's own parser.
  */
-export const siteverifyRateLimit = (logger: Logger): RequestHandler =>
+export const siteverifyRateLimit = (logger: Logger): RequestHandler[] => [
+	express.urlencoded({ extended: false, limit: "1mb" }),
 	rateLimit({
 		windowMs: positiveIntegerFromEnv(
 			"PROSOPO_SITE_VERIFY_WINDOW",
@@ -344,8 +358,7 @@ export const siteverifyRateLimit = (logger: Logger): RequestHandler =>
 			SITEVERIFY_DEFAULT_LIMIT,
 		),
 		handler: rateLimitHandler(logger, SITEVERIFY_PATH),
-		keyGenerator: (req) => {
-			const siteKey = req.headers["prosopo-site-key"];
-			return (typeof siteKey === "string" && siteKey) || req.ip || "unknown";
-		},
-	});
+		keyGenerator: (req) =>
+			siteOrIpRateLimitKey(authenticatedSiteKey(req.body), req),
+	}),
+];

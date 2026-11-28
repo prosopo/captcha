@@ -74,6 +74,7 @@ import {
 	siteverifyRateLimit,
 } from "./siteverify.js";
 import { prosopoVerifyRouter } from "./verify.js";
+import { verifyRateLimitKey } from "./verifyRateLimitKey.js";
 
 /**
  * Body-size ceiling for the detector-pool push. ~830 KB/bundle × 100 bundles
@@ -323,6 +324,7 @@ export async function startProviderApi(
 		};
 		const adminPaths = Object.values(AdminApiPaths);
 		const adminKey = adminRateLimitKey(env.pair, env.authAccount);
+		const verifyPaths = new Set<string>(getServerVerifyPaths());
 		const getRedisConnection = (): RedisConnection | undefined => {
 			try {
 				return env.getDb().getRedisConnection();
@@ -347,22 +349,14 @@ export async function startProviderApi(
 						keyGenerator: adminKey,
 					}),
 				);
-			} else if (
-				path === ClientApiPaths.VerifyImageCaptchaSolutionDapp ||
-				path === ClientApiPaths.VerifyPowCaptchaSolution
-			) {
-				// For verify, key on site key to prevent rate limiting API calls from lambdas
+			} else if (verifyPaths.has(path)) {
 				apiApp.use(
 					enumPath,
 					rateLimit({
 						...limit,
 						handler: rateLimitHandler(env.logger, enumPath),
 						store,
-						keyGenerator: (req) => {
-							const siteKey = req.headers["prosopo-site-key"] as string;
-							// Fall back to IP if no site key found (shouldn't happen for verify routes with headerCheckMiddleware)
-							return siteKey || req.ip || "unknown";
-						},
+						keyGenerator: verifyRateLimitKey,
 					}),
 				);
 			} else {
@@ -379,7 +373,7 @@ export async function startProviderApi(
 	}
 
 	if (!isTestOrDevelopmentEnv && isSiteverifyEnabled()) {
-		apiApp.use(SITEVERIFY_PATH, siteverifyRateLimit(env.logger));
+		apiApp.use(SITEVERIFY_PATH, ...siteverifyRateLimit(env.logger));
 	}
 
 	const i18Middleware = await i18nMiddleware({});
