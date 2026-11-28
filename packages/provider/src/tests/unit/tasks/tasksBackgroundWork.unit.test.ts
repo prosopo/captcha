@@ -37,6 +37,7 @@ describe("Tasks background work", () => {
 		};
 		const db = Object.create(ProviderDatabase.prototype) as ProviderDatabase;
 		db.getRedisConnection = () => connection;
+		db.getRedisMemConnection = () => connection;
 		const config = {
 			logLevel: LogLevel.enum.error,
 			captchas: { solved: { count: 1 }, unsolved: { count: 1 } },
@@ -62,6 +63,7 @@ describe("Tasks background work", () => {
 		};
 		const db = Object.create(ProviderDatabase.prototype) as ProviderDatabase;
 		db.getRedisConnection = () => connection;
+		db.getRedisMemConnection = () => connection;
 		const config = {
 			logLevel: LogLevel.enum.error,
 			captchas: { solved: { count: 1 }, unsolved: { count: 1 } },
