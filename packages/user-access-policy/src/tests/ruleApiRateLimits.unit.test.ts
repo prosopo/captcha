@@ -32,7 +32,7 @@ describe("getExpressApiRuleRateLimits", () => {
 	it("uses the defaults when nothing is set", () => {
 		vi.stubEnv(WINDOW, undefined);
 		vi.stubEnv(LIMIT, undefined);
-		expect(deleteAllLimits()).toEqual({ windowMs: 10_000, limit: 5 });
+		expect(deleteAllLimits()).toEqual({ windowMs: 10_000, limit: 10 });
 	});
 
 	it("reads whole positive integers from the environment", () => {
@@ -46,7 +46,7 @@ describe("getExpressApiRuleRateLimits", () => {
 		(value) => {
 			vi.stubEnv(WINDOW, value);
 			vi.stubEnv(LIMIT, value);
-			expect(deleteAllLimits()).toEqual({ windowMs: 10_000, limit: 5 });
+			expect(deleteAllLimits()).toEqual({ windowMs: 10_000, limit: 10 });
 		},
 	);
 });

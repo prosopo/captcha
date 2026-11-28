@@ -109,7 +109,7 @@ export class AccessRuleApiRoutes implements ApiRoutesProvider {
 export const getExpressApiRuleRateLimits =
 	(): ApiRouteLimits<accessRuleApiPaths> => {
 		const defaults = {
-			limit: 5,
+			limit: 10,
 			windowSeconds: 10,
 		};
 

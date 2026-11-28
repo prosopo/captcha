@@ -422,29 +422,39 @@ describe("POST /siteverify", () => {
 });
 
 describe("siteverify rate limit", () => {
-	it("limits per site key, falling back to the caller's IP", async () => {
+	it("limits per authenticated site key, otherwise per caller IP", async () => {
 		vi.stubEnv("PROSOPO_SITE_VERIFY_LIMIT", "1");
 		const app = express();
+		app.use(express.json());
 		app.use(siteverifyRateLimit(logger));
 		app.post("/siteverify", (_req: Request, res: Response) => {
 			res.json({ ok: true });
 		});
 		vi.unstubAllEnvs();
 		const running = await listen(app);
-		const call = async (siteKey?: string): Promise<number> => {
+		const token = makeToken({ captchaType: CaptchaType.pow });
+		const call = async (
+			secret: string,
+			post: typeof postForm = postJson,
+		): Promise<number> =>
+			(await post(running.baseUrl, { token, secret })).status;
+		const spoof = async (): Promise<number> => {
 			const res = await fetch(`${running.baseUrl}/siteverify`, {
 				method: "POST",
-				headers: siteKey ? { "prosopo-site-key": siteKey } : {},
+				headers: {
+					"content-type": "application/json",
+					"prosopo-site-key": sitePair.address,
+				},
+				body: JSON.stringify({ token, secret: OTHER_SECRET }),
 			});
 			await res.text();
 			return res.status;
 		};
 		try {
-			expect(await call("site-a")).toBe(200);
-			expect(await call("site-a")).toBe(429);
-			expect(await call("site-b")).toBe(200);
-			expect(await call()).toBe(200);
-			expect(await call()).toBe(429);
+			expect(await spoof()).toBe(200);
+			expect(await spoof()).toBe(429);
+			expect(await call(SITE_SECRET, postForm)).toBe(200);
+			expect(await call(SITE_SECRET)).toBe(429);
 		} finally {
 			await running.close();
 		}

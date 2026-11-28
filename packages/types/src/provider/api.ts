@@ -190,79 +190,82 @@ export enum AdminApiPaths {
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 
+// Counted once per node: every provider container on a node shares one Redis
+// counter, so these are double what each container allowed when it counted
+// alone.
 export const ProviderDefaultRateLimits = {
-	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 150 },
-	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.GetImageCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.GetPowCaptchaChallenge]: { windowMs: 60000, limit: 600 },
 	[ClientApiPaths.SubmitImageCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 300,
+		limit: 600,
 	},
 	[ClientApiPaths.GetFrictionlessCaptchaChallenge]: {
 		windowMs: 60000,
-		limit: 300,
+		limit: 600,
 	},
-	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 300 },
-	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 15000 },
-	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitPowCaptchaSolution]: { windowMs: 60000, limit: 600 },
+	[ClientApiPaths.VerifyPowCaptchaSolution]: { windowMs: 60000, limit: 30000 },
+	[ClientApiPaths.GetPuzzleCaptchaChallenge]: { windowMs: 60000, limit: 600 },
 	[ClientApiPaths.SubmitPuzzleCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 300,
+		limit: 600,
 	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 15000,
+		limit: 30000,
 	},
-	[ClientApiPaths.GetAudioCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.GetAudioCaptchaChallenge]: { windowMs: 60000, limit: 600 },
 	[ClientApiPaths.SubmitAudioCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 300,
+		limit: 600,
 	},
 	[ClientApiPaths.VerifyAudioCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 15000,
+		limit: 30000,
 	},
 	[ClientApiPaths.GetIconOrderCaptchaChallenge]: {
 		windowMs: 60000,
-		limit: 300,
+		limit: 600,
 	},
 	[ClientApiPaths.SubmitIconOrderCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 300,
+		limit: 600,
 	},
 	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: {
 		windowMs: 60000,
-		limit: 15000,
+		limit: 30000,
 	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
 		windowMs: 60000,
-		limit: 15000,
+		limit: 30000,
 	},
 	[ClientApiPaths.VerifyAuthenticatedSession]: {
 		windowMs: 60000,
-		limit: 15000,
+		limit: 30000,
 	},
-	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.AssignDetectorBundle]: { windowMs: 60000, limit: 60 },
-	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
-	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
-	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 60 },
-	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 60 },
-	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.GetSession]: { windowMs: 60000, limit: 60 },
-	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 10 },
-	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 5 },
-	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 5 },
+	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 120 },
+	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 120 },
+	[ClientApiPaths.AssignDetectorBundle]: { windowMs: 60000, limit: 120 },
+	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 120 },
+	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 120 },
+	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.SiteKeysRegister]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.ToggleMaintenanceMode]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.UpdateDecisionMachine]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.GetAllDecisionMachines]: { windowMs: 60000, limit: 120 },
+	[AdminApiPaths.GetDecisionMachine]: { windowMs: 60000, limit: 120 },
+	[AdminApiPaths.RemoveDecisionMachine]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.RemoveAllDecisionMachines]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.GetSession]: { windowMs: 60000, limit: 120 },
+	[AdminApiPaths.ClearAllCounters]: { windowMs: 60000, limit: 20 },
+	[AdminApiPaths.SiteKeyRemove]: { windowMs: 60000, limit: 10 },
+	[AdminApiPaths.SiteKeysRemove]: { windowMs: 60000, limit: 10 },
 	// Sidecar batches events and POSTs at shipper_flush_ms cadence
 	// (1s default), so a high per-minute ceiling is fine. Single ingest
 	// path per pronode → no cross-tenant fairness concerns.
-	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 600 },
-	[AdminApiPaths.ReplaceDetectorPool]: { windowMs: 60000, limit: 5 },
+	[AdminApiPaths.DnsEvent]: { windowMs: 60000, limit: 1200 },
+	[AdminApiPaths.ReplaceDetectorPool]: { windowMs: 60000, limit: 10 },
 };
 
 type RateLimit = {
