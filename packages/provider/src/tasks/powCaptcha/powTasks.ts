@@ -90,6 +90,7 @@ import {
 } from "../frictionless/routingMachine.js";
 import { sessionRoutingSignals } from "../postSolveRouting.js";
 import type { ServerVerifyCaptchaSolutionArgs } from "../serverVerifyArgs.js";
+import { mergeShadowRules } from "../shadowRules.js";
 import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
@@ -1136,9 +1137,10 @@ export class PowCaptchaManager extends CaptchaManager {
 					decisionInput,
 					logger,
 				);
-				shadowRules = decision.shadowRules?.length
-					? decision.shadowRules
-					: undefined;
+				shadowRules = mergeShadowRules(
+					sessionRecord?.shadowRules,
+					decision.shadowRules,
+				);
 
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					logger.info(() => ({

@@ -88,6 +88,7 @@ import {
 	runPostSolveRouting,
 } from "../postSolveRouting.js";
 import type { VerifyImageCaptchaSolutionArgs } from "../serverVerifyArgs.js";
+import { mergeShadowRules } from "../shadowRules.js";
 import { isSignatureValid } from "../signatureCheck.js";
 import {
 	evaluateEmailSpamRules,
@@ -1291,9 +1292,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 					decisionInput,
 					logger,
 				);
-				shadowRules = decision.shadowRules?.length
-					? decision.shadowRules
-					: undefined;
+				shadowRules = mergeShadowRules(
+					sessionRecord?.shadowRules,
+					decision.shadowRules,
+				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
 					// Decision machines are operator-authored JS — their `reason`
 					// is just `string | undefined`. Cast to `ResultReason` at the

@@ -931,6 +931,7 @@ export const detectionRuleActionDefault = DetectionRuleAction.Shadow;
 
 export const DetectionRuleActionsSchema = object({
 	webRtcCloudBehindResidential: nativeEnum(DetectionRuleAction).optional(),
+	protectChallengeReferer: nativeEnum(DetectionRuleAction).optional(),
 });
 
 export type DetectionRuleActions = output<typeof DetectionRuleActionsSchema>;

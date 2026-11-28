@@ -432,6 +432,16 @@ describe("detectionRuleActions", () => {
 			}),
 		).toThrow();
 	});
+	it("sets the challenge-page referer rule on its own", () => {
+		expect(
+			parse({
+				...minimal,
+				detectionRuleActions: {
+					protectChallengeReferer: DetectionRuleAction.Challenge,
+				},
+			}).detectionRuleActions,
+		).toEqual({ protectChallengeReferer: DetectionRuleAction.Challenge });
+	});
 });
 
 describe("IPValidationRulesSchema", () => {
