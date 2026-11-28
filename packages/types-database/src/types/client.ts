@@ -22,7 +22,6 @@ import {
 	ModeEnum,
 	type Timestamp,
 	TrafficFilterAction,
-	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
 	captchaTypeDefault,
 	cityChangeActionDefault,
@@ -40,7 +39,6 @@ import {
 	powDifficultyDefault,
 	puzzleMaxDifficultyMax,
 	requireAllConditionsDefault,
-	trafficFilterAbuserScoreThresholdDefault,
 	trafficFilterReputationScoreThresholdDefault,
 } from "@prosopo/types";
 import type mongoose from "mongoose";
@@ -89,7 +87,6 @@ export const IPValidationRulesSchema = new Schema({
 	abuseScoreThreshold: {
 		type: Number,
 		min: 0,
-		default: abuseScoreThresholdDefault,
 	},
 
 	reputationScoreThreshold: {
@@ -418,7 +415,6 @@ export const UserSettingsSchema = new Schema({
 			type: Number,
 			min: 0,
 			max: 1,
-			default: trafficFilterAbuserScoreThresholdDefault,
 		},
 		reputationScoreThreshold: {
 			type: Number,
