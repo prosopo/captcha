@@ -22,6 +22,7 @@ import {
 	type ProsopoConfigInput,
 	type ProsopoConfigOutput,
 	ProsopoConfigSchema,
+	SPAM_EMAIL_DOMAINS_DEFAULT_EXPIRY_DAYS,
 } from "@prosopo/types";
 import { type NumberBounds, parseInteger } from "@prosopo/util";
 import { getRateLimitConfig } from "./RateLimiter.js";
@@ -68,12 +69,13 @@ const getDnsServers = (): string[] | undefined => {
 	}
 };
 
-const getSpamEmailDomainsUrls = (): string[] | undefined => {
-	if (!process.env.SPAM_EMAIL_DOMAINS_URLS) {
+const urlListFromEnv = (name: string): string[] | undefined => {
+	const raw = process.env[name];
+	if (!raw) {
 		return undefined;
 	}
 	try {
-		const parsed = JSON.parse(process.env.SPAM_EMAIL_DOMAINS_URLS);
+		const parsed = JSON.parse(raw);
 		if (isStringArray(parsed)) {
 			return parsed as string[];
 		}
@@ -183,7 +185,15 @@ export default function getConfig({
 			},
 		},
 		lRules: getLRules(),
-		spamEmailDomainsUrls: getSpamEmailDomainsUrls(),
+		spamEmailDomainsUrls: urlListFromEnv("SPAM_EMAIL_DOMAINS_URLS"),
+		spamEmailDomainsAllowlistUrls: urlListFromEnv(
+			"SPAM_EMAIL_DOMAINS_ALLOWLIST_URLS",
+		),
+		spamEmailDomainsExpiryDays: integerFromEnv(
+			"SPAM_EMAIL_DOMAINS_EXPIRY_DAYS",
+			SPAM_EMAIL_DOMAINS_DEFAULT_EXPIRY_DAYS,
+			{ min: 1 },
+		),
 		authAccount: {
 			address: getAddress(admin),
 			password: getPassword(admin),

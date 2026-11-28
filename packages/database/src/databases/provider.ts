@@ -66,6 +66,7 @@ import {
 	DatasetRecordSchema,
 	DecisionMachineArtifactRecordSchema,
 	type DecisionMachineTarget,
+	type HandAddedSpamEmailDomainKind,
 	type IProviderDatabase,
 	type IUserDataSlim,
 	type IconOrderCaptchaRecord,
@@ -83,14 +84,17 @@ import {
 	SessionRecordSchema,
 	SolutionRecordSchema,
 	type SpamEmailDomain,
+	type SpamEmailDomainChanges,
 	type SpamEmailDomainRecord,
 	SpamEmailDomainRecordSchema,
+	type SpamEmailDomainUpdate,
 	type StoreAudioCaptchaRecordArgs,
 	type StoreCaptchaRecordArgs,
 	type StoreIconOrderCaptchaRecordArgs,
 	type StorePendingImageCommitmentArgs,
 	type StorePowCaptchaRecordArgs,
 	type StorePuzzleCaptchaRecordArgs,
+	type StoredSpamEmailDomain,
 	type Tables,
 	type UnstoredRecordsPage,
 	type UpdateInteractiveCaptchaRecordResultArgs,
@@ -121,6 +125,7 @@ import { submitDetectorDataSets } from "./submitDetectorData.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
+const SPAM_EMAIL_DOMAIN_WRITE_BATCH = 1000;
 
 enum TableNames {
 	captcha = "captcha",
@@ -3479,65 +3484,129 @@ export class ProviderDatabase
 			0,
 			MAX_DOMAIN_SUFFIX_CANDIDATES,
 		);
-		const query =
-			suffixCandidates.length > 0
-				? { domain: { $in: suffixCandidates } }
-				: { domain };
+		const query = {
+			domain: suffixCandidates.length > 0 ? { $in: suffixCandidates } : domain,
+			allow: { $ne: true },
+		};
 
 		return await this.tables.spamEmailDomain
 			.findOne<SpamEmailDomainRecord>(query)
 			.exec();
 	}
 
+	async *getAllSpamEmailDomains(): AsyncIterable<StoredSpamEmailDomain> {
+		const table = this.spamEmailDomainTable(this.getAllSpamEmailDomains.name);
+		const records = table
+			.find(
+				{},
+				{
+					_id: 1,
+					domain: 1,
+					sources: 1,
+					firstSeenAt: 1,
+					missingSince: 1,
+					manual: 1,
+					allow: 1,
+				},
+			)
+			.lean<SpamEmailDomain & { _id: Types.ObjectId }>()
+			.cursor();
+		for await (const { _id, firstSeenAt, ...record } of records) {
+			// Rows written before firstSeenAt existed were inserted when first seen.
+			yield { ...record, firstSeenAt: firstSeenAt ?? _id.getTimestamp() };
+		}
+	}
+
 	/**
-	 * Store any of `domains` not already in the collection and return how many
-	 * were added. The source lists hold ~225k domains and barely change between
-	 * runs, so upserting all of them rewrote every row and held write locks for
-	 * ~8s per batch on each provider at the same moment. Reading the existing
-	 * set first is an index-only scan, and only the difference is written.
+	 * Applies a spam email domain sync in small unordered batches, so the first
+	 * sync after a schema change, which touches every row, never holds write
+	 * locks for long. Hand-added rows are excluded in the filter as well, in
+	 * case one was added between planning and writing.
 	 */
-	async insertMissingSpamEmailDomains(
-		domains: Iterable<string>,
-	): Promise<number> {
+	async writeSpamEmailDomainChanges(
+		changes: SpamEmailDomainChanges,
+	): Promise<void> {
+		const table = this.spamEmailDomainTable(
+			this.writeSpamEmailDomainChanges.name,
+		);
+		const notHandAdded = { manual: { $ne: true }, allow: { $ne: true } };
+		const toOp = (change: SpamEmailDomainUpdate, upsert: boolean) => ({
+			updateOne: {
+				filter: upsert
+					? { domain: change.domain }
+					: { domain: change.domain, ...notHandAdded },
+				update:
+					change.missingSince === null
+						? {
+								$set: {
+									sources: change.sources,
+									firstSeenAt: change.firstSeenAt,
+								},
+								$unset: { missingSince: "" },
+							}
+						: {
+								$set: {
+									sources: change.sources,
+									firstSeenAt: change.firstSeenAt,
+									missingSince: change.missingSince,
+								},
+							},
+				upsert,
+			},
+		});
+		const ops = [
+			...changes.inserts.map((change) => toOp(change, true)),
+			...changes.updates.map((change) => toOp(change, false)),
+		];
+		for (let i = 0; i < ops.length; i += SPAM_EMAIL_DOMAIN_WRITE_BATCH) {
+			await table.bulkWrite(ops.slice(i, i + SPAM_EMAIL_DOMAIN_WRITE_BATCH), {
+				ordered: false,
+			});
+		}
+		for (
+			let i = 0;
+			i < changes.deletes.length;
+			i += SPAM_EMAIL_DOMAIN_WRITE_BATCH
+		) {
+			await table.deleteMany({
+				domain: {
+					$in: changes.deletes.slice(i, i + SPAM_EMAIL_DOMAIN_WRITE_BATCH),
+				},
+				...notHandAdded,
+			});
+		}
+	}
+
+	async setHandAddedSpamEmailDomain(
+		domain: string,
+		kind: HandAddedSpamEmailDomainKind,
+	): Promise<void> {
+		const table = this.spamEmailDomainTable(
+			this.setHandAddedSpamEmailDomain.name,
+		);
+		await table.updateOne(
+			{ domain },
+			{
+				$set: kind === "allow" ? { allow: true } : { manual: true },
+				$unset:
+					kind === "allow"
+						? { manual: "", sources: "", missingSince: "" }
+						: { allow: "", missingSince: "" },
+				$setOnInsert: { firstSeenAt: new Date() },
+			},
+			{ upsert: true },
+		);
+	}
+
+	private spamEmailDomainTable(failedFuncName: string) {
 		if (!this.tables?.spamEmailDomain) {
 			throw new ProsopoError({
 				code: "DB_QUERY_FAILED",
 				errorSite: "DBSE-51",
 				message: "Failed to import database engine",
-				context: { failedFuncName: this.insertMissingSpamEmailDomains.name },
+				context: { failedFuncName },
 			});
 		}
-
-		const missing = new Set(domains);
-		if (missing.size === 0) {
-			return 0;
-		}
-
-		// Projecting only `domain` and hinting its unique index makes this a
-		// covered query: mongod answers from the index without fetching docs.
-		const existing = this.tables.spamEmailDomain
-			.find({}, { domain: 1, _id: 0 })
-			.hint({ domain: 1 })
-			.lean<SpamEmailDomain>()
-			.cursor();
-		for await (const record of existing) {
-			missing.delete(record.domain);
-		}
-
-		if (missing.size === 0) {
-			return 0;
-		}
-
-		// Still an upsert so a concurrent run cannot fail on the unique index.
-		const bulkOps = Array.from(missing, (domain) => ({
-			updateOne: {
-				filter: { domain },
-				update: { $set: { domain } },
-				upsert: true,
-			},
-		}));
-		await this.tables.spamEmailDomain.bulkWrite(bulkOps, { ordered: false });
-
-		return missing.size;
+		return this.tables.spamEmailDomain;
 	}
 }
