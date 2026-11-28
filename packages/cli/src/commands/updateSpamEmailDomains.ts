@@ -17,6 +17,7 @@ import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import { updateSpamEmailDomains } from "@prosopo/provider";
 import type { KeyringPair } from "@prosopo/types";
 import type { ProsopoConfigOutput } from "@prosopo/types";
+import type { ArgumentsCamelCase, Argv } from "yargs";
 
 export default (
 	pair: KeyringPair,
@@ -30,8 +31,15 @@ export default (
 	return {
 		command: "update_spam_email_domains",
 		describe: "Update spam email domains from configured URLs",
-		handler: async () => {
+		builder: (yargs: Argv) =>
+			yargs.option("dryRun", {
+				type: "boolean",
+				default: false,
+				description: "Report the before/after domain counts without writing",
+			}),
+		handler: async (argv: ArgumentsCamelCase<{ dryRun?: boolean }>) => {
 			try {
+				const dryRun = argv.dryRun ?? false;
 				const env = new ProviderEnvironment(config, pair);
 				await env.isReady();
 
@@ -48,11 +56,12 @@ export default (
 					data: { urlCount: spamEmailDomainsUrls.length },
 				}));
 
-				await updateSpamEmailDomains(
-					env.getDb(),
-					env.logger,
-					spamEmailDomainsUrls,
-				).catch((err: Error) => {
+				await updateSpamEmailDomains(env.getDb(), env.logger, {
+					blocklistUrls: spamEmailDomainsUrls,
+					allowlistUrls: config.spamEmailDomainsAllowlistUrls,
+					expiryDays: config.spamEmailDomainsExpiryDays,
+					dryRun,
+				}).catch((err: Error) => {
 					env.logger.error(() => ({
 						msg: "Error updating spam email domains",
 						err,

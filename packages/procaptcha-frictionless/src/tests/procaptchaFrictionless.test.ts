@@ -467,6 +467,58 @@ describe("recovering an invalidated session", () => {
 	});
 });
 
+describe("detector trackers", () => {
+	const collector = () => ({
+		start: vi.fn<() => void>(),
+		stop: vi.fn<() => void>(),
+		getData: (): [] => [],
+		clear: vi.fn<() => void>(),
+	});
+
+	test("stops the replaced detector's trackers when a new detection takes over", async () => {
+		const first = collector();
+		const second = collector();
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(
+				detection(CaptchaType.image, { behaviorCollector3: first }),
+			)
+			.mockResolvedValue(
+				detection(CaptchaType.image, {
+					sessionId: "session-2",
+					behaviorCollector3: second,
+				}),
+			);
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		await settle();
+		expect(first.stop).not.toHaveBeenCalled();
+
+		mocks.mounted[0]?.props.onSessionInvalidated?.(11, 22);
+		await settle();
+
+		expect(detectBot).toHaveBeenCalledTimes(2);
+		expect(first.stop).toHaveBeenCalledTimes(1);
+		expect(second.stop).not.toHaveBeenCalled();
+	});
+
+	test("keeps trackers the new detection still uses", async () => {
+		const shared = collector();
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(
+				detection(CaptchaType.image, { behaviorCollector3: shared }),
+			);
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		await settle();
+
+		mocks.mounted[0]?.props.onSessionInvalidated?.(11, 22);
+		await settle();
+
+		expect(detectBot).toHaveBeenCalledTimes(2);
+		expect(shared.stop).not.toHaveBeenCalled();
+	});
+});
+
 describe("the audio alternative", () => {
 	const withAudio = (
 		captchaType: CaptchaType,

@@ -24,6 +24,9 @@ import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
 import { type StartMode, StartModeEnum, StartModes } from "./startMode.js";
+
+export const SPAM_EMAIL_DOMAINS_DEFAULT_EXPIRY_DAYS = 14;
+
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
 import {
@@ -435,6 +438,14 @@ export const ProsopoConfigSchema = ProsopoBasicConfigSchema.merge(
 		mongoClientUri: string().optional(),
 		ipApi: IpApiServiceSpec.optional(),
 		spamEmailDomainsUrls: array(string()).optional(),
+		spamEmailDomainsAllowlistUrls: array(string()).default([
+			"https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/de9d20d740fb58c972e54f0a9fe1f2112a31ac00/allowlist.conf",
+			"https://raw.githubusercontent.com/amieiro/disposable-email-domains/master/allowDomains.txt",
+		]),
+		spamEmailDomainsExpiryDays: number()
+			.int()
+			.positive()
+			.default(SPAM_EMAIL_DOMAINS_DEFAULT_EXPIRY_DAYS),
 		redisConnection: object({
 			url: string(),
 			password: string(),

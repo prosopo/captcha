@@ -28,7 +28,6 @@ import {
 	mergeBehaviourPoints,
 	pickIpMode,
 	resolveClientSessionId,
-	stopPageBehaviourCapture,
 	widgetRequestHeaders,
 } from "@prosopo/procaptcha-common";
 import type {
@@ -214,12 +213,18 @@ const withPageBehaviour = <
 	T extends { x: number; y: number; timestamp: number; eventType?: string },
 >(
 	collector: BehaviourCollector<T> | undefined,
-	early: readonly T[],
+	page: readonly T[],
+	trackedFrom: number,
 	limit: number,
 ): BehaviourCollector<T> | undefined =>
 	collector && {
 		...collector,
-		getData: () => mergeBehaviourPoints(early, collector.getData(), limit),
+		getData: () =>
+			mergeBehaviourPoints(
+				page.filter((point) => point.timestamp <= trackedFrom),
+				collector.getData(),
+				limit,
+			),
 	};
 
 const customDetectBot: BotDetectionFunction = async (
@@ -417,30 +422,35 @@ const customDetectBot: BotDetectionFunction = async (
 	);
 
 	const userAccount = detectionResult.userAccount;
-	// The detector's trackers are running now, so the page-level capture has
-	// done its job; what it recorded is merged into every solve below.
-	stopPageBehaviourCapture();
+	// Each start loads a fresh detector whose trackers begin empty, so the
+	// page capture keeps recording for the page's life and fills in
+	// everything before this detector's trackers took over.
+	const trackedFrom = Date.now();
 	const pageBehaviour = getPageBehaviour();
 
 	const behaviour = {
 		behaviorCollector1: withPageBehaviour(
 			detectionResult.mouseTracker,
 			pageBehaviour?.mouse ?? [],
+			trackedFrom,
 			PAGE_BEHAVIOUR_LIMITS.mouse,
 		),
 		behaviorCollector2: withPageBehaviour(
 			detectionResult.touchTracker,
 			pageBehaviour?.touch ?? [],
+			trackedFrom,
 			PAGE_BEHAVIOUR_LIMITS.touch,
 		),
 		behaviorCollector3: withPageBehaviour(
 			detectionResult.clickTracker,
 			pageBehaviour?.press ?? [],
+			trackedFrom,
 			PAGE_BEHAVIOUR_LIMITS.press,
 		),
 		behaviorCollector4: withPageBehaviour(
 			detectionResult.scrollTracker,
 			pageBehaviour?.scroll ?? [],
+			trackedFrom,
 			PAGE_BEHAVIOUR_LIMITS.scroll,
 		),
 		deviceCapability: detectionResult.hasTouchSupport,
